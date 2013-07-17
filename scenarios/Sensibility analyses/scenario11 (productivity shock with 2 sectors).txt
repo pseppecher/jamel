@@ -1,0 +1,28 @@
+<i>Scenario two sectors</i>
+
+Analyst.set(randomSeed:0-100)
+
+Bank.2000-01.set(rate=0.05,term=12,targetedCapitalRatio=0.1)
+
+Households.2000-01.new(households=3000,type=jamel.agents.households.HouseholdTypeB,resistance=12)
+Firms.2000-01.new(firms=210,type=jamel.agents.firms.typeE2.FirmE0,production=intermediate)
+Firms.2000-01.new(firms=210,type=jamel.agents.firms.typeE2.FirmE0,production=final,coefficient=1.0)
+
+Bank.2005-01.set(accommodating=false)
+Firms.2050-01.set(intermediateProductivity=125) <i>// The previous (default) value was 100.</i>
+
+Circuit.2010-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+Circuit.2020-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+Circuit.2030-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+Circuit.2040-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+Circuit.2050-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+Circuit.2060-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+Circuit.2070-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+Circuit.2080-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+Circuit.2090-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+Circuit.2100-01.print(randomSeed,period,date,Inflation - Annual,Unemployment,Profit share,Relative price,Capacity Utilization - Sector 1,Capacity Utilization - Sector 2,Number of firms - Sector 1,Number of firms - Sector 2,Profit by firm - sector 1,Profit by firm - sector 2,Markup - Sector 1,Markup - Sector 2)
+
+Circuit.2100-01.pause()
+
+<i>Now, we can run the model:</i>
+

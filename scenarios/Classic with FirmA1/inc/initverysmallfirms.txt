@@ -1,0 +1,12 @@
+<i>Smallfirms initialisation</i>
+
+Circuit.2000-01.set(randomSeed=0,range=600)
+
+Bank.2000-01.set(rate=0.05,term=12,targetedCapitalRatio=0.1)
+
+Firms.2000-01.new(firms=1600,type=jamel.agents.firms.BasicFirm,machines=3,production=integrated,price flexibility=0.15,wage downward flex=0.04,wage upward flex=0.05)
+Households.2000-01.new(households=3000,type=jamel.agents.households.HouseholdTypeB,resistance=12,flexibility=0.1)
+
+Bank.2005-01.set(accommodating=false)
+
+<i>End of the initialisation</i>

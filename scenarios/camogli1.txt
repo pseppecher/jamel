@@ -1,0 +1,20 @@
+<i>Sensitivity and Uncertainty Analysis of the Scenario with Two Sectors</i>
+
+Analyst.set(randomSeed:0-30)
+
+Bank.2000-01.set(rate=0.05,term=12,targetedCapitalRatio=0.1)
+
+Households.2000-01.new(households=3000,type=jamel.agents.households.HouseholdTypeB,resistance=12)
+Firms.2000-01.new(firms=210,type=jamel.agents.firms.typeE2.FirmE0,production=intermediate)
+Firms.2000-01.new(firms=210,type=jamel.agents.firms.typeE2.FirmE0,production=final,coefficient=1)
+
+Bank.2005-01.set(accommodating=false)
+
+Circuit.2005-01.printEachPeriod(randomSeed,period,date,prodVolS2,prodValS2,salesVolS2,salesValCS2,salesValPS2,invVolS2,invValS2,firmsS2,capitalS2,machineryS2,wageBillS2,avWorkforceS2,workforceS2,bankruptS2,debtS2,doubtDebtS2,prodVolS1,prodValS1,salesVolS1,salesValCS1,salesValPS1,invVolS1,invValS1,firmsS1,capitalS1,machineryS1,wageBillS1,avWorkforceS1,workforceS1,bankruptS1,debtS1,doubtDebtS1,nPLoans,capitalBank)
+Circuit.2050-01.pause()
+
+<i>Now, we can run the model:</i>
+
+
+
+

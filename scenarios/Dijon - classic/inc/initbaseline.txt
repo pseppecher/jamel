@@ -1,0 +1,17 @@
+<i>Baseline initialisation</i>
+
+Circuit.2000-01.set(randomSeed=0,range=600)
+
+Circuit.2000-01.set(minimumWage=0)
+Circuit.2000-01.set(Bank.rate=0.05,Bank.term=12,Bank.targetedCapitalRatio=0.1,Bank.accommodating=true)
+Circuit.2000-01.set(Households.savingPropensity=0.05,Households.resistance=12,Households.flexibility=0.1)
+Circuit.2000-01.set(Firms.priceFlexibility=0.15)
+Circuit.2000-01.set(Firms.wageUpFlex=0.05)
+Circuit.2000-01.set(Firms.wageDownFlex=0.04)
+
+Firms.2000-01.new(firms=410,type=jamel.agents.firms.BasicFirm,production=integratedProduction,productionTime=8)
+Households.2000-01.new(households=3000,type=jamel.agents.households.HouseholdTypeB)
+
+Circuit.2005-01.set(Bank.accommodating=false)
+
+<i>End of the initialisation</i>

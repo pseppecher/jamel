@@ -1,0 +1,25 @@
+<i>Sensitivity and Uncertainty Analysis of the Scenario with Two Sectors</i>
+
+On vérifie l'instabilité du modèle à deux secteurs sans mobilité du capital.
+Le nombre total de firmes est fixé à 420.
+On fait varier la dotation initiale de chaque secteur.
+
+Analyst.set(randomSeed:0-10)
+Analyst.set(iSector:220,219,218,217,216,215,214,213,212,211,210,209,208,207,206,205,204,203,202,201,200,199,198,197,196,195,194,193,192,191,190,189,188,187,186,185,184,183,182,181,180)
+Analyst.set(fSector:200,201,202,203,204,205,206,207,208,209,210,211,212,213,214,215,216,217,218,219,220,221,222,223,224,225,226,227,228,229,230,231,232,233,234,235,236,237,238,239,240)
+
+Bank.2000-01.set(rate=0.05,term=12,targetedCapitalRatio=0.1)
+
+Households.2000-01.new(households=3000,type=jamel.agents.households.HouseholdTypeB,resistance=12)
+Firms.2000-01.new(firms=iSector,type=jamel.agents.firms.BasicFirm,production=intermediate)
+Firms.2000-01.new(firms=fSector,type=jamel.agents.firms.BasicFirm,production=final,coefficient=1.0)
+
+Bank.2005-01.set(accommodating=false)
+
+Circuit.2050-01.pause()
+
+<i>Now, we can run the model:</i>
+
+
+
+

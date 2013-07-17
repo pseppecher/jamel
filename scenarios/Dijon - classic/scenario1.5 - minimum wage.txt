@@ -1,0 +1,10 @@
+<i>Scenario with minimum wage:</i>
+
+include(scenario1.4 - flexibility shock.txt)
+
+
+Circuit.2030-01.marker(Minimum Wage)
+Circuit.2030-01.set(minimum wage=7500)
+
+<i>End of the scenario with minimum wage.</i>
+

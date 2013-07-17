@@ -1,0 +1,11 @@
+<i>Baseline initialisation without the firms</i>
+
+Circuit.2000-01.set(randomSeed=0,range=600)
+
+Bank.2000-01.set(rate=0.05,term=12,targetedCapitalRatio=0.1)
+
+Households.2000-01.new(households=3000,type=jamel.agents.households.HouseholdTypeB,resistance=12,flexibility=0.1)
+
+Bank.2005-01.set(accommodating=false)
+
+<i>End of the initialisation</i>
