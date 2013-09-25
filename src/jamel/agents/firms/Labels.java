@@ -56,35 +56,17 @@ public class Labels {
 	/** The current number of machines. */
 	public static final String MACHINERY = "Number of machines";
 
-	/** The net worth of the firm after production. */
-	//public static final String NET_WORTH_AFTER_PRODUCTION = "Net worth of the firm after production";
-
 	/** The offer on the market of goods. */
 	public static final String OFFER_OF_GOODS = "The offer on the market of goods";
 
 	/** The offer of job on the labor market. */
 	public static final String OFFER_OF_JOB = "The offer of job on the labor market";
 
-	/** The initial number of machines (parameter). */
-	public static final String PARAM_FACTORY_MACHINES = "Initial number of machines";
-
-	/** The label for the maximum productivity. */
-	public static final String PARAM_FACTORY_PROD_MAX = "prodMax";
-
-	/** The label for the minimum productivity. */
-	public static final String PARAM_FACTORY_PROD_MIN = "prodMin";
-
-	/** The label for the production time. */
-	public static final String PARAM_FACTORY_PRODUCTION_TIME = "productionTime";
-
 	/** The payroll. */
 	public static final String PAYROLL = "The payroll";
 
 	/** The current price. */
 	public static final String PRICE = "current price";
-
-	/** The label for the price flexibility. */
-	//public static final String PRICE_FLEXIBILITY = "price flexibility"; DELETE
 
 	/** The product offered for sales. */
 	public static final String PRODUCT_FOR_SALES = "product for sales";
@@ -128,9 +110,6 @@ public class Labels {
 	/** Volume of sales. */
 	public static final String SALES_VOLUME = "Volume of sales";				
 
-	/** The Label for the technical coefficient. */
-	public static final String TECH_COEFF = "coefficient";
-
 	/** The unit cost. */
 	public static final String UNIT_COST = "unit cost";
 
@@ -139,12 +118,6 @@ public class Labels {
 	
 	/** The vacancies. */
 	public static final String VACANCIES = "vacancies";
-
-	/** The label for the wage downward flexibility. */
-	//public static final String WAGE_DOWN_FLEX = "wage downward flex"; DELETE
-
-	/** The label for the wage upward flexibility. */
-	//public static final String WAGE_UP_FLEX = "wage upward flex"; DELETE
 
 	/** The effective wagebill. */
 	public static final String WAGEBILL = "effective wage bill";
@@ -157,5 +130,20 @@ public class Labels {
 
 	/** The workforce targeted. */
 	public static final String WORKFORCE_TARGET = "workforce target";
+
+	/** The normal ratio of capital. */
+	public static final String CAPITAL_RATIO = "capital.normalRatio";
+
+	/** The maximum length of labor contract. */
+	public static final String labourContractMax ="laborContract.max";
+
+	/** The minimum length of labor contract. */
+	public static final String labourContractMin = "laborContract.min";
+
+	/** The propensity to distribute the capital excess. */
+	public static final String CAPITAL_PROPENSITY_TO_DISTRIBUTE = "capital.propensityToDistributeExcess";
+
+	/** The propensity to sell the inventories. */
+	public static final String INVENTORIES_PROPENSITY_TO_SELL = "inventories.propensityToSell";
 
 }

@@ -27,6 +27,7 @@
 
 package jamel.spheres.realSphere;
 
+import jamel.Circuit;
 import jamel.JamelObject;
 import jamel.agents.roles.Worker;
 import jamel.util.Timer.JamelPeriod;
@@ -40,103 +41,88 @@ import jamel.util.Timer.JamelPeriod;
  */
 abstract class AbstractMachine extends JamelObject implements Machine {
 
-	/** The factory to which the new product will be delivered. */
-	//protected Factory factory;
-
 	/** The last period the machine worked.*/
 	private JamelPeriod lastUsed;
 
 	/** The production process. */
 	protected ProductionProcess process;
 
-	/** The production cycle time. */
-	protected int productionTime ;
-
-	/** The productivity (= the volume of commodities that the machine can product on average in one period). */
-	protected int productivity ;
-
 	/**
-	 * Creates a new machine with the given productivity.
-	 * @param productivity the productivity.
-	 * @param productionTime the production cycle time.
+	 * Creates a new machine.
 	 */
-	public AbstractMachine(int productivity, int productionTime) {
-		this.productivity = productivity;
-		this.productionTime = productionTime;
+	public AbstractMachine() {
 		this.lastUsed = null;
 	}
 
 	/**
-	 * Changes the productivity of the machine.
-	 * @param ratio the change ratio.
+	 * Returns a new production process.
+	 * @return the new process.
 	 */
-	public void changeProductivity(float ratio) {
-		this.productivity = (int) (this.productivity*ratio) ;
-	}
+	protected abstract ProductionProcess newProductionProcess();
 
 	/**
 	 * Returns the value of the current production process (= the sum of wages payed).
 	 * @return the value of the current production process.
 	 */
+	@Override
 	public long getProductionProcessValue() {
 		if (process==null) return 0;
 		return process.getValue();
 	}
 
 	/**
-	 * Returns an integer that represents the productivity of the machine.
-	 * @return an integer.
+	 * Returns the production time. 
+	 * @return the production time.
 	 */
-	public int getProductivity() { 
-		return productivity ; 
+	@Override
+	public int getProductionTime() {
+		return Integer.parseInt(Circuit.getParameter("Firms.productionTime"));
+	}
+
+	/**
+	 * Returns the productivity of the machine. 
+	 * @return the productivity of the machine.
+	 */
+	@Override
+	public int getProductivity() {
+		return Integer.parseInt(Circuit.getParameter("Firms.productivity"));
 	}
 
 	/**
 	 * Returns an integer that represents the progress of the production process.
 	 * @return an integer.
 	 */
+	@Override
 	public int getProgress() { 
 		if (process==null) return 0;
 		return process.getProgress() ; 
 	}
 
+	
 	/**
 	 * 
 	 */
+	@Override
 	public void kill() {
 		this.process = null;
-	}
-
-	/**
-	 * Sets the production cycle time.
-	 * @param time the production cycle time.
-	 */
-	public void setProdTime(int time) {
-		productionTime = time ;
-	}
-
-	/**
-	 * Sets the productivity.
-	 * @param newProductivity - the productivity to set.
-	 */
-	public void setProductivity(int newProductivity) {
-		this.productivity = newProductivity ;		
 	}
 
 	/**
 	 * Expends the given labor power in the production-process progress.
 	 * @param labourPower the labor power to expend.
 	 */
+	@Override
 	public void work(LaborPower labourPower) {
 		this.process.progress(labourPower);
 	}
-
+	
 	/**
 	 * Increments the production-process by the expenditure of a labor power.<br>
 	 * Can be called only once in a period (else an exception is generated).
 	 * @param worker the worker.
 	 * @param wage the wage payed.
 	 */
+	@Override
 	public void work(Worker worker, long wage) {
 		if ((this.lastUsed!=null) && (!this.lastUsed.isBefore(getCurrentPeriod()))) 
 			throw new RuntimeException("This machine has already worked in the current period.");
@@ -148,11 +134,5 @@ abstract class AbstractMachine extends JamelObject implements Machine {
 			throw new RuntimeException("The process has not been incremented.");
 		this.lastUsed = getCurrentPeriod();
 	}
-	
-	/**
-	 * Returns a new production process.
-	 * @return the new process.
-	 */
-	protected abstract ProductionProcess newProductionProcess();
 
 }

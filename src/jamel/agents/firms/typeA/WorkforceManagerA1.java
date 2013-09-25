@@ -33,13 +33,12 @@ public class WorkforceManagerA1 extends WorkforceManager {
 			final Double randomWage = Circuit.getCircuit().getRandomWage() ;
 			if ( randomWage!=null ) 
 				this.offeredWage = randomWage ;
-			else this.offeredWage = defaultWage ;
+			else this.offeredWage = Double.parseDouble(Circuit.getParameter("Firms.defaultWage")) ;
 		}
 		else {
-			//final float wageUpwardFlexibility = (Float) this.blackBoard.get(Labels.WAGE_UP_FLEX);DELETE
-			//final float wageDownwardFlexibility = (Float) this.blackBoard.get(Labels.WAGE_DOWN_FLEX);DELETE
 			final float wageUpwardFlexibility = Float.parseFloat(Circuit.getParameter("Firms.wageUpFlex"));
 			final float wageDownwardFlexibility = Float.parseFloat(Circuit.getParameter("Firms.wageDownFlex"));
+			final float normalVacancyRate = Float.parseFloat(Circuit.getParameter("Firms.vacancies.normalRate"));
 			final Float productionLevel = (Float)this.blackBoard.get(Labels.PRODUCTION_LEVEL);
 			final Float npl;
 			if (productionLevel<normalLevel) {

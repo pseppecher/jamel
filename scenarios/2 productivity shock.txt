@@ -2,10 +2,9 @@
 
 include(inc/initbaseline.txt)
 
-Circuit.2020-01.marker(Shock)
-Firms.2020-01.set(productivity=120) <i>// The previous (default) value was 100.</i>
+Circuit.2040-01.marker(Shock)
+Circuit.2040-01.set(Firms:productivity=125)
 
-Circuit.2050-01.pause()
 Circuit.2100-01.pause()
 
 <i>Now, we can run the model:</i>

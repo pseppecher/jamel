@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2012, Pascal Seppecher.
+ * (C) Copyright 2007-2013, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,44 +21,39 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
  */
 
-package jamel.spheres.realSphere;
+package jamel.util.data;
+
+import jamel.JamelObject;
 
 /**
- * An interface for factories.
+ * A generous object that returns the value of its fields. 
  */
-public interface Factory {
-
+public class AbstractDataset extends JamelObject{
+	
 	/**
-	 * Closes the factories.
+	 * Returns the object for the given field. 
+	 * @param field  the name of the field. 
+	 * @return  an object.
+	 * @throws NoSuchFieldException  if the field is not found.
 	 */
-	void close();
-
-	/**
-	 * Returns the total value of the factory.
-	 * This total value is the sum of the value of the inventory of finished goods
-	 * and the value of unfinished goods embedded in the processes of production. 
-	 * @return a value.
-	 */
-	long getWorth();
-
-	/**
-	 * Kills the factory.
-	 */
-	void kill();
-
-	/**
-	 * Completes some technical operations at the beginning of the period.
-	 */
-	void open();
-
-	/**
-	 * Production function of the factory.<br>
-	 * Summons each employee and makes him work on a machine.
-	 */
-	void production();
+	public Object getFieldValue(String field) throws NoSuchFieldException {
+		Object value = null;
+		try {
+			value = this.getClass().getField(field).get(this);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
+		return value;
+	}
 	
 }

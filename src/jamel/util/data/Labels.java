@@ -366,6 +366,9 @@ public class Labels {
 	/** The voluntary unemployed status*/
 	public static final int STATUS_VOLUNTARY_UNEMPLOYED = 1;
 
+	/** The capitalist status*/
+	public static final int STATUS_CAPITALIST = 3;
+
 	/** The unemployed. */
 	public static final String UNEMPLOYED = "Unemployed";
 

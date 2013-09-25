@@ -317,7 +317,6 @@ public class TimeseriesCollection  extends HashMap<String, TimeSeries>{
 	public void updateSeries(YearDataset yearDataset) {
 		final Year year = JamelObject.getCurrentPeriod().getYear();
 		this.get(Labels.ANNUAL_INCOME).add(year,yearDataset.income);
-		//this.get(MacroLabels.PRODUCTIVITY).add(year,yearDataset.productivity);
 		this.get(Labels.ANNUAL_SAVING_RATE).add(year,yearDataset.savingsRate);
 		this.get(Labels.ANNUAL_PROFIT_SHARE).add(year,yearDataset.profitShare);
 		this.get(Labels.ANNUAL_WAGE_SHARE).add(year,yearDataset.wageShare);
@@ -325,14 +324,14 @@ public class TimeseriesCollection  extends HashMap<String, TimeSeries>{
 		this.get(Labels.MONEY_VELOCITY).add(year,yearDataset.moneyVelocity);
 		this.get(Labels.ANNUAL_INFLATION_RATE).add(year,yearDataset.inflation);
 
-		this.get(Labels.annualBankruptciesTotal).add(year,yearDataset.bankruptciesTotal);
+		this.get(Labels.annualBankruptciesTotal).add(year,yearDataset.bankruptcies);
 		this.get(Labels.annualBankruptcyRateAverage).add(year,yearDataset.bankruptcyRateAverage);
 		this.get(Labels.annualBankruptcyRateFinal).add(year,yearDataset.bankruptcyRateFinal);
 		this.get(Labels.annualBankruptcyRateIntermediate).add(year,yearDataset.bankruptcyRateIntermediate);
 
 		this.get(Labels.annualCapacityUtilizationFinal).add(year,yearDataset.capacityUtilizationFinal);
 		this.get(Labels.annualCapacityUtilizationIntermediate).add(year,yearDataset.capacityUtilizationIntermediate);
-		this.get(Labels.annualCapacityUtilizationTotal).add(year,yearDataset.capacityUtilizationTotal);
+		this.get(Labels.annualCapacityUtilizationTotal).add(year,yearDataset.capacityUtilization);
 		
 		this.get(Labels.annualWorkforceTotal).add(year,yearDataset.workforceTotal);
 

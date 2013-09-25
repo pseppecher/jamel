@@ -28,11 +28,9 @@
 package jamel.spheres.realSphere;
 
 
+import jamel.Circuit;
 import jamel.agents.firms.Labels;
 import jamel.util.Blackboard;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents a factory that produces final goods.
@@ -79,8 +77,8 @@ public class FinalFactory extends AbstractFactory {
 			 * Creates a new production process.
 			 */
 			private Process() {
-				super(FinalMachine.this.productivity,FinalMachine.this.productionTime);
-				this.intermediateConsumption = (int) (FinalMachine.this.coefficient*FinalMachine.this.productivity);
+				super(FinalMachine.this.getProductivity(),FinalMachine.this.getProductionTime());
+				this.intermediateConsumption = (int) (getRequiredVolumeOfRawMaterials()*FinalMachine.this.getProductivity());
 			}
 
 			/**
@@ -105,20 +103,6 @@ public class FinalFactory extends AbstractFactory {
 
 		}
 
-		/** The technical coefficient (the volume of intermediate good consumed by the production of 1 unit of final good). */
-		final private float coefficient;
-
-		/**
-		 * Creates a new machine with the given productivity.
-		 * @param aProductivity the productivity.
-		 * @param aTime the production cycle time.
-		 * @param aCoefficient the volume of intermediate good required to produce 1 unit of final good.
-		 */
-		public FinalMachine(int aProductivity, int aTime, float aCoefficient) {
-			super(aProductivity, aTime);
-			this.coefficient = aCoefficient;
-		}
-
 		/**
 		 * Returns a new production process.
 		 * @return the new process.
@@ -126,6 +110,20 @@ public class FinalFactory extends AbstractFactory {
 		@Override
 		protected ProductionProcess newProductionProcess() {
 			return new Process();
+		}
+
+		/**
+		 * @return
+		 */
+		private float getRequiredVolumeOfRawMaterials() {
+			return getCoefficient()*getProductivity();
+		}
+
+		/**
+		 * @return
+		 */
+		private float getCoefficient() {
+			return Float.parseFloat(Circuit.getParameter("Firms.technicalCoefficient"));
 		}
 
 	}
@@ -158,25 +156,10 @@ public class FinalFactory extends AbstractFactory {
 	private int getRequiredVolumeOfRawMaterials() {
 		int sum = 0;
 		for (Machine machine: this.machinery) {
-			sum += ((FinalMachine)machine).coefficient*machine.getProductivity();   
+			sum += ((FinalMachine)machine).getRequiredVolumeOfRawMaterials();   
 		}
 		return sum;
 	}
-
-	/**
-	 * Returns a HashMap that contains the default parameters for this factory.
-	 * @return a HashMap.
-	 */
-	@Override
-	protected Map<String, Object> getDefaultParameters() {
-		final Map<String, Object> map2 = new HashMap<String, Object>();
-		map2.put(Labels.PARAM_FACTORY_MACHINES, 10);		
-		map2.put(Labels.PARAM_FACTORY_PROD_MIN, 100);		
-		map2.put(Labels.PARAM_FACTORY_PROD_MAX, 100);		
-		map2.put(Labels.PARAM_FACTORY_PRODUCTION_TIME, 4);
-		map2.put("coefficient", 100f);
-		return map2;
-	}		
 
 	/**
 	 * Returns the max level of production according to the current resources of the factory. 
@@ -212,10 +195,8 @@ public class FinalFactory extends AbstractFactory {
 	}
 
 	@Override
-	protected Machine newMachine(int productivity, int productionTime) {
-		float coefficient=0;
-		coefficient = (Float)this.blackboard.get(Labels.TECH_COEFF);
-		return new FinalMachine(productivity, productionTime,coefficient);
+	protected Machine newMachine() {
+		return new FinalMachine();
 	}
 
 	/**

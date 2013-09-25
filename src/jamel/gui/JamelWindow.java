@@ -137,10 +137,10 @@ public class JamelWindow extends JFrame {
 
 	/** A String that gives some infos about Jamel. */
 	private final String infoString = 
-			"<h3>Jamel (20121029 - Steglitz)</h3>" +
-					"<h1>Java Agent-based MacroEconomic Laboratory</h1>"+
-					"&copy; Pascal Seppecher 2007-2012. All rights reserved.<br>"+
-					"<a href=\"http://p.seppecher.free.fr\">http://p.seppecher.free.fr</a>";
+			"<h3>Jamel (20130918 - Morra)</h3>" +
+			"<h1>Java Agent-based MacroEconomic Laboratory</h1>"+
+			"&copy; Pascal Seppecher 2007-2013. All rights reserved.<br>"+
+			"<a href=\"http://p.seppecher.free.fr\">http://p.seppecher.free.fr</a>";
 
 	/** The matrix panel. */
 	private JEditorPane matrixPane;

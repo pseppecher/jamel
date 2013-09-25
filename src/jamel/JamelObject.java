@@ -50,7 +50,7 @@ public abstract class JamelObject {
 	private static File outputDirectory;
 
 	/** The random. */
-	private final static Random random = new Random();
+	private static Random random;
 
 	/** The name of the scenario file. */
 	private static String scenarioFileName;
@@ -75,6 +75,14 @@ public abstract class JamelObject {
 	 */
 	public static Random getRandom() {
 		return random;
+	}
+
+	/**
+	 * Sets the random.
+	 * @param random2  the random to set.
+	 */
+	public static void setRandom(Random random2) {
+		random = random2;
 	}
 
 	/**

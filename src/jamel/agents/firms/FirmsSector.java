@@ -54,6 +54,33 @@ import java.util.Map.Entry;
 public class FirmsSector extends JamelObject {
 
 	/**
+	 * Receive notification of a bankruptcy.<br>
+	 * A new firm will be created 12 months later.
+	 * @param aBankruptFirm the bankrupt firm.
+	 */
+	private static void failure(Firm aBankruptFirm) {
+		if (!aBankruptFirm.isBankrupt())
+			throw new RuntimeException("Not bankrupt.");
+		final String currentDate = getCurrentPeriod().toString();
+		final int minTimeBeforeReCreation = Integer.parseInt(Circuit.getParameter("Firms.regenerationTime.min"));
+		final int maxTimeBeforeReCreation = Integer.parseInt(Circuit.getParameter("Firms.regenerationTime.max"));
+		if (minTimeBeforeReCreation>maxTimeBeforeReCreation) {
+			throw new RuntimeException("Min and max regeneration time are inconsistent.");
+		}
+		Circuit.println(currentDate+" Firm Failure ("+aBankruptFirm.getName()+")");
+		final String someMonthsLater;
+		if (minTimeBeforeReCreation==maxTimeBeforeReCreation) {
+			someMonthsLater = getCurrentPeriod().getNewPeriod(minTimeBeforeReCreation).toString();
+		}
+		else {
+			someMonthsLater = getCurrentPeriod().getNewPeriod(minTimeBeforeReCreation+getRandom().nextInt(maxTimeBeforeReCreation-minTimeBeforeReCreation)).toString();
+		}
+		final String instructions = aBankruptFirm.getParametersString();
+		Circuit.newEvent(someMonthsLater+".newFirms(firms=1,"+instructions+")");
+		return ;
+	}
+
+	/**
 	 * Returns a hash map that contains a list of parameters and their values.
 	 * @param paramString - a string that contains parameters and their values.
 	 * @return a hash map.
@@ -80,95 +107,13 @@ public class FirmsSector extends JamelObject {
 	/** The list of the providers of intermediate goods. */
 	private final LinkedList<Firm> intermediateGoodsProvidersList ;
 
-	/** The scenario. */
-	private final LinkedList<String> scenario;
-
 	/**
 	 * Creates a new firms sector.
-	 * @param aScenario - a list of strings that contain the description of the events.
 	 */
-	public FirmsSector(LinkedList<String> aScenario) {
+	public FirmsSector() {
 		this.firmsList = new LinkedList<Firm>() ;
 		this.finalGoodsProvidersList = new LinkedList<Firm>() ;
 		this.intermediateGoodsProvidersList = new LinkedList<Firm>() ;
-		this.scenario = aScenario;
-		//JamelSimulator.println("Firms sector: ok.");
-	}
-
-	/**
-	 * Receive notification of a bankruptcy.<br>
-	 * A new firm will be created 12 months later.
-	 * @param aBankruptFirm the bankrupt firm.
-	 */
-	private void failure(Firm aBankruptFirm) {
-		if (!aBankruptFirm.isBankrupt())
-			throw new RuntimeException("Not bankrupt.");
-		final String currentDate = getCurrentPeriod().toString();
-		Circuit.println(currentDate+" Firm Failure ("+aBankruptFirm.getName()+")");
-		final String someMonthsLater = getCurrentPeriod().getNewPeriod(12+getRandom().nextInt(12)).toString();
-		final String instructions = aBankruptFirm.getParametersString();
-		this.scenario.add(someMonthsLater+".new(firms=1,"+instructions+")");
-		/*final String type = aBankruptFirm.getClass().getName();
-		final String production = aBankruptFirm.getProduction().name();
-		this.scenario.add(someMonthsLater+".new(firms=1,type="+type+",production="+production+")");*/
-		return ;
-	}
-
-	/**
-	 * Creates new firms according to the parameters.
-	 * @param parametersMap - a map of parameters (key of the parameter, value of the parameter).
-	 */
-	private void newFirms(Map<String, String> parametersMap) {
-		Integer newFirms = null;
-		String className = null;
-		for(Entry<String, String> entry : parametersMap.entrySet()) {
-			final String key = entry.getKey();
-			final String value = entry.getValue();
-			if (key.equals("firms")) {
-				if (newFirms != null) throw new RuntimeException("Event new firms : Duplicate parameter : firms.");
-				newFirms = Integer.parseInt(value);
-			}
-			else if (key.equals("type")) {
-				if (className != null) throw new RuntimeException("Event new firms : Duplicate parameter : type.");
-				className = value;				
-			}
-		}
-		if (newFirms==null) 
-			throw new RuntimeException("Missing parameter: firms.");
-		if (className==null) 
-			throw new RuntimeException("Missing parameter: type.");
-		parametersMap.remove("firms");
-		parametersMap.remove("type");
-		for (int count = 0 ; count<newFirms ; count++){
-			countFirms ++ ;
-			final CapitalOwner owner = Circuit.getRandomCapitalOwner();
-			try {
-				final String name = "Company "+countFirms;
-				final Firm newFirm = (Firm) Class.forName(className,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,CapitalOwner.class,Map.class).newInstance(name,owner,parametersMap);
-				firmsList.add(newFirm) ;
-			} catch (ClassNotFoundException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Firm creation failure"); 
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Firm creation failure"); 
-			} catch (SecurityException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Firm creation failure"); 
-			} catch (InstantiationException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Firm creation failure"); 
-			} catch (IllegalAccessException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Firm creation failure"); 
-			} catch (InvocationTargetException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Firm creation failure"); 
-			} catch (NoSuchMethodException e) {
-				e.printStackTrace();
-				throw new RuntimeException("Firm creation failure"); 
-			}
-		}
 	}
 
 	/**
@@ -219,7 +164,7 @@ public class FirmsSector extends JamelObject {
 				newList.add(selectedFirm);
 			}
 			else {
-				this.failure(selectedFirm);
+				failure(selectedFirm);
 			}
 		}
 		firmsList.clear();
@@ -306,7 +251,7 @@ public class FirmsSector extends JamelObject {
 		if (size>0)
 			return this.intermediateGoodsProvidersList.get(getRandom().nextInt(size));
 		return null;
-	}							
+	}
 
 	/**
 	 * Kills the sector.
@@ -314,6 +259,64 @@ public class FirmsSector extends JamelObject {
 	public void kill() {
 		for (Firm selectedFirm : firmsList) selectedFirm.kill() ;
 		this.firmsList.clear();
+	}							
+
+	/**
+	 * Creates new firms according to the parameters.
+	 * @param parameters  a string that contains the parameters of the new firms.
+	 */
+	public void newFirms(String parameters) {
+		final Map<String, String> parametersMap = getParamHashMap(parameters);
+		Integer newFirms = null;
+		String className = null;
+		for(Entry<String, String> entry : parametersMap.entrySet()) {
+			final String key = entry.getKey();
+			final String value = entry.getValue();
+			if (key.equals("firms")) {
+				if (newFirms != null) throw new RuntimeException("Event new firms : Duplicate parameter : firms.");
+				newFirms = Integer.parseInt(value);
+			}
+			else if (key.equals("type")) {
+				if (className != null) throw new RuntimeException("Event new firms : Duplicate parameter : type.");
+				className = value;				
+			}
+		}
+		if (newFirms==null) 
+			throw new RuntimeException("Missing parameter: firms.");
+		if (className==null) 
+			throw new RuntimeException("Missing parameter: type.");
+		parametersMap.remove("firms");
+		parametersMap.remove("type");
+		for (int count = 0 ; count<newFirms ; count++){
+			countFirms ++ ;
+			final CapitalOwner owner = Circuit.getRandomCapitalOwner();
+			try {
+				final String name = "Company "+countFirms;
+				final Firm newFirm = (Firm) Class.forName(className,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,CapitalOwner.class,Map.class).newInstance(name,owner,parametersMap);
+				firmsList.add(newFirm) ;
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Firm creation failure"); 
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Firm creation failure"); 
+			} catch (SecurityException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Firm creation failure"); 
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Firm creation failure"); 
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Firm creation failure"); 
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Firm creation failure"); 
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Firm creation failure"); 
+			}
+		}
 	}
 
 	/**
@@ -324,23 +327,8 @@ public class FirmsSector extends JamelObject {
 		Collections.shuffle(firmsList,getRandom());
 		updateFinalGoodsProvidersList();
 		updateIntermediateGoodsProvidersList();
-		final String date = getCurrentPeriod().toString();
-		final LinkedList<String> eList = Circuit.getParametersList(this.scenario, date, "\\.");
-		final LinkedList<String> eList2 = new LinkedList<String>();
-		if (!eList.isEmpty()) {
-			for (String string: eList){
-				String[] word = string.split("\\)",2);
-				String[] event = word[0].split("\\(",2);
-				if (event[0].equals("new"))
-					// This event must be treated at the FirmsSector level.
-					newFirms(getParamHashMap(event[1]));
-				else 
-					// The other events must be treated at the level of each firm.
-					eList2.add(string);
-			}
-		}
 		for (Firm selectedFirm : firmsList) {
-			selectedFirm.open(eList2) ;
+			selectedFirm.open() ;
 		}
 	}
 
@@ -369,24 +357,12 @@ public class FirmsSector extends JamelObject {
 	}
 
 	/**
-	 * Executes the production.<br>
-	 * Each firm is called to executes the production.
-	 */
-	public void production() {
-		for (Firm selectedFirm : firmsList) {
-			if (!selectedFirm.isBankrupt()) {
-				selectedFirm.production() ; 
-			}
-		}
-	}
-
-	/**
 	 * Prints the data of each firm.
 	 * @param outputFile  the output file.
 	 * @param keys  an array of strings with the name of the fields to be printed; 
 	 */
 	public void printEach(File outputFile, String[] keys) {
-		try {
+		try {// DELETE use export in abstract simulator instead
 			final FileWriter writer = new FileWriter(outputFile,true);
 			for(Firm firm:this.firmsList){
 				firm.getData().write(writer,keys);
@@ -396,6 +372,18 @@ public class FirmsSector extends JamelObject {
 			e.printStackTrace();
 			throw new RuntimeException("Error while writing data in the output file.");
 		}		
+	}
+
+	/**
+	 * Executes the production.<br>
+	 * Each firm is called to executes the production.
+	 */
+	public void production() {
+		for (Firm selectedFirm : firmsList) {
+			if (!selectedFirm.isBankrupt()) {
+				selectedFirm.production() ; 
+			}
+		}
 	}							
 
 

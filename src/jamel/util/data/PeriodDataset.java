@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2012, Pascal Seppecher.
+ * (C) Copyright 2007-2013, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,8 +21,7 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
  */
 
 package jamel.util.data;
@@ -32,7 +31,6 @@ import java.util.LinkedList;
 import org.jfree.data.statistics.BoxAndWhiskerCalculator;
 import org.jfree.data.statistics.BoxAndWhiskerItem;
 
-import jamel.JamelObject;
 import jamel.agents.firms.Firm;
 import jamel.agents.firms.FirmDataset;
 import jamel.agents.firms.ProductionType;
@@ -44,7 +42,7 @@ import jamel.spheres.realSphere.IntermediateFactory;
 /**
  * A dataset that aggregates the macroeconomic data of one period.
  */
-public class PeriodDataset extends JamelObject{
+public class PeriodDataset extends AbstractDataset {
 
 	/** dividendsFinal */
 	private long dividendsFinal;
@@ -52,26 +50,17 @@ public class PeriodDataset extends JamelObject{
 	/** dividendsIntermediate */
 	private long dividendsIntermediate;
 
-	/** grossProfitFinal */
-	private long grossProfitFinal;
-
-	/** grossProfitIntermediate */
-	private long grossProfitIntermediate;
-
 	/** averageDividendFinal */
 	public double averageDividendFinal;
-
+	
 	/** averageDividendIntermediate */
-	public double averageDividendIntermediate;
+	public double averageDividendIntermediate;	
 
 	/** avWorkforceS1 */
 	public int avWorkforceS1;
 
 	/** avWorkforceS2 */
 	public int avWorkforceS2;
-
-	/** BANK_CAPITAL */
-	public long capitalBank;
 
 	/** BANK_DIVIDEND */
 	public long BANK_DIVIDEND;
@@ -87,6 +76,15 @@ public class PeriodDataset extends JamelObject{
 
 	/** CAPITAL_ADEQUACY_RATIO */
 	public double CAPITAL_ADEQUACY_RATIO;
+
+	/** BANK_CAPITAL */
+	public long capitalBank;
+
+	/** capitalS1 */
+	public long capitalS1;
+
+	/** capitalS2 */
+	public long capitalS2;
 
 	/** CONSUMPTION_BUDGET */
 	public long CONSUMPTION_BUDGET;
@@ -130,11 +128,11 @@ public class PeriodDataset extends JamelObject{
 	/** finalCapUtil */
 	public double finalCapUtil;
 
-	/** FIRMS_CAPITAL */
-	//public long FIRMS_CAPITAL;
-
 	/** FIRMS_DEPOSITS */
 	public long FIRMS_DEPOSITS;
+
+	/** FIRMS_CAPITAL */
+	//public long FIRMS_CAPITAL;
 
 	/** firmsIntermediate */
 	public int firmsS1;
@@ -147,6 +145,15 @@ public class PeriodDataset extends JamelObject{
 
 	/** FORCED_SAVINGS_RATE */
 	public double FORCED_SAVINGS_RATE;
+
+	/** The gross profit */
+	public long grossProfit;
+
+	/** grossProfitFinal */
+	public long grossProfitFinal;
+
+	/** grossProfitIntermediate */
+	public long grossProfitIntermediate;
 
 	/** HOUSEHOLDS */
 	public long HOUSEHOLDS;
@@ -193,26 +200,26 @@ public class PeriodDataset extends JamelObject{
 	/** INVENTORY_VOLUME */
 	public double invVolS2;
 
+	/** PRODUCTION_VOLUME */
+	//public long PRODUCTION_VOLUME;
+
 	/** JOB_OFFERS */
 	public long JOB_OFFERS;
 
 	/** LOANS */
 	public long LOANS;
 
-	/** PRODUCTION_VOLUME */
-	//public long PRODUCTION_VOLUME;
+	/** SALES_VALUE */
+	//public long SALES_VALUE;
+
+	/** SALES_VOLUME */
+	//public long SALES_VOLUME;
 
 	/** intermediateMachinery */
 	public long machineryS1;
 
 	/** finalMachinery */
 	public long machineryS2;
-
-	/** SALES_VALUE */
-	//public long SALES_VALUE;
-
-	/** SALES_VOLUME */
-	//public long SALES_VOLUME;
 
 	/** The maximum regular markup target of the firms. */
 	public float markupFinalMax;
@@ -249,6 +256,9 @@ public class PeriodDataset extends JamelObject{
 
 	/** MIN_REGULAR_WAGE */
 	public long MIN_REGULAR_WAGE;
+
+	/** Non Performing Loans (=the loans cancelled). */
+	public long nPLoans;
 
 	/** period */
 	public final double period;
@@ -387,6 +397,9 @@ public class PeriodDataset extends JamelObject{
 	/** utilizationListIntermediate */
 	public final LinkedList<Float> utilizationListIntermediate = new LinkedList<Float>();
 
+	/** wageBillTotal */
+	//public long wageBillTotal;
+
 	/** vacanciesFinal */
 	public long vacanciesFinal;
 
@@ -395,9 +408,6 @@ public class PeriodDataset extends JamelObject{
 
 	/** vacanciesTotal */
 	public long vacanciesTotal;
-
-	/** wageBillTotal */
-	//public long wageBillTotal;
 
 	/** vacanciesRateTotal */
 	public double vacancyRateAverage;
@@ -437,15 +447,6 @@ public class PeriodDataset extends JamelObject{
 
 	/** workforceTotal */
 	public long workforceTotal;
-
-	/** Non Performing Loans (=the loans cancelled). */
-	public long nPLoans;
-
-	/** capitalS2 */
-	public long capitalS2;
-
-	/** capitalS1 */
-	public long capitalS1;
 
 	/**
 	 */
@@ -532,7 +533,6 @@ public class PeriodDataset extends JamelObject{
 		this.DIVIDENDS += data.getDividend();
 		this.INCOME += data.getIncome();
 		this.HOUSEHOLDS_DEPOSITS += data.getDeposits();
-		//this.WAGE_BILL += data.getWage();		
 		this.HOUSEHOLDS ++;
 		if (data.getSector()==(ProductionType.finalProduction))
 			this.avWorkforceS2++;
@@ -545,12 +545,16 @@ public class PeriodDataset extends JamelObject{
 				throw new RuntimeException("Wage is 0.");
 		}
 		else {
-			this.UNEMPLOYED++;
-			if (data.getEmploymentStatus()==Labels.STATUS_INVOLUNTARY_UNEMPLOYED) 
+			if (data.getEmploymentStatus()==Labels.STATUS_INVOLUNTARY_UNEMPLOYED) {
 				this.INVOLUNTARY_UNEMPLOYED++;
-			else
+				this.UNEMPLOYED++;
+				this.unemploymentTotalDuration += data.getUnemploymentDuration();
+			}
+			else {
 				this.VOLUNTARY_UNEMPLOYED++;
-			this.unemploymentTotalDuration += data.getUnemploymentDuration();
+				this.UNEMPLOYED++;
+				this.unemploymentTotalDuration += data.getUnemploymentDuration();
+			}
 		}
 	}
 
@@ -598,35 +602,14 @@ public class PeriodDataset extends JamelObject{
 	}
 
 	/**
-	 * Returns the object for the given field. 
-	 * @param field  the name of the field. 
-	 * @return  an object.
-	 * @throws NoSuchFieldException  if the field is not found.
-	 */
-	public Object getFieldValue(String field) throws NoSuchFieldException {
-		Object value = null;
-		try {
-			value = this.getClass().getField(field).get(this);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			throw new RuntimeException();
-		} catch (SecurityException e) {
-			e.printStackTrace();
-			throw new RuntimeException();
-		} catch (IllegalAccessException e) {
-			e.printStackTrace();
-			throw new RuntimeException();
-		}
-		return value;
-	}
-
-	/**
 	 * Updates the ratios that require data from different sectors.
 	 */
 	public void updateRatios() {
 
 		//this.profitsRatio = ((double) (this.grossProfitFinal*this.machineryIntermediate))/(this.machineryFinal*this.grossProfitIntermediate);
-
+		
+		this.grossProfit = this.grossProfitFinal+this.grossProfitIntermediate;
+		
 		if (this.machineryS1>0)
 			this.realProfitIntermediate = ((double)this.grossProfitIntermediate/this.machineryS1)*((double)this.CONSUMPTION_VOLUME/this.CONSUMPTION_VALUE);
 		else 

@@ -35,10 +35,10 @@ import jamel.agents.roles.Worker;
 public interface Machine {
 
 	/**
-	 * Changes the productivity of the machine.
-	 * @param ratio the change ratio.
+	 * Returns the production time.
+	 * @return the production time.
 	 */
-	public abstract void changeProductivity(float ratio);
+	int getProductionTime();
 
 	/**
 	 * Returns the value of the current production process (= the sum of wages payed).
@@ -62,18 +62,6 @@ public interface Machine {
 	 * 
 	 */
 	public abstract void kill();
-
-	/**
-	 * Sets the production cycle time.
-	 * @param time the production cycle time.
-	 */
-	public abstract void setProdTime(int time);
-
-	/**
-	 * Sets the productivity.
-	 * @param newProductivity - the productivity to set.
-	 */
-	public abstract void setProductivity(int newProductivity);
 
 	/**
 	 * Expends the given labor power in the production-process progress.

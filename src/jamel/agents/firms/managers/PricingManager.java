@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2013, Pascal Seppecher.
+ * (C) Copyright 2007-2013, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,8 +21,7 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
  */
 
 package jamel.agents.firms.managers;
@@ -55,7 +54,6 @@ public class PricingManager extends JamelObject {
 	 * Updates the unit price.
 	 */
 	public void updatePrice() {
-		//final Float priceFlexibility = (Float)this.blackBoard.get(Labels.PRICE_FLEXIBILITY);
 		final Float priceFlexibility = Float.parseFloat(Circuit.getParameter("Firms.priceFlexibility"));
 		final Float inventoryRatio = (Float)this.blackBoard.get(Labels.INVENTORY_LEVEL_RATIO);
 		final Double unitCost = (Double)this.blackBoard.get(Labels.UNIT_COST);

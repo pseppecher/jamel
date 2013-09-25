@@ -48,11 +48,9 @@ import org.jfree.data.time.TimeSeriesDataItem;
 /**
  * The workforce manager.<br>
  * This manager is in charge of the hiring and firing decisions.
+ * TODO supprimer tous les appels ˆ "Circuit.getParameter"
  */
 public class WorkforceManager extends JamelObject {
-
-	/** The default wage. */
-	protected static final double defaultWage = 3000; // TODO: Should be a parameter.
 
 	/**
 	 * Returns the average of the specified time series.
@@ -74,32 +72,17 @@ public class WorkforceManager extends JamelObject {
 	/** The current account of the firm. */
 	final private Account account;
 
-	/** The black board. */
-	protected final Blackboard blackBoard;
-
 	/** The number of workers hired in the current period. */
-	private Integer effectiveHiring ; 
+	private Integer effectiveHiring ;
 
 	/** The firm. */
-	final private Firm employer;							
+	final private Firm employer; 
 
 	/** The offer of the firm on the labor market. */
-	private JobOffer jobOffer ;								
+	private JobOffer jobOffer ;							
 
 	/** The number of jobs offered at the opening of the labor market. */
-	private Integer jobsOffered;
-
-	/** The maximum labor contract term. */
-	private int labourContractMax = 48;
-
-	/** The minimum labor contract term. */
-	private int labourContractMin = 12;
-
-	/** The normal rate of vacancies. */
-	protected float normalVacancyRate = 0.03f;
-
-	/** The wage proposed on the labor market. */
-	protected Double offeredWage ;
+	private Integer jobsOffered;								
 
 	/** The payroll. */
 	final private LinkedList<EmploymentContract> payroll ;
@@ -113,6 +96,12 @@ public class WorkforceManager extends JamelObject {
 	/** The wage bill targeted. */
 	private Long wageBillBudget ;
 
+	/** The black board. */
+	protected final Blackboard blackBoard;
+
+	/** The wage proposed on the labor market. */
+	protected Double offeredWage ;
+
 	/**
 	 * Creates a new workforce manager.
 	 * @param theEmployer  the employer of the workforce.
@@ -120,8 +109,9 @@ public class WorkforceManager extends JamelObject {
 	 * @param blackboard2  the blackBoard.
 	 */
 	public WorkforceManager(Firm theEmployer, Account theEmployerAccount, Blackboard blackboard2) {
-		this.vacanciesTimeSeries.setMaximumItemAge(12);// TODO: Should be a parameter.
-		this.targetedWorkforceTimeSeries.setMaximumItemAge(12);// TODO: Should be a parameter.
+		final int vacancyRatePeriod = Integer.parseInt(Circuit.getParameter("Firms.vacancies.period")) ;
+		this.vacanciesTimeSeries.setMaximumItemAge(vacancyRatePeriod);
+		this.targetedWorkforceTimeSeries.setMaximumItemAge(vacancyRatePeriod);
 		this.payroll = new LinkedList<EmploymentContract>();
 		this.employer = theEmployer;
 		this.account = theEmployerAccount;
@@ -147,20 +137,11 @@ public class WorkforceManager extends JamelObject {
 	 * @return an integer that represents the labor contract duration (in months).
 	 */
 	private int getRandomLabourContractLenght() {
-		if (this.labourContractMax<this.labourContractMin) throw new IllegalArgumentException();
-		if (this.labourContractMax==this.labourContractMin) return this.labourContractMin ;
-		return this.labourContractMin+getRandom().nextInt(this.labourContractMax-this.labourContractMin) ;
-	}
-
-	/**
-	 * Returns the vacancy rate (vacancies to expected workforce ratio).
-	 * @return a float that represents the vacancy rate.
-	 */
-	protected double getVacanciesRate() {
-		double vacancies = getAverage(this.vacanciesTimeSeries);
-		double workforceRequirement = getAverage(this.targetedWorkforceTimeSeries);
-		if (workforceRequirement==0) return 0;
-		return vacancies/workforceRequirement;
+		final int labourContractMax = (Integer) this.blackBoard.get(Labels.labourContractMax);
+		final int labourContractMin = (Integer) this.blackBoard.get(Labels.labourContractMin);
+		if (labourContractMax<labourContractMin) throw new IllegalArgumentException();
+		if (labourContractMax==labourContractMin) return labourContractMin ;
+		return labourContractMin+getRandom().nextInt(labourContractMax-labourContractMin) ;
 	}
 
 	/**
@@ -180,6 +161,17 @@ public class WorkforceManager extends JamelObject {
 	}
 
 	/**
+	 * Returns the vacancy rate (vacancies to expected workforce ratio).
+	 * @return a float that represents the vacancy rate.
+	 */
+	protected double getVacanciesRate() {
+		double vacancies = getAverage(this.vacanciesTimeSeries);
+		double workforceRequirement = getAverage(this.targetedWorkforceTimeSeries);
+		if (workforceRequirement==0) return 0;
+		return vacancies/workforceRequirement;
+	}
+
+	/**
 	 * Updates the wage offered.
 	 */
 	protected void updateWage() {
@@ -187,13 +179,12 @@ public class WorkforceManager extends JamelObject {
 			final Double randomWage = Circuit.getCircuit().getRandomWage() ;
 			if ( randomWage!=null ) 
 				this.offeredWage = randomWage ;
-			else this.offeredWage = defaultWage ;
+			else this.offeredWage = Double.parseDouble(Circuit.getParameter("Firms.wage.default")) ;
 		}
 		else {
-			//final float wageUpwardFlexibility = (Float) this.blackBoard.get(Labels.WAGE_UP_FLEX); DELETE
-			//final float wageDownwardFlexibility = (Float) this.blackBoard.get(Labels.WAGE_DOWN_FLEX); DELETE
-			final float wageUpwardFlexibility = Float.parseFloat(Circuit.getParameter("Firms.wageUpFlex"));
-			final float wageDownwardFlexibility = Float.parseFloat(Circuit.getParameter("Firms.wageDownFlex"));
+			final float wageUpwardFlexibility = Float.parseFloat(Circuit.getParameter("Firms.wage.upFlex"));
+			final float wageDownwardFlexibility = Float.parseFloat(Circuit.getParameter("Firms.wage.downFlex"));
+			final float normalVacancyRate = Float.parseFloat(Circuit.getParameter("Firms.vacancies.normalRate"));
 			final double currentVacancyRate = this.getVacanciesRate() ;
 			final float alpha1 = getRandom().nextFloat();
 			final float alpha2 = getRandom().nextFloat();
@@ -205,7 +196,7 @@ public class WorkforceManager extends JamelObject {
 				this.offeredWage=this.offeredWage*( 1f+alpha1*wageUpwardFlexibility) ; 
 			}
 		}
-		this.offeredWage = Math.max( this.offeredWage,Integer.parseInt(Circuit.getParameter("minimumWage"))) ;
+		this.offeredWage = Math.max( this.offeredWage,Integer.parseInt(Circuit.getParameter("Firms.wage.minimum"))) ;
 		if ( this.offeredWage==0 ) 
 			throw new RuntimeException("The wage is null.");
 	}

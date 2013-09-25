@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2013, Pascal Seppecher.
+ * (C) Copyright 2007-2013, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,8 +21,7 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
  */
 
 package jamel.spheres.monetarySphere;
@@ -60,8 +59,8 @@ public class Bank extends JamelObject implements AccountHolder {
 
 			/**
 			 * Creates a new regular check.
-			 * @param aAmount - the amount.
-			 * @param aPayee - the payee.
+			 * @param aAmount  the amount.
+			 * @param aPayee  the payee.
 			 */
 			private RegularCheck(long aAmount, AccountHolder aPayee) {
 				super(aAmount, aPayee);
@@ -261,7 +260,7 @@ public class Bank extends JamelObject implements AccountHolder {
 			private void downgrade() {
 				if (this.lQuality.isGood()) {
 					this.lQuality=Quality.DOUBTFUL;
-					this.lInterestRate=Bank.this.getPenaltyRate();
+					this.lInterestRate=Bank.this.penaltyRate;
 					return;
 				}
 				if (this.lQuality.isDoubtFul()) {
@@ -323,7 +322,6 @@ public class Bank extends JamelObject implements AccountHolder {
 					e.printStackTrace();
 					throw new RuntimeException("Borrower deposit can't be debited.");
 				}
-				//Bank.this.bTimeSeriesDataset.add(Labels.PAID_BACK_LOANS,repayment);
 				lLastRepayment = getCurrentPeriod().getValue();
 			}
 
@@ -503,17 +501,22 @@ public class Bank extends JamelObject implements AccountHolder {
 	/** The normal interest rate (monthly). */
 	private double pMonthlyInterestRate = 0;
 
+	/** The penalty interest rate (monthly). */
+	private double penaltyRate = 0;
+
 	/** The normal term of credits. */
 	private int pNormalTerm = 0;
 
 	/** The capital ratio targeted by the bank. */
 	private float pTargetedCapitalRatio = 0f;
 
+	/** The propensity to distribute the exceeding capital. */
+	private float propensityToDistributeCapitalExcess;
+
 	/**
 	 * Creates a new bank.
-	 * @param aScenario  the scenario of the simulation.
 	 */
-	public Bank(LinkedList<String> aScenario) { 
+	public Bank() { 
 		this.bankAccount = new BasicAccount(this); 
 		this.accountsList = new LinkedList<CurrentAccount>() ;
 	}
@@ -527,14 +530,6 @@ public class Bank extends JamelObject implements AccountHolder {
 		for (CurrentAccount account : accountsList )
 			if ( account.getDebtorStatus() != Quality.GOOD) doubtfulDebts+=account.getDebt()  ;
 		return doubtfulDebts ;
-	}
-
-	/**
-	 * Returns the penalty interest rate that must be paid on doubtful debts. 
-	 * @return - the penalty rate.
-	 */
-	private double getPenaltyRate() {
-		return pMonthlyInterestRate*2;
 	}
 
 	/**
@@ -561,6 +556,18 @@ public class Bank extends JamelObject implements AccountHolder {
 			totalLiabilities = totalLiabilities+aAccount.getAmount();
 		}
 		return totalLiabilities;
+	}
+
+	/**
+	 * Updates the exogenous parameters of the bank.
+	 */
+	private void updateParameters() {
+		this.pMonthlyInterestRate = yearly2Monthly(Float.parseFloat(Circuit.getParameter("Bank.rate.normal")));
+		this.penaltyRate = yearly2Monthly(Float.parseFloat(Circuit.getParameter("Bank.rate.penalty")));
+		this.pTargetedCapitalRatio = Float.parseFloat(Circuit.getParameter("Bank.capital.targetedRatio"));
+		this.propensityToDistributeCapitalExcess=Float.parseFloat(Circuit.getParameter("Bank.capital.propensityToDistributeExcess"));
+		this.pNormalTerm = Integer.parseInt(Circuit.getParameter("Bank.term"));
+		this.pAccommodating = Boolean.parseBoolean(Circuit.getParameter("Bank.accommodating"));
 	}
 
 	/**
@@ -616,6 +623,11 @@ public class Bank extends JamelObject implements AccountHolder {
 		this.accountsList.removeAll(bankruptList);				
 	}
 
+	@Override
+	public String getName() {
+		return "The bank";
+	}
+
 	/**
 	 * Returns a new account for the given holder. 
 	 * @param holder - the account holder.
@@ -658,16 +670,6 @@ public class Bank extends JamelObject implements AccountHolder {
 	}
 
 	/**
-	 * Updates the exogenous parameters of the bank.
-	 */
-	private void updateParameters() {
-		this.pMonthlyInterestRate = yearly2Monthly(Float.parseFloat(Circuit.getParameter("Bank.rate")));
-		this.pTargetedCapitalRatio = Float.parseFloat(Circuit.getParameter("Bank.targetedCapitalRatio"));
-		this.pNormalTerm = Integer.parseInt(Circuit.getParameter("Bank.term"));
-		this.pAccommodating = Boolean.parseBoolean(Circuit.getParameter("Bank.accommodating"));
-	}
-
-	/**
 	 * Pays the dividend to the bank owner.
 	 */
 	public void payDividend() {
@@ -677,7 +679,7 @@ public class Bank extends JamelObject implements AccountHolder {
 		final long totalAssets = this.getTotalAssets();
 		final long requiredCapital = (long)(totalAssets*this.pTargetedCapitalRatio);
 		final long excedentCapital = Math.max(0, ownCapital-requiredCapital);
-		long dividend = excedentCapital/12;	
+		long dividend = (long) (excedentCapital*propensityToDistributeCapitalExcess);	
 		if (dividend<0) throw new RuntimeException("Dividend must be positive.") ;
 		if (dividend>0) {
 			if (this.bankOwner==null)
@@ -700,11 +702,6 @@ public class Bank extends JamelObject implements AccountHolder {
 		if (this.bankOwner!=null) 
 			throw new RuntimeException("The bank owner is already defined.");  
 		this.bankOwner = capitalist;
-	}
-
-	@Override
-	public String getName() {
-		return "The bank";
 	}
 
 }

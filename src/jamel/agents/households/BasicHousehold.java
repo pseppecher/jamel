@@ -86,7 +86,7 @@ class BasicHousehold extends AbstractHousehold {
 	private final Account bankAccount ;
 
 	/** The data. */
-	private final HouseholdDataset data ;
+	protected final HouseholdDataset data ;
 
 	/** The flexibility of the reservation wage. */
 	private float flexibility;
@@ -95,7 +95,7 @@ class BasicHousehold extends AbstractHousehold {
 	private final TimeSeries incomeTimeSeries = new TimeSeries("Income");
 
 	/** The job contract. */
-	private EmploymentContract jobContract;
+	protected EmploymentContract jobContract;
 
 	/** The job offer that the household is applying for.*/
 	private JobOffer jobOffer;
@@ -103,11 +103,17 @@ class BasicHousehold extends AbstractHousehold {
 	/** The name of the household. */
 	private String name;
 
+	/** The propensity to consume excess saving. */
+	private float propensityToConsumeExcessSaving;
+
 	/** The resistance to a cut of the reservation wage. */
 	private int resistance;
 
 	/** The saving propensity. */
 	private float savingPropensity;
+
+	/** The ratio of targeted savings to annual income. */
+	private float savingRatioTarget;
 
 	/** The employers. */
 	protected final LinkedList<Employer> employers ;
@@ -226,9 +232,11 @@ class BasicHousehold extends AbstractHousehold {
 	 * using the values recorded in the parameter map.
 	 */
 	protected void updateParameters() {
-		this.savingPropensity = Float.parseFloat(Circuit.getParameter("Households.savingPropensity"));
-		this.flexibility = Float.parseFloat(Circuit.getParameter("Households.flexibility"));
-		this.resistance = Integer.parseInt(Circuit.getParameter("Households.resistance"));
+		this.savingPropensity = Float.parseFloat(Circuit.getParameter("Households.savings.propensityToSave"));
+		this.savingRatioTarget = Float.parseFloat(Circuit.getParameter("Households.savings.ratioTarget"));;
+		this.propensityToConsumeExcessSaving = Float.parseFloat(Circuit.getParameter("Households.savings.propensityToConsumeExcess"));
+		this.flexibility = Float.parseFloat(Circuit.getParameter("Households.wage.flexibility"));
+		this.resistance = Integer.parseInt(Circuit.getParameter("Households.wage.resistance"));
 	}
 
 	/**
@@ -287,13 +295,13 @@ class BasicHousehold extends AbstractHousehold {
 	@Override
 	public void consume() {
 		final long averageIncome = getAverageIncome();
-		final long savingsTarget = (long) (12*averageIncome*this.savingPropensity);
+		final long savingsTarget = (long) (12*averageIncome*this.savingRatioTarget);
 		final long savings = this.bankAccount.getAmount()-averageIncome;
 		long consumptionTarget;
 		if (savings<savingsTarget) 
 			consumptionTarget = (long) ((1.-this.savingPropensity)*averageIncome);
 		else
-			consumptionTarget = averageIncome + (savings-savingsTarget)/2;
+			consumptionTarget = (long) (averageIncome + (savings-savingsTarget)*propensityToConsumeExcessSaving);
 		long budget = Math.min(this.bankAccount.getAmount(),consumptionTarget);
 		this.data.setConsumptionBudget(budget);
 		updateProvidersList();
@@ -387,7 +395,7 @@ class BasicHousehold extends AbstractHousehold {
 
 	/**
 	 * Receives notification of his hiring.
-	 * @param contract - the employment contract.
+	 * @param contract  the employment contract.
 	 */
 	@Override
 	public void notifyHiring(EmploymentContract contract) {
@@ -423,8 +431,8 @@ class BasicHousehold extends AbstractHousehold {
 	}
 
 	/**
-	 * Receives a dividend from the bank.
-	 * @param check - the check.
+	 * Receives a dividend.
+	 * @param check  the check.
 	 */
 	@Override
 	public void receiveDividend(Check check) {
@@ -436,7 +444,7 @@ class BasicHousehold extends AbstractHousehold {
 
 	/**
 	 * Receives a wage from an employer.
-	 * @param check - the check.
+	 * @param check  the check.
 	 */
 	@Override
 	public void receiveWage(Check check) {

@@ -2,9 +2,9 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2011, Pascal Seppecher.
+ * (C) Copyright 2007-2013, Pascal Seppecher and contributors.
  * 
- * Project Info <http://p.seppecher.free.fr/jamel/>. 
+ * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
  * This file is a part of JAMEL (Java Agent-based MacroEconomic Laboratory).
  * 
@@ -21,8 +21,7 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
  */
 
 package jamel.util.data;
@@ -32,13 +31,13 @@ import java.util.LinkedList;
 /**
  * A dataset for the macroeconomic data of the current year.
  */
-public class YearDataset {
+public class YearDataset extends AbstractDataset{
 
 	/** The average price on the goods market last year. */
 	private Double lastFinalPrice;
 
-	/** anticipatedWorkforce */
-	public double workforceAnticipatedTotal;
+	/** bankruptcies */
+	public double bankruptcies;
 
 	/** bankruptciesFinal */
 	public int bankruptciesFinal;
@@ -49,9 +48,6 @@ public class YearDataset {
 	/** bankruptciesIntermediate */
 	public int bankruptciesIntermediate;
 
-	/** bankruptcies */
-	public double bankruptciesTotal;
-
 	/** bankruptcyRateAverage */
 	public double bankruptcyRateAverage;
 
@@ -61,14 +57,17 @@ public class YearDataset {
 	/** bankruptcyRateIntermediate */
 	public double bankruptcyRateIntermediate;
 
+	/** capacityUtilizationTotal */
+	public double capacityUtilization;
+
 	/** capacityUtilizationFinal */
 	public double capacityUtilizationFinal;
 
 	/** capacityUtilizationIntermediate */
 	public double capacityUtilizationIntermediate;
 
-	/** capacityUtilizationTotal */
-	public double capacityUtilizationTotal;
+	/** A string that represents the date at the format yyyy-mm. */
+	public String date;
 
 	/** productionVolume */
 	//public double productionVolume;
@@ -76,8 +75,8 @@ public class YearDataset {
 	/** productivity */
 	//public double productivity;
 
-	/** dividends */
-	public double dividends;
+	/** debt */
+	public long debt;
 
 	/** salesValue */
 	//public double salesValue;
@@ -91,23 +90,35 @@ public class YearDataset {
 	/** effectiveMarkup */
 	//public double effectiveMarkup;
 
+	/** deposits */
+	public long deposits;
+
+	/** dividends */
+	public long dividends;
+
+	/** doubtfulDebt */
+	public long doubtfulDebt;
+
 	/** firmsFinal */
 	public int firmsFinal;
 
 	/** firmsIntermediate */
 	public int firmsIntermediate;
 
+	/** workforce */
+	//public double workforce;
+
 	/** firmsTotal */
 	public int firmsTotal;
+
+	/** The gross profit. */
+	public long grossProfit;
 
 	/** households */
 	public double households;
 
 	/** income */
 	public double income;
-
-	/** workforce */
-	//public double workforce;
 
 	/** inflation */
 	public double inflation;
@@ -139,6 +150,9 @@ public class YearDataset {
 	/** moneyVelocity */
 	public double moneyVelocity;
 
+	/** The number of the period. */
+	public int period;
+
 	/** productionFinalVolume */
 	public long productionFinalVolume;
 
@@ -157,8 +171,14 @@ public class YearDataset {
 	/** salesFinalValue */
 	public long salesFinalValue;
 
+	/** wageBill */
+	//public double wageBill;
+
 	/** salesFinalVolume */
 	public long salesFinalVolume;
+
+	/** vacancies */
+	//public double vacancies;
 
 	/** salesIntermediateValue */
 	public long salesIntermediateValue;
@@ -172,17 +192,17 @@ public class YearDataset {
 	/** unemployed */
 	public double unemployed;
 
-	/** wageBill */
-	//public double wageBill;
-
 	/** unemploymentRate */
 	public double unemploymentRate;
 
-	/** vacancies */
-	//public double vacancies;
-
 	/** vacanciesRate */
 	public double vacanciesRate;
+
+	/** vacanciesTotal */
+	public long vacanciesTotal;
+
+	/** wageBillTotal */
+	public long wageBill;
 
 	/** wageBillFinal */
 	public long wageBillFinal;
@@ -190,11 +210,11 @@ public class YearDataset {
 	/** wageBillIntermediate */
 	public long wageBillIntermediate;
 
-	/** wageBillTotal */
-	public long wageBillTotal;
-
 	/** wageShare */
 	public double wageShare;
+
+	/** anticipatedWorkforce */
+	public double workforceAnticipatedTotal;
 
 	/** workforceFinal */
 	public long workforceFinal;
@@ -205,8 +225,17 @@ public class YearDataset {
 	/** workforceTotal */
 	public long workforceTotal;
 
-	/** vacanciesTotal */
-	public long vacanciesTotal;
+	/** employed */
+	public long employed;
+
+	/** Valeur total des biens finis et non finis en stock. */
+	public long inventoryTotalValue;
+
+	/** Dépôts des firmes. */
+	public long fDeposits;
+
+	/** Dépôts des ménages. */
+	public long hDeposits;
 
 	/**
 	 * Creates a new dataset.
@@ -222,11 +251,24 @@ public class YearDataset {
 	 * @param dataList - a list that contains the datasets of each month of the year.
 	 */
 	public void update(LinkedList<PeriodDataset> dataList) {
+		
+		this.period = getCurrentPeriod().getValue();
+		this.date = getCurrentPeriod().toString();
+		
 		for(PeriodDataset periodData: dataList) {
+			
+			this.debt += periodData.debtS1+periodData.debtS2;
+			this.doubtfulDebt += periodData.doubtDebtS1+periodData.doubtDebtS2;
+			this.deposits += periodData.DEPOSITS;
+			this.fDeposits += periodData.FIRMS_DEPOSITS;
+			this.hDeposits += periodData.HOUSEHOLDS_DEPOSITS;
+			
+			this.grossProfit += periodData.grossProfit;
 
 			this.dividends += periodData.DIVIDENDS;
 			this.households += periodData.HOUSEHOLDS;
 			this.unemployed += periodData.UNEMPLOYED;
+			this.employed += periodData.EMPLOYED;
 
 			this.bankruptciesFinal += periodData.bankruptS2;
 			this.bankruptciesIntermediate += periodData.bankruptS1;
@@ -255,10 +297,12 @@ public class YearDataset {
 
 			this.workforceFinal += periodData.workforceS2;
 			this.workforceIntermediate += periodData.workforceS1;
+			
+			this.inventoryTotalValue += periodData.INVENTORY_UNF_VALUE+periodData.INVENTORY_VALUE;
 
 		}
 
-		this.bankruptciesTotal = this.bankruptciesFinal + this.bankruptciesIntermediate;
+		this.bankruptcies = this.bankruptciesFinal + this.bankruptciesIntermediate;
 
 		this.firmsTotal = this.firmsFinal + this.firmsIntermediate;
 
@@ -266,28 +310,27 @@ public class YearDataset {
 
 		this.workforceTotal = this.workforceFinal + this.workforceIntermediate;
 
-		this.wageBillTotal = this.wageBillFinal + this.wageBillIntermediate;
+		this.wageBill = this.wageBillFinal + this.wageBillIntermediate;
 
-		this.income = this.wageBillTotal+this.dividends;
+		this.income = this.wageBill+this.grossProfit;
 
 		this.inventoryFinalVolumeDecember = dataList.getLast().invVolS2;
 		this.inventoryIntermediateVolumeDecember = dataList.getLast().invVolS1;
-
-
+		
 		this.bankruptcyRateFinal = 1200.*bankruptciesFinal/this.firmsFinal;
 		this.bankruptcyRateIntermediate = 1200.*bankruptciesIntermediate/this.firmsIntermediate;
-		this.bankruptcyRateAverage = 1200.*bankruptciesTotal/this.firmsTotal;
+		this.bankruptcyRateAverage = 1200.*bankruptcies/this.firmsTotal;
 
 		this.moneyVelocity = this.income/dataList.getLast().DEPOSITS;		
 		this.savingsRate = 100.*dataList.getLast().HOUSEHOLDS_DEPOSITS/this.income;
-		this.wageShare = 100.*this.wageBillTotal/this.income;
-		this.profitShare = 100.*this.dividends/this.income;
-		this.unemploymentRate = 100.*this.unemployed/this.households;		
+		this.wageShare = 100.*this.wageBill/this.income;
+		this.profitShare = 100.*this.grossProfit/this.income;
+		this.unemploymentRate = 100.*this.unemployed/(this.unemployed+this.employed);		
 		this.vacanciesRate = 100.*this.vacanciesTotal/ this.workforceAnticipatedTotal;
 
 		this.capacityUtilizationFinal = 100.*this.workforceFinal/this.machineryFinal;
 		this.capacityUtilizationIntermediate = 100.*this.workforceIntermediate/this.machineryIntermediate;
-		this.capacityUtilizationTotal = 100.*this.workforceTotal/this.machineryTotal;
+		this.capacityUtilization = 100.*this.workforceTotal/this.machineryTotal;
 
 		if (this.workforceFinal!=0)
 			this.productivityFinal = this.productionFinalVolume/this.workforceFinal;
@@ -300,7 +343,8 @@ public class YearDataset {
 			final double newPrice=value/volume;
 			if (lastFinalPrice!=null) {
 				final double inflation=100.*(newPrice-lastFinalPrice)/lastFinalPrice;
-				this.inflation = inflation;}
+				this.inflation = inflation;
+				}
 			lastFinalPrice=newPrice;
 		}
 
@@ -308,7 +352,7 @@ public class YearDataset {
 			this.markupIntermediate = 100.*this.salesIntermediateValue /this.wageBillIntermediate - 100.;
 		if (this.wageBillFinal!=0)
 			this.markupFinal = 100.*this.salesFinalValue /(this.wageBillFinal+this.salesIntermediateValue) - 100.;
-		if (this.wageBillTotal!=0)
+		if (this.wageBill!=0)
 			this.markupAverage = 100.*(this.salesFinalValue+this.salesIntermediateValue) /(this.wageBillIntermediate+this.wageBillFinal+this.salesIntermediateValue) - 100.;
 
 	}

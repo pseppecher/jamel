@@ -1,0 +1,11 @@
+<i>Scenario with a shock of consumption</i>
+
+include(inc/initbaseline.txt)
+
+Circuit.2040-01.marker(Shock)
+Circuit.2040-01.set(Households.savings:propensityToSave=0.15,ratioTarget=0.15)<i>// The previous (default) value was 0.05</i>
+
+Circuit.2100-01.pause()
+
+<i>Now, we can run the model:</i>
+

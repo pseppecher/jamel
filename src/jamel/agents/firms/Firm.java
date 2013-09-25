@@ -27,7 +27,6 @@
 
 package jamel.agents.firms;
 
-import java.util.LinkedList;
 import java.util.Map;
 
 import jamel.agents.roles.Employer;
@@ -81,9 +80,8 @@ public interface Firm extends Employer, Provider {
 	/** 
 	 * Opens the household for a new period.<br>
 	 * Initializes data and executes events.
-	 * @param eList - a list of strings that describes the events for the current period. 
 	 */
-	void open(LinkedList<String> eList);
+	void open();
 
 	/**
 	 * Pays the dividend.

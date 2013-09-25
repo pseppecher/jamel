@@ -32,9 +32,8 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
+import jamel.Circuit;
 import jamel.agents.firms.Labels;
 import jamel.agents.roles.Worker;
 import jamel.util.Blackboard;
@@ -46,9 +45,6 @@ import jamel.util.markets.EmploymentContract;
  * A factory encapsulates a machinery (= a collection of {@link Machine} objects).
  */
 abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
-
-	/** The inventory stock target (in number of month of production). */
-	private final static int inventoryStockTarget = 4; // TODO Should be a parameter.
 
 	/** 
 	 * The machine comparator.<p>
@@ -91,46 +87,23 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 	 */
 	public AbstractFactory(Blackboard blackBoard) {
 		this.blackboard = blackBoard;
-		setDefaultParameters();		
 		this.toolUp();
 	}
 	
-	/**
-	 * Adds some default parameters to blackboard.
-	 */
-	private void setDefaultParameters() {
-		final Map<String, Object> defaultParameters = this.getDefaultParameters();
-		for(Entry<String, Object> entry : defaultParameters.entrySet()) {
-			final String key = entry.getKey();
-			if (!this.blackboard.containsKey(key)) {
-				this.blackboard.put(key, entry.getValue());
-			}
-		}
-	}
-	
-	/**
-	 * Changes the productivity of all machines.
-	 * @param ratio the change ratio.
-	 */
-	@SuppressWarnings("unused")
-	private void changeProductivity(float ratio) {
-		for (Machine machine : machinery) machine.changeProductivity(ratio);
-	}
-
 	/**
 	 * Returns a fraction of the inventory.
 	 * @return a heap of goods.
 	 */
 	private Goods getProductForSale() {
 		final int volume = Math.min(
-				this.finishedGoodsInventory.getVolume()/2,
+				(int)(this.finishedGoodsInventory.getVolume()*(Float)this.blackboard.get(Labels.INVENTORIES_PROPENSITY_TO_SELL)),
 				this.maxProduction*2
 				) ;
 		if (volume==0)
 			return null;
 		return this.finishedGoodsInventory.newGoods(volume);
 	}
-
+	
 	/**
 	 * Returns the average theoretical productivity of the factory.
 	 * @return a double that represents the average theoretical productivity.
@@ -147,33 +120,13 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 	}
 
 	/**
-	 * Sets the production cycle time.<br>
-	 * The production cycle time of each machine within the factory is modified.
-	 * @param prodTime - the production cycle time to set.
-	 */
-	@SuppressWarnings("unused")
-	private void setProdTime(int prodTime) {
-		for (Machine machine : machinery) {
-			machine.setProdTime(prodTime);
-		}
-	}
-
-	/**
 	 * Tools up the factory with new machines.
 	 */
 	private void toolUp() {
-		final int machines = (Integer) this.blackboard.get(Labels.PARAM_FACTORY_MACHINES);
-		final int productivityMin = (Integer) this.blackboard.get(Labels.PARAM_FACTORY_PROD_MIN);
-		final int productivitymax =  (Integer) this.blackboard.get(Labels.PARAM_FACTORY_PROD_MAX);
-		final int productionTime =  (Integer) this.blackboard.get(Labels.PARAM_FACTORY_PRODUCTION_TIME);
+		final int machines = Integer.parseInt(Circuit.getParameter("Firms.machinery"));
 		if (machines == 0) new RuntimeException("The number of machines can't be nul.");
-		if (machines == 1) {
-			machinery.add(newMachine((productivityMin+productivitymax)/2, productionTime));
-			return;
-		}
 		for (int i = 0; i<machines; i++) {
-			int prod = productivityMin+(i*(productivitymax-productivityMin))/(machines-1);
-			machinery.add(newMachine(prod, productionTime));
+			machinery.add(newMachine());
 		}
 	}
 
@@ -188,12 +141,6 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 		this.blackboard.put(Labels.PRODUCTION_MAX,this.maxProduction);
 	}
 
-	/**
-	 * Returns a HashMap that contains the default parameters for this factory.
-	 * @return a HashMap.
-	 */
-	abstract protected Map<String, Object> getDefaultParameters();
-	
 	/**
 	 * Adds a new stock of commodity to the current stock of product.<br>
 	 * The new product value is its production cost.
@@ -236,11 +183,9 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 
 	/**
 	 * Returns a new machine with the given parameters.
-	 * @param productivity - the productivity.
-	 * @param productionTime - the production time.
 	 * @return a new machine.
 	 */
-	abstract protected Machine newMachine(int productivity, int productionTime);
+	abstract protected Machine newMachine();
 
 	@Override 
 	public void close() {
@@ -281,6 +226,7 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 		this.productionVolume = 0;
 		this.productionValue = 0;
 		updateMaxProduction();
+		final float inventoryStockTarget = Float.parseFloat(Circuit.getParameter("Firms.inventories.normalLevel"));
 		final float normalInventoryStockLevel = inventoryStockTarget *this.maxProduction;
 		final float currentInventoryStockLevel = this.finishedGoodsInventory.getVolume();
 		this.blackboard.put(Labels.INVENTORY_LEVEL_RATIO, currentInventoryStockLevel/normalInventoryStockLevel);
@@ -309,15 +255,6 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 		this.blackboard.put(Labels.PRODUCT_FOR_SALES, this.getProductForSale());
 		this.blackboard.put(Labels.PRODUCTION_VALUE, this.productionValue);
 		this.blackboard.put(Labels.PRODUCTION_VOLUME, this.productionVolume);
-	}
-
-	/**
-	 * Sets the productivity of the machines.
-	 * @param newProductivity - the productivity to set.
-	 */
-	@Override
-	public void setProductivity(int newProductivity) {
-		for (Machine machine : machinery) machine.setProductivity(newProductivity);
 	}
 	
 }

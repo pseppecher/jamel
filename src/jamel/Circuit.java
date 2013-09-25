@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2012, Pascal Seppecher.
+ * (C) Copyright 2007-2013, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,18 +21,19 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
  */
 
 package jamel;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 import javax.swing.JOptionPane;
 
@@ -62,9 +63,6 @@ public class Circuit extends JamelObject {
 	/** The circuit. */
 	private static Circuit circuit;
 
-	/** The line separator. */
-	final private static String rc = System.getProperty("line.separator");
-
 	/**
 	 * Returns the circuit.
 	 * @return the circuit.
@@ -93,14 +91,6 @@ public class Circuit extends JamelObject {
 	}
 
 	/**
-	 * Returns the legal minimum wage.
-	 * @return the legal minimum wage.
-	 */
-	/*public static double getminimumWage() {
-		return circuit.minimumWage;
-	}*/
-
-	/**
 	 * Returns a new bank account for the given account holder.
 	 * @param holder - the new account holder.
 	 * @return the new account.
@@ -115,7 +105,16 @@ public class Circuit extends JamelObject {
 	 * @return the parameter to which the specified key is mapped, or null if the circuit contains no mapping for the key.
 	 */
 	public static String getParameter(String key) {
-		return circuit.parameters.get(key);
+		final String value = circuit.parameters.get(key);
+		if (value==null) {
+			final String message = "Missing parameter: \""+key+"\"";
+			JOptionPane.showMessageDialog(null,
+					message,
+					"Scenario error",
+					JOptionPane.ERROR_MESSAGE);
+			throw new RuntimeException(message);
+		}
+		return value;
 	}
 
 	/**
@@ -210,6 +209,14 @@ public class Circuit extends JamelObject {
 	}
 
 	/**
+	 * Adds a new event to the scenario.
+	 * @param event  a string that contains the description of the event.
+	 */
+	public static void newEvent(String event) {
+		circuit.scenario.add(event);
+	}
+
+	/**
 	 * Sets the sate of the simulation (paused or running).
 	 * @param b a flag that indicates whether or not the simulation must be paused.
 	 */
@@ -243,9 +250,6 @@ public class Circuit extends JamelObject {
 	/** The balance sheet matrix. */
 	private final BalanceSheetMatrix matrix = new BalanceSheetMatrix();
 
-	/** The legal minimum wage. */
-	//private double minimumWage;
-
 	/** The output file. */
 	private File outputFile;
 
@@ -260,7 +264,7 @@ public class Circuit extends JamelObject {
 
 	/** The simulator. */
 	private final AbstractSimulator simulator;
-	
+
 	/** The time series collection. */
 	private final TimeseriesCollection timesSeriesCollection;
 
@@ -274,15 +278,13 @@ public class Circuit extends JamelObject {
 	 */
 	public Circuit(AbstractSimulator aSimulator, LinkedList<String> aScenario) {
 		circuit = this;
-		//System.out.println(aScenario.toString());
 		simulator = aSimulator;
 		this.scenario = getParametersList(aScenario,"Circuit","\\.");
-		getRandom().setSeed(0); // Why that ?
 		this.crossSectionSeries = new CrossSectionSeries();
 		this.timesSeriesCollection = new TimeseriesCollection();
-		this.bank = new Bank(getParametersList(aScenario,"Bank","\\."));
-		this.households = new HouseholdsSector(getParametersList(aScenario,"Households","\\."));
-		this.firms = new FirmsSector(getParametersList(aScenario,"Firms","\\."));
+		this.bank = new Bank();
+		this.households = new HouseholdsSector();
+		this.firms = new FirmsSector();
 	}
 
 	/**
@@ -334,10 +336,54 @@ public class Circuit extends JamelObject {
 					try {
 						String[] word = string.split("\\)",2);
 						String[] event = word[0].split("\\(",2);
-						if (event[0].equals("set"))
-							setParameters(event[1].split(","));
+						if (event[0].equals("setRandomSeed")) {
+							final int seed = Integer.parseInt(event[1]);
+							setRandom(new Random(seed));
+							//getRandom().setSeed(seed);
+							this.randomSeed = seed;						
+						}
+						else if (event[0].equals("set"))
+							setParameters(event[1]);
+						else if (event[0].equals("newHouseholds")) {
+							this.households.newHouseholds(event[1].split(","));
+						}
+						else if (event[0].equals("newFirms")) {
+							this.firms.newFirms(event[1]);				
+						}
+						else if (event[0].equals("setWindowRange")) {
+							simulator.zoom(Integer.parseInt(event[1]));
+						}
+						else if (event[0].equals("exportAnnualData")) {
+							simulator.export(this.yearDataset,event[1]);
+						}
+						else if (event[0].equals("exportMonthlyData")) {
+							simulator.export(this.data.getLast(),event[1]);
+						}
+						else if (event[0].equals("exportYearDataEachYear")) {
+							simulator.export(event[1]);
+							simulator.export(this.yearDataset,event[1]);
+							final String s=getCurrentPeriod().getNewPeriod(12).toString()+".exportYearDataEachYear2("+event[1]+")";
+							this.scenario.addLast(s);
+						}
+						else if (event[0].equals("exportYearDataEachYear2")) {
+							simulator.export(this.yearDataset,event[1]);
+							final String s=getCurrentPeriod().getNewPeriod(12).toString()+".exportYearDataEachYear2("+event[1]+")";
+							this.scenario.addLast(s);
+						}
+						else if (event[0].equals("exportMonthlyDataEachPeriod")) {
+							simulator.export(event[1]);
+							simulator.export(this.data.getLast(),event[1]);
+							final String s=getCurrentPeriod().next().toString()+".exportMonthlyDataEachPeriod2("+event[1]+")";
+							this.scenario.addLast(s);
+						}
+						else if (event[0].equals("exportMonthlyDataEachPeriod2")) {
+							simulator.export(this.data.getLast(),event[1]);
+							final String s=getCurrentPeriod().next().toString()+".exportMonthlyDataEachPeriod2("+event[1]+")";
+							this.scenario.addLast(s);
+						}
 						else if (event[0].equals("print")) {
-							this.write(event[1].split(","));
+							throw new RuntimeException("Invalid instruction: \"print\".");// DELETE ??? to verify
+							//this.write(event[1].split(","));
 						}
 						else if (event[0].equals("printEachFirm")) {
 							String context = "randomSeed,period,date";
@@ -368,16 +414,30 @@ public class Circuit extends JamelObject {
 						}
 						else 
 							throw new RuntimeException("Unknown event \""+event[0]+"\".");
-					} catch (Exception e) {
+					} catch (NoSuchMethodException e) {
 						e.printStackTrace();
-						JOptionPane.showMessageDialog(null,
-								"<html>" +
-										"Circuit event: Error in the instruction \""+string+"\".<br>"+
-										"Date: "+getCurrentPeriod().toString()+".<br>"+
-										"Cause: "+e.toString()+"<br>"+
-										"Please see server.log for more details.</html>",
-										"Warning",
-										JOptionPane.WARNING_MESSAGE);
+						warningDialog("Circuit event: Error in the instruction \""+string+"\".<br>Date: "+getCurrentPeriod().toString()+".<br>",e.toString());
+					} catch (ClassNotFoundException e) {
+						e.printStackTrace();
+						warningDialog("Circuit event: Error in the instruction \""+string+"\".<br>Date: "+getCurrentPeriod().toString()+".<br>",e.toString());
+					} catch (NumberFormatException e) {
+						e.printStackTrace();
+						warningDialog("Circuit event: Error in the instruction \""+string+"\".<br>Date: "+getCurrentPeriod().toString()+".<br>",e.toString());
+					} catch (IllegalArgumentException e) {
+						e.printStackTrace();
+						warningDialog("Circuit event: Error in the instruction \""+string+"\".<br>Date: "+getCurrentPeriod().toString()+".<br>",e.toString());
+					} catch (SecurityException e) {
+						e.printStackTrace();
+						warningDialog("Circuit event: Error in the instruction \""+string+"\".<br>Date: "+getCurrentPeriod().toString()+".<br>",e.toString());
+					} catch (InstantiationException e) {
+						e.printStackTrace();
+						warningDialog("Circuit event: Error in the instruction \""+string+"\".<br>Date: "+getCurrentPeriod().toString()+".<br>",e.toString());
+					} catch (IllegalAccessException e) {
+						e.printStackTrace();
+						warningDialog("Circuit event: Error in the instruction \""+string+"\".<br>Date: "+getCurrentPeriod().toString()+".<br>",e.toString());
+					} catch (InvocationTargetException e) {
+						e.printStackTrace();
+						warningDialog("Circuit event: Error in the instruction \""+string+"\".<br>Date: "+getCurrentPeriod().toString()+".<br>",e.toString());
 					}
 				}
 			}
@@ -388,22 +448,31 @@ public class Circuit extends JamelObject {
 	}
 
 	/**
-	 * Sets the parameters of the circuit.
-	 * @param parameters - an array of strings that contain parameters.
-	 * TODO cette méthode doit être simplifiée. Elle doit se contenter d'enregistrer les paramètres dans la hashmap (15/07/13). 
+	 * Displays a warning message.
+	 * @param string the message.
+	 * @param string2 the cause.
 	 */
-	private void setParameters(String[] parameters) {
-		for(final String line:parameters) {
-			final String[] parameter = line.split("=",2);
-			if (parameter[0].equals("range")) simulator.zoom(Integer.parseInt(parameter[1]));
-			else if (parameter[0].equals("randomSeed")) {
-				final int seed = Integer.parseInt(parameter[1]);
-				getRandom().setSeed(seed);
-				this.randomSeed = seed;
-			}
-			else {
-				this.parameters.put(parameter[0], parameter[1]);
-			}
+	static private void warningDialog(String string, String string2) {
+		JOptionPane.showMessageDialog(null,
+				"<html>" +
+						string+
+						"Cause: "+string2+"<br>"+
+						"Please see server.log for more details.</html>",
+						"Warning",
+						JOptionPane.WARNING_MESSAGE);
+	}
+
+	/**
+	 * Sets the parameters of the circuit.
+	 * @param parameters  an array of strings that contain parameters.
+	 */
+	private void setParameters(String parameters) {
+		final String[] line = parameters.split(":",2);
+		final String radical = line[0];
+		final String[] values = line[1].split(",");
+		for(final String param:values) {
+			final String[] parameter = param.split("=",2);
+			this.parameters.put(radical+"."+parameter[0], parameter[1]);
 		}		
 	}
 
@@ -411,9 +480,12 @@ public class Circuit extends JamelObject {
 	 * Imprime dans le fichier de sortie les variables demandées.
 	 * Utilisé pour les analyses de sensibilité.
 	 * @param keyArray  le tableau qui contient le nom des variables à imprimer.
+	 * TODO vérifier l'utilité.
 	 */
-	private void write(String[] keyArray) {
-		try {
+	@SuppressWarnings("static-method")
+	private void write(String[] keyArray) {		
+		throw new RuntimeException("This method should not be called.");
+		/*try {
 			final FileWriter writer = new FileWriter(outputFile,true);
 			for (String key:keyArray) {
 				String value = null;
@@ -429,7 +501,7 @@ public class Circuit extends JamelObject {
 		} catch (IOException e) {
 			e.printStackTrace();
 			throw new RuntimeException("Error while writing data in the output file.");
-		}
+		}*/
 	}
 
 	/**

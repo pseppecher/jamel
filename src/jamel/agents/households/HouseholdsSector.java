@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2012, Pascal Seppecher.
+ * (C) Copyright 2007-2013, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,13 +21,11 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
  */
 
 package jamel.agents.households;
 
-import jamel.Circuit;
 import jamel.JamelObject;
 import jamel.agents.roles.CapitalOwner;
 import jamel.agents.roles.Consumer;
@@ -50,27 +48,49 @@ public class HouseholdsSector extends JamelObject {
 	/** The list of the households. */
 	private final LinkedList<Household> householdsList ;
 
-	/** The scenario. */
-	private final LinkedList<String> scenario;
-
 	/**
 	 * Creates a new households sector.
-	 * @param aScenario - a list of strings that contain the description of the events.
 	 */
-	public HouseholdsSector(LinkedList<String> aScenario) { 
+	public HouseholdsSector() { 
 		this.householdsList = new LinkedList<Household>() ;
-		this.scenario = aScenario;
-		//JamelSimulator.println("Households sector: ok.");
+	}
+
+	/**
+	 * Closes the sector.<br>
+	 * Each household is closed. 
+	 * The macro data are updated.
+	 * @param macroData - the macro dataset.
+	 */
+	public void close(PeriodDataset macroData) {
+		for (Household aHousehold : householdsList) 
+			aHousehold.close() ;
+		macroData.compileHouseholdsData(householdsList);
+	}
+
+	/**
+	 * Calls up each consumer to consume. 
+	 */
+	public void consume() {
+		for (Consumer selectedConsumer : householdsList)
+			selectedConsumer.consume() ;		
+	}
+
+	/**
+	 * Calls up each worker to job search. 
+	 */
+	public void jobSearch() {
+		for (Worker selectedWorker : householdsList)
+			selectedWorker.jobSearch() ;		
 	}
 
 	/**
 	 * Creates new households.
-	 * @param parameters - an array of strings that must contain :
+	 * @param parameters  an array of strings that must contain :
 	 * the number of households to create, 
 	 * the type of household to create,
 	 * and possibly other parameters.
 	 */
-	private void newHouseholds(String[] parameters) {
+	public void newHouseholds(String[] parameters) {
 		Integer newHouseholds = null;
 		String householdClassName = null;
 		for(String parameter : parameters) {
@@ -103,52 +123,11 @@ public class HouseholdsSector extends JamelObject {
 	}
 
 	/**
-	 * Closes the sector.<br>
-	 * Each household is closed. 
-	 * The macro data are updated.
-	 * @param macroData - the macro dataset.
-	 */
-	public void close(PeriodDataset macroData) {
-		for (Household aHousehold : householdsList) 
-			aHousehold.close() ;
-		macroData.compileHouseholdsData(householdsList);
-	}
-
-	/**
-	 * Calls up each consumer to consume. 
-	 */
-	public void consume() {
-		for (Consumer selectedConsumer : householdsList)
-			selectedConsumer.consume() ;		
-	}
-
-	/**
-	 * Calls up each worker to job search. 
-	 */
-	public void jobSearch() {
-		for (Worker selectedWorker : householdsList)
-			selectedWorker.jobSearch() ;		
-	}
-
-	/**
 	 * Opens the firms sector.<br>
 	 * Each firm is opened.
 	 */
 	public void open() {
 		Collections.shuffle(householdsList, getRandom());
-		final String date = getCurrentPeriod().toString();
-		final LinkedList<String> eList = Circuit.getParametersList(this.scenario, date, "\\.");
-		final LinkedList<String> eList2 = new LinkedList<String>();
-		if (!eList.isEmpty()) {
-			for (String string: eList){
-				String[] word = string.split("\\)",2);
-				String[] event = word[0].split("\\(",2);
-				if (event[0].equals("new"))
-					newHouseholds(event[1].split(","));
-				else 
-					eList2.add(string);// TODO à revoir : c'est inutile maintenant que les ménages ne reçoivent plus d'événements.
-			}
-		}
 		for (Household selectedHousehold : householdsList) {
 			selectedHousehold.open() ;
 		}

@@ -38,8 +38,8 @@ public interface CapitalOwner extends AccountHolder {
 
 	/**
 	 * Receives a check for the dividend payment.
-	 * @param cheque for the dividend.
+	 * @param check for the dividend.
 	 */
-	void receiveDividend(Check cheque);
+	void receiveDividend(Check check);
 	
 }

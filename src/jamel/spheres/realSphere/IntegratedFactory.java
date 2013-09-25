@@ -27,12 +27,7 @@
 
 package jamel.spheres.realSphere;
 
-
-import jamel.agents.firms.Labels;
 import jamel.util.Blackboard;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents a factory that produces final goods.
@@ -76,7 +71,7 @@ public class IntegratedFactory extends AbstractFactory {
 			 * Creates a new production process.
 			 */
 			private Process() {
-				super(DefaultMachine.this.productivity,DefaultMachine.this.productionTime);
+				super(DefaultMachine.this.getProductivity(),DefaultMachine.this.getProductionTime());
 			}
 
 			/**
@@ -96,15 +91,6 @@ public class IntegratedFactory extends AbstractFactory {
 				}
 			}	
 		
-		}
-
-		/**
-		 * Creates a new machine with the given productivity.
-		 * @param productivity the productivity.
-		 * @param productionTime the production cycle time.
-		 */
-		private DefaultMachine(int productivity, int productionTime) {
-			super(productivity, productionTime);
 		}
 
 		/**
@@ -128,20 +114,6 @@ public class IntegratedFactory extends AbstractFactory {
 	}
 
 	/**
-	 * Returns a HashMap that contains the default parameters for this factory.
-	 * @return a HashMap.
-	 */
-	@Override
-	protected Map<String, Object> getDefaultParameters() {
-		final Map<String, Object> map2 = new HashMap<String, Object>();
-		map2.put(Labels.PARAM_FACTORY_MACHINES, "10");		
-		map2.put(Labels.PARAM_FACTORY_PROD_MIN, "100");		
-		map2.put(Labels.PARAM_FACTORY_PROD_MAX, "100");		
-		map2.put(Labels.PARAM_FACTORY_PRODUCTION_TIME, "8");
-		return map2;
-	}		
-
-	/**
 	 * Returns the max level of production according to the current resources of the factory. 
 	 * @return 100.
 	 */
@@ -160,11 +132,12 @@ public class IntegratedFactory extends AbstractFactory {
 	}
 
 	/**
-	 * 
+	 * Returns a new machine.
+	 * @return a new machine.
 	 */
 	@Override
-	protected Machine newMachine(int productivity, int productionTime) {
-		return new DefaultMachine(productivity, productionTime);
+	protected Machine newMachine() {
+		return new DefaultMachine();
 	}
 
 	/**

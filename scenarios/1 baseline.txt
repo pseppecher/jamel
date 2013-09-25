@@ -1,0 +1,11 @@
+<i>Scenario one sector</i>
+
+include(inc/initbaseline.txt)
+
+//Circuit.2000-02.exportMonthlyDataEachPeriod(%date,%priceFinalMax,%priceFinalMedian,%priceFinalMinimum,%MAX_REGULAR_WAGE,%MEDIAN_WAGE,%MIN_REGULAR_WAGE,%inventoryFinalLevel,%finalCapUtil,%FIRMS_DEPOSITS,%HOUSEHOLDS_DEPOSITS,%capitalBank,%CAPITAL_ADEQUACY_RATIO,%DOUBTFUL_DEBTS_RATIO,%BANK_DIVIDEND)
+//Circuit.2001-01.exportYearDataEachYear(%date,%unemploymentRate,%vacanciesRate,%inflation,%profitShare,%wageShare,%bankruptcies,%moneyVelocity)
+
+Circuit.2050-01.pause()
+
+<i>Now, we can run the model:</i>
+

@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2013, Pascal Seppecher.
+ * (C) Copyright 2007-2013, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -36,7 +36,6 @@ import java.util.Date;
 import java.util.LinkedList;
 import java.util.Scanner;
 
-import javax.swing.JFileChooser;
 import javax.swing.SwingUtilities;
 
 import org.jfree.data.time.Month;
@@ -44,7 +43,7 @@ import org.jfree.data.time.Month;
 /**
  * The main class of Jamel.  
  */
-public class Simulator implements AbstractSimulator {
+public class Simulator extends AbstractSimulator {
 
 	/**
 	 * Read the file and returns its content as a list of strings. 
@@ -61,7 +60,6 @@ public class Simulator implements AbstractSimulator {
 				if (truc1[0].equals("include")) {
 					final String[] truc2 = truc1[1].split("\\)");
 					final String fileName=file.getParent()+"/"+truc2[0];
-					//System.out.println(fileName);
 					final File file2 = new File(fileName);
 					parameters.addAll(getParametersFrom(file2));
 				}
@@ -78,26 +76,6 @@ public class Simulator implements AbstractSimulator {
 	}
 
 	/**
-	 * Returns the file scenario selected by the user.
-	 * @return the file selected.
-	 */
-	private static File selectScenario() {
-		final JFileChooser fc = new JFileChooser();
-		final File dir = new File("scenarios/");
-		final File file;
-		fc.setDialogTitle("Open Scenario");
-		fc.setCurrentDirectory(dir);
-		final int returnVal = fc.showOpenDialog(null);
-		if (returnVal==JFileChooser.APPROVE_OPTION) {
-			file = fc.getSelectedFile();
-		}
-		else {
-			file=null;
-		}
-		return file;		
-	}
-
-	/**
 	 * The main method.
 	 * @param args - the arguments.
 	 */
@@ -111,11 +89,8 @@ public class Simulator implements AbstractSimulator {
 		System.out.println("Duration: "+((new Date()).getTime()-start)/1000.) ;
 	}
 
-	/** A flag that indicates wheter or not the simulation is paused. */
+	/** A flag that indicates whether or not the simulation is paused. */
 	private boolean pause=true;
-
-	/** A flag that indicates whether or not the simulation is running. */
-	private boolean run=false;
 
 	/** The application window. */
 	private JamelWindow window=null;
@@ -127,8 +102,8 @@ public class Simulator implements AbstractSimulator {
 	 */
 	public Simulator(String name, LinkedList<String> parameters) {
 		JamelObject.setTimer(new Timer());
-		//JamelObject.setRandom(new Random());
 		JamelObject.setScenarioFileName(name);
+		this.name=name;
 		final Circuit circuit = new Circuit(this, parameters);
 		this.window = new JamelWindow();
 		this.window.setSelectedTab(5);
@@ -170,6 +145,11 @@ public class Simulator implements AbstractSimulator {
 		for(String string: strings) {
 			println(string);
 		}
+	}
+
+	@Override
+	int getSimulationId() {
+		return 0;
 	}
 
 	/* (non-Javadoc)

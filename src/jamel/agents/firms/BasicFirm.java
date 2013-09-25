@@ -29,7 +29,6 @@ package jamel.agents.firms;
 
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -59,9 +58,6 @@ import jamel.util.markets.JobOffer;
  */
 public class BasicFirm extends JamelObject implements Firm {
 
-	/** The bank account of the firm. */
-	protected final Account account ;
-
 	/** A flag that indicates whether the firm is bankrupt or not. */
 	private boolean bankrupt;
 
@@ -77,11 +73,11 @@ public class BasicFirm extends JamelObject implements Firm {
 	/** The purchasing manager. */
 	final private PurchasingManager purchasingManager;
 
-	/** The reserve target. */
-	private float reserveTarget = 0.2f;
-
 	/** The store. */
 	private final StoreManager storeManager ;
+
+	/** The bank account of the firm. */
+	protected final Account account ;
 
 	/** A map that contains the information shared with the managers. */
 	protected final Blackboard blackboard = new Blackboard();
@@ -111,7 +107,6 @@ public class BasicFirm extends JamelObject implements Firm {
 			String aName, 
 			CapitalOwner owner,
 			Map<String,String> someParameters) {
-		this.defaultParameters();
 		this.parseParameters(someParameters);
 		this.init();
 		this.name = aName ;
@@ -131,28 +126,36 @@ public class BasicFirm extends JamelObject implements Firm {
 	 * @return a long that represents the dividend.
 	 */
 	private long calculateDividend() {
+		final Float reserveTarget = (Float) this.blackboard.get(Labels.CAPITAL_RATIO);
+		final Float propensityToDistributeExcessCapital = (Float) this.blackboard.get(Labels.CAPITAL_PROPENSITY_TO_DISTRIBUTE);
 		long retainedEarnings = this.getNetWorth();
 		if (retainedEarnings<=0) return 0;
-		long retainedEarningsTarget = (long) (
-				(this.account.getDebt()+retainedEarnings)
-				*BasicFirm.this.reserveTarget );
+		long retainedEarningsTarget = (long) ((this.account.getDebt()+retainedEarnings)*reserveTarget );
 		if (retainedEarnings<=retainedEarningsTarget) return 0;
-		return (retainedEarnings-retainedEarningsTarget)/6;
+		return (long) ((retainedEarnings-retainedEarningsTarget)*propensityToDistributeExcessCapital);
 	}
 
 	/**
-	 * Sets the default parameters.
-	 * TODO Cleanup
+	 * Extracts the value associated with the given key in the blackboard and records it in the map.
+	 * @param params  the map.
+	 * @param key  the key.
+	 * TODO UTILE ?
 	 */
-	private void defaultParameters() {
-		this.blackboard.put(Labels.PARAM_FACTORY_MACHINES, 10,null);
-		//this.blackboard.put(Labels.PRICE_FLEXIBILITY, 0.1f,null); DELETE
-		this.blackboard.put(Labels.PARAM_FACTORY_PROD_MAX, 100,null);
-		this.blackboard.put(Labels.PARAM_FACTORY_PROD_MIN, 100,null);
-		this.blackboard.put(Labels.PARAM_FACTORY_PRODUCTION_TIME, 4,null);
-		this.blackboard.put(Labels.PRODUCTION, ProductionType.integratedProduction,null);
-		//this.blackboard.put(Labels.WAGE_DOWN_FLEX, 0.02f,null); DELETE
-		//this.blackboard.put(Labels.WAGE_UP_FLEX, 0.03f,null); DELETE
+	private void putParam(Map<String, Object> params, String key) {
+		if (!this.blackboard.containsKey(key))
+			throw new RuntimeException("Key not found: "+key);
+		params.put(key,this.blackboard.get(key));		
+	}
+
+	/**
+	 * Updates the parameters of the firm.
+	 */
+	private void updateParameters() {
+		this.blackboard.put(Labels.labourContractMax, Integer.parseInt(Circuit.getParameter("Firms."+Labels.labourContractMax)));
+		this.blackboard.put(Labels.labourContractMin, Integer.parseInt(Circuit.getParameter("Firms."+Labels.labourContractMin)));
+		this.blackboard.put(Labels.CAPITAL_RATIO, Float.parseFloat(Circuit.getParameter("Firms."+Labels.CAPITAL_RATIO)));
+		this.blackboard.put(Labels.CAPITAL_PROPENSITY_TO_DISTRIBUTE, Float.parseFloat(Circuit.getParameter("Firms."+Labels.CAPITAL_PROPENSITY_TO_DISTRIBUTE)));
+		this.blackboard.put(Labels.INVENTORIES_PROPENSITY_TO_SELL, Float.parseFloat(Circuit.getParameter("Firms."+Labels.INVENTORIES_PROPENSITY_TO_SELL)));
 	}
 
 	/**
@@ -177,7 +180,7 @@ public class BasicFirm extends JamelObject implements Firm {
 
 	/**
 	 * Returns the net worth.<br>
-	 * The net worth of the firm = total assets minus total liabilities = retained earnings.
+	 * The net worth of the firm = total assets - total liabilities = retained earnings.
 	 * @return a long.
 	 */
 	protected long getNetWorth() {
@@ -248,14 +251,6 @@ public class BasicFirm extends JamelObject implements Firm {
 	protected void parseParameters(Map<String, String> params) {
 		final Set<String> integers = new HashSet<String>();
 		final Set<String> floats = new HashSet<String>();
-		integers.add(Labels.PARAM_FACTORY_MACHINES);
-		//floats.add(Labels.PRICE_FLEXIBILITY); DELETE
-		integers.add(Labels.PARAM_FACTORY_PROD_MAX);
-		integers.add(Labels.PARAM_FACTORY_PROD_MIN);
-		integers.add(Labels.PARAM_FACTORY_PRODUCTION_TIME);
-		floats.add(Labels.TECH_COEFF);
-		//floats.add(Labels.WAGE_DOWN_FLEX); DELETE
-		//floats.add(Labels.WAGE_UP_FLEX); DELETE
 		for(Entry<String, String> entry : params.entrySet()) {
 			final String key = entry.getKey();
 			final String value = entry.getValue();
@@ -298,7 +293,7 @@ public class BasicFirm extends JamelObject implements Firm {
 		data.machinery=(Integer)this.blackboard.get(Labels.MACHINERY);
 		data.prodVol=(Integer)this.blackboard.get(Labels.PRODUCTION_VOLUME);
 		data.prodVal=(Long)this.blackboard.get(Labels.PRODUCTION_VALUE);
-		data.reserveTarget=this.reserveTarget;
+		data.reserveTarget=(Float)this.blackboard.get(Labels.CAPITAL_RATIO);
 		data.salesPVal=(Long) this.blackboard.get(Labels.SALES_VALUE);
 		data.salesCVal=(Long) this.blackboard.get(Labels.COST_OF_GOODS_SOLD);
 		data.salesVol=(Integer) this.blackboard.get(Labels.SALES_VOLUME);
@@ -391,38 +386,20 @@ public class BasicFirm extends JamelObject implements Firm {
 	/**
 	 * Returns a map that contains the parameters of the firm.
 	 * @return a map that contains the parameters of the firm.
-	 * TODO cleanup
+	 * TODO UTILE ?
 	 */
-	/*public Map<String, String> getParameters() {
-		final Map<String, String> params = new HashMap<String, String>();
+	public Map<String, Object> getParameters() {
+		final Map<String, Object> params = new HashMap<String, Object>();
 		params.put("type",this.getClass().getName());
-		params.put(Labels.PARAM_FACTORY_MACHINES,this.blackboard.get(Labels.PARAM_FACTORY_MACHINES).toString());
-		params.put(Labels.PRICE_FLEXIBILITY,this.blackboard.get(Labels.PRICE_FLEXIBILITY).toString());
-		params.put(Labels.PARAM_FACTORY_PROD_MAX,this.blackboard.get(Labels.PARAM_FACTORY_PROD_MAX).toString());
-		params.put(Labels.PARAM_FACTORY_PROD_MIN,this.blackboard.get(Labels.PARAM_FACTORY_PROD_MIN).toString());
-		params.put(Labels.PARAM_FACTORY_PRODUCTION_TIME,this.blackboard.get(Labels.PARAM_FACTORY_PRODUCTION_TIME).toString());
-		params.put(Labels.PRODUCTION,this.blackboard.get(Labels.PRODUCTION).toString());
-		params.put(Labels.WAGE_DOWN_FLEX,this.blackboard.get(Labels.WAGE_DOWN_FLEX).toString());
-		params.put(Labels.WAGE_UP_FLEX,this.blackboard.get(Labels.WAGE_UP_FLEX).toString());
-		if (this.blackboard.get(Labels.TECH_COEFF)!=null)
-			params.put(Labels.TECH_COEFF,this.blackboard.get(Labels.TECH_COEFF).toString());
+		putParam(params,Labels.PRODUCTION);
 		return params;
-	}*/
+	}
 
 	@Override
 	public String getParametersString() {// TODO utiliser ici getParameters(); CLEANUP !
 		String string = 
 				"type="+this.getClass().getName()+
-				","+Labels.PARAM_FACTORY_MACHINES+"="+this.blackboard.get(Labels.PARAM_FACTORY_MACHINES).toString()+
-				//","+Labels.PRICE_FLEXIBILITY+"="+this.blackboard.get(Labels.PRICE_FLEXIBILITY).toString()+DELETE
-				","+Labels.PARAM_FACTORY_PROD_MAX+"="+this.blackboard.get(Labels.PARAM_FACTORY_PROD_MAX).toString()+
-				","+Labels.PARAM_FACTORY_PROD_MIN+"="+this.blackboard.get(Labels.PARAM_FACTORY_PROD_MIN).toString()+
-				","+Labels.PARAM_FACTORY_PRODUCTION_TIME+"="+this.blackboard.get(Labels.PARAM_FACTORY_PRODUCTION_TIME).toString()+
 				","+Labels.PRODUCTION+"="+this.blackboard.get(Labels.PRODUCTION).toString();
-				//","+Labels.WAGE_DOWN_FLEX+"="+this.blackboard.get(Labels.WAGE_DOWN_FLEX).toString()+DELETE
-				//","+Labels.WAGE_UP_FLEX+"="+this.blackboard.get(Labels.WAGE_UP_FLEX).toString();DELETE
-		if (this.blackboard.get(Labels.TECH_COEFF)!=null)
-			string = string+","+Labels.TECH_COEFF+"="+this.blackboard.get(Labels.TECH_COEFF).toString();
 		return string;
 	}
 
@@ -479,29 +456,15 @@ public class BasicFirm extends JamelObject implements Firm {
 
 	/** 
 	 * Opens the firm for a new period.<br>
-	 * Initializes data and executes events.
-	 * @param eList - a list of strings that describes the events for the current period. 
+	 * Initializes data.
 	 */
 	@Override
-	public void open(LinkedList<String> eList) {
+	public void open() {
 		if (bankrupt)
 			throw new RuntimeException("Bankrupted.");
 		this.blackboard.cleanUp();
+		updateParameters();
 		this.data = new FirmDataset();
-		for (String string: eList){
-			String[] word = string.split("\\)",2);
-			String[] event = word[0].split("\\(",2);
-			if (event[0].equals("set")) {
-				final String[] parameters = event[1].split(",");
-				final Map<String, String> params = new HashMap<String, String>();
-				for (String p:parameters) {
-					String[] words = p.split("=", 2);
-					params.put(words[0], words[1]);
-				}
-			}
-			else 
-				throw new RuntimeException("Unknown event \""+event[0]+"\".");
-		}
 		if (this.purchasingManager!=null) this.purchasingManager.open();
 		this.workforceManager.open();
 		this.factory.open();
@@ -516,7 +479,7 @@ public class BasicFirm extends JamelObject implements Firm {
 			throw new RuntimeException("Bankrupted.");
 		long dividend = calculateDividend();
 		if (dividend<0) 
-			throw new IllegalArgumentException("Negative dividend.");
+			throw new RuntimeException("Negative dividend.");
 		dividend = Math.min(dividend,this.account.getAmount());
 		if ( dividend!=0 ) {
 			if ( this.account.getDebtorStatus()!=Quality.GOOD ) 
@@ -545,7 +508,7 @@ public class BasicFirm extends JamelObject implements Firm {
 		this.financeProduction();
 		this.workforceManager.newJobOffer();
 	}
-
+	
 	/**
 	 * Produces.
 	 */
@@ -570,38 +533,6 @@ public class BasicFirm extends JamelObject implements Firm {
 			throw new RuntimeException("Bankrupted.");
 		Goods sale = this.storeManager.sell( offer, volume, check );
 		return sale;
-	}
-	
-	/**
-	 * Extracts the value associated with the given key in the blackboard and records it in the map.
-	 * @param params  the map.
-	 * @param key  the key.
-	 */
-	private void putParam(Map<String, Object> params, String key) {
-		if (!this.blackboard.containsKey(key))
-			throw new RuntimeException("Key not found: "+key);
-		params.put(key,this.blackboard.get(key));		
-	}
-
-	/**
-	 * Returns a map that contains the parameters of the firm.
-	 * @return a map that contains the parameters of the firm.
-	 * TODO CLEANUP
-	 */
-	public Map<String, Object> getParameters() {
-		final Map<String, Object> params = new HashMap<String, Object>();
-		params.put("type",this.getClass().getName());
-		putParam(params,Labels.PARAM_FACTORY_MACHINES);
-		//putParam(params,Labels.PRICE_FLEXIBILITY); DELETE
-		putParam(params,Labels.PARAM_FACTORY_PROD_MAX);
-		putParam(params,Labels.PARAM_FACTORY_PROD_MIN);
-		putParam(params,Labels.PARAM_FACTORY_PRODUCTION_TIME);
-		putParam(params,Labels.PRODUCTION);
-		//putParam(params,Labels.WAGE_DOWN_FLEX); DELETE
-		//putParam(params,Labels.WAGE_UP_FLEX); DELETE
-		if (((ProductionType)params.get(Labels.PRODUCTION)).equals(ProductionType.finalProduction))
-			putParam(params,Labels.TECH_COEFF);
-		return params;
 	}
 
 }

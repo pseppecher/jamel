@@ -1,0 +1,30 @@
+<i>Baseline initialization</i>
+
+Circuit.2000-01.setRandomSeed(0)
+Circuit.2000-01.setWindowRange(1200)
+
+Circuit.2000-01.set(Bank.rate:normal=0.05,penalty=0.10)
+Circuit.2000-01.set(Bank.capital:targetedRatio=0.1,propensityToDistributeExcess=0.5)
+Circuit.2000-01.set(Bank:term=12,accommodating=true)
+
+Circuit.2000-01.set(Households.savings:propensityToSave=0.05,ratioTarget=0.05,propensityToConsumeExcess=0.5)
+Circuit.2000-01.set(Households.wage:resistance=12,flexibility=0.05)
+
+Circuit.2000-01.set(Firms.wage:minimum=0,default=3000,downFlex=0.09,upFlex=0.06)
+Circuit.2000-01.set(Firms.laborContract:min=6,max=18)
+Circuit.2000-01.set(Firms.capital:normalRatio=0.5,propensityToDistributeExcess=0.5)
+Circuit.2000-01.set(Firms.vacancies:normalRate=0.03,period=4)
+Circuit.2000-01.set(Firms.regenerationTime:min=12,max=12)
+Circuit.2000-01.set(Firms:priceFlexibility=0.1)
+Circuit.2000-01.set(Firms.inventories:normalLevel=4,propensityToSell=0.5)
+Circuit.2000-01.set(Firms:productionTime=6)
+Circuit.2000-01.set(Firms:productivity=100)
+Circuit.2000-01.set(Firms:machinery=10)
+Circuit.2000-01.set(Firms:utilizationRateFlexibility=10)
+
+Circuit.2000-01.newFirms(firms=660,type=jamel.agents.firms.BasicFirm,production=integratedProduction)
+Circuit.2000-01.newHouseholds(households=5000,type=jamel.agents.households.HouseholdTypeB)
+
+Circuit.2005-01.set(Bank:accommodating=false)
+
+<i>End of the initialization</i>

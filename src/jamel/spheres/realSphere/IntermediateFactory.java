@@ -27,11 +27,7 @@
 
 package jamel.spheres.realSphere;
 
-import jamel.agents.firms.Labels;
 import jamel.util.Blackboard;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Represents a factory that produces intermediate goods.
@@ -72,7 +68,7 @@ public class IntermediateFactory extends AbstractFactory {
 			 * Creates a new production process.
 			 */
 			private Process() {
-				super(IntermediateMachine.this.productivity,IntermediateMachine.this.productionTime);
+				super(IntermediateMachine.this.getProductivity(),IntermediateMachine.this.getProductionTime());
 			}
 		
 			/**
@@ -95,11 +91,9 @@ public class IntermediateFactory extends AbstractFactory {
 
 		/**
 		 * Creates a new machine with the given productivity.
-		 * @param productivity the productivity.
-		 * @param productionTime the production cycle time.
 		 */
-		public IntermediateMachine(int productivity, int productionTime) {
-			super(productivity, productionTime);
+		public IntermediateMachine() {
+			super();
 		}
 
 		/**
@@ -120,20 +114,6 @@ public class IntermediateFactory extends AbstractFactory {
 	public IntermediateFactory(Blackboard parameters) {
 		super(parameters);
 		this.finishedGoodsInventory = new IntermediateGoods();
-	}
-
-	/**
-	 * Returns a map that contains the default parameters for this factory.
-	 * @return a map<String,String>.
-	 */
-	@Override
-	protected Map<String, Object> getDefaultParameters() {
-		final Map<String, Object> map2 = new HashMap<String, Object>();
-		map2.put(Labels.PARAM_FACTORY_MACHINES, "10");		
-		map2.put(Labels.PARAM_FACTORY_PROD_MIN, "100");		
-		map2.put(Labels.PARAM_FACTORY_PROD_MAX, "100");		
-		map2.put(Labels.PARAM_FACTORY_PRODUCTION_TIME, "4");
-		return map2;
 	}
 
 	/**
@@ -168,8 +148,8 @@ public class IntermediateFactory extends AbstractFactory {
 	 * @return a new machine.
 	 */
 	@Override
-	protected Machine newMachine(int productivity, int productionTime) {
-		return new IntermediateMachine(productivity, productionTime);
+	protected Machine newMachine() {
+		return new IntermediateMachine();
 	}
 	
 }
