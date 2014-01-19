@@ -120,7 +120,7 @@ public class InstantXYZScatterChart extends AbstractScatterChart {
 	 * @param maxDate the max date.
 	 */
 	public void setTimeRange(Date minDate, Date maxDate) {		
-		double[][] data = Circuit.getCircuit().getCrossSectionSeries().get(xLabel,yLabel,zLabel) ;
+		double[][] data = Circuit.getCrossSectionSeries(xLabel,yLabel,zLabel) ;
 		if (data==null) return;
 		if (data[2].length==0) return;
 		double min = 0;

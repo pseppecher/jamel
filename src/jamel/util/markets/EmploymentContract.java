@@ -66,7 +66,7 @@ public class EmploymentContract extends JamelObject {
 		this.employee = employee ;
 		this.wage = wage ;
 		this.start = getCurrentPeriod() ;
-		this.end = this.start.getNewPeriod(term) ;
+		this.end = this.start.getFuturePeriod(term) ;
 	}
 
 	/**
@@ -96,10 +96,18 @@ public class EmploymentContract extends JamelObject {
 
 	/**
 	 * Returns the end of the contract.
-	 * @return the period.
+	 * @return a period.
 	 */
 	public JamelPeriod getEnd() { 
 		return this.end ; 
+	}
+
+	/**
+	 * Returns the start of the contract.
+	 * @return a period.
+	 */
+	public JamelPeriod getStart() {
+		return this.start;
 	}
 
 	/**

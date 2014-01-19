@@ -27,7 +27,9 @@
 package jamel.spheres.monetarySphere;
 
 import jamel.Circuit;
+import jamel.CircuitCommands;
 import jamel.JamelObject;
+import jamel.agents.firms.Labels;
 import jamel.agents.roles.AccountHolder;
 import jamel.agents.roles.CapitalOwner;
 import jamel.util.data.PeriodDataset;
@@ -164,6 +166,18 @@ public class Bank extends JamelObject implements AccountHolder {
 			if (!open) 
 				throw new RuntimeException("This account is closed.");
 			return new RegularCheck(aAmount,aPayee);
+		}
+
+		@Override
+		public Object get(String key) {
+			Object result = null;
+			if (key.equals(Labels.MONEY)) {
+				result=getAmount();
+			}
+			else if (key.equals(Labels.DEBT)) {
+				result=getDebt();
+			}
+			return result;
 		}
 
 	}
@@ -682,12 +696,15 @@ public class Bank extends JamelObject implements AccountHolder {
 		long dividend = (long) (excedentCapital*propensityToDistributeCapitalExcess);	
 		if (dividend<0) throw new RuntimeException("Dividend must be positive.") ;
 		if (dividend>0) {
-			if (this.bankOwner==null)
-				this.bankOwner=Circuit.getRandomCapitalOwner();
-			if (this.bankOwner!=null)
+			if (this.bankOwner==null){
+				this.bankOwner=(CapitalOwner) Circuit.getResource(CircuitCommands.SelectACapitalOwnerAtRandom);
+			}
+			if (this.bankOwner!=null){
 				this.bankOwner.receiveDividend( this.bankAccount.newCheck(dividend, this.bankOwner) );
-			else 
+			} 
+			else {
 				dividend=0;
+			}
 		}
 		this.bankData.setDividend(dividend);
 	}

@@ -29,6 +29,7 @@ package jamel.gui.charts;
 
 
 import java.awt.Color;
+import java.awt.Paint;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -66,14 +67,15 @@ class TwoSeriesScatterChart extends AbstractScatterChart {
 	 * @param xLabel  the label of the x axis.
 	 * @param yTimeSeries  the y time series.
 	 * @param yLabel  the label of the y axis.
+	 * @param color  the paint.
 	 */
-	public TwoSeriesScatterChart(String title,TimeSeries xTimeSeries, String xLabel, TimeSeries yTimeSeries, String yLabel) {
+	public TwoSeriesScatterChart(String title,TimeSeries xTimeSeries, String xLabel, TimeSeries yTimeSeries, String yLabel, Paint color) {
 		super(title, null, xLabel, yLabel ) ;
 		this.xTimeSeries = xTimeSeries ;	
 		this.yTimeSeries = yTimeSeries ;	
 		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
 		renderer.setSeriesPaint(0,Color.GRAY);
-		renderer.setSeriesFillPaint(0,JamelColor.LIGHT_TRANSPARENT_RED);
+		renderer.setSeriesFillPaint(0,color);
 		renderer.setUseFillPaint(true);
 		((XYPlot) getPlot()).setRenderer(renderer);
 	}

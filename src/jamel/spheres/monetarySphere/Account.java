@@ -27,12 +27,13 @@
 
 package jamel.spheres.monetarySphere;
 
+import jamel.agents.firms.util.FirmComponent;
 import jamel.agents.roles.AccountHolder;
 
 /**
  * The base interface for accounts.
  */
-public interface Account {
+public interface Account extends FirmComponent {
 
 	/**
 	 * Deposits a check on this account.

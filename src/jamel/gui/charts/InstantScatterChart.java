@@ -76,7 +76,7 @@ public class InstantScatterChart extends AbstractScatterChart {
 	 */
 	public void setTimeRange(Date lower, Date upper) {		
 		XYSeriesCollection dataset = (XYSeriesCollection) ((XYPlot) this.getPlot()).getDataset() ;
-		XYSeries newSeries = Circuit.getCircuit().getCrossSectionSeries().get(xLabel,yLabel) ;
+		XYSeries newSeries = Circuit.getCrossSectionSeries(xLabel,yLabel) ;
 		if (newSeries == null) return;
 		try { dataset.removeSeries(0) ; }														
 		catch (IllegalArgumentException i) {}

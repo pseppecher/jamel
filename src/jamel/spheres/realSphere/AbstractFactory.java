@@ -34,9 +34,10 @@ import java.util.LinkedList;
 import java.util.List;
 
 import jamel.Circuit;
+import jamel.JamelObject;
 import jamel.agents.firms.Labels;
+import jamel.agents.firms.util.Mediator;
 import jamel.agents.roles.Worker;
-import jamel.util.Blackboard;
 import jamel.util.markets.EmploymentContract;
 
 /**
@@ -44,7 +45,7 @@ import jamel.util.markets.EmploymentContract;
  * <p>
  * A factory encapsulates a machinery (= a collection of {@link Machine} objects).
  */
-abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
+abstract class AbstractFactory extends JamelObject implements jamel.spheres.realSphere.Factory{
 
 	/** 
 	 * The machine comparator.<p>
@@ -63,6 +64,9 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 		}
 	};
 
+	/** The inventory volume targeted. */
+	private Float inventoryVolumeTarget = null;
+
 	/** The average monthly volume that the factory produces when working at its full capacity. */
 	private int maxProduction;
 
@@ -72,36 +76,22 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 	/** The volume of the production of the current period. */
 	private int productionVolume ;
 
-	/** The blackboard. */
-	final protected Blackboard blackboard;
-
 	/** The inventory where the production of the firm is stored. */
 	protected Goods finishedGoodsInventory;
-	
+
 	/** The list of machines. */
 	protected final LinkedList<Machine> machinery = new LinkedList<Machine>() ;
 
+	/** The mediator. */
+	protected Mediator mediator;
+
 	/**
 	 * Creates a new factory.
-	 * @param blackBoard  the blackboard.
+	 * @param mediator  the mediator.
 	 */
-	public AbstractFactory(Blackboard blackBoard) {
-		this.blackboard = blackBoard;
+	public AbstractFactory(Mediator mediator) {
+		this.mediator = mediator;
 		this.toolUp();
-	}
-	
-	/**
-	 * Returns a fraction of the inventory.
-	 * @return a heap of goods.
-	 */
-	private Goods getProductForSale() {
-		final int volume = Math.min(
-				(int)(this.finishedGoodsInventory.getVolume()*(Float)this.blackboard.get(Labels.INVENTORIES_PROPENSITY_TO_SELL)),
-				this.maxProduction*2
-				) ;
-		if (volume==0)
-			return null;
-		return this.finishedGoodsInventory.newGoods(volume);
 	}
 	
 	/**
@@ -138,7 +128,6 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 		for (Machine thisMachine : machinery) 
 			production += thisMachine.getProductivity();
 		this.maxProduction = production;
-		this.blackboard.put(Labels.PRODUCTION_MAX,this.maxProduction);
 	}
 
 	/**
@@ -189,14 +178,62 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 
 	@Override 
 	public void close() {
-		final Goods unsoldGoods = (Goods) this.blackboard.remove(Labels.PRODUCT_FOR_SALES);
-		if (unsoldGoods !=null)
-			this.finishedGoodsInventory.add(unsoldGoods);
-		this.blackboard.put(Labels.INVENTORY_FG_VALUE, this.finishedGoodsInventory.getValue());
-		this.blackboard.put(Labels.INVENTORY_FG_VOLUME, this.finishedGoodsInventory.getVolume());
-		this.blackboard.put(Labels.INVENTORY_UG_VALUE, this.getUnfinishedGoodsValue());
 	}
 	
+	@Override
+	public Object get(String key) {
+		Object result = null;
+		if (key.equals(Labels.INVENTORIES_TOTAL_VALUE)) {
+			result = this.getWorth();
+		}
+		else if (key.equals(Labels.INVENTORY_LEVEL_RATIO)) {
+			result = this.finishedGoodsInventory.getVolume()/(this.inventoryVolumeTarget*this.maxProduction);
+		}
+		else if (key.equals(Labels.UNIT_COST)) {
+			result = this.finishedGoodsInventory.getUnitCost();
+		}
+		else if (key.equals(Labels.PRODUCTION_LEVEL_MAX)) {
+			result = this.getMaxLevelOfProduction();
+		}
+		else if (key.equals(Labels.INVENTORIES_OF_FINISHED_GOODS)) {
+			result = this.finishedGoodsInventory;			
+		}
+		else if (key.equals(Labels.INVENTORIES_NORMAL_VOLUME)) {
+			result = this.inventoryVolumeTarget*this.maxProduction;			
+		}
+		else if (key.equals(Labels.PRODUCTION_MAX)) {
+			result = this.maxProduction;
+		}
+		else if (key.equals(Labels.INVENTORY_FG_VALUE)) {
+			result = this.finishedGoodsInventory.getValue();
+		}
+		else if (key.equals(Labels.INVENTORY_FG_VOLUME)) {
+			result = this.finishedGoodsInventory.getVolume();
+		}
+		else if (key.equals(Labels.INVENTORY_UG_VALUE)) {
+			result = this.getUnfinishedGoodsValue();
+		}
+		else if (key.equals(Labels.MACHINERY)) {
+			result = this.machinery.size();
+		}
+		else if (key.equals(Labels.RAW_MATERIALS_NEEDS)) {
+			result = this.getRawMaterialsNeedVolume();
+		}
+		else if (key.equals(Labels.PRODUCTION_VALUE)) {
+			result = this.productionValue;
+		}
+		else if (key.equals(Labels.PRODUCTION_VOLUME)) {
+			result = this.productionVolume;
+		}
+		else if (key.equals(Labels.CLOSURE)) {
+			this.close();
+		}
+		else if (key.equals(Labels.OPENING)) {
+			this.open();
+		}
+		return result;
+	}
+
 	/**
 	 * Returns the total value of the factory.
 	 * This total value is the sum of the value of the inventory of finished goods
@@ -208,7 +245,7 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 	public long getWorth() {
 		return this.finishedGoodsInventory.getValue()+this.getUnfinishedGoodsValue()+this.getRawMaterialsInventoryValue();
 	}
-
+	
 	/**
 	 * Kills the factory.
 	 */
@@ -217,7 +254,7 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 		for (Machine machine : machinery) machine.kill();
 		this.machinery.clear();
 	}
-	
+
 	/**
 	 * Completes some technical operations at the beginning of the period.
 	 */
@@ -226,14 +263,7 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 		this.productionVolume = 0;
 		this.productionValue = 0;
 		updateMaxProduction();
-		final float inventoryStockTarget = Float.parseFloat(Circuit.getParameter("Firms.inventories.normalLevel"));
-		final float normalInventoryStockLevel = inventoryStockTarget *this.maxProduction;
-		final float currentInventoryStockLevel = this.finishedGoodsInventory.getVolume();
-		this.blackboard.put(Labels.INVENTORY_LEVEL_RATIO, currentInventoryStockLevel/normalInventoryStockLevel);
-		this.blackboard.put(Labels.UNIT_COST,this.finishedGoodsInventory.getUnitCost());
-		this.blackboard.put(Labels.PRODUCTION_LEVEL_MAX, this.getMaxLevelOfProduction());
-		this.blackboard.put(Labels.MACHINERY, this.machinery.size());
-		this.blackboard.put(Labels.RAW_MATERIALS_NEEDS, this.getRawMaterialsNeedVolume());
+		this.inventoryVolumeTarget  = Float.parseFloat(Circuit.getParameter("Firms.inventories.normalLevel"));
 	}
 
 	/**
@@ -243,7 +273,7 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 	@Override
 	public void production() {
 		@SuppressWarnings("unchecked")
-		final List<EmploymentContract> payroll = (List<EmploymentContract>) this.blackboard.remove(Labels.PAYROLL);
+		final List<EmploymentContract> payroll = (List<EmploymentContract>) this.mediator.get(Labels.PAYROLL);
 		Collections.sort(this.machinery,MACHINE_COMPARATOR);
 		Iterator<Machine> machineIterator=this.machinery.iterator();
 		for (EmploymentContract contract : payroll) {
@@ -252,11 +282,8 @@ abstract class AbstractFactory implements jamel.spheres.realSphere.Factory{
 			Machine machine = machineIterator.next();
 			machine.work(worker,wage);
 		}
-		this.blackboard.put(Labels.PRODUCT_FOR_SALES, this.getProductForSale());
-		this.blackboard.put(Labels.PRODUCTION_VALUE, this.productionValue);
-		this.blackboard.put(Labels.PRODUCTION_VOLUME, this.productionVolume);
 	}
-	
+		
 }
 
 

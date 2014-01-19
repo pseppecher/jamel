@@ -28,13 +28,15 @@
 package jamel.agents.firms.managers;
 
 import jamel.Circuit;
+import jamel.CircuitCommands;
 import jamel.JamelObject;
-import jamel.agents.firms.Firm;
 import jamel.agents.firms.Labels;
+import jamel.agents.firms.util.FirmComponent;
+import jamel.agents.firms.util.Mediator;
+import jamel.agents.roles.Employer;
 import jamel.agents.roles.Worker;
 import jamel.spheres.monetarySphere.Account;
 import jamel.spheres.monetarySphere.Check;
-import jamel.util.Blackboard;
 import jamel.util.markets.EmploymentContract;
 import jamel.util.markets.JobOffer;
 
@@ -48,9 +50,8 @@ import org.jfree.data.time.TimeSeriesDataItem;
 /**
  * The workforce manager.<br>
  * This manager is in charge of the hiring and firing decisions.
- * TODO supprimer tous les appels ˆ "Circuit.getParameter"
  */
-public class WorkforceManager extends JamelObject {
+public class WorkforceManager extends JamelObject implements FirmComponent {
 
 	/**
 	 * Returns the average of the specified time series.
@@ -69,79 +70,85 @@ public class WorkforceManager extends JamelObject {
 		return (sum/count);
 	}
 
+	/**
+	 * Returns a labor contract duration chosen at random in the interval specified in settings.  
+	 * @return an integer that represents the labor contract duration (in months).
+	 */
+	private static int getRandomLabourContractLenght() {
+		final int labourContractMax = Integer.parseInt(Circuit.getParameter("Firms."+Labels.labourContractMax));//(Integer) this.blackBoard.get(Labels.labourContractMax);
+		final int labourContractMin = Integer.parseInt(Circuit.getParameter("Firms."+Labels.labourContractMin));//(Integer) this.blackBoard.get(Labels.labourContractMin);
+		if (labourContractMax<labourContractMin) throw new IllegalArgumentException();
+		if (labourContractMax==labourContractMin) return labourContractMin ;
+		return labourContractMin+getRandom().nextInt(labourContractMax-labourContractMin) ;
+	}
+
 	/** The current account of the firm. */
-	final private Account account;
+	//final private Account account;
 
 	/** The number of workers hired in the current period. */
-	private Integer effectiveHiring ;
+	private Integer effectiveHiring ; 
+
+	/** effectiveWorkforce */
+	private Integer effectiveWorkforce = null;							
 
 	/** The firm. */
-	final private Firm employer; 
+	private Employer employer;								
 
 	/** The offer of the firm on the labor market. */
-	private JobOffer jobOffer ;							
+	private JobOffer jobOffer ;
 
 	/** The number of jobs offered at the opening of the labor market. */
-	private Integer jobsOffered;								
+	private Integer jobsOffered;
 
 	/** The payroll. */
 	final private LinkedList<EmploymentContract> payroll ;
 
+	/** The targeted workforce */
+	private Integer targetedWorkforce = null;
+
 	/** A time series to record the number of employed targeted. */
 	private final TimeSeries targetedWorkforceTimeSeries = new TimeSeries("Jobs offered");
+
+	/** The vacancies */
+	private Integer vacancies = null;
 
 	/** A time series to record the number of vacancies. */
 	private final TimeSeries vacanciesTimeSeries = new TimeSeries("Vacancies");
 
+	/** wageBill */
+	private Long wageBill = null;
+
 	/** The wage bill targeted. */
 	private Long wageBillBudget ;
 
-	/** The black board. */
-	protected final Blackboard blackBoard;
+	/** The mediator */
+	protected Mediator mediator;
 
 	/** The wage proposed on the labor market. */
 	protected Double offeredWage ;
 
 	/**
 	 * Creates a new workforce manager.
-	 * @param theEmployer  the employer of the workforce.
-	 * @param theEmployerAccount  the account of the employer.
-	 * @param blackboard2  the blackBoard.
+	 * @param mediator  the mediator.
 	 */
-	public WorkforceManager(Firm theEmployer, Account theEmployerAccount, Blackboard blackboard2) {
+	public WorkforceManager(Mediator mediator) {
 		final int vacancyRatePeriod = Integer.parseInt(Circuit.getParameter("Firms.vacancies.period")) ;
 		this.vacanciesTimeSeries.setMaximumItemAge(vacancyRatePeriod);
 		this.targetedWorkforceTimeSeries.setMaximumItemAge(vacancyRatePeriod);
 		this.payroll = new LinkedList<EmploymentContract>();
-		this.employer = theEmployer;
-		this.account = theEmployerAccount;
-		this.blackBoard = blackboard2;
+		this.mediator = mediator;
 	}
 
 	/**
 	 * Counts the number of vacancies.
 	 */
 	private void countVacancies() {
-		int vacancies;
 		if ( this.jobsOffered>0 )
-			vacancies = this.jobsOffered - this.effectiveHiring ;
+			this.vacancies = this.jobsOffered - this.effectiveHiring ;
 		else
-			vacancies = 0 ;
-		this.vacanciesTimeSeries.add(getCurrentPeriod().getMonth(), vacancies);
-		this.targetedWorkforceTimeSeries.add(getCurrentPeriod().getMonth(), (Integer)this.blackBoard.get(Labels.WORKFORCE_TARGET));
-		this.blackBoard.put(Labels.VACANCIES, vacancies);
-	}
-
-	/**
-	 * Returns a labor contract duration chosen at random in the interval specified in settings.  
-	 * @return an integer that represents the labor contract duration (in months).
-	 */
-	private int getRandomLabourContractLenght() {
-		final int labourContractMax = (Integer) this.blackBoard.get(Labels.labourContractMax);
-		final int labourContractMin = (Integer) this.blackBoard.get(Labels.labourContractMin);
-		if (labourContractMax<labourContractMin) throw new IllegalArgumentException();
-		if (labourContractMax==labourContractMin) return labourContractMin ;
-		return labourContractMin+getRandom().nextInt(labourContractMax-labourContractMin) ;
+			this.vacancies  = 0 ;
+		this.vacanciesTimeSeries.add(getCurrentPeriod().getMonth(), this.vacancies);
+		this.targetedWorkforceTimeSeries.add(getCurrentPeriod().getMonth(), this.targetedWorkforce);
 	}
 
 	/**
@@ -176,7 +183,7 @@ public class WorkforceManager extends JamelObject {
 	 */
 	protected void updateWage() {
 		if ( this.offeredWage==null ) {
-			final Double randomWage = Circuit.getCircuit().getRandomWage() ;
+			final Double randomWage = (Double) Circuit.getResource(CircuitCommands.SelectAWageAtRandom);			
 			if ( randomWage!=null ) 
 				this.offeredWage = randomWage ;
 			else this.offeredWage = Double.parseDouble(Circuit.getParameter("Firms.wage.default")) ;
@@ -199,6 +206,42 @@ public class WorkforceManager extends JamelObject {
 		this.offeredWage = Math.max( this.offeredWage,Integer.parseInt(Circuit.getParameter("Firms.wage.minimum"))) ;
 		if ( this.offeredWage==0 ) 
 			throw new RuntimeException("The wage is null.");
+	}
+
+	@Override
+	public Object get(String key) {
+		Object result = null;
+		if (key.equals(Labels.PAYROLL)) {
+			result = this.payroll;
+		}
+		else if (key.equals(Labels.WORKFORCE_TARGET)) {
+			result=this.targetedWorkforce;
+		}
+		else if (key.equals(Labels.VACANCIES)) {
+			result=this.vacancies;
+		}
+		else if (key.equals(Labels.WORKFORCE)) {
+			result=this.effectiveWorkforce;
+		}
+		else if (key.equals(Labels.WAGEBILL)) {
+			result=this.wageBill;
+		}
+		else if (key.equals(Labels.WAGE)) {
+			result=this.offeredWage;
+		}
+		else if (key.equals(Labels.JOBS_OFFERED)) {
+			result=this.jobsOffered;
+		}
+		else if (key.equals(Labels.WAGEBILL_BUDGET)) {
+			result=this.wageBillBudget;
+		}
+		else if (key.equals(Labels.OFFER_OF_JOB)) {
+			result=this.jobOffer;
+		}
+		else if (key.equals(Labels.OPENING)) {
+			this.open();
+		}
+		return result;
 	}
 
 	/**
@@ -252,7 +295,6 @@ public class WorkforceManager extends JamelObject {
 					this.jobsOffered,
 					Math.round(this.offeredWage) 
 					) ;
-			this.blackBoard.put(Labels.OFFER_OF_JOB, jobOffer);
 		}
 	}
 
@@ -265,32 +307,34 @@ public class WorkforceManager extends JamelObject {
 		this.effectiveHiring=null;
 		this.jobOffer=null;
 		this.jobsOffered=null;
+		if (this.employer==null) {
+			this.employer=(Employer)this.mediator.get(Labels.FIRM);
+		}
 	}
 
 	/**
 	 * Pays all employees.
 	 */
 	public void payWorkers() {				
-		int effectiveWorkforce = 0;
-		long wageBill = 0;
+		this.effectiveWorkforce  = 0;
+		this.wageBill  = 0l;
 		countVacancies();
 		if ( this.payroll.size() == 0 ) {
 			// Does nothing.
 		}
 		else {
-			if ( this.account.getAmount() < this.wageBillBudget ) throw new RuntimeException("Not enough money.");
+			Account account = (Account) this.mediator.get(Labels.ACCOUNT);
+			if ( account.getAmount() < this.wageBillBudget ) throw new RuntimeException("Not enough money.");
 			for ( EmploymentContract job : this.payroll ) {
 				final long jobWage = job.getWage();
 				final Worker worker = job.getEmployee();
-				final Check check = this.account.newCheck( jobWage , worker);
+				final Check check = account.newCheck( jobWage , worker);
 				worker.receiveWage( check );
 				wageBill += jobWage;
 				effectiveWorkforce  ++;			
 			}
 			if (effectiveWorkforce!=this.payroll.size()) throw new RuntimeException("Workforce is not consistent with the payroll.");
 		}
-		this.blackBoard.put(Labels.WORKFORCE,effectiveWorkforce);
-		this.blackBoard.put(Labels.WAGEBILL,wageBill);
 	}
 
 	/**
@@ -308,10 +352,10 @@ public class WorkforceManager extends JamelObject {
 
 		// On calcule le besoin de main d'oeuvre.
 
-		final int machinery = (Integer)this.blackBoard.get(Labels.MACHINERY);
-		final float productionLevel = (Float)this.blackBoard.get(Labels.PRODUCTION_LEVEL);
-		final int targetedWorkforce = (int) ((machinery*productionLevel)/100f);
-		this.blackBoard.put(Labels.WORKFORCE_TARGET, targetedWorkforce);		
+		final int machinery = (Integer)this.mediator.get(Labels.MACHINERY);
+		final float productionLevel = (Float)this.mediator.get(Labels.PRODUCTION_LEVEL);
+		this.targetedWorkforce  = (int) ((machinery*productionLevel)/100f);
+		//this.blackBoard.put(Labels.WORKFORCE_TARGET, targetedWorkforce);		
 
 		// Si la main d'oeuvre employŽe dŽpasse les besoins, on licencie. 
 
@@ -328,7 +372,6 @@ public class WorkforceManager extends JamelObject {
 				this.jobsOffered = 0;				
 			}
 		}
-		this.blackBoard.put(Labels.JOBS_OFFERED, this.jobsOffered);
 
 		if (targetedHiring>0) 
 			updateWage();
@@ -342,8 +385,6 @@ public class WorkforceManager extends JamelObject {
 		if ( this.jobsOffered>0 ) {
 			this.wageBillBudget += Math.round(this.offeredWage)*this.jobsOffered;
 		}
-		this.blackBoard.put(Labels.WAGEBILL_BUDGET, this.wageBillBudget);
-		this.blackBoard.put(Labels.PAYROLL, this.payroll);
 	}
 
 }

@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2013, Pascal Seppecher and contributors.
+ * (C) Copyright 2007-2014, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -22,10 +22,14 @@
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
  * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
+ * [JAMEL uses JFreeChart, copyright by Object Refinery Limited and Contributors. 
+ * JFreeChart is distributed under the terms of the GNU Lesser General Public Licence (LGPL). 
+ * See <http://www.jfree.org>.]
  */
 
 package jamel.agents.households;
 
+import jamel.CircuitCommands;
 import jamel.JamelObject;
 import jamel.agents.roles.CapitalOwner;
 import jamel.agents.roles.Consumer;
@@ -48,11 +52,41 @@ public class HouseholdsSector extends JamelObject {
 	/** The list of the households. */
 	private final LinkedList<Household> householdsList ;
 
+	/** The type of the households. */
+	private String householdsType;
+
 	/**
 	 * Creates a new households sector.
 	 */
 	public HouseholdsSector() { 
 		this.householdsList = new LinkedList<Household>() ;
+	}
+
+	/**
+	 * Returns a Household selected at random.
+	 * @return a Household.
+	 */
+	protected Household getRandomHousehold() {
+		final int size = householdsList.size();
+		if (size==0) return null;
+		return householdsList.get( getRandom().nextInt( size ) ) ;
+	}
+
+	/**
+	 * Returns an array of households selected at random.
+	 * Duplicate households are permitted.
+	 * @param n  the number of households to select.
+	 * @return an array of households.
+	 */
+	protected Household[] getRandomHouseholds(int n) {
+		final Household[] households = new Household[n];
+		final int size = householdsList.size();
+		if (size!=0) {
+			for (int count=0; count<n; count++) {
+				households[count] = householdsList.get( getRandom().nextInt( size ) ) ;
+			}
+		}
+		return households;
 	}
 
 	/**
@@ -62,9 +96,18 @@ public class HouseholdsSector extends JamelObject {
 	 * @param macroData - the macro dataset.
 	 */
 	public void close(PeriodDataset macroData) {
-		for (Household aHousehold : householdsList) 
+		//int unemployed = 0; DELETE
+		for (Household aHousehold : householdsList) {
 			aHousehold.close() ;
+			/*if (!((Household131201) aHousehold).isOptimist()) {
+				pessimists++;				
+			}
+			if (!((Household131201) aHousehold).employed()) {
+				unemployed++;			
+			}*/
+		}
 		macroData.compileHouseholdsData(householdsList);
+		//System.out.print(macroData.UNEMPLOYED+"\t"); DELETE
 	}
 
 	/**
@@ -73,6 +116,24 @@ public class HouseholdsSector extends JamelObject {
 	public void consume() {
 		for (Consumer selectedConsumer : householdsList)
 			selectedConsumer.consume() ;		
+	}
+
+	/**
+	 * Returns the selected resource.
+	 * @param key the key of the resource to be returned.
+	 * @return the resource.
+	 */
+	public Object get(String key) {
+		final Object result;
+		if (
+				key.equals(CircuitCommands.SelectAHouseholdAtRandom) ||
+				key.equals(CircuitCommands.SelectACapitalOwnerAtRandom)				
+				) {
+			result = this.getRandomHousehold();
+		} else {
+			throw new RuntimeException("Unexpected key: "+key);
+		}
+		return result;
 	}
 
 	/**
@@ -92,28 +153,21 @@ public class HouseholdsSector extends JamelObject {
 	 */
 	public void newHouseholds(String[] parameters) {
 		Integer newHouseholds = null;
-		String householdClassName = null;
 		for(String parameter : parameters) {
 			final String[] word=parameter.split("=",2);
 			if (word[0].equals("households")) {
 				if (newHouseholds != null) throw new RuntimeException("Event new households : Duplicate parameter : households.");
 				newHouseholds = Integer.parseInt(word[1]);
 			}
-			else if (word[0].equals("type")) {
-				if (householdClassName != null) throw new RuntimeException("Event new households : Duplicate parameter : type.");
-				householdClassName = word[1];				
-			}
 		}
 		if (newHouseholds==null) 
 			throw new RuntimeException("Missing parameter: households.");
-		if (householdClassName==null) 
-			throw new RuntimeException("Missing parameter: type.");
 		for (int count = 0 ; count<newHouseholds ; count++){
 			countHouseholds ++ ;
 			try {
 				final String name = "Household "+countHouseholds;
 				Household newHousehold;
-				newHousehold = (Household) Class.forName(householdClassName,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class).newInstance(name);
+				newHousehold = (Household) Class.forName(this.householdsType,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class).newInstance(name);
 				householdsList.add(newHousehold) ;
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -141,6 +195,14 @@ public class HouseholdsSector extends JamelObject {
 		final int size = householdsList.size();
 		if (size==0) return null;//throw new RuntimeException("The list of households is empty.");
 		return householdsList.get( getRandom().nextInt( size ) ) ;
+	}
+
+	/**
+	 * Sets the type of the households.
+	 * @param householdsType the type to set.
+	 */
+	public void setHouseholdsType(String householdsType) {
+		this.householdsType=householdsType;
 	}
 
 }

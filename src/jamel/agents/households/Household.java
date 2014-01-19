@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2012, Pascal Seppecher.
+ * (C) Copyright 2007-2014, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,8 +21,10 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
+ * [JAMEL uses JFreeChart, copyright by Object Refinery Limited and Contributors. 
+ * JFreeChart is distributed under the terms of the GNU Lesser General Public Licence (LGPL). 
+ * See <http://www.jfree.org>.]
  */
 
 package jamel.agents.households;
@@ -51,6 +53,6 @@ public interface Household extends Worker, CapitalOwner, Consumer {
 	 * Returns the data.
 	 * @return the data.
 	 */
-	HouseholdDatasetInterface getData();
+	HouseholdDataset getData();
 
 }

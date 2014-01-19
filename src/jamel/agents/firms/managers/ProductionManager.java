@@ -26,78 +26,16 @@
 
 package jamel.agents.firms.managers;
 
-import jamel.Circuit;
-import jamel.JamelObject;
-import jamel.agents.firms.Labels;
-import jamel.util.Blackboard;
+import jamel.agents.firms.util.FirmComponent;
 
 /**
- * A basic production manager.
+ * An interface for the production managers.
  */
-public class ProductionManager extends JamelObject{
-
-	/** The current (targeted) capacity utilization rate. */
-	protected float utilizationRateTargeted=50+getRandom().nextInt(50);
-
-	/** The black board. */
-	final private Blackboard blackBoard;
-
-	/**
-	 * Creates a new manager.
-	 * @param blackboard2  the black board.
-	 */
-	public ProductionManager(Blackboard blackboard2) {
-		this.blackBoard = blackboard2;
-	}
+public interface ProductionManager extends FirmComponent {
 
 	/**
 	 * Updates the level of production targeted.
 	 */
-	public void updateProductionLevel() {
-		final float utilizationRateFlexibility = Float.parseFloat(Circuit.getParameter("Firms.utilizationRateFlexibility"));
-		final float alpha1 = getRandom().nextFloat();
-		final float alpha2 = getRandom().nextFloat();
-		final float inventoryRatio = (Float)this.blackBoard.get(Labels.INVENTORY_LEVEL_RATIO);
-		if (inventoryRatio<1-alpha1*alpha2) {// Low level
-			final float delta = (alpha1*utilizationRateFlexibility);
-			this.utilizationRateTargeted += delta;
-			if (this.utilizationRateTargeted>100) {
-				this.utilizationRateTargeted = 100;
-			}
-		}
-		else if (inventoryRatio>1+alpha1*alpha2) {// High level
-			final float delta = (alpha1*utilizationRateFlexibility);
-			this.utilizationRateTargeted -= delta;
-			if (this.utilizationRateTargeted<0) {
-				this.utilizationRateTargeted = 0;
-			}
-		}
-		final float maxUtilization = (Float) this.blackBoard.get(Labels.PRODUCTION_LEVEL_MAX);
-		final float rectifiedTarget = Math.min(this.utilizationRateTargeted, maxUtilization);
-		this.blackBoard.put(Labels.PRODUCTION_LEVEL, rectifiedTarget);
-	}
+	public abstract void updateProductionLevel();
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

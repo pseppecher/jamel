@@ -54,6 +54,12 @@ public class TimeseriesCollection  extends HashMap<String, TimeSeries>{
 	 */
 	private void initialize() {
 
+		this.newSeries(Labels.DEBT_TARGET);
+		this.newSeries(Labels.H_SAVING_TARGET);
+		this.newSeries(Labels.selfFinancingRatio);
+		this.newSeries(Labels.H_HOARD2INCOME_RATIO);
+		this.newSeries(Labels.fPessimism);
+
 		this.newSeries(Labels.CONSUMPTION_VALUE);
 		this.newSeries(Labels.CONSUMPTION_VOLUME);
 		this.newSeries(Labels.DIVIDENDS);
@@ -179,6 +185,11 @@ public class TimeseriesCollection  extends HashMap<String, TimeSeries>{
 
 		this.newSeries(Labels.inventoryFinalVolume);
 		this.newSeries(Labels.inventoryIntermediateVolume);
+		
+		this.newSeries(Labels.hOptimism);
+		this.newSeries(Labels.hPessimism);
+
+		this.newSeries(Labels.DEBT);
 	}
 
 	/**
@@ -219,8 +230,10 @@ public class TimeseriesCollection  extends HashMap<String, TimeSeries>{
 	 */
 	public void updateSeries(PeriodDataset periodDataset) {
 		final Month month = JamelObject.getCurrentPeriod().getMonth();
-		this.get(Labels.CONSUMPTION_VALUE).add(month,periodDataset.CONSUMPTION_VALUE);
-		this.get(Labels.CONSUMPTION_VOLUME).add(month,periodDataset.CONSUMPTION_VOLUME);
+		this.get(Labels.DEBT).add(month,periodDataset.debtS1+periodDataset.debtS2);
+		this.get(Labels.selfFinancingRatio).add(month,periodDataset.sefFinancingRatio);
+		this.get(Labels.CONSUMPTION_VALUE).add(month,periodDataset.consumptionVal);
+		this.get(Labels.CONSUMPTION_VOLUME).add(month,periodDataset.consumptionVol);
 		this.get(Labels.DIVIDENDS).add(month,periodDataset.DIVIDENDS);
 		this.get(Labels.EMPLOYED).add(month,periodDataset.EMPLOYED);
 		this.get(Labels.HOUSEHOLDS).add(month,periodDataset.HOUSEHOLDS);
@@ -229,18 +242,18 @@ public class TimeseriesCollection  extends HashMap<String, TimeSeries>{
 		this.get(Labels.MAX_REGULAR_WAGE).add(month,periodDataset.MAX_REGULAR_WAGE);
 		this.get(Labels.MEDIAN_WAGE).add(month,periodDataset.MEDIAN_WAGE);
 		this.get(Labels.MIN_REGULAR_WAGE).add(month,periodDataset.MIN_REGULAR_WAGE);
-		this.get(Labels.HOUSEHOLDS_DEPOSITS).add(month,periodDataset.HOUSEHOLDS_DEPOSITS);
-		this.get(Labels.UNEMPLOYED).add(month,periodDataset.UNEMPLOYED);
-		this.get(Labels.UNEMPLOYMENT_DURATION).add(month,periodDataset.UNEMPLOYMENT_DURATION);
+		this.get(Labels.HOUSEHOLDS_DEPOSITS).add(month,periodDataset.hDeposits);
+		this.get(Labels.UNEMPLOYED).add(month,periodDataset.unemployed);
+		this.get(Labels.UNEMPLOYMENT_DURATION).add(month,periodDataset.unemploymentDuration);
 		this.get(Labels.BANK_CAPITAL).add(month,periodDataset.capitalBank);
 		this.get(Labels.BANK_DIVIDEND).add(month,periodDataset.BANK_DIVIDEND);
 		this.get(Labels.DEPOSITS).add(month,periodDataset.DEPOSITS);
-		this.get(Labels.DOUBTFUL_DEBTS).add(month,periodDataset.DOUBTFUL_DEBTS);
+		this.get(Labels.DOUBTFUL_DEBTS).add(month,periodDataset.doubtDebt);
 		this.get(Labels.LOANS).add(month,periodDataset.LOANS);
 		this.get(Labels.CAPITAL_ADEQUACY_RATIO).add(month,periodDataset.CAPITAL_ADEQUACY_RATIO);
 		this.get(Labels.DOUBTFUL_DEBTS_RATIO).add(month,periodDataset.DOUBTFUL_DEBTS_RATIO);
-		this.get(Labels.JOB_OFFERS).add(month,periodDataset.JOB_OFFERS);
-		this.get(Labels.FIRMS_DEPOSITS).add(month,periodDataset.FIRMS_DEPOSITS);
+		this.get(Labels.JOB_OFFERS).add(month,periodDataset.jobOffers);
+		this.get(Labels.FIRMS_DEPOSITS).add(month,periodDataset.fDeposits);
 		this.get(Labels.VACANCIES).add(month,periodDataset.vacanciesTotal);
 		this.get(Labels.REAL_WAGE).add(month,periodDataset.REAL_WAGE);
 		this.get(Labels.FORCED_SAVINGS_RATE).add(month,periodDataset.FORCED_SAVINGS_RATE);
@@ -268,8 +281,8 @@ public class TimeseriesCollection  extends HashMap<String, TimeSeries>{
 		this.get(Labels.markupIntermediateMedian).add(month,periodDataset.markupIntermediateMedian);
 		this.get(Labels.markupIntermediateMin).add(month,periodDataset.markupIntermediateMin);
 
-		this.get(Labels.inventoryFinalLevel).add(month,periodDataset.inventoryFinalLevel);
-		this.get(Labels.inventoryIntermediateLevel).add(month,periodDataset.inventoryIntermediateLevel);	
+		this.get(Labels.inventoryFinalLevel).add(month,periodDataset.invS2Level);
+		this.get(Labels.inventoryIntermediateLevel).add(month,periodDataset.inventoryS1Level);	
 
 		this.get(Labels.productionIntermediateVolume).add(month,periodDataset.prodVolS1);
 		this.get(Labels.productionFinalVolume).add(month,periodDataset.prodVolS2);
@@ -277,10 +290,10 @@ public class TimeseriesCollection  extends HashMap<String, TimeSeries>{
 		this.get(Labels.relativePrices).add(month,periodDataset.relativePrices);
 
 		this.get(Labels.salesFinalVolume).add(month,periodDataset.salesVolS2);
-		this.get(Labels.salesFinalValue).add(month,periodDataset.salesValPS2);
+		this.get(Labels.salesFinalValue).add(month,periodDataset.salesPriceValS2);
 		
 		this.get(Labels.salesIntermediateVolume).add(month,periodDataset.salesVolS1);
-		this.get(Labels.salesIntemediateValue).add(month,periodDataset.salesValPS1);
+		this.get(Labels.salesIntemediateValue).add(month,periodDataset.salesPriceValS1);
 
 		this.get(Labels.utilizationFinalMax).add(month,periodDataset.utilizationFinalMax);
 		this.get(Labels.utilizationFinalMedian).add(month,periodDataset.utilizationFinalMedian);
@@ -301,13 +314,23 @@ public class TimeseriesCollection  extends HashMap<String, TimeSeries>{
 		this.get(Labels.workersInSector1).add(month,periodDataset.avWorkforceS1);
 		this.get(Labels.workersInSector2).add(month,periodDataset.avWorkforceS2);
 
-		this.get(Labels.PRICE_FINAL_MEDIAN).add(month,periodDataset.priceFinalMedian);
-		this.get(Labels.PRICE_FINAL_MIN).add(month,periodDataset.priceFinalMinimum);
-		this.get(Labels.PRICE_FINAL_MAX).add(month,periodDataset.priceFinalMax);
+		this.get(Labels.PRICE_FINAL_MEDIAN).add(month,periodDataset.priceS2Med);
+		this.get(Labels.PRICE_FINAL_MIN).add(month,periodDataset.priceS2Min);
+		this.get(Labels.PRICE_FINAL_MAX).add(month,periodDataset.priceS2Max);
 
-		this.get(Labels.PRICE_INTERMEDIATE_MEDIAN).add(month,periodDataset.priceIntermediateMedian);
-		this.get(Labels.PRICE_INTERMEDIATE_MIN).add(month,periodDataset.priceIntermediateMinimum);
-		this.get(Labels.PRICE_INTERMEDIATE_MAX).add(month,periodDataset.priceIntermediateMax);
+		this.get(Labels.PRICE_INTERMEDIATE_MEDIAN).add(month,periodDataset.priceS1Med);
+		this.get(Labels.PRICE_INTERMEDIATE_MIN).add(month,periodDataset.priceS1Minimum);
+		this.get(Labels.PRICE_INTERMEDIATE_MAX).add(month,periodDataset.priceS1Max);
+
+		this.get(Labels.hPessimism).add(month,periodDataset.hPessimismRatio);
+		
+		this.get(Labels.fPessimism).add(month,periodDataset.fPessimismRatio);
+
+		this.get(Labels.H_HOARD2INCOME_RATIO).add(month,periodDataset.hHoardingRatio);
+
+		this.get(Labels.H_SAVING_TARGET).add(month,periodDataset.hSavingTarget);
+		this.get(Labels.DEBT_TARGET).add(month,periodDataset.debtTarget);
+
 	}
 
 	/**

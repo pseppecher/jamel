@@ -27,11 +27,13 @@
 package jamel.agents.firms.managers;
 
 import jamel.Circuit;
+import jamel.CircuitCommands;
 import jamel.agents.firms.Labels;
+import jamel.agents.firms.util.FirmComponent;
+import jamel.agents.firms.util.Mediator;
 import jamel.agents.roles.Provider;
 import jamel.spheres.monetarySphere.Account;
 import jamel.spheres.realSphere.IntermediateGoods;
-import jamel.util.Blackboard;
 import jamel.util.markets.GoodsOffer;
 import jamel.util.markets.ProviderComparator;
 
@@ -40,11 +42,11 @@ import java.util.Collections;
 import java.util.LinkedList;
 
 /**
- * The purchasing manager.<br>
- * This manager is in charge of the purchase of raw materials for a firm producing final goods.
- * TODO: this object should be tested.
+ * The purchasing manager.<p>
+ * This manager is in charge of the purchase of raw materials (intermediate goods) for a firm producing final goods.
+ * 2013-11-10: refactoring.
  */
-public class PurchasingManager {
+public class PurchasingManager implements FirmComponent {
 
 	/** The number of providers the manager can memorize. TODO: Should be a parameter. */
 	private static final int memory = 5;
@@ -63,7 +65,7 @@ public class PurchasingManager {
 	private static Collection<Provider> getMoreProviders(int num) {
 		final LinkedList<Provider> providers = new LinkedList<Provider>();
 		for (int count=0; count<num; count++) {
-			final Provider provider = Circuit.getRandomProviderOfRawMaterials();
+			final Provider provider = (Provider) Circuit.getResource(CircuitCommands.SelectAProviderOfRawMaterialsAtRandom);
 			if (provider==null) {
 				return providers;
 			}
@@ -73,12 +75,9 @@ public class PurchasingManager {
 		Collections.sort(providers, providerComparator);
 		return providers;
 	}
-
+	
 	/** The current account of the firm. */
-	final private Account account;
-
-	/** The blackboard. */
-	final private Blackboard blackboard;
+	private Account account;
 
 	/** The initial budget of the purchasing manager for the current period. */
 	private Long maxBudget;
@@ -86,21 +85,25 @@ public class PurchasingManager {
 	/** The max volume to purchase. */
 	private Integer maxVolume;
 
+	/** The mediator. */
+	final private Mediator mediator;
+
 	/** The list of usual providers. */
 	final private LinkedList<Provider> providersList ;
 
 	/** The unit price of the raw materials. */
 	private double rawMaterialsPrice = rawMaterialsInitialPrice;
 
+	/** The goods purchased by the manager. */
+	private IntermediateGoods totalPurchase;
+
 	/**
 	 * Creates a new purchasing manager.
-	 * @param aAccount  the current account of the firm.
-	 * @param blackboard2  the blackBoard. 
+	 * @param mediator  the mediator.
 	 */
-	public PurchasingManager(Account aAccount, Blackboard blackboard2) {
-		this.account = aAccount;
+	public PurchasingManager(Mediator mediator) {
 		this.providersList=new LinkedList<Provider>();
-		this.blackboard=blackboard2;
+		this.mediator=mediator;
 	}
 
 	/**
@@ -175,7 +178,10 @@ public class PurchasingManager {
 	 */
 	public void buyRawMaterials() {
 
-		final IntermediateGoods totalPurchase = new IntermediateGoods();
+		if (this.totalPurchase.getVolume()>0) {
+			throw new RuntimeException("The volume must be 0."); 
+		}
+		this.totalPurchase = new IntermediateGoods();
 
 		if (maxBudget!=0) {
 
@@ -216,36 +222,43 @@ public class PurchasingManager {
 				this.rawMaterialsPrice = totalPurchase.getUnitCost(); // Updates the price.
 			
 		}
-		
-		this.blackboard.put(Labels.RAW_MATERIALS, totalPurchase);
-		
+				
 	}
 
 	/**
 	 * 
 	 */
 	public void computeBudget() {
-		this.maxVolume = (Integer)this.blackboard.get(Labels.RAW_MATERIALS_NEEDS);
-		this.maxBudget = (long) (this.maxVolume*getRawMaterialsPrice()*1.0);
-		this.blackboard.put(Labels.RAW_MATERIALS_BUDGET, this.maxBudget);
+		this.maxVolume = (Integer)this.mediator.get(Labels.RAW_MATERIALS_NEEDS);
+		this.maxBudget = (long) (this.maxVolume*this.rawMaterialsPrice*1.0);
 	}
 
-	/**
-	 * Returns the unit price of the raw materials. 
-	 * @return a value.
-	 */
-	public double getRawMaterialsPrice() {
-		return this.rawMaterialsPrice;
+	@Override
+	public Object get(String key) {
+		Object result = null;
+		if (key.equals(Labels.RAW_MATERIALS_BUDGET)) {
+			result = this.maxBudget;
+		}
+		else if (key.equals(Labels.RAW_MATERIALS)) {
+			result = this.totalPurchase;
+		}
+		else if (key.equals(Labels.OPENING)) {
+			this.open();
+		}
+		return result;
 	}
 
 	/**
 	 * Opens the managers.
 	 */
 	public void open() {
+		if (this.account==null) {
+			this.account=(Account) this.mediator.get(Labels.ACCOUNT);
+		}
 		this.maxBudget=null;
 		this.maxVolume=null;
 	}
-
+	
 }
 
 

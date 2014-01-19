@@ -27,13 +27,16 @@
 
 package jamel.util;
 
+import jamel.JamelObject;
+import jamel.util.data.PeriodDataset;
+
 import java.text.NumberFormat;
 import java.util.Locale;
 
 /**
  * The balance sheet matrix.
  */
-public class BalanceSheetMatrix {
+public class BalanceSheetMatrix extends JamelObject{
 
 	/** The capital of the bank. */
 	private Long bankCapital = new Long(0);
@@ -254,8 +257,17 @@ public class BalanceSheetMatrix {
 
 	/**
 	 * Updates the matrix and checks its consistency.
+	 * @param periodDataset the data.
 	 */
-	public void update() {
+	public void update(PeriodDataset periodDataset) {
+		this.clear();
+		this.setDate(getCurrentPeriod().toString());
+		this.setFirmsInventories(periodDataset.invFinVal+periodDataset.invUnfVal);
+		this.setFirmsDeposits(periodDataset.fDeposits);
+		this.setHouseholdsDeposits(periodDataset.hDeposits);
+		this.setBankDeposits(periodDataset.DEPOSITS);
+		this.setFirmsLoans(periodDataset.LOANS);
+		this.setBankLoans(periodDataset.LOANS);
 		this.sumInventories = this.firmsInventories;
 		this.sumDeposits = this.firmsDeposits+this.householdsDeposits+this.bankDeposits;
 		this.sumLoans = this.firmsLoans+this.bankLoans;

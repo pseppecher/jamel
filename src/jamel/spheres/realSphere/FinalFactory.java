@@ -30,7 +30,7 @@ package jamel.spheres.realSphere;
 
 import jamel.Circuit;
 import jamel.agents.firms.Labels;
-import jamel.util.Blackboard;
+import jamel.agents.firms.util.Mediator;
 
 /**
  * Represents a factory that produces final goods.
@@ -113,14 +113,16 @@ public class FinalFactory extends AbstractFactory {
 		}
 
 		/**
-		 * @return
+		 * Returns the volume of raw materials required for one month of production.
+		 * @return the volume of raw materials required for one month of production.
 		 */
 		private float getRequiredVolumeOfRawMaterials() {
 			return getCoefficient()*getProductivity();
 		}
 
 		/**
-		 * @return
+		 * Returns the technical coefficient.
+		 * @return the technical coefficient.
 		 */
 		private float getCoefficient() {
 			return Float.parseFloat(Circuit.getParameter("Firms.technicalCoefficient"));
@@ -133,10 +135,10 @@ public class FinalFactory extends AbstractFactory {
 
 	/**
 	 * Creates a new factory.
-	 * @param parameters - the list of parameters.
+	 * @param mediator  the mediator.
 	 */
-	public FinalFactory(Blackboard parameters) {
-		super(parameters);
+	public FinalFactory(Mediator mediator) {
+		super(mediator);
 		this.finishedGoodsInventory = new FinalGoods();
 		this.rawMaterialsInventory=new IntermediateGoods();
 	}
@@ -203,9 +205,20 @@ public class FinalFactory extends AbstractFactory {
 	 * Takes the raw materials required for the production process.
 	 */
 	public void takeRawMaterials() {
-		final IntermediateGoods rawMaterials=(IntermediateGoods) this.blackboard.remove(Labels.RAW_MATERIALS);
+		final IntermediateGoods rawMaterials=(IntermediateGoods) this.mediator.get(Labels.RAW_MATERIALS);
 		this.rawMaterialsInventory.add(rawMaterials);
-		this.blackboard.put(Labels.RAW_MATERIALS_VOLUME,this.rawMaterialsInventory.getVolume());
+	}
+	
+	@Override
+	public Object get(String key) {
+		Object result = null;
+		if (key.equals(Labels.RAW_MATERIALS_VOLUME)) {
+			result = this.rawMaterialsInventory.getVolume();
+		}
+		else {
+			result = super.get(key);			
+		}
+		return result;
 	}
 
 }

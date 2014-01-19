@@ -49,7 +49,7 @@ public class ViewManager extends JamelObject {
 	private final JamelPeriod origin = getOrigin() ;
 
 	/** The start of the view. */
-	private JamelPeriod start = end.getNewPeriod(-300);
+	private JamelPeriod start = end.getFuturePeriod(-300);
 
 	/**
 	 * Returns the range.
@@ -83,7 +83,7 @@ public class ViewManager extends JamelObject {
 		current = getCurrentPeriod() ;
 		int range = getRange();
 		end = current ;
-		start = end.getNewPeriod(-range) ;
+		start = end.getFuturePeriod(-range) ;
 	}
 
 
@@ -102,7 +102,7 @@ public class ViewManager extends JamelObject {
 	 * @param range - the range to set.
 	 */
 	public void setRange(int range) {
-		this.start = this.end.getNewPeriod(-range);
+		this.start = this.end.getFuturePeriod(-range);
 	}
 
 	/**

@@ -187,11 +187,23 @@ public class Labels {
 	/** FORCED_SAVINGS_RATE */
 	public static final String FORCED_SAVINGS_RATE = "Forced Savings Rate";
 
+	/** fPessimism */
+	public static final String fPessimism = "Firms - Pessimists";
+
+	/** H_HOARD2INCOME_RATIO */
+	public static final String H_HOARD2INCOME_RATIO = "Households - Hoarding to Income Ratio";
+
+	/** hOptimism */
+	public static final String hOptimism = "Households - Optimism";
+
 	/** The households. */
 	public static final String HOUSEHOLDS = "Households";
 
 	/** Households deposits. */
 	public static final String HOUSEHOLDS_DEPOSITS = "Households deposits";
+
+	/** hPessimism */
+	public static final String hPessimism = "Households - Pessimism";
 
 	/** The income. */
 	public static final String INCOME = "Income";
@@ -263,11 +275,20 @@ public class Labels {
 	/** markupIntermediateAnnual */
 	public static String markupIntermediateAnnual = "Markup - Sector 1";
 
+	/** */
+	//public static final String PRODUCTIVITY = "Productivity";
+
 	/** Markup maximum */
 	public static final String markupIntermediateMax = "Markup target maximum - Intermediate";
 
 	/** Markup median */
 	public static final String markupIntermediateMedian = "Markup target median - Intermediate";
+
+	/** The sales - in value)*/
+	//public static final String SALES_VALUE = "Sellings - Value";
+
+	/** The sales - in volume)*/
+	//public static final String SALES_VOLUME = "Sellings - Volume";
 
 	/** Markup minimum */
 	public static final String markupIntermediateMin = "Markup target minimum - Intermediate";
@@ -275,20 +296,11 @@ public class Labels {
 	/** The maximum regular wage. */
 	public static final String MAX_REGULAR_WAGE = "Max regular wage";
 
-	/** */
-	//public static final String PRODUCTIVITY = "Productivity";
-
 	/** Measurable firms - percent) */
 	public static final String MEASURABLE_RATE = "Measurable firms";
 
 	/** The mean wage. */
 	public static final String MEDIAN_WAGE = "Median wage";
-
-	/** The sales - in value)*/
-	//public static final String SALES_VALUE = "Sellings - Value";
-
-	/** The sales - in volume)*/
-	//public static final String SALES_VOLUME = "Sellings - Volume";
 
 	/** The minimum regular wage. */
 	public static final String MIN_REGULAR_WAGE = "Min regular wage";
@@ -357,6 +369,12 @@ public class Labels {
 	/** INTERMEDIATE_SALES_VOLUME */
 	public static final String salesIntermediateVolume = "Sales of intermediate goods - volume";
 
+	/** selfFinancingRatio */
+	public static String selfFinancingRatio = "Self-financing Ratio";
+
+	/** The capitalist status*/
+	public static final int STATUS_CAPITALIST = 3;
+
 	/** The employed status*/
 	public static final int STATUS_EMPLOYED = 0;
 
@@ -366,15 +384,12 @@ public class Labels {
 	/** The voluntary unemployed status*/
 	public static final int STATUS_VOLUNTARY_UNEMPLOYED = 1;
 
-	/** The capitalist status*/
-	public static final int STATUS_CAPITALIST = 3;
-
 	/** The unemployed. */
 	public static final String UNEMPLOYED = "Unemployed";
-
+	
 	/** The unemployment duration. */
 	public static final String UNEMPLOYMENT_DURATION = "Unemployment duration";
-
+	
 	/** utilizationFinalMax */
 	public static String utilizationFinalMax = "The maximum target of utilization - Final Sector";
 
@@ -386,28 +401,22 @@ public class Labels {
 
 	/** utilizationIntermediateMax */
 	public static String utilizationIntermediateMax = "The maximum target of utilization - Intermediate Sector";
-	
+
 	/** utilizationIntermediateMedian */
 	public static String utilizationIntermediateMedian = "The median target of utilization - Intermediate Sector";
-	
+
 	/** utilizationIntermediateMin */
 	public static String utilizationIntermediateMin = "The minimum target of utilization - Intermediate Sector";
-
-	/** workersInSector2 */
-	public static String workersInSector2 = "Workers in Sector 2";
-
-	/** workersInSector1 */
-	public static String workersInSector1 = "Workers in Sector 1";
-
+	
 	/** */
 	public static final String VACANCIES = "Vacancies";
-	
+
 	/** The number of vacancies. */
 	public static final String vacanciesAnnual = "Vacancies - Annual";
-
+	
 	/** */
 	public static final String vacanciesRateAnnual = "Vacancies rate";
-	
+
 	/** vacanciesRateAverage */
 	public static final String vacancyRateAverage = "The vacancy rate - Average";
 
@@ -423,7 +432,37 @@ public class Labels {
 	/** The wage bill. */
 	public static final String wageBillTotal = "The wage bill of the period - Total";
 
+	/** workersInSector1 */
+	public static String workersInSector1 = "Workers in Sector 1";
+	
+	/** workersInSector2 */
+	public static String workersInSector2 = "Workers in Sector 2";
+
 	/** The effective workforce. */
 	public static final String workforceTotal = "Workforce - Whole Industry";
+
+	/** DEBT */
+	public static final String DEBT = "Debt";
+
+	/** H_SAVING_TARGET */
+	public static final String H_SAVING_TARGET = "Households - Saving Target";
+
+	/** DEBT_TARGET */
+	public static final String DEBT_TARGET = "Firms - Debt Target";
 	
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

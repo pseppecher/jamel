@@ -27,7 +27,7 @@
 
 package jamel.spheres.realSphere;
 
-import jamel.util.Blackboard;
+import jamel.agents.firms.util.Mediator;
 
 /**
  * Represents a factory that produces final goods.
@@ -106,10 +106,10 @@ public class IntegratedFactory extends AbstractFactory {
 
 	/**
 	 * Creates a new factory.
-	 * @param parameters - the list of parameters.
+	 * @param mediator  the mediator.
 	 */
-	public IntegratedFactory(Blackboard parameters) {
-		super(parameters);
+	public IntegratedFactory(Mediator mediator) {
+		super(mediator);
 		this.finishedGoodsInventory = new FinalGoods();
 	}
 

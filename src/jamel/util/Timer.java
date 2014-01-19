@@ -132,7 +132,7 @@ public class Timer {
 		 * @param i - the number of periods.
 		 * @return the new period.
 		 */
-		public JamelPeriod getNewPeriod(int i) {
+		public JamelPeriod getFuturePeriod(int i) {
 			return new JamelPeriod(this.value+i);
 		}
 	

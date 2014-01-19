@@ -1,24 +1,47 @@
+/* =========================================================
+ * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
+ * =========================================================
+ *
+ * (C) Copyright 2007-2014, Pascal Seppecher and contributors.
+ * 
+ * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
+ *
+ * This file is a part of JAMEL (Java Agent-based MacroEconomic Laboratory).
+ * 
+ * JAMEL is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * JAMEL is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
+ * [JAMEL uses JFreeChart, copyright by Object Refinery Limited and Contributors. See <http://www.jfree.org>.]
+ */
+
 package jamel.gui;
 
+import jamel.Jamel;
 import jamel.Circuit;
+import jamel.CircuitCommands;
 import jamel.JamelObject;
 import jamel.gui.charts.JamelChart;
-import jamel.gui.charts.industry.*;
-import jamel.gui.charts.income.*;
-import jamel.gui.charts.labor.*;
-import jamel.gui.charts.money.*;
-import jamel.gui.charts.others.*;
-import jamel.gui.charts.sectorFinal.*;
+import jamel.util.data.SimulationReport;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Font;
 import java.awt.Frame;
-import java.awt.GridLayout;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 
 import javax.swing.JEditorPane;
@@ -31,6 +54,7 @@ import javax.swing.ProgressMonitor;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+import javax.swing.text.html.HTMLDocument;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtilities;
@@ -46,85 +70,17 @@ public class JamelWindow extends JFrame {
 	/** serialVersionUID */
 	private static final long serialVersionUID = 1L;
 
-	/**
-	 * Returns the industry panel.
-	 * @return the industry panel.
-	 */
-	private static Component getIndustryPanel() {
-		final JPanel panel = new JPanel(new GridLayout(3,3,10,10));
-		panel.add(new BankruptcyRate());
-		panel.add(new CapacityUtilization());
-		panel.add(new Markup());
-		panel.add(new InventoryLevel());
-		panel.add(new RelativePrices());
-		panel.add(new VacancyRates());
-		panel.add(new Firms());
-		panel.add(new Profits());
-		panel.add(new Workers());
-		//panel.add(new ProfitsRatio());
-		//panel.add(new ChartPanel(null));
-		//panel.add(new MarkupTarget());
-		return panel;
-	}
+	@SuppressWarnings("javadoc")
+	public static final String COMMAND_ADD_PANEL = "windowAddPanel";
 
-	/**
-	 * Returns the labor panel.
-	 * @return the labor panel.
-	 */
-	private static Component getLaborPanel() {
-		final JPanel panel = new JPanel(new GridLayout(3,3,10,10));
-		panel.add(new LaborMarket());
-		panel.add(new UnemploymentRate());
-		panel.add(new BeveridgeCurve());
-		panel.add(new JobVacancies());
-		//panel.add(new UnemploymentTypes());
-		panel.add(new UnemploymentDuration());
-		panel.add(new JobSeekers());
-		panel.add(new Unemployment());
-		panel.add(new VacancyRate());
-		panel.add(new ChartPanel(null));
-		return panel;
-	}
+	@SuppressWarnings("javadoc")
+	public static final String COMMAND_MARKER = "windowMarker";
 
-	/**
-	 * Returns the main panel.
-	 * @return the main panel.
-	 */
-	private static Component getMainPanel() {
-		final JPanel panel = new JPanel(new GridLayout(3,3,10,10));
-		panel.add(new Prices());
-		panel.add(new FinalGoodsMarket());
-		panel.add(new InventoryVolumeFinal());
+	@SuppressWarnings("javadoc")
+	public static final String COMMAND_SELECT_PANEL = "windowSelectPanel";
 
-		panel.add(new Wages());
-		panel.add(new BeveridgeCurve());
-		panel.add(new BankRatios());
-		
-		panel.add(new InflationUnemployment());
-		panel.add(new PhillipsCurve());
-		panel.add(new Distribution());
-		//panel.add(new LaborMarket());
-		//panel.add(new Income());
-		return panel;
-	}
-
-	/**
-	 * Returns the money panel.
-	 * @return the money panel.
-	 */
-	private static Component getMoneyPanel() {
-		final JPanel panel = new JPanel(new GridLayout(3,3,10,10));
-		panel.add(new BankRatios());
-		panel.add(new BankDividend());
-		panel.add(new Bankruptcies());
-		panel.add(new Money());
-		panel.add(new MoneyVelocity());
-		panel.add(new ChartPanel(null));
-		panel.add(new ChartPanel(null));
-		panel.add(new ChartPanel(null));
-		panel.add(new ChartPanel(null));
-		return panel;
-	}
+	@SuppressWarnings("javadoc")
+	public static final String COMMAND_ZOOM = "windowSetZoom";
 
 	/** The button bar. */
 	private final ButtonBar buttonBar;
@@ -136,11 +92,7 @@ public class JamelWindow extends JFrame {
 	private final StringBuffer consoleText = new StringBuffer();
 
 	/** A String that gives some infos about Jamel. */
-	private final String infoString = 
-			"<h3>Jamel (20130918 - Morra)</h3>" +
-			"<h1>Java Agent-based MacroEconomic Laboratory</h1>"+
-			"&copy; Pascal Seppecher 2007-2013. All rights reserved.<br>"+
-			"<a href=\"http://p.seppecher.free.fr\">http://p.seppecher.free.fr</a>";
+	private final String infoString;
 
 	/** The matrix panel. */
 	private JEditorPane matrixPane;
@@ -152,12 +104,16 @@ public class JamelWindow extends JFrame {
 	private final ViewManager viewManager;
 
 	/**
-	 * 
+	 * Creates a new window.
+	 * @param name  the string that is to be this window's name.
 	 */
-	public JamelWindow() {
+	public JamelWindow(String name) {
+		infoString = Jamel.readFile("info.html");
 		viewManager = new ViewManager() ;
 		tabbedPane = new JTabbedPane() ;
 		setVisible(false);
+		this.setName(name);
+		this.setTitle(name);
 		setMinimumSize(new Dimension(400,200));
 		setPreferredSize(new Dimension(800,400));
 		pack();
@@ -165,16 +121,14 @@ public class JamelWindow extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE) ;
 		// ********
 		getContentPane().add( tabbedPane ) ;
-		this.tabbedPane.add("Main",getMainPanel());
-		this.tabbedPane.add("Industry",getIndustryPanel());
-		this.tabbedPane.add("Labor",getLaborPanel());
-		this.tabbedPane.add("Money",getMoneyPanel());
 		this.tabbedPane.add("Matrix",getMatrixPanel());
 		this.tabbedPane.add("Console",getConsolePanel());
 		this.tabbedPane.add("Info",getInfoPanel());
+		this.tabbedPane.setSelectedIndex(1);
 		this.buttonBar = new ButtonBar(this) ;
 		getContentPane().add( this.buttonBar, "South" );
 		this.buttonBar.pause(false);
+		this.setVisible(true);
 	}
 
 	/**
@@ -183,6 +137,10 @@ public class JamelWindow extends JFrame {
 	 */
 	private JScrollPane getConsolePanel() {
 		consolePane = new JEditorPane("text/html","<h2>The console panel.</h2>");
+		Font font = new Font("Monaco", Font.PLAIN, 12);
+		String bodyRule = "body { font-family: " + font.getFamily() + "; " +
+				"font-size: " + font.getSize() + "pt; }";
+		((HTMLDocument)consolePane.getDocument()).getStyleSheet().addRule(bodyRule);
 		consolePane.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(consolePane) ;
 		return scrollPane;
@@ -205,13 +163,13 @@ public class JamelWindow extends JFrame {
 						ex.printStackTrace();
 						JOptionPane.showMessageDialog(null,
 								"<html>" +
-								"Error.<br>"+
-								"Cause: "+e.toString()+".<br>"+
-								"Please see server.log for more details.</html>",
-								"Warning",
-								JOptionPane.WARNING_MESSAGE);
+										"Error.<br>"+
+										"Cause: "+e.toString()+".<br>"+
+										"Please see server.log for more details.</html>",
+										"Warning",
+										JOptionPane.WARNING_MESSAGE);
 					}	        
-				}
+			}
 		});		
 		editorPane.setEditable(false);
 		final JScrollPane scrollPane = new JScrollPane(editorPane) ;
@@ -227,6 +185,15 @@ public class JamelWindow extends JFrame {
 		matrixPane.setEditable(false);
 		JScrollPane scrollPane = new JScrollPane(matrixPane) ;
 		return scrollPane;
+	}
+
+	/**
+	 * Sets the zoom.
+	 * @param z the zoom to set.
+	 */
+	void zoom(int z) {
+		viewManager.setRange(z) ;
+		update() ;		
 	}
 
 	/**
@@ -255,9 +222,32 @@ public class JamelWindow extends JFrame {
 	}
 
 	/**
-	 * Exports a rapport.
+	 * Receives an event.
+	 * @param key  the instruction.
+	 * @param val  An object that represents some parameters.
 	 */
-	public void exportRapport() {
+	public void doEvent(String key, Object val) {
+		if (key.equals(COMMAND_MARKER)) {
+			this.addMarker((String)val,JamelObject.getCurrentPeriod().getMonth());
+		}
+		else if (key.equals(COMMAND_ADD_PANEL)) {
+			this.tabbedPane.add((Component) val,0);
+		}
+		else if (key.equals(COMMAND_SELECT_PANEL)) {
+			this.tabbedPane.setSelectedIndex((Integer) val);
+		}
+		else if (key.equals(COMMAND_ZOOM)) {
+			this.zoom((Integer) val);
+		}
+		else {
+			throw new IllegalArgumentException("Unexpected command: "+key);			
+		}
+	}
+
+	/**
+	 * Exports a report.
+	 */
+	public void exportHtmlReport() {
 		final int max = tabbedPane.getTabCount();
 		final ProgressMonitor progressMonitor = new ProgressMonitor(this,
 				"Exporting",
@@ -267,7 +257,7 @@ public class JamelWindow extends JFrame {
 		final File outputDirectory = new File("exports/"+this.getTitle()+"-"+(new Date()).getTime());
 		outputDirectory.mkdir();
 		try {
-			final FileWriter writer = new FileWriter(new File(outputDirectory,"Rapport.html"));
+			final FileWriter writer = new FileWriter(new File(outputDirectory,"Report.html"));
 			writer.write("<HTML>"+rc);
 			writer.write("<HEAD>");
 			writer.write("<TITLE>"+this.getTitle()+"</TITLE>"+rc);
@@ -322,6 +312,32 @@ public class JamelWindow extends JFrame {
 	}
 
 	/**
+	 * Exports a simulation report in the latex format.
+	 */
+	public void exportLatexReport() {
+		final SimulationReport report = new SimulationReport();
+		final int max = tabbedPane.getTabCount();
+		report.setTitle((this.getTitle().split("\\."))[0]);
+		report.setDates(viewManager.getStart().getDate(),viewManager.getEnd().getDate());
+		for (int tabIndex = 0; tabIndex < max; tabIndex ++) {
+			try {
+				final JPanel currentTab = (JPanel)tabbedPane.getComponentAt(tabIndex) ;
+				final String tabTitle = tabbedPane.getTitleAt(tabIndex);					
+				final int chartPanelCount = currentTab.getComponentCount() ;
+				for (int chartIndex=0 ; chartIndex<chartPanelCount ; chartIndex++) {
+					final ChartPanel aChartPanel = (ChartPanel)currentTab.getComponent(chartIndex);
+					final JamelChart chart = (JamelChart) aChartPanel.getChart() ;
+					report.addChart(tabTitle,chart);
+				}
+			} catch (ClassCastException e) {
+				// The current panel is not a chart panel: nothing to do.
+			}
+		}
+		report.setParameters(Circuit.getParameters());
+		report.export();
+	}
+
+	/**
 	 * Shows a dialog that indicates the bank failure.
 	 */
 	public void failure() {
@@ -353,32 +369,6 @@ public class JamelWindow extends JFrame {
 	}
 
 	/**
-	 * Sets the chart in the specified panel.
-	 * @param tabIndex the index of the tab to customize.
-	 * @param panelIndex the id of the ChartPanel to customize.
-	 * @param chartPanelName the name of the ChartPanel to set.
-	 * @throws ClassNotFoundException ...
-	 * @throws NoSuchMethodException ... 
-	 * @throws InvocationTargetException ...  
-	 * @throws IllegalAccessException ...
-	 * @throws InstantiationException ...
-	 * @throws SecurityException ...
-	 * @throws IllegalArgumentException ... 
-	 */
-	public void setChart(int tabIndex, int panelIndex, String chartPanelName) throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, ClassNotFoundException {		
-			final ChartPanel chartPanel = (ChartPanel) Class.forName(chartPanelName,false,ClassLoader.getSystemClassLoader()).getConstructor().newInstance();
-			((ChartPanel) ((JPanel) tabbedPane.getComponent(tabIndex)).getComponent(panelIndex)).setChart(chartPanel.getChart());
-	}
-
-	/**
-	 * Sets the selected index for the tabbedpane.
-	 * @param index the index to be selected.
-	 */
-	public void setSelectedTab(int index) {
-		this.tabbedPane.setSelectedIndex(index);		
-	}
-
-	/**
 	 * 
 	 */
 	public void update() {
@@ -397,16 +387,14 @@ public class JamelWindow extends JFrame {
 				}
 			}
 		}
-		this.matrixPane.setText(Circuit.getCircuit().getHtmlMatrix());
+		this.matrixPane.setText((String) Circuit.getResource(CircuitCommands.GetHtmlMatrix));
 	}
 
 	/**
-	 * Sets the zoom.
-	 * @param z the zoom to set.
+	 * Updates the pause/run buttons.
 	 */
-	public void zoom(int z) {
-		viewManager.setRange(z) ;
-		update() ;		
+	public void updatePauseButton() {
+		this.buttonBar.updatePauseButton();
 	}
 
 	/**

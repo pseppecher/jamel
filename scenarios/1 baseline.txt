@@ -1,11 +1,45 @@
-<i>Scenario one sector</i>
+********
+Baseline
+********
 
-include(inc/initbaseline.txt)
+*PREAMBLE*
 
-//Circuit.2000-02.exportMonthlyDataEachPeriod(%date,%priceFinalMax,%priceFinalMedian,%priceFinalMinimum,%MAX_REGULAR_WAGE,%MEDIAN_WAGE,%MIN_REGULAR_WAGE,%inventoryFinalLevel,%finalCapUtil,%FIRMS_DEPOSITS,%HOUSEHOLDS_DEPOSITS,%capitalBank,%CAPITAL_ADEQUACY_RATIO,%DOUBTFUL_DEBTS_RATIO,%BANK_DIVIDEND)
-//Circuit.2001-01.exportYearDataEachYear(%date,%unemploymentRate,%vacanciesRate,%inflation,%profitShare,%wageShare,%bankruptcies,%moneyVelocity)
+Circuit=jamel.BasicCircuit
+RandomSeed=0
+WindowRange=1200
+Households=jamel.agents.households.HouseholdB // A basic household
+Firms=jamel.agents.firms.BasicFirm // A not-very-smart firm.
 
-Circuit.2050-01.pause()
+*START*
 
-<i>Now, we can run the model:</i>
+2000-01.set(Bank.rate:normal=0.05,penalty=0.10)
+2000-01.set(Bank.capital:targetedRatio=0.1,propensityToDistributeExcess=0.5)
+2000-01.set(Bank:term=12,accommodating=true)
 
+2000-01.set(Households.savings:propensityToSave=0.05,ratioTarget=0.05,propensityToConsumeExcess=0.5)
+2000-01.set(Households.wage:resistance=12,flexibility=0.05)
+
+2000-01.set(Firms.wage:minimum=0,default=3000,downFlex=0.09,upFlex=0.06)
+2000-01.set(Firms.laborContract:min=6,max=18)
+2000-01.set(Firms.capital:normalRatio=0.5,propensityToDistributeExcess=0.5)
+2000-01.set(Firms.vacancies:normalRate=0.03,period=4)
+2000-01.set(Firms.regenerationTime:min=12,max=12)
+2000-01.set(Firms.price:flexibility=0.1)
+2000-01.set(Firms.inventories:normalLevel=4,propensityToSell=0.5)
+2000-01.set(Firms:productionTime=6)
+2000-01.set(Firms:productivity=100)
+2000-01.set(Firms:machinery=10)
+2000-01.set(Firms.utilizationRate:flexibility=10,init.min=50,init.max=100)
+
+2000-01.newFirms(firms=660)
+2000-01.newHouseholds(households=5000)
+
+2005-01.set(Bank:accommodating=false)
+
+2100-01.pause()
+
+*END*
+
+********
+Now, run 
+********

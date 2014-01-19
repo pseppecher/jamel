@@ -31,7 +31,7 @@ import java.util.LinkedList;
 /**
  * A dataset for the macroeconomic data of the current year.
  */
-public class YearDataset extends AbstractDataset{
+public class YearDataset extends GlobalDataset{
 
 	/** The average price on the goods market last year. */
 	private Double lastFinalPrice;
@@ -260,14 +260,14 @@ public class YearDataset extends AbstractDataset{
 			this.debt += periodData.debtS1+periodData.debtS2;
 			this.doubtfulDebt += periodData.doubtDebtS1+periodData.doubtDebtS2;
 			this.deposits += periodData.DEPOSITS;
-			this.fDeposits += periodData.FIRMS_DEPOSITS;
-			this.hDeposits += periodData.HOUSEHOLDS_DEPOSITS;
+			this.fDeposits += periodData.fDeposits;
+			this.hDeposits += periodData.hDeposits;
 			
 			this.grossProfit += periodData.grossProfit;
 
 			this.dividends += periodData.DIVIDENDS;
 			this.households += periodData.HOUSEHOLDS;
-			this.unemployed += periodData.UNEMPLOYED;
+			this.unemployed += periodData.unemployed;
 			this.employed += periodData.EMPLOYED;
 
 			this.bankruptciesFinal += periodData.bankruptS2;
@@ -282,8 +282,8 @@ public class YearDataset extends AbstractDataset{
 			this.productionFinalVolume += periodData.prodVolS2;
 			this.productionIntermediateVolume += periodData.prodVolS1;
 
-			this.salesFinalValue += periodData.salesValPS2;
-			this.salesIntermediateValue += periodData.salesValPS1;
+			this.salesFinalValue += periodData.salesPriceValS2;
+			this.salesIntermediateValue += periodData.salesPriceValS1;
 
 			this.salesFinalVolume += periodData.salesVolS2;
 			this.salesIntermediateVolume += periodData.salesVolS1;
@@ -298,7 +298,7 @@ public class YearDataset extends AbstractDataset{
 			this.workforceFinal += periodData.workforceS2;
 			this.workforceIntermediate += periodData.workforceS1;
 			
-			this.inventoryTotalValue += periodData.INVENTORY_UNF_VALUE+periodData.INVENTORY_VALUE;
+			this.inventoryTotalValue += periodData.invUnfVal+periodData.invFinVal;
 
 		}
 
@@ -322,7 +322,7 @@ public class YearDataset extends AbstractDataset{
 		this.bankruptcyRateAverage = 1200.*bankruptcies/this.firmsTotal;
 
 		this.moneyVelocity = this.income/dataList.getLast().DEPOSITS;		
-		this.savingsRate = 100.*dataList.getLast().HOUSEHOLDS_DEPOSITS/this.income;
+		this.savingsRate = 100.*dataList.getLast().hDeposits/this.income;
 		this.wageShare = 100.*this.wageBill/this.income;
 		this.profitShare = 100.*this.grossProfit/this.income;
 		this.unemploymentRate = 100.*this.unemployed/(this.unemployed+this.employed);		

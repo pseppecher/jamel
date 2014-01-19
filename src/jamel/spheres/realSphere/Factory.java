@@ -27,10 +27,12 @@
 
 package jamel.spheres.realSphere;
 
+import jamel.agents.firms.util.FirmComponent;
+
 /**
  * An interface for factories.
  */
-public interface Factory {
+public interface Factory extends FirmComponent{
 
 	/**
 	 * Closes the factories.

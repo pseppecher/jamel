@@ -25,19 +25,16 @@ class ButtonBar extends JPanel {
 
 	/** maxDateField */
 	private JTextField maxDateField = new JTextField (9) ;
-	
+
 	/** minDateField */
 	private JTextField minDateField = new JTextField (9);
 
-	/** the status. */
-	private boolean pause;
-	
 	/** pauseButton */
 	private JButton pauseButton = new JButton("Pause");
-	
+
 	/** playButton */
 	private JButton playButton = new JButton("Run");
-	
+
 	/** quitButton */
 	private JButton quitButton = new JButton("Quit");
 
@@ -75,13 +72,11 @@ class ButtonBar extends JPanel {
 		pauseButton.setEnabled(false);
 		exportButton.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
-				final boolean previous=pause;
 				pause(true);
-				window.exportRapport();
-				pause(previous);
+				window.exportLatexReport();
 			} 
 		}) ;
-		exportButton.setToolTipText("Export Rapport") ;
+		exportButton.setToolTipText("Export Simulation Report") ;
 		quitButton.addActionListener(new ActionListener() { 
 			public void actionPerformed(ActionEvent e) { 
 				System.exit(0);
@@ -223,12 +218,7 @@ class ButtonBar extends JPanel {
 	 * @param b the state to set.
 	 */
 	void pause(boolean b) {
-		pauseButton.setEnabled(!b) ;
-		pauseButton.setSelected(b) ;
-		playButton.setEnabled(b) ;
-		playButton.setSelected(!b) ;
 		Circuit.pause(b) ;
-		this.pause=b;
 	}
 
 	/**
@@ -241,4 +231,14 @@ class ButtonBar extends JPanel {
 		maxDateField.setText(end) ;
 	}
 
+	/**
+	 * Updates the pause/run buttons.
+	 */
+	void updatePauseButton() {
+		final boolean b = Circuit.isPaused();
+		pauseButton.setEnabled(!b) ;
+		pauseButton.setSelected(b) ;
+		playButton.setEnabled(b) ;
+		playButton.setSelected(!b) ;			
+	}
 }

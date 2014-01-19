@@ -27,7 +27,7 @@
 
 package jamel.agents.roles;
 
-import jamel.agents.firms.ProductionType;
+import jamel.agents.firms.util.ProductionType;
 import jamel.util.markets.JobOffer;
 
 /**

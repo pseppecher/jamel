@@ -33,16 +33,16 @@ import org.jfree.data.statistics.BoxAndWhiskerItem;
 
 import jamel.agents.firms.Firm;
 import jamel.agents.firms.FirmDataset;
-import jamel.agents.firms.ProductionType;
+import jamel.agents.firms.util.ProductionType;
 import jamel.agents.households.Household;
-import jamel.agents.households.HouseholdDatasetInterface;
+import jamel.agents.households.HouseholdDataset;
 import jamel.spheres.monetarySphere.BankData;
 import jamel.spheres.realSphere.IntermediateFactory;
 
 /**
  * A dataset that aggregates the macroeconomic data of one period.
  */
-public class PeriodDataset extends AbstractDataset {
+public class PeriodDataset extends GlobalDataset {
 
 	/** dividendsFinal */
 	private long dividendsFinal;
@@ -50,11 +50,20 @@ public class PeriodDataset extends AbstractDataset {
 	/** dividendsIntermediate */
 	private long dividendsIntermediate;
 
+	/** fPessimism */
+	public int fPessimism;
+	
+	/** hOptimism */
+	public int hOptimism;	
+
+	/** hPessimism */
+	public int hPessimism;
+
 	/** averageDividendFinal */
 	public double averageDividendFinal;
-	
+
 	/** averageDividendIntermediate */
-	public double averageDividendIntermediate;	
+	public double averageDividendIntermediate;
 
 	/** avWorkforceS1 */
 	public int avWorkforceS1;
@@ -66,7 +75,7 @@ public class PeriodDataset extends AbstractDataset {
 	public long BANK_DIVIDEND;
 
 	/** BANKRUPTCIES */
-	public long BANKRUPTCIES; // TODO utiliser cette donnée issue de la banque pour contrôler les données issues des entreprises.
+	public long bankruptcies; // TODO utiliser cette donnée issue de la banque pour contrôler les données issues des entreprises.
 
 	/** bankruptciesIntermediate */
 	public int bankruptS1;
@@ -90,10 +99,10 @@ public class PeriodDataset extends AbstractDataset {
 	public long CONSUMPTION_BUDGET;
 
 	/** CONSUMPTION_VALUE */
-	public long CONSUMPTION_VALUE;
+	public long consumptionVal;
 
 	/** CONSUMPTION_VOLUME */
-	public long CONSUMPTION_VOLUME;
+	public long consumptionVol;
 
 	/** date */
 	public final String date;
@@ -103,6 +112,8 @@ public class PeriodDataset extends AbstractDataset {
 
 	/** debtS2 */
 	public long debtS2;
+
+	public long debtTarget;
 
 	/** DEPOSITS */
 	public long DEPOSITS;
@@ -117,7 +128,7 @@ public class PeriodDataset extends AbstractDataset {
 	public long doubtDebtS2;
 
 	/** DOUBTFUL_DEBTS */
-	public long DOUBTFUL_DEBTS;
+	public long doubtDebt;
 
 	/** DOUBTFUL_DEBTS_RATIO */
 	public double DOUBTFUL_DEBTS_RATIO;
@@ -129,10 +140,7 @@ public class PeriodDataset extends AbstractDataset {
 	public double finalCapUtil;
 
 	/** FIRMS_DEPOSITS */
-	public long FIRMS_DEPOSITS;
-
-	/** FIRMS_CAPITAL */
-	//public long FIRMS_CAPITAL;
+	public long fDeposits;
 
 	/** firmsIntermediate */
 	public int firmsS1;
@@ -146,20 +154,29 @@ public class PeriodDataset extends AbstractDataset {
 	/** FORCED_SAVINGS_RATE */
 	public double FORCED_SAVINGS_RATE;
 
+	public float fPessimismRatio;
+
 	/** The gross profit */
 	public long grossProfit;
 
 	/** grossProfitFinal */
-	public long grossProfitFinal;
+	public long grossProfitS2;
 
 	/** grossProfitIntermediate */
-	public long grossProfitIntermediate;
+	public long grossProfitS1;
+
+	/** hHoardingRatio */
+	public float hHoardingRatio;
 
 	/** HOUSEHOLDS */
 	public long HOUSEHOLDS;
 
 	/** HOUSEHOLDS_DEPOSITS */
-	public long HOUSEHOLDS_DEPOSITS;
+	public long hDeposits;
+
+	public float hPessimismRatio;
+
+	public long hSavingTarget;
 
 	/** INCOME */
 	public long INCOME;
@@ -173,20 +190,20 @@ public class PeriodDataset extends AbstractDataset {
 	/** The volume of intermediate goods needed by the final goods sector. */
 	public long intermediateNeedsVolume;
 
-	/** INVENTORY_VALUE */
-	public long INVENTORY_UNF_VALUE;
-
-	/** INVENTORY_VALUE */
-	public long INVENTORY_VALUE;
-
-	/** inventoryFinalLevel */
-	public double inventoryFinalLevel;
-
 	/** inventoryIntermediateLevel */
-	public double inventoryIntermediateLevel;
+	public double inventoryS1Level;
+
+	/** INVENTORY_VALUE */
+	public long invFinVal;
 
 	/** INVOLUNTARY_UNEMPLOYED */
 	public long INVOLUNTARY_UNEMPLOYED;
+
+	/** inventoryFinalLevel */
+	public double invS2Level;
+
+	/** INVENTORY_VALUE */
+	public long invUnfVal;
 
 	/** INVENTORY value */
 	public double invValS1;
@@ -200,20 +217,11 @@ public class PeriodDataset extends AbstractDataset {
 	/** INVENTORY_VOLUME */
 	public double invVolS2;
 
-	/** PRODUCTION_VOLUME */
-	//public long PRODUCTION_VOLUME;
-
 	/** JOB_OFFERS */
-	public long JOB_OFFERS;
+	public long jobOffers;
 
 	/** LOANS */
 	public long LOANS;
-
-	/** SALES_VALUE */
-	//public long SALES_VALUE;
-
-	/** SALES_VOLUME */
-	//public long SALES_VOLUME;
 
 	/** intermediateMachinery */
 	public long machineryS1;
@@ -263,37 +271,34 @@ public class PeriodDataset extends AbstractDataset {
 	/** period */
 	public final double period;
 
-	/** MAXIMUM_REGULAR_PRICE */
-	public long priceFinalMax;
-
-	/** priceFinalMean */
-	public double priceFinalMean;
-
-	/** MEDIAN_PRICE */
-	public long priceFinalMedian;
-
-	/** MINIMUM_REGULAR_PRICE */
-	public long priceFinalMinimum;
-
 	/** priceIntermediateMax */
-	public long priceIntermediateMax;
+	public long priceS1Max;
 
 	/** priceIntermediateMean */
-	public double priceIntermediateMean;
+	public double priceS1Mean;
 
 	/** priceIntermediateMedian */
-	public long priceIntermediateMedian;
+	public long priceS1Med;
 
-	/** The total value of the sales of intermediate goods. */
-	//public long intermediateSalesValue;
+	public long priceS1Minimum;
 
-	public long priceIntermediateMinimum;
+	/** MAXIMUM_REGULAR_PRICE */
+	public long priceS2Max;
 
-	/** pricesList */
-	public final LinkedList<Long> pricesFinalList = new LinkedList<Long>();
+	/** priceFinalMean */
+	public double priceS2Mean;
+
+	/** MEDIAN_PRICE */
+	public long priceS2Med;
+
+	/** MINIMUM_REGULAR_PRICE */
+	public long priceS2Min;
 
 	/** pricesList */
 	public final LinkedList<Long> pricesIntermediateList = new LinkedList<Long>();
+
+	/** pricesList */
+	public final LinkedList<Long> pricesS2List = new LinkedList<Long>();
 
 	/** productionMaxFinalVolume */
 	public int productionMaxFinalVolume;
@@ -344,16 +349,16 @@ public class PeriodDataset extends AbstractDataset {
 	public long RESERVATION_WAGE;
 
 	/** Value of sales (at the cost value). */
-	public long salesValCS1;
+	public long salesCostValS1;
 
 	/** Value of sales (at the cost value). */
-	public long salesValCS2;
+	public long salesCostValS2;
 
 	/** Value of sales (at the price value). */
-	public long salesValPS1;
+	public long salesPriceValS1;
 
 	/** Value of sales (at the price value). */
-	public long salesValPS2;
+	public long salesPriceValS2;
 
 	/** salesFinalVolume */
 	public long salesVolS1;
@@ -361,11 +366,14 @@ public class PeriodDataset extends AbstractDataset {
 	/** salesFinalVolume */
 	public long salesVolS2;
 
+	/** autofinance */
+	public float sefFinancingRatio;
+
 	/** UNEMPLOYED */
-	public long UNEMPLOYED;
+	public long unemployed;
 
 	/** UNEMPLOYMENT_DURATION */
-	public double UNEMPLOYMENT_DURATION;
+	public double unemploymentDuration;
 
 	/** unemploymentDurationList */
 	public final LinkedList<Double> unemploymentDurationList = new LinkedList<Double>();
@@ -397,14 +405,11 @@ public class PeriodDataset extends AbstractDataset {
 	/** utilizationListIntermediate */
 	public final LinkedList<Float> utilizationListIntermediate = new LinkedList<Float>();
 
-	/** wageBillTotal */
-	//public long wageBillTotal;
-
 	/** vacanciesFinal */
-	public long vacanciesFinal;
+	public long vacanciesS2;
 
 	/** vacanciesIntermediate */
-	public long vacanciesIntermediate;
+	public long vacanciesS1;
 
 	/** vacanciesTotal */
 	public long vacanciesTotal;
@@ -461,10 +466,15 @@ public class PeriodDataset extends AbstractDataset {
 	 * @param data - the data to add.
 	 */
 	private void addIndividualData(FirmDataset data) {
-		this.JOB_OFFERS += data.jobOffers;
-		this.FIRMS_DEPOSITS += data.deposit;
-		this.INVENTORY_VALUE += data.invVal;
-		this.INVENTORY_UNF_VALUE += data.invUnfVal;
+		if (data.optimism!=null&&!data.optimism){
+			this.fPessimism++;
+		}
+		this.debtTarget += data.debtTarget;
+		//System.out.println(this.debtTarget); DELETE
+		this.jobOffers += data.jobOffers;
+		this.fDeposits += data.deposit;
+		this.invFinVal += data.invFiVal;
+		this.invUnfVal += data.invUnVal;
 		this.intermediateNeedsVolume += data.intermediateNeedsVolume;
 		this.intermediateNeedsBudget += data.intermediateNeedsBudget;
 		this.rawMaterialEffectiveVolume += data.rawMaterialEffectiveVolume;
@@ -476,20 +486,20 @@ public class PeriodDataset extends AbstractDataset {
 			this.doubtDebtS1 += data.doubtDebt;
 			if (data.bankrupt) this.bankruptS1++;
 			this.dividendsIntermediate += data.dividend;
-			this.grossProfitIntermediate += data.grossProfit; 
-			this.invVolS1 += data.invVol;
-			this.invValS1 += data.invVal;
+			this.grossProfitS1 += data.grossProfit; 
+			this.invVolS1 += data.invFiVol;
+			this.invValS1 += data.invFiVal;
 			this.prodVolS1 += data.prodVol;
 			this.prodValS1 += data.prodVal;
 			this.productionMaxIntermediateVolume += data.maxProduction;
-			this.salesValPS1 += data.salesPVal;
-			this.salesValCS1 += data.salesCVal;
+			this.salesPriceValS1 += data.salesPVal;
+			this.salesCostValS1 += data.salesCVal;
 			this.salesVolS1 += data.salesVol;
 			this.machineryS1 += data.machinery;
-			this.vacanciesIntermediate += data.vacancies;
+			this.vacanciesS1 += data.vacancies;
 			this.wageBillS1 += data.wageBill;
 			this.workforceS1 += data.workforce;
-			this.workforceAnticipatedIntermediate += data.anticipatedWorkforce;
+			this.workforceAnticipatedIntermediate += data.workforceTarget;
 			this.pricesIntermediateList.add((long)data.price);// FIXME pourquoi long ?
 			this.markupListIntermediate.add(data.markupTarget);
 			this.utilizationListIntermediate.add(data.utilizationTarget);
@@ -500,22 +510,22 @@ public class PeriodDataset extends AbstractDataset {
 			this.debtS2 += data.debt;
 			this.doubtDebtS2 += data.doubtDebt;
 			if (data.bankrupt) this.bankruptS2++;
-			this.invVolS2 += data.invVol;
-			this.invValS2 += data.invVal;
+			this.invVolS2 += data.invFiVol;
+			this.invValS2 += data.invFiVal;
 			this.dividendsFinal += data.dividend;
-			this.grossProfitFinal += data.grossProfit; 
+			this.grossProfitS2 += data.grossProfit; 
 			this.prodVolS2 += data.prodVol;
 			this.prodValS2 += data.prodVal;
 			this.productionMaxFinalVolume += data.maxProduction;
-			this.salesValPS2 += data.salesPVal;
-			this.salesValCS2 += data.salesCVal;
+			this.salesPriceValS2 += data.salesPVal;
+			this.salesCostValS2 += data.salesCVal;
 			this.salesVolS2 += data.salesVol;
 			this.machineryS2 += data.machinery;
-			this.vacanciesFinal += data.vacancies;
+			this.vacanciesS2 += data.vacancies;
 			this.wageBillS2 += data.wageBill;
 			this.workforceS2 += data.workforce;
-			this.workforceAnticipatedFinal += data.anticipatedWorkforce;
-			this.pricesFinalList.add((long)data.price);
+			this.workforceAnticipatedFinal += data.workforceTarget;
+			this.pricesS2List.add((long)data.price);
 			this.markupListFinal.add(data.markupTarget);		
 			this.utilizationListFinal.add(data.utilizationTarget);
 		}		
@@ -525,14 +535,21 @@ public class PeriodDataset extends AbstractDataset {
 	 * Adds the data of one household.
 	 * @param data - the data to add.
 	 */
-	private void addIndividualData(HouseholdDatasetInterface data) {
+	private void addIndividualData(HouseholdDataset data) {
+		this.hSavingTarget+=data.savingTarget;
+		if (data.getOptimism()) {
+			this.hOptimism++;			
+		}
+		else {
+			this.hPessimism++;
+		}
 		this.CONSUMPTION_BUDGET += data.getConsumptionBudget();
 		this.FORCED_SAVINGS += data.getForcedSavings();
-		this.CONSUMPTION_VALUE += data.getConsumptionValue();
-		this.CONSUMPTION_VOLUME += data.getConsumptionVolume();
+		this.consumptionVal += data.getConsumptionValue();
+		this.consumptionVol += data.getConsumptionVolume();
 		this.DIVIDENDS += data.getDividend();
 		this.INCOME += data.getIncome();
-		this.HOUSEHOLDS_DEPOSITS += data.getDeposits();
+		this.hDeposits += data.getDeposits();
 		this.HOUSEHOLDS ++;
 		if (data.getSector()==(ProductionType.finalProduction))
 			this.avWorkforceS2++;
@@ -547,12 +564,12 @@ public class PeriodDataset extends AbstractDataset {
 		else {
 			if (data.getEmploymentStatus()==Labels.STATUS_INVOLUNTARY_UNEMPLOYED) {
 				this.INVOLUNTARY_UNEMPLOYED++;
-				this.UNEMPLOYED++;
+				this.unemployed++;
 				this.unemploymentTotalDuration += data.getUnemploymentDuration();
 			}
 			else {
 				this.VOLUNTARY_UNEMPLOYED++;
-				this.UNEMPLOYED++;
+				this.unemployed++;
 				this.unemploymentTotalDuration += data.getUnemploymentDuration();
 			}
 		}
@@ -567,9 +584,9 @@ public class PeriodDataset extends AbstractDataset {
 		this.capitalBank = data.getCapital();
 		this.BANK_DIVIDEND = data.getDividend();
 		this.DEPOSITS = data.getDeposits();
-		this.DOUBTFUL_DEBTS = data.getDoubtfulDebts();
+		this.doubtDebt = data.getDoubtfulDebts();
 		this.LOANS = data.getLoans();
-		this.BANKRUPTCIES =  data.getBankruptcies();
+		this.bankruptcies =  data.getBankruptcies();
 		this.CAPITAL_ADEQUACY_RATIO = 100.*data.getCapital()/data.getLoans();
 		this.DOUBTFUL_DEBTS_RATIO = 100.*data.getDoubtfulDebts()/data.getLoans();	
 	}
@@ -579,12 +596,11 @@ public class PeriodDataset extends AbstractDataset {
 	 * @param firmsList - the list of the firms.
 	 */
 	public void compileFirmsData(LinkedList<Firm> firmsList) {
-		this.pricesFinalList.clear();
+		this.pricesS2List.clear();
 		this.markupListFinal.clear();
 		this.markupListIntermediate.clear();
 		for (Firm aFirm : firmsList) {
-			final FirmDataset data = aFirm.getData();
-			addIndividualData(data);
+			addIndividualData(aFirm.getData());
 		}		
 	}
 
@@ -605,16 +621,23 @@ public class PeriodDataset extends AbstractDataset {
 	 * Updates the ratios that require data from different sectors.
 	 */
 	public void updateRatios() {
-
-		//this.profitsRatio = ((double) (this.grossProfitFinal*this.machineryIntermediate))/(this.machineryFinal*this.grossProfitIntermediate);
+						
+		this.hPessimismRatio=100f*this.hPessimism/this.HOUSEHOLDS;
+		this.fPessimismRatio=100f*this.fPessimism/(this.firmsS1+this.firmsS2);
 		
-		this.grossProfit = this.grossProfitFinal+this.grossProfitIntermediate;
+		final long assets=this.fDeposits+this.invFinVal+this.invUnfVal;
+		final long capital=assets-(this.debtS1+this.debtS2);
+		this.sefFinancingRatio=100f*capital/assets;
+				
+		this.hHoardingRatio = 100f*this.hDeposits/(this.INCOME*12);
+		
+		this.grossProfit = this.grossProfitS2+this.grossProfitS1;
 		
 		if (this.machineryS1>0)
-			this.realProfitIntermediate = ((double)this.grossProfitIntermediate/this.machineryS1)*((double)this.CONSUMPTION_VOLUME/this.CONSUMPTION_VALUE);
+			this.realProfitIntermediate = ((double)this.grossProfitS1/this.machineryS1)*((double)this.consumptionVol/this.consumptionVal);
 		else 
 			this.realProfitIntermediate = 0;
-		this.realProfitFinal = ((double)this.grossProfitFinal/this.machineryS2)*((double)this.CONSUMPTION_VOLUME/this.CONSUMPTION_VALUE);
+		this.realProfitFinal = ((double)this.grossProfitS2/this.machineryS2)*((double)this.consumptionVol/this.consumptionVal);
 
 
 		if (this.firmsS2!=0) 
@@ -625,20 +648,17 @@ public class PeriodDataset extends AbstractDataset {
 
 		this.workforceAnticipatedTotal = this.workforceAnticipatedFinal+this.workforceAnticipatedIntermediate;
 
-		this.vacanciesTotal = this.vacanciesFinal+this.vacanciesIntermediate;
+		this.vacanciesTotal = this.vacanciesS2+this.vacanciesS1;
 
 		this.workforceTotal = this.workforceS2+this.workforceS1;
-		//this.wageBillTotal = this.wageBillS2+this.wageBillS1;
 
-		//if (this.productionMaxFinalVolume!=0) 
-		this.inventoryFinalLevel = this.invVolS2/this.productionMaxFinalVolume;
+		this.invS2Level = this.invVolS2/this.productionMaxFinalVolume;
 		if (this.productionMaxIntermediateVolume!=0) 
-			this.inventoryIntermediateLevel = this.invVolS1/this.productionMaxIntermediateVolume;
+			this.inventoryS1Level = this.invVolS1/this.productionMaxIntermediateVolume;
 		else
-			this.inventoryIntermediateLevel = 0;
-		//System.out.println(this.inventoryIntermediateLevel);// DELETE
+			this.inventoryS1Level = 0;
 
-		this.UNEMPLOYMENT_DURATION = this.unemploymentTotalDuration/this.UNEMPLOYED;
+		this.unemploymentDuration = this.unemploymentTotalDuration/this.unemployed;
 		this.FORCED_SAVINGS_RATE = 100.*this.FORCED_SAVINGS/this.CONSUMPTION_BUDGET;
 		if (wagesList.size()>0) {
 			BoxAndWhiskerItem item = BoxAndWhiskerCalculator.calculateBoxAndWhiskerStatistics(wagesList);
@@ -646,23 +666,23 @@ public class PeriodDataset extends AbstractDataset {
 			this.MEDIAN_WAGE = item.getMedian().longValue();
 			this.MIN_REGULAR_WAGE = item.getMinRegularValue().longValue();
 		}
-		if (pricesFinalList.size()>0) {
-			BoxAndWhiskerItem item = BoxAndWhiskerCalculator.calculateBoxAndWhiskerStatistics(pricesFinalList);
-			this.priceFinalMax = item.getMaxRegularValue().longValue();
-			this.priceFinalMedian = item.getMedian().longValue();
-			this.priceFinalMean = item.getMean().doubleValue();
-			this.priceFinalMinimum = item.getMinRegularValue().longValue();
+		if (pricesS2List.size()>0) {
+			BoxAndWhiskerItem item = BoxAndWhiskerCalculator.calculateBoxAndWhiskerStatistics(pricesS2List);
+			this.priceS2Max = item.getMaxRegularValue().longValue();
+			this.priceS2Med = item.getMedian().longValue();
+			this.priceS2Mean = item.getMean().doubleValue();
+			this.priceS2Min = item.getMinRegularValue().longValue();
 		}
 		if (pricesIntermediateList.size()>0) {
-			BoxAndWhiskerItem item = BoxAndWhiskerCalculator.calculateBoxAndWhiskerStatistics(pricesIntermediateList);
-			this.priceIntermediateMax = item.getMaxRegularValue().longValue();
-			this.priceIntermediateMedian = item.getMedian().longValue();
-			this.priceIntermediateMean = item.getMean().doubleValue();
-			this.priceIntermediateMinimum = item.getMinRegularValue().longValue();
+			final BoxAndWhiskerItem item = BoxAndWhiskerCalculator.calculateBoxAndWhiskerStatistics(pricesIntermediateList);
+			this.priceS1Max = item.getMaxRegularValue().longValue();
+			this.priceS1Med = item.getMedian().longValue();
+			this.priceS1Mean = item.getMean().doubleValue();
+			this.priceS1Minimum = item.getMinRegularValue().longValue();
 		}
 
 		//if (this.priceIntermediateMean!=0)
-		this.relativePrices=this.priceFinalMean/this.priceIntermediateMean;
+		this.relativePrices=this.priceS2Mean/this.priceS1Mean;
 
 		if (markupListFinal.size()>0) {
 			final BoxAndWhiskerItem item = BoxAndWhiskerCalculator.calculateBoxAndWhiskerStatistics(markupListFinal);
@@ -690,14 +710,14 @@ public class PeriodDataset extends AbstractDataset {
 			this.utilizationIntermediateMin = item.getMinRegularValue().floatValue();
 		}
 
-		if ((this.CONSUMPTION_VALUE!=0)&(this.EMPLOYED!=0))
-			this.REAL_WAGE = (double)((this.wageBillS1+this.wageBillS2)*this.CONSUMPTION_VOLUME)/(this.CONSUMPTION_VALUE*this.EMPLOYED);
+		if ((this.consumptionVal!=0)&(this.EMPLOYED!=0))
+			this.REAL_WAGE = (double)((this.wageBillS1+this.wageBillS2)*this.consumptionVol)/(this.consumptionVal*this.EMPLOYED);
 		this.finalCapUtil = 100.*this.workforceS2/this.machineryS2;
 		this.intermediateCapUtil = 100.*this.workforceS1/this.machineryS1;
 		this.rawMaterialsInventoriesRate = 100.*this.rawMaterialEffectiveVolume/this.rawMaterialNormalVolume;
 
-		this.vacancyRateIntermediate = 100.*this.vacanciesIntermediate/this.workforceAnticipatedIntermediate;
-		this.vacancyRateFinal = 100.*this.vacanciesFinal/this.workforceAnticipatedFinal;
+		this.vacancyRateIntermediate = 100.*this.vacanciesS1/this.workforceAnticipatedIntermediate;
+		this.vacancyRateFinal = 100.*this.vacanciesS2/this.workforceAnticipatedFinal;
 		this.vacancyRateAverage = 100.*this.vacanciesTotal/this.workforceAnticipatedTotal;
 
 	}

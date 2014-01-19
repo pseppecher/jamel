@@ -27,9 +27,8 @@
 
 package jamel.spheres.realSphere;
 
-import jamel.agents.firms.Labels;
-import jamel.agents.firms.ProductionType;
-import jamel.util.Blackboard;
+import jamel.agents.firms.util.Mediator;
+import jamel.agents.firms.util.ProductionType;
 
 /**
  *
@@ -38,28 +37,19 @@ public class Factories {
 	
 	/**
 	 * Returns a new factory.
-	 * @param blackboard  the parameters of the new factory.
+	 * @param sector  the sector.
+	 * @param mediator  the mediator.
 	 * @return a new factory.
 	 */
-	static public Factory getNewFactory(Blackboard blackboard) {
-		return getNewFactory(blackboard,(ProductionType)blackboard.get(Labels.PRODUCTION));
-	}
-
-	/**
-	 * Returns a new factory.
-	 * @param blackboard the parameters.
-	 * @param sector the sector.
-	 * @return a new factory.
-	 */
-	static public Factory getNewFactory(Blackboard blackboard, ProductionType sector) {
+	static public Factory getNewFactory(ProductionType sector,Mediator mediator) {
 		switch (sector) {
 		case intermediateProduction:
-			return new IntermediateFactory(blackboard);
+			return new IntermediateFactory(mediator);
 		case finalProduction:{
-			return new FinalFactory(blackboard);
+			return new FinalFactory(mediator);
 		}
 		case integratedProduction:
-			return new IntegratedFactory(blackboard);
+			return new IntegratedFactory(mediator);
 		default :
 			throw new RuntimeException("Error while creating new factory: unknown sector."); 
 		}			

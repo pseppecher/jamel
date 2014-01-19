@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2013, Pascal Seppecher.
+ * (C) Copyright 2007-2014, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,8 +21,10 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
+ * [JAMEL uses JFreeChart, copyright by Object Refinery Limited and Contributors. 
+ * JFreeChart is distributed under the terms of the GNU Lesser General Public Licence (LGPL). 
+ * See <http://www.jfree.org>.]
  */
 
 package jamel.agents.households;
@@ -30,14 +32,11 @@ package jamel.agents.households;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
-import java.util.List;
-
-import org.jfree.data.time.TimeSeries;
-import org.jfree.data.time.TimeSeriesDataItem;
 
 import jamel.Circuit;
+import jamel.CircuitCommands;
 import jamel.JamelObject;
-import jamel.agents.firms.ProductionType;
+import jamel.agents.firms.util.ProductionType;
 import jamel.agents.roles.Employer;
 import jamel.agents.roles.Provider;
 import jamel.spheres.monetarySphere.Account;
@@ -55,7 +54,7 @@ import jamel.util.markets.ProviderComparator;
  * <p>
  * A household has two main functions : labor and consumption.
  */
-class BasicHousehold extends AbstractHousehold {
+public class BasicHousehold extends AbstractHousehold {
 
 	/** The max number of employers in the memory of the household. */
 	protected static final int maxEmployers = 10; // TODO should be a parameter.
@@ -85,17 +84,11 @@ class BasicHousehold extends AbstractHousehold {
 	/** The bank account. */
 	private final Account bankAccount ;
 
-	/** The data. */
-	protected final HouseholdDataset data ;
-
 	/** The flexibility of the reservation wage. */
 	private float flexibility;
 
 	/** The income time series. */
-	private final TimeSeries incomeTimeSeries = new TimeSeries("Income");
-
-	/** The job contract. */
-	protected EmploymentContract jobContract;
+	private final LinkedList<Long> incomeTimeSeries = new LinkedList<Long>();
 
 	/** The job offer that the household is applying for.*/
 	private JobOffer jobOffer;
@@ -110,13 +103,16 @@ class BasicHousehold extends AbstractHousehold {
 	private int resistance;
 
 	/** The saving propensity. */
-	private float savingPropensity;
+	protected float savingPropensity;
 
-	/** The ratio of targeted savings to annual income. */
-	private float savingRatioTarget;
+	/** The data. */
+	protected final HouseholdDataset data ;
 
 	/** The employers. */
 	protected final LinkedList<Employer> employers ;
+
+	/** The job contract. */
+	protected EmploymentContract jobContract;
 
 	/** The maximum size of a list of providers or employers. */
 	protected int maxSize = 10; // TODO should be a parameter.
@@ -126,6 +122,9 @@ class BasicHousehold extends AbstractHousehold {
 
 	/** The reservation wage. */
 	protected float reservationWage;
+
+	/** The ratio of targeted savings to annual income. */
+	protected float savingRatioTarget;
 
 	/** The preferred sector of the household. */
 	protected ProductionType sector = null;
@@ -141,7 +140,6 @@ class BasicHousehold extends AbstractHousehold {
 		this.name = aName;
 		this.bankAccount = Circuit.getNewAccount(this);
 		this.data = new HouseholdDataset();
-		this.incomeTimeSeries.setMaximumItemAge(12);
 		this.providers = new LinkedList<Provider>();
 		this.employers = new LinkedList<Employer>();
 		this.updateParameters();
@@ -152,20 +150,27 @@ class BasicHousehold extends AbstractHousehold {
 	 * @param newIncome - the new income.
 	 */
 	private void addToIncomeTimeSeries(long newIncome) {
-		this.incomeTimeSeries.addOrUpdate(getCurrentPeriod().getMonth(), this.incomeTimeSeries.getValue(getCurrentPeriod().getMonth()).longValue()+newIncome);
+		long val = this.incomeTimeSeries.removeLast();
+		val+=newIncome;
+		this.incomeTimeSeries.addLast(val);
 	}
 
 	/**
-	 * Returns the average income of the household.
+	 * Computes and returns the average income of the household.
 	 * @return the average income.
 	 */
-	private long getAverageIncome() {
-		@SuppressWarnings("unchecked") List<TimeSeriesDataItem> data = this.incomeTimeSeries.getItems();
-		long annualIncome = 0;
-		if (data.size()==0) return 0;
-		for(TimeSeriesDataItem item:data)
-			annualIncome += item.getValue().longValue();
-		return annualIncome/data.size();
+	private double getAverageIncome() {
+		double annualIncome = 0;
+		double average = 0;
+		int count = 0;
+		for(long val:this.incomeTimeSeries) {
+			count++;
+			annualIncome += val;
+		}
+		if (count>0) {
+			average=annualIncome/count;
+		}
+		return average;
 	}
 
 	/**
@@ -191,7 +196,7 @@ class BasicHousehold extends AbstractHousehold {
 		purchase.consumption() ;
 		return dealValue ;
 	}
-	
+
 	/**
 	 * Checks if the given offer is acceptable. 
 	 * @param jobOffer  the offer to check.
@@ -212,7 +217,7 @@ class BasicHousehold extends AbstractHousehold {
 		}
 		this.employers.clear();
 		for (int count = 0; count<maxEmployers; count++){
-			final Employer employer = Circuit.getRandomEmployer();
+			final Employer employer = (Employer) Circuit.getResource(CircuitCommands.SelectAnEmployerAtRandom);
 			if (employer.isBankrupt())
 				throw new RuntimeException("This employer is bankrupt.");
 			if ((employer.getJobOffer()!=null)&&(this.employers.contains(employer)==false)) {
@@ -243,16 +248,14 @@ class BasicHousehold extends AbstractHousehold {
 	 * Updates the list of the providers.
 	 */
 	protected void updateProvidersList() {
+		this.providers.clear();
 		while (providers.size()<maxSize){
-			final Provider provider = Circuit.getRandomProviderOfFinalGoods();
+			final Provider provider = (Provider) Circuit.getResource(CircuitCommands.SelectAProviderOfFinalGoodsAtRandom);
 			if (provider==null) break;
 			if (!this.providers.contains(provider)) {
 				this.providers.add(provider);
 			}
 		}
-		Collections.sort(providers, PROVIDER_COMPARATOR);
-		if (this.providers.size()>maxSize-1)
-			this.providers.removeLast();
 	}
 
 	/**
@@ -294,9 +297,9 @@ class BasicHousehold extends AbstractHousehold {
 	 */
 	@Override
 	public void consume() {
-		final long averageIncome = getAverageIncome();
+		final double averageIncome = getAverageIncome();
 		final long savingsTarget = (long) (12*averageIncome*this.savingRatioTarget);
-		final long savings = this.bankAccount.getAmount()-averageIncome;
+		final long savings = (long) (this.bankAccount.getAmount()-averageIncome);
 		long consumptionTarget;
 		if (savings<savingsTarget) 
 			consumptionTarget = (long) ((1.-this.savingPropensity)*averageIncome);
@@ -304,6 +307,7 @@ class BasicHousehold extends AbstractHousehold {
 			consumptionTarget = (long) (averageIncome + (savings-savingsTarget)*propensityToConsumeExcessSaving);
 		long budget = Math.min(this.bankAccount.getAmount(),consumptionTarget);
 		this.data.setConsumptionBudget(budget);
+		this.data.setSavingTarget(savingsTarget);
 		updateProvidersList();
 		final LinkedList<Provider> newList = new LinkedList<Provider>(providers);
 		while (newList.size()>0) {
@@ -323,7 +327,7 @@ class BasicHousehold extends AbstractHousehold {
 		}
 		if ((JamelObject.getCurrentPeriod().getYear().getYear()>2002) & (budget>this.data.getConsumptionBudget()/10)) {
 			for (int i = 0; i<maxSize; i++) {
-				final Provider aProvider = Circuit.getRandomProviderOfFinalGoods();
+				final Provider aProvider = (Provider) Circuit.getResource(CircuitCommands.SelectAProviderOfFinalGoodsAtRandom);
 				if (aProvider==null) break;
 				final GoodsOffer offer = aProvider.getGoodsOffer();
 				if (offer!=null) {
@@ -345,7 +349,7 @@ class BasicHousehold extends AbstractHousehold {
 	 * @return the data.
 	 */
 	@Override
-	public HouseholdDatasetInterface getData() {
+	public HouseholdDataset getData() {
 		return data;
 	}
 
@@ -426,7 +430,10 @@ class BasicHousehold extends AbstractHousehold {
 	public void open() {
 		updateLaborPower();
 		data.clear() ;
-		this.incomeTimeSeries.add(getCurrentPeriod().getMonth(), 0);
+		this.incomeTimeSeries.addLast(0l);
+		if (this.incomeTimeSeries.size()>12) {
+			this.incomeTimeSeries.removeFirst();
+		}
 		this.updateParameters();
 	}
 

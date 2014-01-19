@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2012, Pascal Seppecher.
+ * (C) Copyright 2007-2014, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,28 +21,23 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
+ * [JAMEL uses JFreeChart, copyright by Object Refinery Limited and Contributors. 
+ * JFreeChart is distributed under the terms of the GNU Lesser General Public Licence (LGPL). 
+ * See <http://www.jfree.org>.]
  */
 
 package jamel.agents.firms;
 
-import java.io.FileWriter;
-import java.io.IOException;
+import jamel.agents.firms.util.ProductionType;
 
 /**
- *
+ * The data of the firm.
  */
 public class FirmDataset {
-	
-	/** The line separator. */
-	final private static String rc = System.getProperty("line.separator");
 
 	/** The number of period since the creation of the firm. */
 	public int age;
-
-	/** anticipatedWorkforce */
-	public long anticipatedWorkforce;
 
 	/** bankrupt */
 	public boolean bankrupt;
@@ -50,8 +45,14 @@ public class FirmDataset {
 	/** capital */
 	public long capital;
 
+	/** The date */
+	public String date;
+
 	/** debt */
 	public long debt;
+
+	/** debt target */
+	public long debtTarget;
 
 	/** deposit */
 	public long deposit;
@@ -67,21 +68,30 @@ public class FirmDataset {
 
 	/** grossProfit */
 	public long grossProfit;
-	
+
 	/** The budget for the purchase of intermediate needs. */
 	public long intermediateNeedsBudget;
-	
+
 	/** intermediatesNeedsVolume */
 	public int intermediateNeedsVolume;
 
-	/** inventoriesValues */
-	public long invUnfVal;
+	/** the appreciation of the inventory Level */
+	public String inventoryLevel;
 
-	/** inventoriesValues */
-	public long invVal;
+	/** inventoryNormalVolume */
+	public Float inventoryNormalVolume;
+
+	/** the inventory Ratio */
+	public Float inventoryRatio;
+
+	/** value of inventories (finished goods) */
+	public long invFiVal;
 
 	/** The volume of finished goods in inventories. */
-	public int invVol;
+	public int invFiVol;
+
+	/** value of inventories (unfinished goods) */
+	public long invUnVal;
 
 	/** jobOffers */
 	public long jobOffers;
@@ -97,6 +107,15 @@ public class FirmDataset {
 
 	/** name */
 	public String name;
+
+	/** the volume of commodities offered */
+	public Integer offeredVol;
+
+	/** optimism */
+	public Boolean optimism;
+
+	/** The period */
+	public int period;
 
 	/** price */
 	public double price;
@@ -126,7 +145,7 @@ public class FirmDataset {
 	public long salesPVal;
 
 	/** salesVolume */
-	public long salesVol;
+	public float salesVol;
 
 	/** utilizationTarget */
 	public float utilizationTarget;
@@ -134,11 +153,20 @@ public class FirmDataset {
 	/** vacancies */
 	public long vacancies;
 
+	/** wage */
+	public Double wage;
+
 	/** wageBill */
 	public long wageBill;
 
 	/** workforce */
 	public long workforce;
+
+	/** anticipatedWorkforce */
+	public long workforceTarget;
+
+	/** salesVariation */
+	public Integer salesVariation;
 
 	/**
 	 * Returns the object for the given field. 
@@ -164,26 +192,36 @@ public class FirmDataset {
 	}
 
 	/**
-	 * Writes the data in an output file.
-	 * @param writer  the writer to use.
-	 * @param keys  an array of string with the name of the fields to write.
+	 * Returns the contains of the specified fields.
+	 * @param sKeys  a string that contains the keys of the fields to return, separated by commas.
+	 * @return a string that contains the values of the specified fields, separated by commas. 
 	 */
-	public void write(FileWriter writer, String[] keys) {
-		try {
-			for (String key:keys) {
-				String value = null;
+	public String getData(String sKeys) {
+		String result=null;
+		String[] keys = sKeys.split(",");
+		for (String key:keys) {
+			String value = key;
+			if (key.startsWith("%")) {
 				try {
-					value=this.getFieldValue(key).toString();
+					final Object fieldValue = this.getFieldValue(key.substring(1));
+					if (fieldValue!=null) {
+						value=fieldValue.toString();
+					}
+					else {
+						value="null";					
+					}
 				} catch (NoSuchFieldException e) {
 					value="No Such Field: "+key;
 				}
-				writer.write(value+",");
 			}
-			writer.write(rc);
-		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Error while writing data in the output file.");
-		}		
+			if (result==null){
+				result=value;
+			}
+			else {
+				result+=","+value;
+			}
+		}
+		return result;
 	}
 
 }

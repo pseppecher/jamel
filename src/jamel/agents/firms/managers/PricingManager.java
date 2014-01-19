@@ -26,64 +26,25 @@
 
 package jamel.agents.firms.managers;
 
-import jamel.Circuit;
-import jamel.JamelObject;
-import jamel.agents.firms.Labels;
-import jamel.util.Blackboard;
+import jamel.agents.firms.util.FirmComponent;
 
 /**
- * A basic pricing manager.
+ * An interface for the pricing managers.<p>
+ * 2013-11-06: creation.
  */
-public class PricingManager extends JamelObject {
-
-	/** The current unit price.*/
-	protected double currentPrice;
-
-	/** The black board. */
-	protected final Blackboard blackBoard;
+public interface PricingManager extends FirmComponent{
 
 	/**
-	 * Creates a new pricing manager.
-	 * @param blackboard  the blackboard.
+	 * Closes the manager.
 	 */
-	public PricingManager(Blackboard blackboard) {
-		this.blackBoard = blackboard;
-	}
-
+	public abstract void close();
+	
 	/**
 	 * Updates the unit price.
 	 */
-	public void updatePrice() {
-		final Float priceFlexibility = Float.parseFloat(Circuit.getParameter("Firms.priceFlexibility"));
-		final Float inventoryRatio = (Float)this.blackBoard.get(Labels.INVENTORY_LEVEL_RATIO);
-		final Double unitCost = (Double)this.blackBoard.get(Labels.UNIT_COST);
-		if (this.currentPrice==0) {
-			this.currentPrice = (1.+getRandom().nextFloat()/2.)*unitCost;
-			if ( Double.isNaN(currentPrice) )
-				throw new RuntimeException("This price is NaN.") ;
-		}
-		else {
-			final float alpha1 = getRandom().nextFloat();
-			final float alpha2 = getRandom().nextFloat();
-			if (inventoryRatio<1-alpha1*alpha2) {
-				this.currentPrice = this.currentPrice*(1f+alpha1*priceFlexibility);
-			}
-			else if (inventoryRatio>1+alpha1*alpha2) {
-				this.currentPrice = this.currentPrice*(1f-alpha1*priceFlexibility);
-				if (this.currentPrice<1) this.currentPrice = 1;
-			}
-		}
-		this.blackBoard.put(Labels.PRICE, this.currentPrice);
-	}
-
+	public abstract void updatePrice();
+	
 }
-
-
-
-
-
-
-
 
 
 

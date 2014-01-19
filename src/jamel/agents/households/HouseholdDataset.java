@@ -1,11 +1,40 @@
+/* =========================================================
+ * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
+ * =========================================================
+ *
+ * (C) Copyright 2007-2014, Pascal Seppecher and contributors.
+ * 
+ * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
+ *
+ * This file is a part of JAMEL (Java Agent-based MacroEconomic Laboratory).
+ * 
+ * JAMEL is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * JAMEL is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public License
+ * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
+ * [JAMEL uses JFreeChart, copyright by Object Refinery Limited and Contributors. 
+ * JFreeChart is distributed under the terms of the GNU Lesser General Public Licence (LGPL). 
+ * See <http://www.jfree.org>.]
+ */
+
 package jamel.agents.households;
 
-import jamel.agents.firms.ProductionType;
+import jamel.agents.firms.util.ProductionType;
 
 /**
  * A class for the household data.
  */
-public class HouseholdDataset implements HouseholdDatasetInterface {	
+public class HouseholdDataset {	
 		
 	/** The consumption budget. */
 	private long consumptionBudget;
@@ -31,14 +60,18 @@ public class HouseholdDataset implements HouseholdDatasetInterface {
 	/** The reservation wage. */
 	private float reservationWage;
 	
+	/** sector */
+	private ProductionType sector;
+	
 	/** The unemployment duration. */
 	private double unemploymentDuration;
-	
+
 	/** The wage. */
 	private long wage;
 
-	/** sector */
-	private ProductionType sector;
+	private boolean optimism;
+
+	public long savingTarget;
 
 	/**
 	 * @param value - the value to add.
@@ -61,10 +94,6 @@ public class HouseholdDataset implements HouseholdDatasetInterface {
 		this.consumptionVolume+=volume;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#clear()
-	 */
-	@Override
 	public void clear() {
 		consumptionBudget=0;
 		consumptionValue=0;
@@ -76,84 +105,53 @@ public class HouseholdDataset implements HouseholdDatasetInterface {
 		reservationWage=0;
 		unemploymentDuration=0;
 		wage=0;		
+		this.savingTarget=0;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getConsumptionBudget()
-	 */
-	@Override
 	public long getConsumptionBudget() {
 		return consumptionBudget;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getConsumptionValue()
-	 */
-	@Override
 	public long getConsumptionValue() {
 		return consumptionValue;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getDeposits()
-	 */
-	@Override
+	public int getConsumptionVolume() {
+		return this.consumptionVolume;
+	}
+
 	public long getDeposits() {
 		return deposits;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getDividend()
-	 */
-	@Override
 	public long getDividend() {
 		return dividend;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getEmploymentStatus()
-	 */
-	@Override
 	public Integer getEmploymentStatus() {
 		return employmentStatus;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getForcedSavings()
-	 */
-	@Override
 	public long getForcedSavings() {
 		return forcedSavings;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getIncome()
-	 */
-	@Override
 	public long getIncome() {
 		return wage+dividend;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getReservationWage()
-	 */
-	@Override
 	public float getReservationWage() {
 		return reservationWage;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getUnemploymentDuration()
-	 */
-	@Override
+	public ProductionType getSector() {
+		return this.sector;
+	}
+
 	public double getUnemploymentDuration() {
 		return unemploymentDuration;
 	}
 
-	/* (non-Javadoc)
-	 * @see jamel.agents.households.HouseholdDatasetInterface#getWage()
-	 */
-	@Override
 	public long getWage() {
 		return wage;
 	}
@@ -199,6 +197,14 @@ public class HouseholdDataset implements HouseholdDatasetInterface {
 	}
 
 	/**
+	 * Sets the sector.
+	 * @param sector  the sector to set.
+	 */
+	public void setSector(ProductionType sector) {
+		this.sector = sector;
+	}
+
+	/**
 	 * Sets the duration of unemployment.
 	 * @param duration - the duration to set.
 	 */
@@ -216,22 +222,16 @@ public class HouseholdDataset implements HouseholdDatasetInterface {
 		this.wage=value;
 	}
 
-	/**
-	 * Sets the sector.
-	 * @param sector  the sector to set.
-	 */
-	public void setSector(ProductionType sector) {
-		this.sector = sector;
+	public boolean getOptimism() {
+		return this.optimism;
 	}
 
-	@Override
-	public int getConsumptionVolume() {
-		return this.consumptionVolume;
+	public void setOptimism(boolean optimist) {
+		this.optimism=optimist;
 	}
 
-	@Override
-	public ProductionType getSector() {
-		return this.sector;
+	public void setSavingTarget(long value) {
+		this.savingTarget=value;
 	}	
 	
 }
