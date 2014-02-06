@@ -27,7 +27,6 @@
 package jamel.agents.firms.managers;
 
 import jamel.Circuit;
-import jamel.CircuitCommands;
 import jamel.agents.firms.Labels;
 import jamel.agents.firms.util.FirmComponent;
 import jamel.agents.firms.util.Mediator;
@@ -65,7 +64,7 @@ public class PurchasingManager implements FirmComponent {
 	private static Collection<Provider> getMoreProviders(int num) {
 		final LinkedList<Provider> providers = new LinkedList<Provider>();
 		for (int count=0; count<num; count++) {
-			final Provider provider = (Provider) Circuit.getResource(CircuitCommands.SelectAProviderOfRawMaterialsAtRandom);
+			final Provider provider = (Provider) Circuit.getResource(Circuit.SELECT_A_PROVIDER_OF_RAW_MATERIAL);
 			if (provider==null) {
 				return providers;
 			}

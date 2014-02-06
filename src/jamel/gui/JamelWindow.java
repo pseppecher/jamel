@@ -29,7 +29,6 @@ package jamel.gui;
 
 import jamel.Jamel;
 import jamel.Circuit;
-import jamel.CircuitCommands;
 import jamel.JamelObject;
 import jamel.gui.charts.JamelChart;
 import jamel.util.data.SimulationReport;
@@ -387,7 +386,7 @@ public class JamelWindow extends JFrame {
 				}
 			}
 		}
-		this.matrixPane.setText((String) Circuit.getResource(CircuitCommands.GetHtmlMatrix));
+		this.matrixPane.setText((String) Circuit.getResource(Circuit.GET_HTML_MATRIX));
 	}
 
 	/**

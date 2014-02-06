@@ -94,6 +94,30 @@ public abstract class Circuit extends JamelObject {
 	@SuppressWarnings("javadoc")
 	protected static final String YEAR = "year";
 
+	@SuppressWarnings("javadoc")
+	public static final String GET_HTML_MATRIX = "GetHtmlMatrix";
+
+	@SuppressWarnings("javadoc")
+	public static final String SELECT_A_CAPITAL_OWNER = "SelectACapitalOwnerAtRandom";
+
+	@SuppressWarnings("javadoc")
+	public static final String SELECT_A_HOUSEHOLD = "SelectAHouseholdAtRandom";
+
+	@SuppressWarnings("javadoc")
+	public static final String SELECT_A_LIST_OF_FIRMS = "SelectAListOfFirmsAtRandom";
+
+	@SuppressWarnings("javadoc")
+	public static final String SELECT_A_PROVIDER_OF_FINAL_GOODS = "SelectAProviderOfFinalGoodsAtRandom";
+
+	@SuppressWarnings("javadoc")
+	public static final String SELECT_A_PROVIDER_OF_RAW_MATERIAL = "SelectAProviderOfRawMaterialsAtRandom";
+
+	@SuppressWarnings("javadoc")
+	public static final String SELECT_A_WAGE = "SelectAWageAtRandom";
+
+	@SuppressWarnings("javadoc")
+	public static final String SELECT_AN_EMPLOYER = "SelectAnEmployerAtRandom";
+
 	/**
 	 * Displays a warning message.
 	 * @param string the message.
@@ -198,7 +222,7 @@ public abstract class Circuit extends JamelObject {
 		if (circuit!=null) {
 			circuit.simulator.pause(b);
 		}
-	}
+	}	
 
 	/**
 	 * Prints a String in the console panel.
@@ -227,7 +251,7 @@ public abstract class Circuit extends JamelObject {
 	protected HouseholdsSector households;
 
 	/** The balance sheet matrix. */
-	protected BalanceSheetMatrix matrix = new BalanceSheetMatrix();	
+	protected BalanceSheetMatrix matrix = new BalanceSheetMatrix();
 
 	/** The collection of the data of the circuit, in a chronological order. */
 	protected final LinkedList<PeriodDataset> monthlyData = new LinkedList<PeriodDataset>();
@@ -510,7 +534,9 @@ public abstract class Circuit extends JamelObject {
 		else if (key.equals(CMD_SET_HOUSEHOLDS)) {
 			this.households.setHouseholdsType(val);
 		}
-		else {
+		else if (key.startsWith("Firms")||key.startsWith("Households")||key.startsWith("Bank")) {
+			setParameters(key+"="+val);
+		} else {
 			throw new InvalidKeyException("unexpected command \""+key+"\"");
 		}
 	}

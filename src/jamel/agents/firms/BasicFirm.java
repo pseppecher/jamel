@@ -30,16 +30,19 @@
 package jamel.agents.firms;
 
 import jamel.Circuit;
-import jamel.CircuitCommands;
 import jamel.JamelObject;
 import jamel.agents.firms.managers.BasicCapitalManager;
 import jamel.agents.firms.managers.BasicPricingManager;
+import jamel.agents.firms.managers.BasicPublicRelationManager;
 import jamel.agents.firms.managers.CapitalManager;
 import jamel.agents.firms.managers.PricingManager;
 import jamel.agents.firms.managers.BasicProductionManager;
 import jamel.agents.firms.managers.ProductionManager;
+import jamel.agents.firms.managers.PublicRelationManager;
 import jamel.agents.firms.managers.PurchasingManager;
 import jamel.agents.firms.managers.BasicStoreManager;
+import jamel.agents.firms.managers.BasicWorkforceManager;
+import jamel.agents.firms.managers.StoreManager;
 import jamel.agents.firms.managers.WorkforceManager;
 import jamel.agents.firms.util.BasicMediator;
 import jamel.agents.firms.util.FirmComponent;
@@ -65,6 +68,9 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 	/** A flag that indicates whether the firm is bankrupt or not. */
 	private boolean bankrupt;
 
+	/** The store. */
+	private final StoreManager storeManager ;
+
 	/** The period when the firm was created. */
 	private final int birthPeriod;
 
@@ -82,9 +88,6 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 
 	/** The purchasing manager. */
 	final private PurchasingManager purchasingManager;
-
-	/** The store. */
-	private final BasicStoreManager basicStoreManager ;
 
 	/** The verbosity of the firm; */
 	@SuppressWarnings("unused")
@@ -108,6 +111,9 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 	/** The production manager. */
 	protected final ProductionManager productionManager;
 
+	/** The public relation manager. */
+	protected final PublicRelationManager publicRelationManager;
+
 	/** The workforce manager. */
 	protected final WorkforceManager workforceManager ;
 
@@ -128,19 +134,31 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 		this.factory = getNewFactory() ;
 		this.purchasingManager = getNewPurchasingManager();
 		this.workforceManager = getNewWorkforceManager();
-		this.basicStoreManager = getNewStoreManager();
+		this.storeManager = getNewStoreManager();
 		this.productionManager = getNewProductionManager();
 		this.pricingManager = getNewPricingManager();
 		this.capitalManager = getNewCapitalManager();
+		this.publicRelationManager = getNewPublicRelationManager();
 		this.mediator.add(this.factory);
 		this.mediator.add(this.account);
 		this.mediator.add(this.pricingManager);
-		this.mediator.add(this.basicStoreManager);
+		this.mediator.add(this.storeManager);
 		this.mediator.add(this.productionManager);
 		this.mediator.add(this.workforceManager);
 		this.mediator.add(this.purchasingManager);
 		this.mediator.add(this.capitalManager);
 		this.mediator.add(this);
+	}
+
+	/**
+	 * Returns the owner.
+	 * @return the owner.
+	 */
+	private CapitalOwner getOwner() {
+		if (this.owner==null) {
+			this.owner=(CapitalOwner) Circuit.getResource(Circuit.SELECT_A_CAPITAL_OWNER);
+		}
+		return this.owner;
 	}
 
 	/**
@@ -196,6 +214,14 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 	}
 
 	/**
+	 * Returns a new public relation manager.
+	 * @return the new manager.
+	 */
+	protected PublicRelationManager getNewPublicRelationManager() {
+		return new BasicPublicRelationManager(this.mediator);
+	}
+
+	/**
 	 * Returns a new purchasing manager.
 	 * @return a new purchasing manager.
 	 */
@@ -222,7 +248,7 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 	 * @return the new manager.
 	 */
 	protected WorkforceManager getNewWorkforceManager() {
-		return new WorkforceManager(this.mediator);
+		return new BasicWorkforceManager(this.mediator);
 	}
 
 	/**
@@ -322,17 +348,6 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 	}
 
 	/**
-	 * Returns the owner.
-	 * @return the owner.
-	 */
-	private CapitalOwner getOwner() {
-		if (this.owner==null) {
-			this.owner=(CapitalOwner) Circuit.getResource(CircuitCommands.SelectACapitalOwnerAtRandom);
-		}
-		return this.owner;
-	}
-
-	/**
 	 * Returns the data.
 	 * @return the data.
 	 */
@@ -381,6 +396,11 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 	@Override
 	public ProductionType getProduction() {
 		return this.productionType;
+	}
+
+	@Override
+	public <extend> Object getPublicInfo(String key) {
+		return this.publicRelationManager.getPublicInfo(key);
 	}
 
 	/**
@@ -469,7 +489,7 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 			throw new RuntimeException("Bankrupted.");
 		this.workforceManager.payWorkers() ;
 		factory.production() ;
-		this.basicStoreManager.offerCommodities();
+		this.storeManager.offerCommodities();
 	}
 
 	/**
@@ -482,7 +502,7 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 	public Goods sell( GoodsOffer offer, int volume, Check check ) {
 		if (bankrupt)
 			throw new RuntimeException("Bankrupted.");
-		Goods sale = this.basicStoreManager.sell( offer, volume, check );
+		Goods sale = this.storeManager.sell( offer, volume, check );
 		return sale;
 	}
 

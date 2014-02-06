@@ -27,7 +27,6 @@
 package jamel.spheres.monetarySphere;
 
 import jamel.Circuit;
-import jamel.CircuitCommands;
 import jamel.JamelObject;
 import jamel.agents.firms.Labels;
 import jamel.agents.roles.AccountHolder;
@@ -129,6 +128,18 @@ public class Bank extends JamelObject implements AccountHolder {
 		}
 
 		@Override
+		public Object get(String key) {
+			Object result = null;
+			if (key.equals(Labels.MONEY)) {
+				result=getAmount();
+			}
+			else if (key.equals(Labels.DEBT)) {
+				result=getDebt();
+			}
+			return result;
+		}
+
+		@Override
 		final public long getAmount() {
 			return this.fDeposit.getAmount();
 		}
@@ -166,18 +177,6 @@ public class Bank extends JamelObject implements AccountHolder {
 			if (!open) 
 				throw new RuntimeException("This account is closed.");
 			return new RegularCheck(aAmount,aPayee);
-		}
-
-		@Override
-		public Object get(String key) {
-			Object result = null;
-			if (key.equals(Labels.MONEY)) {
-				result=getAmount();
-			}
-			else if (key.equals(Labels.DEBT)) {
-				result=getDebt();
-			}
-			return result;
 		}
 
 	}
@@ -512,20 +511,38 @@ public class Bank extends JamelObject implements AccountHolder {
 	/** A flag that indicates whether the bank is accommodating or not. */
 	private boolean pAccommodating = true;
 
-	/** The normal interest rate (monthly). */
-	private double pMonthlyInterestRate = 0;
-
 	/** The penalty interest rate (monthly). */
 	private double penaltyRate = 0;
+
+	/** The normal interest rate (monthly). */
+	private double pMonthlyInterestRate = 0;
 
 	/** The normal term of credits. */
 	private int pNormalTerm = 0;
 
+	/** The propensity to distribute the exceeding capital. */
+	private float propensityToDistributeCapitalExcess;
+
 	/** The capital ratio targeted by the bank. */
 	private float pTargetedCapitalRatio = 0f;
 
-	/** The propensity to distribute the exceeding capital. */
-	private float propensityToDistributeCapitalExcess;
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_ACCOMODATING = "Bank.accommodating";
+
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_CAPITAL_PROP_TO_DISTRIBUTE_EXCESS = "Bank.capital.propensityToDistributeExcess";
+
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_CAPITAL_TARGET = "Bank.capital.targetedRatio";
+
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_RATE_NORMAL = "Bank.rate.normal";
+
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_RATE_PENALTY = "Bank.rate.penalty";
+
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_TERM = "Bank.term";
 
 	/**
 	 * Creates a new bank.
@@ -576,12 +593,12 @@ public class Bank extends JamelObject implements AccountHolder {
 	 * Updates the exogenous parameters of the bank.
 	 */
 	private void updateParameters() {
-		this.pMonthlyInterestRate = yearly2Monthly(Float.parseFloat(Circuit.getParameter("Bank.rate.normal")));
-		this.penaltyRate = yearly2Monthly(Float.parseFloat(Circuit.getParameter("Bank.rate.penalty")));
-		this.pTargetedCapitalRatio = Float.parseFloat(Circuit.getParameter("Bank.capital.targetedRatio"));
-		this.propensityToDistributeCapitalExcess=Float.parseFloat(Circuit.getParameter("Bank.capital.propensityToDistributeExcess"));
-		this.pNormalTerm = Integer.parseInt(Circuit.getParameter("Bank.term"));
-		this.pAccommodating = Boolean.parseBoolean(Circuit.getParameter("Bank.accommodating"));
+		this.pMonthlyInterestRate = yearly2Monthly(Float.parseFloat(Circuit.getParameter(this.PARAM_RATE_NORMAL)));
+		this.penaltyRate = yearly2Monthly(Float.parseFloat(Circuit.getParameter(this.PARAM_RATE_PENALTY)));
+		this.pTargetedCapitalRatio = Float.parseFloat(Circuit.getParameter(this.PARAM_CAPITAL_TARGET));
+		this.propensityToDistributeCapitalExcess=Float.parseFloat(Circuit.getParameter(this.PARAM_CAPITAL_PROP_TO_DISTRIBUTE_EXCESS));
+		this.pNormalTerm = Integer.parseInt(Circuit.getParameter(this.PARAM_TERM));
+		this.pAccommodating = Boolean.parseBoolean(Circuit.getParameter(this.PARAM_ACCOMODATING));
 	}
 
 	/**
@@ -697,7 +714,7 @@ public class Bank extends JamelObject implements AccountHolder {
 		if (dividend<0) throw new RuntimeException("Dividend must be positive.") ;
 		if (dividend>0) {
 			if (this.bankOwner==null){
-				this.bankOwner=(CapitalOwner) Circuit.getResource(CircuitCommands.SelectACapitalOwnerAtRandom);
+				this.bankOwner=(CapitalOwner) Circuit.getResource(Circuit.SELECT_A_CAPITAL_OWNER);
 			}
 			if (this.bankOwner!=null){
 				this.bankOwner.receiveDividend( this.bankAccount.newCheck(dividend, this.bankOwner) );

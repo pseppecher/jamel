@@ -59,10 +59,10 @@ public class ChartFactory {
 	public static final Color LIGHT_TRANSPARENT_RED = new Color(1,0.5f,0.5f,0.7f) ;
 	
 	/** finalColor */
-	public final static Color SECTOR1COLOR = ChartColor.LIGHT_BLUE;
+	public final static Color SECTOR2COLOR = ChartColor.LIGHT_BLUE;
 
 	/** intermediateColor */
-	public final static Color SECTOR2COLOR = ChartColor.LIGHT_RED;
+	public final static Color SECTOR1COLOR = ChartColor.LIGHT_RED;
 	
 	/** ULTRA_LIGHT_BLUE */
 	public static final Color ULTRA_LIGHT_BLUE = new Color(0xDD, 0xDD, 0xFF);
@@ -93,6 +93,10 @@ public class ChartFactory {
 
 	/** VERY_TRANSPARENT_RED */
 	public static final Color VERY_TRANSPARENT_RED = new Color(1,0.7f,0.7f,0.7f) ;
+
+	public static final String Sector1 = "Sector 1";
+
+	public static final String Sector2 = "Sector 2";
 
 	public static JFreeChart getBankDividend(TimeseriesCollection data) {
 		final TimeChart chart = new TimeChart(
@@ -138,9 +142,9 @@ public class ChartFactory {
 				data.get(Labels.annualBankruptcyRateIntermediate),
 				data.get(Labels.annualBankruptcyRateFinal)
 				);
-		chart.setColors( 0,SECTOR2COLOR,SECTOR1COLOR,AVERAGE_COLOR);
-		chart.addLineLegendItem("Sector 1", SECTOR2COLOR);
-		chart.addLineLegendItem("Sector 2", SECTOR1COLOR);
+		chart.setColors( 0,SECTOR1COLOR,SECTOR2COLOR,AVERAGE_COLOR);
+		chart.addLineLegendItem(Sector1, SECTOR1COLOR);
+		chart.addLineLegendItem(Sector2, SECTOR2COLOR);
 		chart.getXYPlot().getRangeAxis().setRange(0,10);
 		return chart;
 	}
@@ -167,9 +171,9 @@ public class ChartFactory {
 				data.get(Labels.annualCapacityUtilizationIntermediate),
 				data.get(Labels.annualCapacityUtilizationFinal)
 				);
-		chart.setColors( 0, SECTOR2COLOR, SECTOR1COLOR);
-		chart.addLineLegendItem("Intermediate Sector", SECTOR2COLOR);
-		chart.addLineLegendItem("Final Sector", SECTOR1COLOR);
+		chart.setColors( 0, SECTOR1COLOR, SECTOR2COLOR);
+		chart.addLineLegendItem(Sector1, SECTOR1COLOR);
+		chart.addLineLegendItem(Sector2, SECTOR2COLOR);
 		chart.getXYPlot().getRangeAxis().setRange(0,100);
 		return chart;
 	}
@@ -210,9 +214,9 @@ public class ChartFactory {
 				data.get(Labels.firmsIntermediate),
 				data.get(Labels.firmsFinal)
 				);
-		chart.setColors(0, SECTOR2COLOR, SECTOR1COLOR);
-		chart.addLineLegendItem("Intermediate Sector", SECTOR2COLOR);
-		chart.addLineLegendItem("Final Sector", SECTOR1COLOR);
+		chart.setColors( 0,SECTOR1COLOR,SECTOR2COLOR);
+		chart.addLineLegendItem(Sector1, SECTOR1COLOR);
+		chart.addLineLegendItem(Sector2, SECTOR2COLOR);
 		return chart;
 	}
 	
@@ -315,9 +319,9 @@ public class ChartFactory {
 				data.get(Labels.inventoryIntermediateLevel),
 				data.get(Labels.inventoryFinalLevel)
 				) ;
-		chart.setColors( 0,SECTOR2COLOR,SECTOR1COLOR);
-		chart.addLineLegendItem("Intermediate Sector", SECTOR2COLOR);
-		chart.addLineLegendItem("Final Sector", SECTOR1COLOR);
+		chart.setColors( 0,SECTOR1COLOR,SECTOR2COLOR);
+		chart.addLineLegendItem(Sector1, SECTOR1COLOR);
+		chart.addLineLegendItem(Sector2, SECTOR2COLOR);
 		return chart;
 	}
 
@@ -383,9 +387,9 @@ public class ChartFactory {
 				gata.get(Labels.markupIntermediateAnnual),
 				gata.get(Labels.markupFinalAnnual)
 				) ;
-		chart.setColors( 0,SECTOR2COLOR,SECTOR1COLOR,AVERAGE_COLOR);
-		chart.addLineLegendItem("Intermediate Sector", SECTOR2COLOR);
-		chart.addLineLegendItem("Final Sector", SECTOR1COLOR);
+		chart.setColors( 0,SECTOR1COLOR,SECTOR2COLOR,AVERAGE_COLOR);
+		chart.addLineLegendItem(Sector1, SECTOR1COLOR);
+		chart.addLineLegendItem(Sector2, SECTOR2COLOR);
 		return chart;
 	}
 
@@ -459,9 +463,9 @@ public class ChartFactory {
 				data.get(Labels.realProfitIntermediate),
 				data.get(Labels.realProfitFinal)
 				);
-		chart.setColors( 0,SECTOR2COLOR,SECTOR1COLOR);
-		chart.addLineLegendItem("Intermediate Sector", SECTOR2COLOR);
-		chart.addLineLegendItem("Final Sector", SECTOR1COLOR);
+		chart.setColors( 0,SECTOR1COLOR,SECTOR2COLOR);
+		chart.addLineLegendItem(Sector1, SECTOR1COLOR);
+		chart.addLineLegendItem(Sector2, SECTOR2COLOR);
 		return chart;
 	}
 
@@ -519,9 +523,9 @@ public class ChartFactory {
 				data.get(Labels.vacancyRateIntermediate),
 				data.get(Labels.vacancyRateFinal)
 				) ;
-		chart.setColors( 0,SECTOR2COLOR,SECTOR1COLOR);
-		chart.addLineLegendItem("Intermediate Sector", SECTOR2COLOR);
-		chart.addLineLegendItem("Final Sector", SECTOR1COLOR);
+		chart.setColors( 0,SECTOR1COLOR,SECTOR2COLOR);
+		chart.addLineLegendItem(Sector1, SECTOR1COLOR);
+		chart.addLineLegendItem(Sector2, SECTOR2COLOR);
 		chart.getXYPlot().getRangeAxis().setRange(0,100);
 		return chart;
 	}
@@ -544,9 +548,9 @@ public class ChartFactory {
 				data.get(Labels.workersInSector1),
 				data.get(Labels.workersInSector2)
 				);
-		chart.setColors(0, SECTOR2COLOR, SECTOR1COLOR);
-		chart.addLineLegendItem("Sector 1", SECTOR2COLOR);
-		chart.addLineLegendItem("Sector 2", SECTOR1COLOR);
+		chart.setColors( 0,SECTOR1COLOR,SECTOR2COLOR);
+		chart.addLineLegendItem(Sector1, SECTOR1COLOR);
+		chart.addLineLegendItem(Sector2, SECTOR2COLOR);
 		return chart;
 	}
 

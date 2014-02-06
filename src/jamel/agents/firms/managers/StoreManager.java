@@ -27,28 +27,30 @@
  * See <http://www.jfree.org>.]
  */
 
-package jamel;
+package jamel.agents.firms.managers;
+
+import jamel.agents.firms.util.FirmComponent;
+import jamel.spheres.monetarySphere.Check;
+import jamel.spheres.realSphere.Goods;
+import jamel.util.markets.GoodsOffer;
 
 /**
- * Keys for global commands.
+ * The store manager.
  */
-@SuppressWarnings("javadoc")
-public class CircuitCommands {
+public interface StoreManager extends FirmComponent {
 
-	public static final String GetHtmlMatrix = "GetHtmlMatrix";
+	/**
+	 * Creates a new offer and posts it on the goods market.
+	 */
+	public abstract void offerCommodities();
 
-	public static final String SelectACapitalOwnerAtRandom = "SelectACapitalOwnerAtRandom";
+	/**
+	 * Sells the specified volume of goods.
+	 * @param offer  the offer.
+	 * @param volume  the volume.
+	 * @param check  the check.
+	 * @return the goods sold.
+	 */
+	public abstract Goods sell(GoodsOffer offer, int volume, Check check);
 
-	public static final String SelectAHouseholdAtRandom = "SelectAHouseholdAtRandom";
-
-	public static final String SelectAListOfFirmsAtRandom = "SelectAListOfFirmsAtRandom";
-
-	public static final String SelectAnEmployerAtRandom = "SelectAnEmployerAtRandom";
-
-	public static final String SelectAProviderOfFinalGoodsAtRandom = "SelectAProviderOfFinalGoodsAtRandom";
-
-	public static final String SelectAProviderOfRawMaterialsAtRandom = "SelectAProviderOfRawMaterialsAtRandom";
-
-	public static final String SelectAWageAtRandom = "SelectAWageAtRandom";
-	
 }

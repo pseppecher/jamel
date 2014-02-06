@@ -27,82 +27,18 @@
  * See <http://www.jfree.org>.]
  */
 
-package jamel.agents.firms;
-
-import jamel.agents.roles.Employer;
-import jamel.agents.roles.Provider;
+package jamel.agents.firms.managers;
 
 /**
- * An interface for the firms.
+ * The public relation manager.
  */
-public interface Firm extends Employer, Provider {
-
-	/**
-	 * Buys the raw materials.
-	 */
-	void buyRawMaterials();
-
-	/**
-	 * Closes the firm.<br>
-	 * Completes some technical operations at the end of the period.
-	 */
-	void close();
-
-	/**
-	 * Returns the data.
-	 * @return the data.
-	 */
-	FirmDataset getData();
+public interface PublicRelationManager {
 
 	/**
 	 * Returns an object.
-	 * @param string  the key of the info.
+	 * @param key  the key of the info.
 	 * @return an object containing the info (<code>null</code> if not available). 
 	 */
-	<extend>Object getPublicInfo(String string);
-	
-	
-	/**
-	 * Goes bankrupt.
-	 */
-	void goBankrupt();
-
-	/**
-	 * Returns a flag that indicates if the firm is bankrupt or not.
-	 * @return <code>true</code> if the firm is bankrupt.
-	 */
-	boolean isBankrupt();
-
-	/**
-	 * Kills the firm.
-	 */
-	void kill();
-
-	/** 
-	 * Opens the household for a new period.<br>
-	 * Initializes data and executes events.
-	 */
-	void open();
-
-	/**
-	 * Pays the dividend.
-	 */
-	void payDividend();
-
-	/**
-	 * Prepares the production.
-	 */
-	void prepareProduction();
-
-	/**
-	 * Produces.
-	 */
-	void production();
-
-	/**
-	 * Sets the verbosity of the firm.
-	 * @param b  a boolean.
-	 */
-	void setVerbose(boolean b);
+	Object getPublicInfo(String key);
 
 }

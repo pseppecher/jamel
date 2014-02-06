@@ -34,7 +34,6 @@ import java.util.Comparator;
 import java.util.LinkedList;
 
 import jamel.Circuit;
-import jamel.CircuitCommands;
 import jamel.JamelObject;
 import jamel.agents.firms.util.ProductionType;
 import jamel.agents.roles.Employer;
@@ -58,7 +57,7 @@ public class BasicHousehold extends AbstractHousehold {
 
 	/** The max number of employers in the memory of the household. */
 	protected static final int maxEmployers = 10; // TODO should be a parameter.
-
+	
 	/** 
 	 * The employer comparator.<p>
 	 * To compare employers according to the wage they offer on the labor market.
@@ -75,15 +74,15 @@ public class BasicHousehold extends AbstractHousehold {
 			return (new Long(offer2.getWage()).compareTo(offer1.getWage()));
 		}
 	};
-
+	
 	/** 
 	 * The provider comparator.
 	 */
 	public static final ProviderComparator PROVIDER_COMPARATOR = new ProviderComparator();
-
+	
 	/** The bank account. */
 	private final Account bankAccount ;
-
+	
 	/** The flexibility of the reservation wage. */
 	private float flexibility;
 
@@ -102,9 +101,6 @@ public class BasicHousehold extends AbstractHousehold {
 	/** The resistance to a cut of the reservation wage. */
 	private int resistance;
 
-	/** The saving propensity. */
-	protected float savingPropensity;
-
 	/** The data. */
 	protected final HouseholdDataset data ;
 
@@ -117,11 +113,29 @@ public class BasicHousehold extends AbstractHousehold {
 	/** The maximum size of a list of providers or employers. */
 	protected int maxSize = 10; // TODO should be a parameter.
 
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_SAV_PROP = "Households.savings.propensityToSave";
+
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_SAV_PROP2_CONSUM_EXCESS = "Households.savings.propensityToConsumeExcess";
+
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_SAV_TARGET = "Households.savings.ratioTarget";
+
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_WAGE_FLEX = "Households.wage.flexibility";
+
+	@SuppressWarnings("javadoc")
+	protected final String PARAM_WAGE_RESIST = "Households.wage.resistance";
+
 	/** The list of usual providers. */
 	protected LinkedList<Provider> providers ;
 
 	/** The reservation wage. */
 	protected float reservationWage;
+
+	/** The saving propensity. */
+	protected float savingPropensity;
 
 	/** The ratio of targeted savings to annual income. */
 	protected float savingRatioTarget;
@@ -217,7 +231,7 @@ public class BasicHousehold extends AbstractHousehold {
 		}
 		this.employers.clear();
 		for (int count = 0; count<maxEmployers; count++){
-			final Employer employer = (Employer) Circuit.getResource(CircuitCommands.SelectAnEmployerAtRandom);
+			final Employer employer = (Employer) Circuit.getResource(Circuit.SELECT_AN_EMPLOYER);
 			if (employer.isBankrupt())
 				throw new RuntimeException("This employer is bankrupt.");
 			if ((employer.getJobOffer()!=null)&&(this.employers.contains(employer)==false)) {
@@ -237,11 +251,11 @@ public class BasicHousehold extends AbstractHousehold {
 	 * using the values recorded in the parameter map.
 	 */
 	protected void updateParameters() {
-		this.savingPropensity = Float.parseFloat(Circuit.getParameter("Households.savings.propensityToSave"));
-		this.savingRatioTarget = Float.parseFloat(Circuit.getParameter("Households.savings.ratioTarget"));;
-		this.propensityToConsumeExcessSaving = Float.parseFloat(Circuit.getParameter("Households.savings.propensityToConsumeExcess"));
-		this.flexibility = Float.parseFloat(Circuit.getParameter("Households.wage.flexibility"));
-		this.resistance = Integer.parseInt(Circuit.getParameter("Households.wage.resistance"));
+		this.savingPropensity = Float.parseFloat(Circuit.getParameter(this.PARAM_SAV_PROP));
+		this.savingRatioTarget = Float.parseFloat(Circuit.getParameter(this.PARAM_SAV_TARGET));
+		this.propensityToConsumeExcessSaving = Float.parseFloat(Circuit.getParameter(this.PARAM_SAV_PROP2_CONSUM_EXCESS));
+		this.flexibility = Float.parseFloat(Circuit.getParameter(this.PARAM_WAGE_FLEX));
+		this.resistance = Integer.parseInt(Circuit.getParameter(this.PARAM_WAGE_RESIST));
 	}
 
 	/**
@@ -250,7 +264,7 @@ public class BasicHousehold extends AbstractHousehold {
 	protected void updateProvidersList() {
 		this.providers.clear();
 		while (providers.size()<maxSize){
-			final Provider provider = (Provider) Circuit.getResource(CircuitCommands.SelectAProviderOfFinalGoodsAtRandom);
+			final Provider provider = (Provider) Circuit.getResource(Circuit.SELECT_A_PROVIDER_OF_FINAL_GOODS);
 			if (provider==null) break;
 			if (!this.providers.contains(provider)) {
 				this.providers.add(provider);
@@ -327,7 +341,7 @@ public class BasicHousehold extends AbstractHousehold {
 		}
 		if ((JamelObject.getCurrentPeriod().getYear().getYear()>2002) & (budget>this.data.getConsumptionBudget()/10)) {
 			for (int i = 0; i<maxSize; i++) {
-				final Provider aProvider = (Provider) Circuit.getResource(CircuitCommands.SelectAProviderOfFinalGoodsAtRandom);
+				final Provider aProvider = (Provider) Circuit.getResource(Circuit.SELECT_A_PROVIDER_OF_FINAL_GOODS);
 				if (aProvider==null) break;
 				final GoodsOffer offer = aProvider.getGoodsOffer();
 				if (offer!=null) {

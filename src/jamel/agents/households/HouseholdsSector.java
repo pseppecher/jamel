@@ -29,7 +29,7 @@
 
 package jamel.agents.households;
 
-import jamel.CircuitCommands;
+import jamel.Circuit;
 import jamel.JamelObject;
 import jamel.agents.roles.CapitalOwner;
 import jamel.agents.roles.Consumer;
@@ -126,8 +126,8 @@ public class HouseholdsSector extends JamelObject {
 	public Object get(String key) {
 		final Object result;
 		if (
-				key.equals(CircuitCommands.SelectAHouseholdAtRandom) ||
-				key.equals(CircuitCommands.SelectACapitalOwnerAtRandom)				
+				key.equals(Circuit.SELECT_A_HOUSEHOLD) ||
+				key.equals(Circuit.SELECT_A_CAPITAL_OWNER)				
 				) {
 			result = this.getRandomHousehold();
 		} else {

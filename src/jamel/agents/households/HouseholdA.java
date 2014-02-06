@@ -30,7 +30,6 @@
 package jamel.agents.households;
 
 import jamel.Circuit;
-import jamel.CircuitCommands;
 import jamel.agents.roles.Provider;
 
 import java.util.Collections;
@@ -56,7 +55,7 @@ public class HouseholdA extends BasicHousehold {
 	@Override
 	protected void updateProvidersList() {
 		while (providers.size()<maxSize){
-			final Provider provider = (Provider) Circuit.getResource(CircuitCommands.SelectAProviderOfFinalGoodsAtRandom);
+			final Provider provider = (Provider) Circuit.getResource(Circuit.SELECT_A_PROVIDER_OF_FINAL_GOODS);
 			if (provider==null) break;
 			if (!this.providers.contains(provider)) {
 				this.providers.add(provider);

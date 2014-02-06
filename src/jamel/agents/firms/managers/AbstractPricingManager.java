@@ -36,6 +36,9 @@ import jamel.agents.firms.util.Mediator;
  */
 public abstract class AbstractPricingManager extends JamelObject implements PricingManager {
 
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_PRICE_FLEX = "Firms.price.flexibility";
+
 	/** The current unit price.*/
 	protected double currentPrice=0;
 

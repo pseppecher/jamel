@@ -30,7 +30,6 @@
 package jamel.agents.firms;
 
 import jamel.Circuit;
-import jamel.CircuitCommands;
 import jamel.JamelObject;
 import jamel.agents.roles.CapitalOwner;
 import jamel.agents.roles.Employer;
@@ -53,6 +52,12 @@ import java.util.Map.Entry;
  */
 public class BasicFirmSector extends JamelObject implements FirmSector {
 
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_REGENERATION_SPAN_MIN = "Firms.regenerationTime.min";
+
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_REGENERATION_SPAN_MAX = "Firms.regenerationTime.max";
+
 	/**
 	 * Receive notification of a bankruptcy.<br>
 	 * A new firm will be created some months later.
@@ -62,8 +67,8 @@ public class BasicFirmSector extends JamelObject implements FirmSector {
 		if (!aBankruptFirm.isBankrupt())
 			throw new RuntimeException("Not bankrupt.");
 		final String currentDate = getCurrentPeriod().toString();
-		final int minTimeBeforeReCreation = Integer.parseInt(Circuit.getParameter("Firms.regenerationTime.min"));
-		final int maxTimeBeforeReCreation = Integer.parseInt(Circuit.getParameter("Firms.regenerationTime.max"));
+		final int minTimeBeforeReCreation = Integer.parseInt(Circuit.getParameter(PARAM_REGENERATION_SPAN_MIN));
+		final int maxTimeBeforeReCreation = Integer.parseInt(Circuit.getParameter(PARAM_REGENERATION_SPAN_MAX));
 		if (minTimeBeforeReCreation>maxTimeBeforeReCreation) {
 			throw new RuntimeException("Min and max regeneration time are inconsistent.");
 		}
@@ -213,14 +218,14 @@ public class BasicFirmSector extends JamelObject implements FirmSector {
 	@Override
 	public Object get(String key) {
 		final Object result;
-		if (key.startsWith(CircuitCommands.SelectAListOfFirmsAtRandom)) {
+		if (key.startsWith(Circuit.SELECT_A_LIST_OF_FIRMS)) {
 			final int n = Integer.parseInt(key.split(",")[1]);
 			result = this.getRandomFirms(n);
-		} else if (key.equals(CircuitCommands.SelectAWageAtRandom)) {
+		} else if (key.equals(Circuit.SELECT_A_WAGE)) {
 			result = this.getRandomWage();
-		} else if (key.equals(CircuitCommands.SelectAnEmployerAtRandom)) {
+		} else if (key.equals(Circuit.SELECT_AN_EMPLOYER)) {
 			result = this.getRandomEmployer();
-		} else if (key.equals(CircuitCommands.SelectAProviderOfFinalGoodsAtRandom)) {
+		} else if (key.equals(Circuit.SELECT_A_PROVIDER_OF_FINAL_GOODS)) {
 			result = this.getRandomProviderOfFinalGoods();
 		} else {
 			throw new RuntimeException("Unexpected key: "+key);
@@ -293,7 +298,7 @@ public class BasicFirmSector extends JamelObject implements FirmSector {
 			throw new RuntimeException("Missing parameter: firms.");
 		for (int count = 0 ; count<newFirms ; count++){
 			countFirms ++ ;
-			final CapitalOwner owner = (CapitalOwner) Circuit.getResource(CircuitCommands.SelectACapitalOwnerAtRandom);
+			final CapitalOwner owner = (CapitalOwner) Circuit.getResource(Circuit.SELECT_A_CAPITAL_OWNER);
 			try {
 				final String name = "Company "+countFirms;
 				final Firm newFirm = (Firm) Class.forName(this.firmType,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,CapitalOwner.class).newInstance(name,owner);

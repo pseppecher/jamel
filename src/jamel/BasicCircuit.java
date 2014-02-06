@@ -164,18 +164,18 @@ public class BasicCircuit extends Circuit {
 	protected Object getResource2(String key) {
 		final Object result;
 		if (
-				key.equals(CircuitCommands.SelectACapitalOwnerAtRandom) ||
-				key.equals(CircuitCommands.SelectAHouseholdAtRandom)
+				key.equals(Circuit.SELECT_A_CAPITAL_OWNER) ||
+				key.equals(Circuit.SELECT_A_HOUSEHOLD)
 				) {
 			result = this.households.get(key);
 		} else if (
-				key.startsWith(CircuitCommands.SelectAListOfFirmsAtRandom) ||
-				key.equals(CircuitCommands.SelectAnEmployerAtRandom) ||
-				key.equals(CircuitCommands.SelectAWageAtRandom) ||
-				key.equals(CircuitCommands.SelectAProviderOfFinalGoodsAtRandom)				
+				key.startsWith(Circuit.SELECT_A_LIST_OF_FIRMS) ||
+				key.equals(Circuit.SELECT_AN_EMPLOYER) ||
+				key.equals(Circuit.SELECT_A_WAGE) ||
+				key.equals(Circuit.SELECT_A_PROVIDER_OF_FINAL_GOODS)				
 				) {
 			result = this.firms.get(key);
-		} else if (key.startsWith(CircuitCommands.GetHtmlMatrix)) {
+		} else if (key.startsWith(Circuit.GET_HTML_MATRIX)) {
 			result = this.matrix.toHtml();
 		} else {
 			throw new RuntimeException("Unexpected key: "+key);

@@ -103,13 +103,15 @@ public class FinalFactory extends AbstractFactory {
 
 		}
 
+		@SuppressWarnings("javadoc")
+		private static final String PARAM_TECHNICAL_COEF = "Firms.technicalCoefficient";
+
 		/**
-		 * Returns a new production process.
-		 * @return the new process.
+		 * Returns the technical coefficient.
+		 * @return the technical coefficient.
 		 */
-		@Override
-		protected ProductionProcess newProductionProcess() {
-			return new Process();
+		private float getCoefficient() {
+			return Float.parseFloat(Circuit.getParameter(PARAM_TECHNICAL_COEF));
 		}
 
 		/**
@@ -121,11 +123,12 @@ public class FinalFactory extends AbstractFactory {
 		}
 
 		/**
-		 * Returns the technical coefficient.
-		 * @return the technical coefficient.
+		 * Returns a new production process.
+		 * @return the new process.
 		 */
-		private float getCoefficient() {
-			return Float.parseFloat(Circuit.getParameter("Firms.technicalCoefficient"));
+		@Override
+		protected ProductionProcess newProductionProcess() {
+			return new Process();
 		}
 
 	}
@@ -201,14 +204,6 @@ public class FinalFactory extends AbstractFactory {
 		return new FinalMachine();
 	}
 
-	/**
-	 * Takes the raw materials required for the production process.
-	 */
-	public void takeRawMaterials() {
-		final IntermediateGoods rawMaterials=(IntermediateGoods) this.mediator.get(Labels.RAW_MATERIALS);
-		this.rawMaterialsInventory.add(rawMaterials);
-	}
-	
 	@Override
 	public Object get(String key) {
 		Object result = null;
@@ -219,6 +214,14 @@ public class FinalFactory extends AbstractFactory {
 			result = super.get(key);			
 		}
 		return result;
+	}
+	
+	/**
+	 * Takes the raw materials required for the production process.
+	 */
+	public void takeRawMaterials() {
+		final IntermediateGoods rawMaterials=(IntermediateGoods) this.mediator.get(Labels.RAW_MATERIALS);
+		this.rawMaterialsInventory.add(rawMaterials);
 	}
 
 }

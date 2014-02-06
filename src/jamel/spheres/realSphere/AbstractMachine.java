@@ -41,6 +41,12 @@ import jamel.util.Timer.JamelPeriod;
  */
 abstract class AbstractMachine extends JamelObject implements Machine {
 
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_PRODUCTION_TIME = "Firms.productionTime";
+
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_PRODUCTIVITY = "Firms.productivity";
+
 	/** The last period the machine worked.*/
 	private JamelPeriod lastUsed;
 
@@ -76,7 +82,7 @@ abstract class AbstractMachine extends JamelObject implements Machine {
 	 */
 	@Override
 	public int getProductionTime() {
-		return Integer.parseInt(Circuit.getParameter("Firms.productionTime"));
+		return Integer.parseInt(Circuit.getParameter(PARAM_PRODUCTION_TIME));
 	}
 
 	/**
@@ -85,7 +91,7 @@ abstract class AbstractMachine extends JamelObject implements Machine {
 	 */
 	@Override
 	public int getProductivity() {
-		return Integer.parseInt(Circuit.getParameter("Firms.productivity"));
+		return Integer.parseInt(Circuit.getParameter(PARAM_PRODUCTIVITY));
 	}
 
 	/**

@@ -50,13 +50,11 @@ public class BasicPricingManager extends AbstractPricingManager {
 	 */
 	@Override
 	public void updatePrice() {
-		final Float priceFlexibility = Float.parseFloat(Circuit.getParameter("Firms.price.flexibility"));
+		final Float priceFlexibility = Float.parseFloat(Circuit.getParameter(PARAM_PRICE_FLEX));
 		final Float inventoryRatio = (Float)this.mediator.get(Labels.INVENTORY_LEVEL_RATIO);		
 		final Double unitCost = (Double)this.mediator.get(Labels.UNIT_COST);
 		if (this.currentPrice==0) {
 			this.currentPrice = (1.+getRandom().nextFloat()/2.)*unitCost;
-			if ( Double.isNaN(currentPrice) )
-				throw new RuntimeException("This price is NaN.") ;
 		}
 		else {
 			final float alpha1 = getRandom().nextFloat();
@@ -68,6 +66,9 @@ public class BasicPricingManager extends AbstractPricingManager {
 				this.currentPrice = this.currentPrice*(1f-alpha1*priceFlexibility);
 				if (this.currentPrice<1) this.currentPrice = 1d;
 			}
+		}
+		if ( Double.isNaN(currentPrice) ) {
+			throw new RuntimeException("This price is NaN.") ;
 		}
 	}
 

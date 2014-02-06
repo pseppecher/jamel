@@ -40,11 +40,20 @@ import jamel.spheres.monetarySphere.Account;
  */
 public class BasicCapitalManager extends JamelObject implements CapitalManager {
 
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_CAPITAL_PROPENSITY_TO_DISTRIBUTE = "Firms.capital.propensityToDistributeExcess";
+
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_CAPITAL_RATIO = "Firms.capital.normalRatio";
+
 	/** The account. */
 	protected Account account;
 
 	/** The capital ratio targeted. */
 	protected Float capitalRatioTarget=null;
+
+	/** The debt targeted. */
+	protected Long debtTarget;
 
 	/** The dividend. */
 	protected Long dividend;
@@ -57,9 +66,6 @@ public class BasicCapitalManager extends JamelObject implements CapitalManager {
 
 	/** propensityToDistributeExcessCapital */
 	protected Float propensityToDistributeExcessCapital=null;
-
-	/** The debt targeted. */
-	protected Long debtTarget;
 
 	/**
 	 * Creates a new capital manager.
@@ -97,8 +103,8 @@ public class BasicCapitalManager extends JamelObject implements CapitalManager {
 		if (this.owner==null) {
 			this.owner = (CapitalOwner) this.mediator.get(Labels.OWNER);
 		}
-		this.capitalRatioTarget=Float.parseFloat(Circuit.getParameter("Firms."+Labels.CAPITAL_RATIO));
-		this.propensityToDistributeExcessCapital = Float.parseFloat(Circuit.getParameter("Firms."+Labels.CAPITAL_PROPENSITY_TO_DISTRIBUTE));		
+		this.capitalRatioTarget=Float.parseFloat(Circuit.getParameter(PARAM_CAPITAL_RATIO));
+		this.propensityToDistributeExcessCapital = Float.parseFloat(Circuit.getParameter(PARAM_CAPITAL_PROPENSITY_TO_DISTRIBUTE));		
 	}
 
 	/**

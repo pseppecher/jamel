@@ -47,6 +47,12 @@ import jamel.util.markets.EmploymentContract;
  */
 abstract class AbstractFactory extends JamelObject implements jamel.spheres.realSphere.Factory{
 
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_INVENTORY_NORMAL_LEVEL = "Firms.inventories.normalLevel";
+
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_MACHINERY = "Firms.machinery";
+
 	/** 
 	 * The machine comparator.<p>
 	 * To compare machines and sort them according to the progress of their process of production.
@@ -113,7 +119,7 @@ abstract class AbstractFactory extends JamelObject implements jamel.spheres.real
 	 * Tools up the factory with new machines.
 	 */
 	private void toolUp() {
-		final int machines = Integer.parseInt(Circuit.getParameter("Firms.machinery"));
+		final int machines = Integer.parseInt(Circuit.getParameter(PARAM_MACHINERY));
 		if (machines == 0) new RuntimeException("The number of machines can't be nul.");
 		for (int i = 0; i<machines; i++) {
 			machinery.add(newMachine());
@@ -263,7 +269,7 @@ abstract class AbstractFactory extends JamelObject implements jamel.spheres.real
 		this.productionVolume = 0;
 		this.productionValue = 0;
 		updateMaxProduction();
-		this.inventoryVolumeTarget  = Float.parseFloat(Circuit.getParameter("Firms.inventories.normalLevel"));
+		this.inventoryVolumeTarget  = Float.parseFloat(Circuit.getParameter(PARAM_INVENTORY_NORMAL_LEVEL));
 	}
 
 	/**

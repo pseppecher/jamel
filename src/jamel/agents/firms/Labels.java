@@ -40,12 +40,6 @@ public class Labels {
 	/** CAPITAL */
 	public static final String CAPITAL = "the capital";
 
-	/** The propensity to distribute the capital excess. */
-	public static final String CAPITAL_PROPENSITY_TO_DISTRIBUTE = "capital.propensityToDistributeExcess";
-
-	/** The normal ratio of capital. */
-	public static final String CAPITAL_RATIO = "capital.normalRatio";
-
 	/** Period closure. */
 	public static final String CLOSURE = "period closure";
 
@@ -76,9 +70,6 @@ public class Labels {
 	/** the inventories of finished goods */
 	public static final String INVENTORIES_OF_FINISHED_GOODS = "the inventories of finished goods";
 
-	/** The propensity to sell the inventories. */
-	public static final String INVENTORIES_PROPENSITY_TO_SELL = "inventories.propensityToSell";
-
 	/** the total value of inventories (finished goods, unfinished goods and raw materials) */
 	public static final String INVENTORIES_TOTAL_VALUE = "the total value of inventories (finished goods, unfinished goods and raw materials)";
 
@@ -96,12 +87,6 @@ public class Labels {
 
 	/** The number of jobs offered. */
 	public static final String JOBS_OFFERED = "Jobs offered";
-
-	/** The maximum length of labor contract. */
-	public static final String labourContractMax ="laborContract.max";
-
-	/** The minimum length of labor contract. */
-	public static final String labourContractMin = "laborContract.min";
 
 	/** The current number of machines. */
 	public static final String MACHINERY = "Number of machines";

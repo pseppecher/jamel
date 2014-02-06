@@ -2,7 +2,7 @@
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
- * (C) Copyright 2007-2012, Pascal Seppecher.
+ * (C) Copyright 2007-2014, Pascal Seppecher and contributors.
  * 
  * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
  *
@@ -21,8 +21,10 @@
  * You should have received a copy of the GNU General Public License
  * along with JAMEL. If not, see <http://www.gnu.org/licenses/>.
  *
- * [Java is a trademark or registered trademark of Sun Microsystems, Inc.
- * in the United States and other countries.]
+ * [Oracle and Java are registered trademarks of Oracle and/or its affiliates.]
+ * [JAMEL uses JFreeChart, copyright by Object Refinery Limited and Contributors. 
+ * JFreeChart is distributed under the terms of the GNU Lesser General Public Licence (LGPL). 
+ * See <http://www.jfree.org>.]
  */
 
 package jamel.agents.firms.managers;
@@ -33,7 +35,6 @@ import java.util.ListIterator;
 import jamel.Circuit;
 import jamel.JamelObject;
 import jamel.agents.firms.Labels;
-import jamel.agents.firms.util.FirmComponent;
 import jamel.agents.firms.util.Mediator;
 import jamel.agents.roles.Provider;
 import jamel.spheres.monetarySphere.Account;
@@ -44,10 +45,16 @@ import jamel.util.markets.GoodsOffer;
 /**
  * A basic store manager for the firms.
  */
-public class BasicStoreManager extends JamelObject implements FirmComponent{
+public class BasicStoreManager extends JamelObject implements StoreManager{
 
 	/** The limit of the memory of the manager. */
 	final static private int recordLim = 12;
+
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_INVENTORIES_PROPENSITY_TO_SELL = "Firms.inventories.propensityToSell";
+
+	/** The variation of sales (halfyear2 - halfyear1, volume) */
+	private Integer salesVariation;
 
 	/** The bank account. */
 	protected Account account;
@@ -78,9 +85,6 @@ public class BasicStoreManager extends JamelObject implements FirmComponent{
 
 	/** The volume of the sales. */
 	protected Integer salesVolume=null ;
-
-	/** The variation of sales (halfyear2 - halfyear1, volume) */
-	private Integer salesVariation;
 
 	/**
 	 * Creates a new manager.
@@ -169,7 +173,7 @@ public class BasicStoreManager extends JamelObject implements FirmComponent{
 	}
 
 	/* (non-Javadoc)
-	 * @see jamel.agents.firms.util.FirmComponent#get(java.lang.String)
+	 * @see jamel.agents.firms.managers.StoreManager#get(java.lang.String)
 	 */
 	@Override
 	public Object get(String key) {
@@ -210,9 +214,10 @@ public class BasicStoreManager extends JamelObject implements FirmComponent{
 		return result;
 	}
 
-	/**
-	 * Creates a new offer and posts it on the goods market.
+	/* (non-Javadoc)
+	 * @see jamel.agents.firms.managers.StoreManager#offerCommodities()
 	 */
+	@Override
 	public void offerCommodities() {
 		if (this.provider==null) {
 			this.provider=(Provider)this.mediator.get(Labels.FIRM);
@@ -227,7 +232,7 @@ public class BasicStoreManager extends JamelObject implements FirmComponent{
 		final Goods merchandise = (Goods) this.mediator.get(Labels.INVENTORIES_OF_FINISHED_GOODS);
 		if ((aPrice>0)&&(merchandise!=null)) {
 			this.inventory = merchandise ;
-			final int vol1 = (int)(this.inventory.getVolume()*Float.parseFloat(Circuit.getParameter("Firms."+Labels.INVENTORIES_PROPENSITY_TO_SELL)));
+			final int vol1 = (int)(this.inventory.getVolume()*Float.parseFloat(Circuit.getParameter(PARAM_INVENTORIES_PROPENSITY_TO_SELL)));
 			final int vol2 = (Integer)this.mediator.get(Labels.PRODUCTION_MAX)*2;
 			this.offerVolume = Math.min(vol1,vol2);
 			if (this.offerVolume>0) {
@@ -236,13 +241,10 @@ public class BasicStoreManager extends JamelObject implements FirmComponent{
 		}
 	}
 
-	/**
-	 * Sells the specified volume of goods.
-	 * @param offer  the offer.
-	 * @param volume  the volume.
-	 * @param check  the check.
-	 * @return the goods sold.
+	/* (non-Javadoc)
+	 * @see jamel.agents.firms.managers.StoreManager#sell(jamel.util.markets.GoodsOffer, int, jamel.spheres.monetarySphere.Check)
 	 */
+	@Override
 	public Goods sell( GoodsOffer offer, int volume, Check check ) {
 		if ( offer != this.offer ) 
 			throw new RuntimeException("The 2 offers are not the same.");

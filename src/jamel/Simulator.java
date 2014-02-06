@@ -36,9 +36,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
 import java.security.InvalidKeyException;
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Scanner;
 
 import javax.swing.SwingUtilities;
@@ -63,29 +62,32 @@ public class Simulator extends Jamel {
 	@SuppressWarnings("javadoc")
 	private static final String CMD_SIMULATION_END = "*END*";
 
+	/** The laps after each print of a line in the console panel. */
+	private static final int sleep=15;
+
 	/**
 	 * Reads the file and returns its content as a list of strings. 
 	 * @param file  the file to read.
 	 * @return a list of strings.
 	 * @throws FileNotFoundException if the file is not found.
 	 */
-	protected static List<String> read(File file) throws FileNotFoundException {
-		final LinkedList<String> parameters = new LinkedList<String>();
-			Scanner scanner=new Scanner(file);
-			while (scanner.hasNextLine()) {
-				final String line = scanner.nextLine();
-				final String[] truc1 = line.split("\\(");
-				if (truc1[0].equals("include")) {
-					final String[] truc2 = truc1[1].split("\\)");
-					final String fileName=file.getParent()+"/"+truc2[0];
-					final File file2 = new File(fileName);
-					parameters.addAll(read(file2));
-				}
-				else {
-					parameters.add(line);
-				}
+	protected static ArrayList<String> read(File file) throws FileNotFoundException {
+		final ArrayList<String> parameters = new ArrayList<String>();
+		Scanner scanner=new Scanner(file);
+		while (scanner.hasNextLine()) {
+			final String line = scanner.nextLine();
+			final String[] truc1 = line.split("\\(");
+			if (truc1[0].equals("include")) {
+				final String[] truc2 = truc1[1].split("\\)");
+				final String fileName=file.getParent()+"/"+truc2[0];
+				final File file2 = new File(fileName);
+				parameters.addAll(read(file2));
 			}
-			scanner.close();
+			else {
+				parameters.add(line);
+			}
+		}
+		scanner.close();
 		return parameters;
 	}
 
@@ -110,108 +112,61 @@ public class Simulator extends Jamel {
 	}
 
 	/**
-	 * Prints a line of the scenario in the console. 
-	 * @param splitLine  an array of 2 Strings (The first contains an instruction, the second a comment)
-	 * @param color  a String that defines the html color for the instruction.
-	 */
-	protected void printScenario(String[] splitLine,String color) {
-		String string = "<FONT COLOR=\""+color+"\">"+splitLine[0]+"</FONT>";
-		if (splitLine.length==2){
-			string += "<FONT COLOR=\"#21610B\">//"+splitLine[1]+"</FONT>";
-		}
-		println(string);
-		try {
-			Thread.sleep(15); // Gives the time to see the scenario in the console panel.
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Returns a new <code>Circuit</code>.<p>
-	 * TODO: This method could be refactored.
+	 * Returns a new <code>Circuit</code>.
 	 * @param instructions  a list of (raw) strings constituting the scenario of the simulation.
 	 * @return a new <code>Circuit</code>.
 	 */
-	protected Circuit getNewCircuit(List<String> instructions) {
-		int count=0;
-		boolean inPreamble=false;
-		boolean inSimulation=false;
-		boolean terminated=false;
+	protected Circuit getNewCircuit(ArrayList<String> instructions) {
+		int count=-1;
 		Circuit circuit=null;
-		for (String line: instructions) {
+		// Before the preamble
+		
+		while (true) {
 			count++;
-			String color="#000000";
+			if (count==instructions.size()) {
+				throw new RuntimeException("Error in scenario file: \""+CMD_PREAMBLE_BEGIN+"\" command not found." );
+			}
+			String line=instructions.get(count);
+			if (line.equals(CMD_PREAMBLE_BEGIN)) {
+				printLine("<FONT COLOR=\"#013ADF\">"+CMD_PREAMBLE_BEGIN+"</FONT>");
+				break;
+			}
+			printLine("<FONT COLOR=\"#21610B\">"+line+"</FONT>");			
+		}
+		
+		// In the preamble
+		
+		while (true) {
+			count++;
+			if (count==instructions.size()) {
+				throw new RuntimeException("Error in scenario file: \""+CMD_SIMULATION_BEGIN+"\" command not found." );
+			}
+			String line=instructions.get(count);
+			if (line.equals(CMD_SIMULATION_BEGIN)) {
+				printLine("<FONT COLOR=\"#013ADF\">"+CMD_SIMULATION_BEGIN+"</FONT>");
+				break;
+			}
 			String[] splitLine = line.split("//", 2);
 			final String instruction = splitLine[0].trim(); // removes whitespace.
-			if (instruction.isEmpty()) {
-				// does nothing.
-			}
-			else if (instruction.equals(CMD_PREAMBLE_BEGIN)){ // detecting the start of the preamble. 
-				if (inPreamble||inSimulation) {
-					throw new RuntimeException("Error in scenario file, line "+count+": unexpected \""+CMD_PREAMBLE_BEGIN+"\" command." );
-				}
-				inPreamble=true;
-				color="#013ADF";
-			} 
-			else if (instruction.equals(CMD_SIMULATION_BEGIN)) { // detecting the end of the preamble and the start of the simulation.
-				if (!inPreamble) {
-					throw new RuntimeException("Error in scenario file, line "+count+": unexpected \""+CMD_SIMULATION_BEGIN+"\" command." );
-				}
-				if (circuit==null) {
-					throw new RuntimeException("Error in scenario file, line "+count+": missing \""+CMD_SET_CIRCUIT+"\" command." );
-				}
-				inSimulation=true;
-				inPreamble=false;
-				color="#013ADF";
-			}
-			else if (instruction.equals(CMD_SIMULATION_END)) { // detecting the end of the simulation.
-				if (!inSimulation) {
-					throw new RuntimeException("Error in scenario file, line "+count+": unexpected \""+CMD_SIMULATION_END+"\" command." );
-				}
-				inSimulation=false;
-				terminated=true;
-				color="#013ADF";
-			}
-			else if (inPreamble) {
+			if (!instruction.isEmpty()) {
 				final String[] words = instruction.split("=", 2);
-				final String key = words[0].trim();  
 				if (words.length!=2) {
-					throw new RuntimeException("Error in scenario file, line "+count+": syntax error in \""+instruction+"\"." );
+					throw new RuntimeException("Error in scenario file, line "+(count+1)+": syntax error in \""+instruction+"\"." );
 				}
+				final String key = words[0].trim();
 				final String val = words[1].trim();
 				if (key.equals(CMD_SET_CIRCUIT)) {	// creates the new circuit;
-					if (!inPreamble) {
-						throw new RuntimeException("Error in scenario file, line "+count+": unexpected \""+CMD_SET_CIRCUIT+"\" command." );
-					}
 					try {
 						// val must contain the fully qualified name of the desired class of Circuit.
 						circuit = (Circuit) Class.forName(val,false,ClassLoader.getSystemClassLoader()).getConstructor(Jamel.class).newInstance(this);
-					} catch (IllegalArgumentException e) {
+					} catch (Exception e) {
 						e.printStackTrace();
-						throw new RuntimeException("Error in scenario file, line "+count+": while creating the new Circuit \""+val+"\"." );
-					} catch (SecurityException e) {
-						e.printStackTrace();
-						throw new RuntimeException("Error in scenario file, line "+count+": while creating the new Circuit \""+val+"\"." );
-					} catch (InstantiationException e) {
-						e.printStackTrace();
-						throw new RuntimeException("Error in scenario file, line "+count+": while creating the new Circuit \""+val+"\"." );
-					} catch (IllegalAccessException e) {
-						e.printStackTrace();
-						throw new RuntimeException("Error in scenario file, line "+count+": while creating the new Circuit \""+val+"\"." );
-					} catch (InvocationTargetException e) {
-						e.printStackTrace();
-						throw new RuntimeException("Error in scenario file, line "+count+": while creating the new Circuit \""+val+"\"." );
-					} catch (NoSuchMethodException e) {
-						e.printStackTrace();
-						throw new RuntimeException("Error in scenario file, line "+count+": while creating the new Circuit \""+val+"\"." );
-					} catch (ClassNotFoundException e) {
-						e.printStackTrace();
-						throw new RuntimeException("Error in scenario file, line "+count+": while creating the new Circuit \""+val+"\"." );
+						throw new RuntimeException("Error in scenario file, line "+(count+1)+": while creating the new Circuit \""+val+"\"." );
 					}
-				} else {
+				} 
+				else {
 					if (circuit==null) {
-						throw new RuntimeException("Error in scenario file, line "+count+": missing \""+CMD_SET_CIRCUIT+"\" command." );
+						throw new RuntimeException("Error in scenario file, line "+(count+1)+": missing \""+CMD_SET_CIRCUIT+"\" command." );
 					}
 					if (key.equals(CMD_SET_WINDOW_RANGE)) {
 						this.doEvent(JamelWindow.COMMAND_ZOOM,Integer.parseInt(val));
@@ -220,42 +175,76 @@ public class Simulator extends Jamel {
 							circuit.init(key,val);
 						} catch (InvalidKeyException e) {
 							e.printStackTrace();
-							throw new RuntimeException("Error in scenario file, line "+count+": unexpected \""+key+"\" command." );
+							throw new RuntimeException("Error in scenario file, line "+(count+1)+": unexpected \""+key+"\" command." );
 						}
 					}
 				}
 			}
-			else if (inSimulation) {
+			if (splitLine.length==2) {
+				printLine(splitLine[0]+"<FONT COLOR=\"#21610B\">//"+splitLine[1]+"</FONT>");			
+			}
+			else {
+				printLine(splitLine[0]);
+			}
+		}
+		
+		if (circuit==null) {
+			throw new RuntimeException("Error in scenario file, line "+(count+1)+": missing \""+CMD_SET_CIRCUIT+"\" command." );
+		}
+		
+		// In the simulation
+		
+		while (true) {
+			count++;
+			if (count==instructions.size()) {
+				throw new RuntimeException("Error in scenario file: \""+CMD_SIMULATION_END+"\" command not found." );
+			}
+			String line=instructions.get(count);
+			if (line.equals(CMD_SIMULATION_END)) {
+				printLine("<FONT COLOR=\"#013ADF\">"+CMD_SIMULATION_END+"</FONT>");
+				break;
+			}
+
+			String[] splitLine = line.split("//", 2);
+			final String instruction = splitLine[0].trim(); // removes whitespace.
+			if (!instruction.isEmpty()) {
 				try {
 					circuit.addEvent(instruction);
 				} catch (IllegalArgumentException e) {
 					e.printStackTrace();
 					throw new RuntimeException("Error in scenario file, line "+count+": illegal syntax in \""+instruction+"\" command." );
-				}
+				}				
+			}
+			if (splitLine.length==2) {
+				printLine(splitLine[0]+"<FONT COLOR=\"#21610B\">//"+splitLine[1]+"</FONT>");			
 			}
 			else {
-				if (inPreamble|inSimulation)	{
-					throw new RuntimeException("Error in scenario file, line "+count+": unknown error." );
-				}
-				// Does nothing (we are before the preamble).
-				color="#21610B";
-			}
-			printScenario(splitLine,color);
+				printLine(splitLine[0]);
+			}			
 		}
-		if(!terminated) {
-			throw new RuntimeException("Error in scenario file, line "+count+": missing command \""+CMD_SIMULATION_END+"\".");
+		
+		while (true) {
+			count++;
+			if (count==instructions.size()) {
+				break;
+			}
+			String line=instructions.get(count);
+			printLine("<FONT COLOR=\"#21610B\">"+line+"</FONT>");			
 		}
 		return circuit;
 	}
 
 	/**
-	 * Prints the list of strings in the console panel.
-	 * @param strings a list of strings.
+	 * Prints a line of the scenario in the console panel.
+	 * @param string  the line to be printed.
 	 */
-	protected void println(LinkedList<String> strings) {
-		for(String string: strings) {
-			println(string);
-		}
+	protected void printLine(String string) {
+		println(string);
+		try {
+			Thread.sleep(sleep); // Gives the time to see the scenario in the console panel.
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}		
 	}
 
 	/**

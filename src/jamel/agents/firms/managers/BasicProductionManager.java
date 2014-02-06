@@ -36,6 +36,15 @@ import jamel.agents.firms.util.Mediator;
  */
 public class BasicProductionManager extends JamelObject implements ProductionManager{
 
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_UTIL_RATE_INIT_MAX = "Firms.utilizationRate.init.max";
+
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_UTIL_RATE_INIT_MIN = "Firms.utilizationRate.init.min";
+
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_UTIL_RATE_FLEX = "Firms.utilizationRate.flexibility";
+
 	/** The mediator. */
 	protected Mediator mediator;
 
@@ -50,8 +59,8 @@ public class BasicProductionManager extends JamelObject implements ProductionMan
 	 * @param mediator  the mediator.
 	 */
 	public BasicProductionManager(Mediator mediator) {
-		final int uRateMin = Integer.parseInt(Circuit.getParameter("Firms.utilizationRate.init.min"));
-		final int uRateMax = Integer.parseInt(Circuit.getParameter("Firms.utilizationRate.init.max"));
+		final int uRateMin = Integer.parseInt(Circuit.getParameter(PARAM_UTIL_RATE_INIT_MIN));
+		final int uRateMax = Integer.parseInt(Circuit.getParameter(PARAM_UTIL_RATE_INIT_MAX));
 		this.utilizationRateTargeted =uRateMin+getRandom().nextInt(uRateMax-uRateMin);
 		this.mediator=mediator;
 	}
@@ -70,7 +79,7 @@ public class BasicProductionManager extends JamelObject implements ProductionMan
 	 */
 	@Override
 	public void updateProductionLevel() {
-		final float utilizationRateFlexibility = Float.parseFloat(Circuit.getParameter("Firms.utilizationRate.flexibility"));
+		final float utilizationRateFlexibility = Float.parseFloat(Circuit.getParameter(PARAM_UTIL_RATE_FLEX));
 		final float alpha1 = getRandom().nextFloat();
 		final float alpha2 = getRandom().nextFloat();
 		final float inventoryRatio = (Float)this.mediator.get(Labels.INVENTORY_LEVEL_RATIO);
