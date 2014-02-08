@@ -27,6 +27,7 @@
 package jamel.util.data;
 
 import java.util.LinkedList;
+import java.util.List;
 
 import org.jfree.data.statistics.BoxAndWhiskerCalculator;
 import org.jfree.data.statistics.BoxAndWhiskerItem;
@@ -595,7 +596,7 @@ public class PeriodDataset extends GlobalDataset {
 	 * Adds the data of each firm.
 	 * @param firmsList - the list of the firms.
 	 */
-	public void compileFirmsData(LinkedList<Firm> firmsList) {
+	public void compileFirmsData(List<Firm> firmsList) {
 		this.pricesS2List.clear();
 		this.markupListFinal.clear();
 		this.markupListIntermediate.clear();
@@ -608,7 +609,7 @@ public class PeriodDataset extends GlobalDataset {
 	 * Adds the data of each households.
 	 * @param householdsList - the list of the households.
 	 */
-	public void compileHouseholdsData(LinkedList<Household> householdsList) {
+	public void compileHouseholdsData(List<Household> householdsList) {
 		this.wagesList.clear();
 		this.unemploymentDurationList.clear();
 		unemploymentTotalDuration=0;

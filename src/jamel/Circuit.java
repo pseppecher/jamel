@@ -36,6 +36,7 @@ import jamel.spheres.monetarySphere.Account;
 import jamel.spheres.monetarySphere.Bank;
 import jamel.util.BalanceSheetMatrix;
 import jamel.util.data.CrossSectionSeries;
+import jamel.util.data.GlobalDataset;
 import jamel.util.data.PeriodDataset;
 import jamel.util.data.TimeseriesCollection;
 import jamel.util.data.YearDataset;
@@ -43,6 +44,7 @@ import jamel.util.data.YearDataset;
 import java.security.InvalidKeyException;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 import javax.swing.JOptionPane;
@@ -54,9 +56,6 @@ import org.jfree.date.MonthConstants;
  * An abstraction of the macro-economic circuit.
  */
 public abstract class Circuit extends JamelObject {
-
-	@SuppressWarnings("javadoc")
-	private static final String CMD_SET = "set";
 
 	/** The circuit. */
 	protected static Circuit circuit;
@@ -72,6 +71,9 @@ public abstract class Circuit extends JamelObject {
 
 	@SuppressWarnings("javadoc")
 	protected static final String CMD_PAUSE = "pause()";
+
+	@SuppressWarnings("javadoc")
+	protected static final String CMD_SET = "set";
 
 	@SuppressWarnings("javadoc")
 	protected static final String CMD_SET_FIRMS = "Firms";
@@ -237,6 +239,9 @@ public abstract class Circuit extends JamelObject {
 
 	/** The cross-section series. */
 	protected CrossSectionSeries crossSectionSeries;
+
+	/** The data ready for export. */
+	final protected List<String> export = new LinkedList<String>();
 
 	/** The keys of the data to export. */
 	protected String[] exportDataKeys=null;
@@ -407,11 +412,11 @@ public abstract class Circuit extends JamelObject {
 	protected void exportData() {
 		if (this.exportDataKeys!=null) {
 			if (this.exportDataPeriod.equals(MONTH)) {
-				simulator.export(this.monthlyData.getLast(),this.exportDataKeys);			
+				this.recordData(this.monthlyData.getLast(), exportDataKeys);
 			}
 			else if (this.exportDataPeriod.equals(YEAR)) {
 				if (getCurrentPeriod().isMonth(MonthConstants.DECEMBER)) {
-					simulator.export(this.yearData,this.exportDataKeys);			
+					this.recordData(this.yearData, exportDataKeys);
 				}
 			}
 			else {
@@ -470,6 +475,30 @@ public abstract class Circuit extends JamelObject {
 	}
 
 	/**
+	 * Records the data for future export.
+	 * @param data  the record of data.
+	 * @param keys  the keys of the values to export.
+	 */
+	protected void recordData(GlobalDataset data, String[] keys) {
+		String line = "";
+		for (String key:keys) {
+			String value=null;
+			if (key.startsWith("%")) {
+				try {
+					value=data.getFieldValue(key.substring(1)).toString();
+				} catch (NoSuchFieldException e) {
+					value="No Such Field: "+key;
+				}
+			}
+			else {
+				value=key;
+			}
+			line+=(value+",");
+		}
+		export.add(line);
+	}
+
+	/**
 	 * Sets the parameters of the circuit.
 	 * @param instructions  an array of strings that contain parameters.
 	 */
@@ -515,6 +544,14 @@ public abstract class Circuit extends JamelObject {
 	 * Executes a period a the circuit (one month). 
 	 */
 	abstract public void doPeriod();
+
+	/**
+	 * Returns the data to export.
+	 * @return a list of strings representing the data.
+	 */
+	public List<String> getExportData() {
+		return this.export;
+	}
 
 	/**
 	 * Initializes the circuit.

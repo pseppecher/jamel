@@ -36,8 +36,8 @@ import jamel.agents.roles.Consumer;
 import jamel.agents.roles.Worker;
 import jamel.util.data.PeriodDataset;
 
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 
 /**
  * Represents the sector of the households.
@@ -50,7 +50,7 @@ public class HouseholdsSector extends JamelObject {
 	private int countHouseholds = 0 ;
 
 	/** The list of the households. */
-	private final LinkedList<Household> householdsList ;
+	private final ArrayList<Household> householdsList ;
 
 	/** The type of the households. */
 	private String householdsType;
@@ -59,7 +59,7 @@ public class HouseholdsSector extends JamelObject {
 	 * Creates a new households sector.
 	 */
 	public HouseholdsSector() { 
-		this.householdsList = new LinkedList<Household>() ;
+		this.householdsList = new ArrayList<Household>() ;
 	}
 
 	/**

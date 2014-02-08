@@ -35,7 +35,6 @@ import jamel.util.Timer;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
-import java.security.InvalidKeyException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Scanner;
@@ -43,28 +42,10 @@ import java.util.Scanner;
 import javax.swing.SwingUtilities;
 
 /**
- * The main class of Jamel.  
+ * A simulator with a GUI for dynamic simulations.  
  */
 public class Simulator extends Jamel {
-
-	@SuppressWarnings("javadoc")
-	private static final String CMD_PREAMBLE_BEGIN = "*PREAMBLE*";
-
-	@SuppressWarnings("javadoc")
-	private static final String CMD_SET_CIRCUIT = "Circuit";
-
-	@SuppressWarnings("javadoc")
-	private static final String CMD_SET_WINDOW_RANGE = "WindowRange";
-
-	@SuppressWarnings("javadoc")
-	private static final String CMD_SIMULATION_BEGIN = "*START*";
-
-	@SuppressWarnings("javadoc")
-	private static final String CMD_SIMULATION_END = "*END*";
-
-	/** The laps after each print of a line in the console panel. */
-	private static final int sleep=15;
-
+	
 	/**
 	 * Reads the file and returns its content as a list of strings. 
 	 * @param file  the file to read.
@@ -96,9 +77,7 @@ public class Simulator extends Jamel {
 	 * @param args  the arguments (not used).
 	 */
 	public static void main(String[] args) {
-		final long start = (new Date()).getTime();
 		new Simulator();
-		System.out.println("Duration: "+((new Date()).getTime()-start)/1000.+" s." ) ;
 	}
 
 	/** The application window. */
@@ -112,142 +91,6 @@ public class Simulator extends Jamel {
 	}
 
 	/**
-	 * Returns a new <code>Circuit</code>.
-	 * @param instructions  a list of (raw) strings constituting the scenario of the simulation.
-	 * @return a new <code>Circuit</code>.
-	 */
-	protected Circuit getNewCircuit(ArrayList<String> instructions) {
-		int count=-1;
-		Circuit circuit=null;
-		// Before the preamble
-		
-		while (true) {
-			count++;
-			if (count==instructions.size()) {
-				throw new RuntimeException("Error in scenario file: \""+CMD_PREAMBLE_BEGIN+"\" command not found." );
-			}
-			String line=instructions.get(count);
-			if (line.equals(CMD_PREAMBLE_BEGIN)) {
-				printLine("<FONT COLOR=\"#013ADF\">"+CMD_PREAMBLE_BEGIN+"</FONT>");
-				break;
-			}
-			printLine("<FONT COLOR=\"#21610B\">"+line+"</FONT>");			
-		}
-		
-		// In the preamble
-		
-		while (true) {
-			count++;
-			if (count==instructions.size()) {
-				throw new RuntimeException("Error in scenario file: \""+CMD_SIMULATION_BEGIN+"\" command not found." );
-			}
-			String line=instructions.get(count);
-			if (line.equals(CMD_SIMULATION_BEGIN)) {
-				printLine("<FONT COLOR=\"#013ADF\">"+CMD_SIMULATION_BEGIN+"</FONT>");
-				break;
-			}
-			String[] splitLine = line.split("//", 2);
-			final String instruction = splitLine[0].trim(); // removes whitespace.
-			if (!instruction.isEmpty()) {
-				final String[] words = instruction.split("=", 2);
-				if (words.length!=2) {
-					throw new RuntimeException("Error in scenario file, line "+(count+1)+": syntax error in \""+instruction+"\"." );
-				}
-				final String key = words[0].trim();
-				final String val = words[1].trim();
-				if (key.equals(CMD_SET_CIRCUIT)) {	// creates the new circuit;
-					try {
-						// val must contain the fully qualified name of the desired class of Circuit.
-						circuit = (Circuit) Class.forName(val,false,ClassLoader.getSystemClassLoader()).getConstructor(Jamel.class).newInstance(this);
-					} catch (Exception e) {
-						e.printStackTrace();
-						throw new RuntimeException("Error in scenario file, line "+(count+1)+": while creating the new Circuit \""+val+"\"." );
-					}
-				} 
-				else {
-					if (circuit==null) {
-						throw new RuntimeException("Error in scenario file, line "+(count+1)+": missing \""+CMD_SET_CIRCUIT+"\" command." );
-					}
-					if (key.equals(CMD_SET_WINDOW_RANGE)) {
-						this.doEvent(JamelWindow.COMMAND_ZOOM,Integer.parseInt(val));
-					} else {
-						try {
-							circuit.init(key,val);
-						} catch (InvalidKeyException e) {
-							e.printStackTrace();
-							throw new RuntimeException("Error in scenario file, line "+(count+1)+": unexpected \""+key+"\" command." );
-						}
-					}
-				}
-			}
-			if (splitLine.length==2) {
-				printLine(splitLine[0]+"<FONT COLOR=\"#21610B\">//"+splitLine[1]+"</FONT>");			
-			}
-			else {
-				printLine(splitLine[0]);
-			}
-		}
-		
-		if (circuit==null) {
-			throw new RuntimeException("Error in scenario file, line "+(count+1)+": missing \""+CMD_SET_CIRCUIT+"\" command." );
-		}
-		
-		// In the simulation
-		
-		while (true) {
-			count++;
-			if (count==instructions.size()) {
-				throw new RuntimeException("Error in scenario file: \""+CMD_SIMULATION_END+"\" command not found." );
-			}
-			String line=instructions.get(count);
-			if (line.equals(CMD_SIMULATION_END)) {
-				printLine("<FONT COLOR=\"#013ADF\">"+CMD_SIMULATION_END+"</FONT>");
-				break;
-			}
-
-			String[] splitLine = line.split("//", 2);
-			final String instruction = splitLine[0].trim(); // removes whitespace.
-			if (!instruction.isEmpty()) {
-				try {
-					circuit.addEvent(instruction);
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-					throw new RuntimeException("Error in scenario file, line "+count+": illegal syntax in \""+instruction+"\" command." );
-				}				
-			}
-			if (splitLine.length==2) {
-				printLine(splitLine[0]+"<FONT COLOR=\"#21610B\">//"+splitLine[1]+"</FONT>");			
-			}
-			else {
-				printLine(splitLine[0]);
-			}			
-		}
-		
-		while (true) {
-			count++;
-			if (count==instructions.size()) {
-				break;
-			}
-			String line=instructions.get(count);
-			printLine("<FONT COLOR=\"#21610B\">"+line+"</FONT>");			
-		}
-		return circuit;
-	}
-
-	/**
-	 * Prints a line of the scenario in the console panel.
-	 * @param string  the line to be printed.
-	 */
-	protected void printLine(String string) {
-		println(string);
-		try {
-			Thread.sleep(sleep); // Gives the time to see the scenario in the console panel.
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}		
-	}
-
-	/**
 	 * Runs the simulation.
 	 */
 	protected void run() {		
@@ -256,9 +99,10 @@ public class Simulator extends Jamel {
 			this.name=file.getName();
 			JamelObject.setTimer(new Timer());
 			this.window = new JamelWindow(name);
-			Circuit circuit;
+			final Circuit circuit;
 			try {
-				circuit = getNewCircuit(read(file));
+				final CircuitFactory circuitFactory = new CircuitFactory(this);
+				circuit = circuitFactory.getNewCircuit(read(file));
 			} catch (FileNotFoundException e1) {
 				e1.printStackTrace();
 				throw new RuntimeException("File not found: "+file.getAbsolutePath());
@@ -266,6 +110,7 @@ public class Simulator extends Jamel {
 			this.window.doEvent(JamelWindow.COMMAND_SELECT_PANEL,0);
 			this.pause(false);
 			this.run=true;
+			final long start = (new Date()).getTime();
 			while (this.run) {
 				if (!this.pause){
 					circuit.doPeriod();
@@ -288,7 +133,9 @@ public class Simulator extends Jamel {
 						e.printStackTrace();
 					}				
 				}
-			}		
+			}
+			this.export(circuit.getExportData());
+			System.out.println("Duration: "+((new Date()).getTime()-start)/1000.+" s." ) ;
 		}
 	}
 

@@ -37,6 +37,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.Date;
+import java.util.List;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -213,6 +214,32 @@ public abstract class Jamel {
 			e.printStackTrace();
 			throw new RuntimeException(message);
 		}		
+	}
+
+	/**
+	 * Exports a list of strings in a csv file.
+	 * @param exportData  the strings to export.
+	 */
+	protected void export(List<String> exportData) {
+		if (exportData!=null&&exportData.size()!=0) {
+			if (outputFile==null)
+				setNewOutputFile();
+			try {
+				final FileWriter writer = new FileWriter(outputFile,true);
+				for(String line:exportData) {
+					writer.write(line+rc);
+				}
+				writer.close();
+			} catch (IOException e) {
+				final String message = "Error while writing data in the output file.";
+				JOptionPane.showMessageDialog(null,
+						message,
+						"Error",
+						JOptionPane.ERROR_MESSAGE);
+				e.printStackTrace();
+				throw new RuntimeException(message);
+			}			
+		}
 	}
 
 	/**

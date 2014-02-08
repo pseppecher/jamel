@@ -27,6 +27,9 @@
  * See <http://www.jfree.org>.]
  */
 
+// TODO tester
+// TODO revoir la question de l'affichage du scénario, et du ralentissement de l'affichage
+
 package jamel;
 
 import jamel.util.Timer;
@@ -34,7 +37,6 @@ import jamel.util.Timer;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -75,6 +77,15 @@ public class MultiSimulator extends Simulator {
 	 */
 	public static void main(String[] args) {
 		new MultiSimulator();
+	}
+
+	/**
+	 * Prints a line.
+	 * @param string  the line to be printed.
+	 */
+	@Override
+	protected void printLine(String string) {
+		println(string);
 	}
 
 	/**
@@ -194,10 +205,7 @@ public class MultiSimulator extends Simulator {
 
 			// Fin de la définition de l'analyse de sesibilité.
 			// Début de l'analyse de sensibilité.
-			
-			final CircuitFactory circuitFactory = new CircuitFactory2(this);
 
-			final long start = (new Date()).getTime();
 			for (int i =0; i<numSim; i++) {
 				// On commence par construire le scénario en remplaçant chaque key par la valeur correspondante.
 				final ArrayList<String> scenario =new ArrayList<String>();
@@ -211,14 +219,12 @@ public class MultiSimulator extends Simulator {
 					scenario.add(line);
 				}
 				JamelObject.setTimer(new Timer());
-				final Circuit circuit = circuitFactory.getNewCircuit(scenario);
+				final Circuit circuit = getNewCircuit(scenario);
 				this.pause(false);
 				this.run=true;
 				while (this.run) {
 					circuit.doPeriod();
 				}
-				this.export(circuit.getExportData());
-				System.out.println("Duration: "+((new Date()).getTime()-start)/1000.+" s." ) ;
 			}
 
 		}

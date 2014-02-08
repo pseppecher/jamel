@@ -103,7 +103,7 @@ public class BasicFirmSector extends JamelObject implements FirmSector {
 	private int countFirms ;
 
 	/** The list of the firms. */
-	private final LinkedList<Firm> firmsList ;
+	private final ArrayList<Firm> firmsList ;
 
 	/** The type of the firms. */
 	private String firmType;
@@ -115,7 +115,7 @@ public class BasicFirmSector extends JamelObject implements FirmSector {
 	 * Creates a new firms sector.
 	 */
 	public BasicFirmSector() {
-		this.firmsList = new LinkedList<Firm>() ;
+		this.firmsList = new ArrayList<Firm>() ;
 	}
 
 	/**
@@ -152,7 +152,7 @@ public class BasicFirmSector extends JamelObject implements FirmSector {
 		final Firm result;
 		final int size = this.firmsList.size();
 		if (size>0) {
-			result =  this.firmsList.get(getRandom().nextInt(this.firmsList.size()));
+			result =  this.firmsList.get(getRandom().nextInt(size));
 		} else {
 			result=null;
 		}
