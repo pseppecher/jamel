@@ -58,7 +58,7 @@ public class CircuitFactory {
 	private static final int sleep=15;
 
 	@SuppressWarnings("javadoc")
-	protected String END_FONT = "</FONT>";
+	protected String FONT_END = "</FONT>";
 
 	@SuppressWarnings("javadoc")
 	protected String FONT_BLUE = "<FONT COLOR=\"#013ADF\">";
@@ -107,10 +107,10 @@ public class CircuitFactory {
 			}
 			String line=instructions.get(count);
 			if (line.equals(CMD_PREAMBLE_BEGIN)) {
-				printLine(FONT_BLUE+CMD_PREAMBLE_BEGIN+END_FONT);
+				printLine(FONT_BLUE+CMD_PREAMBLE_BEGIN+FONT_END);
 				break;
 			}
-			printLine(FONT_GREEN+line+END_FONT);			
+			printLine(FONT_GREEN+line+FONT_END);			
 		}
 		
 		// In the preamble
@@ -122,7 +122,7 @@ public class CircuitFactory {
 			}
 			String line=instructions.get(count);
 			if (line.equals(CMD_SIMULATION_BEGIN)) {
-				printLine(FONT_BLUE+CMD_SIMULATION_BEGIN+END_FONT);
+				printLine(FONT_BLUE+CMD_SIMULATION_BEGIN+FONT_END);
 				break;
 			}
 			String[] splitLine = line.split("//", 2);
@@ -160,7 +160,7 @@ public class CircuitFactory {
 				}
 			}
 			if (splitLine.length==2) {
-				printLine(splitLine[0]+FONT_GREEN+" // "+splitLine[1]+END_FONT);			
+				printLine(splitLine[0]+FONT_GREEN+" // "+splitLine[1]+FONT_END);			
 			}
 			else {
 				printLine(splitLine[0]);
@@ -180,7 +180,7 @@ public class CircuitFactory {
 			}
 			String line=instructions.get(count);
 			if (line.equals(CMD_SIMULATION_END)) {
-				printLine(FONT_BLUE+CMD_SIMULATION_END+END_FONT);
+				printLine(FONT_BLUE+CMD_SIMULATION_END+FONT_END);
 				break;
 			}
 
@@ -195,7 +195,7 @@ public class CircuitFactory {
 				}				
 			}
 			if (splitLine.length==2) {
-				printLine(splitLine[0]+FONT_GREEN+" // "+splitLine[1]+END_FONT);			
+				printLine(splitLine[0]+FONT_GREEN+" // "+splitLine[1]+FONT_END);			
 			}
 			else {
 				printLine(splitLine[0]);
@@ -208,7 +208,7 @@ public class CircuitFactory {
 				break;
 			}
 			String line=instructions.get(count);
-			printLine(FONT_GREEN+line+END_FONT);			
+			printLine(FONT_GREEN+line+FONT_END);			
 		}
 		return circuit;
 	}

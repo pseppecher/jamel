@@ -70,6 +70,9 @@ public abstract class Circuit extends JamelObject {
 	protected static final String CMD_EXPORT_DATA_OF_EACH_FIRM = "export.data.firms";
 
 	@SuppressWarnings("javadoc")
+	protected static final String CMD_EXPORT_DATA_OF_EACH_HOUSEHOLD = "export.data.households";
+
+	@SuppressWarnings("javadoc")
 	protected static final String CMD_PAUSE = "pause()";
 
 	@SuppressWarnings("javadoc")
@@ -346,12 +349,12 @@ public abstract class Circuit extends JamelObject {
 						else if (event[0].equals("newFirms")) {
 							this.firms.newFirms(event[1]);				
 						}
-						else if (event[0].equals("exportAnnualData")) {
+						/*else if (event[0].equals("exportAnnualData")) { DELETE
 							simulator.export(this.yearData,event[1]);
-						}
-						else if (event[0].equals("exportMonthlyData")) {
+						}*/
+						/*else if (event[0].equals("exportMonthlyData")) { DELETE
 							simulator.export(this.monthlyData.getLast(),event[1]);
-						}
+						}*/
 						else if (event[0].equals(CMD_EXPORT_DATA_BEGIN)) {
 							if (this.exportDataKeys!=null) {
 								throw new IllegalArgumentException("Data exportation is already defined.");
@@ -362,12 +365,21 @@ public abstract class Circuit extends JamelObject {
 								this.simulator.export(truc[1]);// Exports headers.
 							}
 						}
-						else if (event[0].equals("print")) {
+						/*else if (event[0].equals("print")) { DELETE
 							this.simulator.export(event[1]);
-						}
+						}*/
 						else if (event[0].equals(CMD_EXPORT_DATA_OF_EACH_FIRM)) {
 							this.simulator.export(event[1]);
 							String[] data=this.firms.getFirmsData(event[1]);
+							for(String item:data) {
+								if (item!=null) {
+									this.simulator.export(item);
+								}
+							}
+						}
+						else if (event[0].equals(CMD_EXPORT_DATA_OF_EACH_HOUSEHOLD)) {
+							this.simulator.export(event[1]);
+							String[] data=this.households.getHouseholdsData(event[1]);
 							for(String item:data) {
 								if (item!=null) {
 									this.simulator.export(item);

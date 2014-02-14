@@ -281,6 +281,7 @@ public class BasicHousehold extends AbstractHousehold {
 		if (this.jobContract!=null) {							
 			this.unemploymentDuration=0;					 
 			this.reservationWage=this.jobContract.getWage();
+			this.data.employmentDuration=getCurrentPeriod().getValue()-this.jobContract.getStart().getValue();
 		}
 		else {
 			if (this.unemploymentDuration == 0) this.unemploymentDuration = getRandom().nextFloat() ;
@@ -289,6 +290,7 @@ public class BasicHousehold extends AbstractHousehold {
 			final float alpha2 = getRandom().nextFloat();
 			if (alpha1*this.resistance < this.unemploymentDuration)
 				this.reservationWage=(this.reservationWage*(1f-this.flexibility*alpha2));
+			this.data.employmentDuration=0;
 		}
 		this.data.setReservationWage(this.reservationWage);
 		this.data.setUnemploymentDuration(this.unemploymentDuration);
@@ -444,6 +446,8 @@ public class BasicHousehold extends AbstractHousehold {
 	public void open() {
 		updateLaborPower();
 		data.clear() ;
+		data.name=this.name;
+		data.period=getCurrentPeriod().getValue();
 		this.incomeTimeSeries.addLast(0l);
 		if (this.incomeTimeSeries.size()>12) {
 			this.incomeTimeSeries.removeFirst();
@@ -486,6 +490,11 @@ public class BasicHousehold extends AbstractHousehold {
 		if (this.data.getWage() != this.jobContract.getWage()) 
 			throw new RuntimeException("Wage not payed.");
 		super.work(machine);
+	}
+
+	@Override
+	public void infoCapital(long capital) {
+		this.data.capital+=capital;
 	}
 
 }

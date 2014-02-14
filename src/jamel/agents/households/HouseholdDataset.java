@@ -33,45 +33,77 @@ import jamel.agents.firms.util.ProductionType;
 
 /**
  * A class for the household data.
+ * TODO use an hashmap instead.
  */
 public class HouseholdDataset {	
 		
 	/** The consumption budget. */
-	private long consumptionBudget;
+	public long consumptionBudget;
 	
 	/** The consumption value. */
-	private long consumptionValue;
+	public long consumptionValue;
 	
 	/** The consumption volume. */
-	private int consumptionVolume;
+	public int consumptionVolume;
 	
 	/** The deposits. */
-	private long deposits;
+	public long deposits;
 	
 	/** The dividend. */
-	private long dividend;
+	public long dividend;
 	
 	/** The employment status. */
-	private int employmentStatus;
+	public int employmentStatus;
 	
 	/** The forced savings. */
-	private long forcedSavings;
+	public long forcedSavings;
+	
+	public boolean optimism;
 	
 	/** The reservation wage. */
-	private float reservationWage;
+	public float reservationWage;
 	
+	public long savingTarget;
+
 	/** sector */
-	private ProductionType sector;
-	
+	public ProductionType sector;
+
 	/** The unemployment duration. */
-	private double unemploymentDuration;
+	public double unemploymentDuration;
 
 	/** The wage. */
-	private long wage;
+	public long wage;
 
-	private boolean optimism;
+	public int period;
 
-	public long savingTarget;
+	public String name;
+	
+	public long capital;
+
+	public int employmentDuration;
+
+	/**
+	 * Returns the object for the given field. 
+	 * @param  field  the name of the field. 
+	 * @return an object.
+	 * @throws NoSuchFieldException  if the field is not found.
+	 */
+	private Object getFieldValue(String field) throws NoSuchFieldException {
+		Object value = null;
+		try {
+			value = this.getClass().getField(field).get(this);
+		} catch (IllegalArgumentException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		} catch (SecurityException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			throw new RuntimeException();
+		}
+		return value;
+	}
 
 	/**
 	 * @param value - the value to add.
@@ -104,7 +136,9 @@ public class HouseholdDataset {
 		forcedSavings=0;
 		reservationWage=0;
 		unemploymentDuration=0;
-		wage=0;		
+		employmentDuration=0;
+		wage=0;
+		capital=0;
 		this.savingTarget=0;
 	}
 
@@ -118,6 +152,39 @@ public class HouseholdDataset {
 
 	public int getConsumptionVolume() {
 		return this.consumptionVolume;
+	}
+
+	/**
+	 * Returns the contains of the specified fields.
+	 * @param sKeys  a string that contains the keys of the fields to return, separated by commas.
+	 * @return a string that contains the values of the specified fields, separated by commas. 
+	 */
+	public String getData(String sKeys) {
+		String result=null;
+		String[] keys = sKeys.split(",");
+		for (String key:keys) {
+			String value = key;
+			if (key.startsWith("%")) {
+				try {
+					final Object fieldValue = this.getFieldValue(key.substring(1));
+					if (fieldValue!=null) {
+						value=fieldValue.toString();
+					}
+					else {
+						value="null";					
+					}
+				} catch (NoSuchFieldException e) {
+					value="No Such Field: "+key;
+				}
+			}
+			if (result==null){
+				result=value;
+			}
+			else {
+				result+=","+value;
+			}
+		}
+		return result;
 	}
 
 	public long getDeposits() {
@@ -138,6 +205,10 @@ public class HouseholdDataset {
 
 	public long getIncome() {
 		return wage+dividend;
+	}
+
+	public boolean getOptimism() {
+		return this.optimism;
 	}
 
 	public float getReservationWage() {
@@ -188,12 +259,20 @@ public class HouseholdDataset {
 		this.forcedSavings=value;
 	}
 
+	public void setOptimism(boolean optimist) {
+		this.optimism=optimist;
+	}
+
 	/**
 	 * Sets the reservation wage.
 	 * @param value - the value to set.
 	 */
 	public void setReservationWage(float value) {
 		this.reservationWage=value;
+	}
+
+	public void setSavingTarget(long value) {
+		this.savingTarget=value;
 	}
 
 	/**
@@ -222,16 +301,4 @@ public class HouseholdDataset {
 		this.wage=value;
 	}
 
-	public boolean getOptimism() {
-		return this.optimism;
-	}
-
-	public void setOptimism(boolean optimist) {
-		this.optimism=optimist;
-	}
-
-	public void setSavingTarget(long value) {
-		this.savingTarget=value;
-	}	
-	
 }

@@ -42,4 +42,10 @@ public interface CapitalOwner extends AccountHolder {
 	 */
 	void receiveDividend(Check check);
 	
+	/**
+	 * Receives the amount of capital detained (for information)
+	 * @param capital  the capital amount.
+	 */
+	void infoCapital(long capital);
+	
 }

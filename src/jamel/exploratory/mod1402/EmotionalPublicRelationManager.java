@@ -27,30 +27,39 @@
  * See <http://www.jfree.org>.]
  */
 
-package jamel;
+package jamel.exploratory.mod1402;
+
+import jamel.agents.firms.Labels;
+import jamel.agents.firms.managers.PublicRelationManager;
+import jamel.agents.firms.util.Mediator;
 
 /**
- * A <code>Circuit</code> factory for multi-simulations. 
+ * A public relation manager that provides information about the optimism of the firm.
+ * (new version of the old PublicRelationManager140126).
  */
-public class CircuitFactory2 extends CircuitFactory {
-
-	/**
-	 * Creates a new factory.
-	 * @param simulator  the parent simulator.
-	 */
-	public CircuitFactory2(Simulator simulator) {
-		super(simulator);
-		this.FONT_END="";
-		this.FONT_BLUE="";
-		this.FONT_GREEN="";
-	}
+public class EmotionalPublicRelationManager implements PublicRelationManager {
 	
 	/**
-	 * Prints a line of the scenario in the console panel.
-	 * @param string  the line to be printed.
+	 * Creates a new PublicRelationManager140126
+	 * @param mediator  the mediator.
 	 */
-	protected void printLine(String string) {
-		System.out.println(string);
+	public EmotionalPublicRelationManager(Mediator mediator) {
+		super();
+		this.mediator = mediator;
+	}
+
+	/** The mediator. */
+	protected final Mediator mediator;
+
+	@Override
+	public Object getPublicInfo(String key) {
+		final Object info;
+		if (key.equals(Labels.OPTIMISM)) {
+			info = this.mediator.get(Labels.OPTIMISM);
+		} else {
+			info = null;
+		}
+		return info;
 	}
 
 }

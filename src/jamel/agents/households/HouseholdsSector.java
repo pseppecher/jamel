@@ -93,21 +93,13 @@ public class HouseholdsSector extends JamelObject {
 	 * Closes the sector.<br>
 	 * Each household is closed. 
 	 * The macro data are updated.
-	 * @param macroData - the macro dataset.
+	 * @param macroData  the macro dataset.
 	 */
 	public void close(PeriodDataset macroData) {
-		//int unemployed = 0; DELETE
 		for (Household aHousehold : householdsList) {
 			aHousehold.close() ;
-			/*if (!((Household131201) aHousehold).isOptimist()) {
-				pessimists++;				
-			}
-			if (!((Household131201) aHousehold).employed()) {
-				unemployed++;			
-			}*/
 		}
 		macroData.compileHouseholdsData(householdsList);
-		//System.out.print(macroData.UNEMPLOYED+"\t"); DELETE
 	}
 
 	/**
@@ -134,6 +126,24 @@ public class HouseholdsSector extends JamelObject {
 			throw new RuntimeException("Unexpected key: "+key);
 		}
 		return result;
+	}
+
+	/**
+	 * Returns the data for each household of the sector.
+	 * @param keys  a string that contains the keys of the fields to return, separated by commas.
+	 * @return an array of string, each string containing the data of one firm, each field separated by commas.
+	 */
+	public String[] getHouseholdsData(String keys) {
+		final String[] data = new String[this.householdsList.size()];
+		int id = 0;
+		for(Household household:this.householdsList){
+			HouseholdDataset householdData = household.getData();
+			if (householdData!=null) {
+				data[id]=householdData.getData(keys);
+			}
+			id++;
+		}
+		return data;
 	}
 
 	/**

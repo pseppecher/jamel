@@ -33,6 +33,7 @@ import jamel.agents.firms.util.ProductionType;
 
 /**
  * The data of the firm.
+ * TODO use an hashmap instead.
  */
 public class FirmDataset {
 
@@ -144,6 +145,9 @@ public class FirmDataset {
 	/** salesPriceValue */
 	public long salesPVal;
 
+	/** salesVariation */
+	public Integer salesVariation;
+
 	/** salesVolume */
 	public float salesVol;
 
@@ -164,9 +168,6 @@ public class FirmDataset {
 
 	/** anticipatedWorkforce */
 	public long workforceTarget;
-
-	/** salesVariation */
-	public Integer salesVariation;
 
 	/**
 	 * Returns the object for the given field. 

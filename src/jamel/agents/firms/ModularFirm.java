@@ -47,22 +47,22 @@ import jamel.agents.roles.CapitalOwner;
 public class ModularFirm extends BasicFirm {
 
 	@SuppressWarnings("javadoc")
-	protected static final String PARAM_CAPITAL_MANAGER = "Firms.managers.capitalManager";
+	protected static final String PARAM_CAPITAL_MANAGER = "Firms.capitalManager";
 	
 	@SuppressWarnings("javadoc")
-	protected static final String PARAM_PRICING_MANAGER = "Firms.managers.pricingManager";
+	protected static final String PARAM_PRICING_MANAGER = "Firms.pricingManager";
 
 	@SuppressWarnings("javadoc")
-	protected static final String PARAM_PRODUCTION_MANAGER = "Firms.managers.productionManager";
+	protected static final String PARAM_PRODUCTION_MANAGER = "Firms.productionManager";
 
 	@SuppressWarnings("javadoc")
-	protected static final String PARAM_PUBLIC_RELATION_MANAGER = "Firms.managers.publicRelationManager";
+	protected static final String PARAM_PUBLIC_RELATION_MANAGER = "Firms.publicRelationManager";
 
 	@SuppressWarnings("javadoc")
-	protected static final String PARAM_STORE_MANAGER = "Firms.managers.storeManager";
+	protected static final String PARAM_STORE_MANAGER = "Firms.storeManager";
 
 	@SuppressWarnings("javadoc")
-	protected static final String PARAM_WORKFORCE_MANAGER = "Firms.managers.workforceManager";
+	protected static final String PARAM_WORKFORCE_MANAGER = "Firms.workforceManager";
 
 	/**
 	 * Creates a new firm with the given parameters.

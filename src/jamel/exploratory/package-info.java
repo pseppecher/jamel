@@ -27,30 +27,7 @@
  * See <http://www.jfree.org>.]
  */
 
-package jamel;
-
 /**
- * A <code>Circuit</code> factory for multi-simulations. 
+ * Exploratory components.
  */
-public class CircuitFactory2 extends CircuitFactory {
-
-	/**
-	 * Creates a new factory.
-	 * @param simulator  the parent simulator.
-	 */
-	public CircuitFactory2(Simulator simulator) {
-		super(simulator);
-		this.FONT_END="";
-		this.FONT_BLUE="";
-		this.FONT_GREEN="";
-	}
-	
-	/**
-	 * Prints a line of the scenario in the console panel.
-	 * @param string  the line to be printed.
-	 */
-	protected void printLine(String string) {
-		System.out.println(string);
-	}
-
-}
+package jamel.exploratory;

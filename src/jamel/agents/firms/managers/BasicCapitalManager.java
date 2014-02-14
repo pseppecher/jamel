@@ -138,6 +138,7 @@ public class BasicCapitalManager extends JamelObject implements CapitalManager {
 		if (this.dividend>0) {
 			this.owner.receiveDividend( this.account.newCheck( this.dividend, this.owner ) ) ;				
 		}
+		this.owner.infoCapital(this.account.getAmount()+inventoriesTotalValue-debt);
 	}
 
 	@Override
