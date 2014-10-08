@@ -58,6 +58,9 @@ public class BasicHousehold extends AbstractHousehold {
 	/** The max number of employers in the memory of the household. */
 	protected static final int maxEmployers = 10; // TODO should be a parameter.
 	
+	/** The maximum size of a list of providers. */
+	protected static final int maxProviders = 10; // TODO should be a parameter.
+	
 	/** 
 	 * The employer comparator.<p>
 	 * To compare employers according to the wage they offer on the labor market.
@@ -82,9 +85,6 @@ public class BasicHousehold extends AbstractHousehold {
 	
 	/** The bank account. */
 	private final Account bankAccount ;
-	
-	/** The flexibility of the reservation wage. */
-	private float flexibility;
 
 	/** The income time series. */
 	private final LinkedList<Long> incomeTimeSeries = new LinkedList<Long>();
@@ -98,20 +98,17 @@ public class BasicHousehold extends AbstractHousehold {
 	/** The propensity to consume excess saving. */
 	private float propensityToConsumeExcessSaving;
 
-	/** The resistance to a cut of the reservation wage. */
-	private int resistance;
-
 	/** The data. */
 	protected final HouseholdDataset data ;
 
 	/** The employers. */
 	protected final LinkedList<Employer> employers ;
 
+	/** The flexibility of the reservation wage. */
+	protected float flexibility;
+
 	/** The job contract. */
 	protected EmploymentContract jobContract;
-
-	/** The maximum size of a list of providers or employers. */
-	protected int maxSize = 10; // TODO should be a parameter.
 
 	@SuppressWarnings("javadoc")
 	protected final String PARAM_SAV_PROP = "Households.savings.propensityToSave";
@@ -133,6 +130,9 @@ public class BasicHousehold extends AbstractHousehold {
 
 	/** The reservation wage. */
 	protected float reservationWage;
+
+	/** The resistance to a cut of the reservation wage. */
+	protected float resistance;
 
 	/** The saving propensity. */
 	protected float savingPropensity;
@@ -224,6 +224,22 @@ public class BasicHousehold extends AbstractHousehold {
 	 * Updates the list of employers.
 	 */
 	protected void updateEmployersList() {
+		this.employers.clear();
+		for (int count = 0; count<maxEmployers; count++){
+			final Employer employer = (Employer) Circuit.getResource(Circuit.SELECT_AN_EMPLOYER);
+			if (employer.isBankrupt())
+				throw new RuntimeException("This employer is bankrupt.");
+			if ((employer.getJobOffer()!=null)&&(this.employers.contains(employer)==false)) {
+				this.employers.add(employer);
+			}
+		}
+		Collections.sort(this.employers, EMPLOYER_COMPARATOR);
+	}
+
+	/**
+	 * Updates the list of employers.
+	 */
+	protected void updateEmployersList2() {
 		final LinkedList<Employer> newListOfEmployers = new LinkedList<Employer>();
 		for (Employer employer: this.employers){
 			if (!employer.isBankrupt())
@@ -255,7 +271,7 @@ public class BasicHousehold extends AbstractHousehold {
 		this.savingRatioTarget = Float.parseFloat(Circuit.getParameter(this.PARAM_SAV_TARGET));
 		this.propensityToConsumeExcessSaving = Float.parseFloat(Circuit.getParameter(this.PARAM_SAV_PROP2_CONSUM_EXCESS));
 		this.flexibility = Float.parseFloat(Circuit.getParameter(this.PARAM_WAGE_FLEX));
-		this.resistance = Integer.parseInt(Circuit.getParameter(this.PARAM_WAGE_RESIST));
+		this.resistance = Float.parseFloat(Circuit.getParameter(this.PARAM_WAGE_RESIST));
 	}
 
 	/**
@@ -263,15 +279,16 @@ public class BasicHousehold extends AbstractHousehold {
 	 */
 	protected void updateProvidersList() {
 		this.providers.clear();
-		while (providers.size()<maxSize){
+		while (providers.size()<maxProviders){
 			final Provider provider = (Provider) Circuit.getResource(Circuit.SELECT_A_PROVIDER_OF_FINAL_GOODS);
 			if (provider==null) break;
 			if (!this.providers.contains(provider)) {
 				this.providers.add(provider);
 			}
 		}
+		Collections.sort(this.providers, PROVIDER_COMPARATOR);
 	}
-
+	
 	/**
 	 * Updates the reservation wage.<br>
 	 * The level of the reservation wage depends on the number of periods spent in a state of unemployment.
@@ -324,6 +341,7 @@ public class BasicHousehold extends AbstractHousehold {
 		long budget = Math.min(this.bankAccount.getAmount(),consumptionTarget);
 		this.data.setConsumptionBudget(budget);
 		this.data.setSavingTarget(savingsTarget);
+		this.data.setSavings(savings);
 		updateProvidersList();
 		final LinkedList<Provider> newList = new LinkedList<Provider>(providers);
 		while (newList.size()>0) {
@@ -342,7 +360,7 @@ public class BasicHousehold extends AbstractHousehold {
 			}
 		}
 		if ((JamelObject.getCurrentPeriod().getYear().getYear()>2002) & (budget>this.data.getConsumptionBudget()/10)) {
-			for (int i = 0; i<maxSize; i++) {
+			for (int i = 0; i<maxProviders; i++) {
 				final Provider aProvider = (Provider) Circuit.getResource(Circuit.SELECT_A_PROVIDER_OF_FINAL_GOODS);
 				if (aProvider==null) break;
 				final GoodsOffer offer = aProvider.getGoodsOffer();
@@ -376,6 +394,11 @@ public class BasicHousehold extends AbstractHousehold {
 	@Override
 	public String getName() {
 		return this.name;
+	}
+
+	@Override
+	public void infoCapital(long capital) {
+		this.data.capital+=capital;
 	}
 
 	/**
@@ -462,7 +485,7 @@ public class BasicHousehold extends AbstractHousehold {
 	@Override
 	public void receiveDividend(Check check) {
 		final long dividend = check.getAmount();
-		this.data.addDividend(dividend) ;
+		this.data.addDividend(dividend);
 		addToIncomeTimeSeries(dividend);
 		this.bankAccount.deposit(check);
 	}
@@ -490,11 +513,6 @@ public class BasicHousehold extends AbstractHousehold {
 		if (this.data.getWage() != this.jobContract.getWage()) 
 			throw new RuntimeException("Wage not payed.");
 		super.work(machine);
-	}
-
-	@Override
-	public void infoCapital(long capital) {
-		this.data.capital+=capital;
 	}
 
 }

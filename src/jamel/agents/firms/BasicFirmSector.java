@@ -300,7 +300,7 @@ public class BasicFirmSector extends JamelObject implements FirmSector {
 			countFirms ++ ;
 			final CapitalOwner owner = (CapitalOwner) Circuit.getResource(Circuit.SELECT_A_CAPITAL_OWNER);
 			try {
-				final String name = "Company "+countFirms;
+				final String name = "Company."+countFirms;
 				final Firm newFirm = (Firm) Class.forName(this.firmType,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,CapitalOwner.class).newInstance(name,owner);
 				firmsList.add(newFirm) ;
 			} catch (ClassNotFoundException e) {

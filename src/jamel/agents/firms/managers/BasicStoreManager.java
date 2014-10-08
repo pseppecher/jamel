@@ -30,7 +30,6 @@
 package jamel.agents.firms.managers;
 
 import java.util.LinkedList;
-import java.util.ListIterator;
 
 import jamel.Circuit;
 import jamel.JamelObject;
@@ -48,7 +47,7 @@ import jamel.util.markets.GoodsOffer;
 public class BasicStoreManager extends JamelObject implements StoreManager{
 
 	/** The limit of the memory of the manager. */
-	final static private int recordLim = 12;
+	final static private int recordLim = 1200;
 
 	@SuppressWarnings("javadoc")
 	protected static final String PARAM_INVENTORIES_PROPENSITY_TO_SELL = "Firms.inventories.propensityToSell";
@@ -98,23 +97,27 @@ public class BasicStoreManager extends JamelObject implements StoreManager{
 	 * Closes the manager.
 	 */
 	protected void close() {
-		this.recordSalesVol.add(this.salesVolume);
+		this.recordSalesVol.addFirst(this.salesVolume);
 		if (this.recordSalesVol.size()>recordLim) {
-			this.recordSalesVol.removeFirst();
+			this.recordSalesVol.removeLast();
 		}
 	}
 
 	/**
 	 * Returns the average of the latest sales (in volume).
+	 * @param lim  the maximum number of values to consider. 
 	 * @return the average of the latest sales.
 	 */
-	protected float getAverageSales() {
+	protected float getAverageSales(int lim) {
 		float average = 0;
 		int sum=0;
 		int count=0;
 		for(int vol:this.recordSalesVol) {
 			sum+=vol;
 			count++;
+			if (count>=lim) {
+				break;
+			}
 		}
 		if (count>0) {
 			average=sum/count;
@@ -128,7 +131,7 @@ public class BasicStoreManager extends JamelObject implements StoreManager{
 	 */
 	protected float getSalesRatio() {
 		final int productionMax = (Integer)this.mediator.get(Labels.PRODUCTION_MAX);
-		return this.getAverageSales()/productionMax;
+		return this.getAverageSales(12)/productionMax;
 	}
 
 	/**
@@ -136,7 +139,7 @@ public class BasicStoreManager extends JamelObject implements StoreManager{
 	 * @return the volume of the variation.
 	 */
 	protected Integer getSalesVariation() {
-		if (this.salesVariation==null) {
+		/*if (this.salesVariation==null) { DELETE
 			ListIterator<Integer> iterator = recordSalesVol.listIterator(recordSalesVol.size());
 			int count=0;
 			int halfYear1 = 0;
@@ -146,7 +149,8 @@ public class BasicStoreManager extends JamelObject implements StoreManager{
 					halfYear2 += iterator.previous();
 				} else {
 					if (count>=12) {
-						throw new RuntimeException("Too many data in this data set.");
+						break;
+						//throw new RuntimeException("Too many data in this data set.");
 					}
 					halfYear1 += iterator.previous();
 				}
@@ -154,7 +158,8 @@ public class BasicStoreManager extends JamelObject implements StoreManager{
 			}
 			this.salesVariation = halfYear2-halfYear1;
 		}
-		return this.salesVariation;
+		return this.salesVariation;*/
+		return null;
 	}
 
 	/**
@@ -189,9 +194,6 @@ public class BasicStoreManager extends JamelObject implements StoreManager{
 		}
 		else if (key.equals(Labels.SALES_VOLUME)) {
 			result=this.salesVolume;
-		}
-		else if (key.equals(Labels.SALES_VARIATION)) {
-			result=this.getSalesVariation();
 		}
 		else if (key.equals(Labels.OFFERED_VOLUME)) {
 			result=this.offerVolume;

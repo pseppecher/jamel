@@ -49,6 +49,9 @@ public class Labels {
 	/** the debt of the firm */
 	public static final String DEBT = "the debt of the firm";				
 
+	/** DEBT_TARGET */
+	public static final String DEBT_TARGET = "Debt Target";
+
 	/** the dividend */
 	public static final String DIVIDEND = "the dividend";
 
@@ -92,17 +95,17 @@ public class Labels {
 	public static final String MACHINERY = "Number of machines";
 
 	/** the amount of money available */
-	public static final String MONEY = "the amount of money available";
+	public static final String MONEY = "the amount of money available";				
 
 	/** The offer on the market of goods. */
-	public static final String OFFER_OF_GOODS = "The offer on the market of goods";				
-
-	/** The offer of job on the labor market. */
-	public static final String OFFER_OF_JOB = "The offer of job on the labor market";
+	public static final String OFFER_OF_GOODS = "The offer on the market of goods";
 
 	/** The rate of utilization of the capacities of production targeted. */
 	//public static final String UTIL_RATE_TARGET = "utilization rate targeted";
 	
+	/** The offer of job on the labor market. */
+	public static final String OFFER_OF_JOB = "The offer of job on the labor market";
+
 	/** The volume of commodities offered at the beginning of the market phase. */
 	public static final String OFFERED_VOLUME = "The volume of commodities offered at the beginning of the market phasis.";
 
@@ -136,8 +139,6 @@ public class Labels {
 	/** The value of the production. */
 	public static final String PRODUCTION_VALUE = "Value of the production";
 
-	//public static final String CAPITAL = "the capital of the firm";
-
 	/** The volume of the production. */
 	public static final String PRODUCTION_VOLUME = "Volume of the production";
 
@@ -156,8 +157,14 @@ public class Labels {
 	/** The sales to max production ratio */
 	public static final String SALES_RATIO = "The sales to max production ratio";
 
+	@SuppressWarnings("javadoc")
+	public static String SALES_RATIO_NORMAL = "The normal level of the sales ratio";
+
 	/** Sales at price value. */
 	public static final String SALES_VALUE = "Sales at price value";
+
+	/** Sales variation (volume) */
+	public static final String SALES_VARIATION = "Sales variation (volume)";
 
 	/** Volume of sales. */
 	public static final String SALES_VOLUME = "Volume of sales";
@@ -183,10 +190,7 @@ public class Labels {
 	/** The workforce targeted. */
 	public static final String WORKFORCE_TARGET = "workforce target";
 
-	/** DEBT_TARGET */
-	public static final String DEBT_TARGET = "Debt Target";
-
-	/** Sales variation (volume) */
-	public static final String SALES_VARIATION = "Sales variation (volume)";
+	@SuppressWarnings("javadoc")
+	public static final String VERBOSE = "verbose";
 
 }

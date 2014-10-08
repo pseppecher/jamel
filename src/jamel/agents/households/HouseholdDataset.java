@@ -37,6 +37,8 @@ import jamel.agents.firms.util.ProductionType;
  */
 public class HouseholdDataset {	
 		
+	public long capital;
+	
 	/** The consumption budget. */
 	public long consumptionBudget;
 	
@@ -52,35 +54,35 @@ public class HouseholdDataset {
 	/** The dividend. */
 	public long dividend;
 	
+	public int employmentDuration;
+	
 	/** The employment status. */
 	public int employmentStatus;
 	
 	/** The forced savings. */
 	public long forcedSavings;
 	
+	public String name;
+
 	public boolean optimism;
-	
+
+	public int period;
+
 	/** The reservation wage. */
 	public float reservationWage;
-	
+
 	public long savingTarget;
+	
+	public long savings;
 
 	/** sector */
 	public ProductionType sector;
-
+	
 	/** The unemployment duration. */
 	public double unemploymentDuration;
 
 	/** The wage. */
 	public long wage;
-
-	public int period;
-
-	public String name;
-	
-	public long capital;
-
-	public int employmentDuration;
 
 	/**
 	 * Returns the object for the given field. 
@@ -273,6 +275,10 @@ public class HouseholdDataset {
 
 	public void setSavingTarget(long value) {
 		this.savingTarget=value;
+	}
+
+	public void setSavings(long savings) {
+		this.savings=savings;
 	}
 
 	/**

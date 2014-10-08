@@ -34,11 +34,12 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import org.jfree.chart.ChartUtilities;
@@ -67,7 +68,7 @@ public class SimulationReport {
 	private final HashMap<String,List<JamelChart>> panelList=new HashMap<String,List<JamelChart>>();
 
 	/** The parameters. */
-	private HashMap<String, String> parameters;
+	private Map<String, String> parameters;
 
 	/** The start. */
 	private Date start;
@@ -81,23 +82,24 @@ public class SimulationReport {
 	 * @throws IOException  if there is an I/O error.
 	 */
 	private void exportParameters(FileWriter writer) throws IOException {
-		final LinkedList<String> bank= new LinkedList<String>();
-		final LinkedList<String> firms= new LinkedList<String>();
-		final LinkedList<String> households= new LinkedList<String>();
-		final LinkedList<String> others= new LinkedList<String>();
+		final Map<String,String> bank= new TreeMap<String,String>();
+		final Map<String,String> firms= new TreeMap<String,String>();
+		final Map<String,String> households= new TreeMap<String,String>();
+		final Map<String,String> others= new TreeMap<String,String>();
 		for(Entry<String,String> entry:parameters.entrySet()) {
 			final String key = entry.getKey();
+			final String val = entry.getValue();
 			if (key.startsWith("Bank")) {
-				bank.add(key);
+				bank.put(key,val);
 			}
 			else if (key.startsWith("Firms")) {
-				firms.add(key);				
+				bank.put(key,val);
 			}
 			else if (key.startsWith("Households")) {
-				households.add(key);				
+				bank.put(key,val);
 			}
 			else {
-				others.add(key);					
+				bank.put(key,val);
 			}
 		}
 		exportParameters(writer,bank);
@@ -109,19 +111,18 @@ public class SimulationReport {
 	/**
 	 * Exports the given parameters toward the given writer.
 	 * @param writer  the destination writer.
-	 * @param keys  the keys of the parameters to export.
+	 * @param map  the parameters to export.
 	 * @throws IOException  if there is an I/O error.
 	 */
-	private void exportParameters(FileWriter writer, LinkedList<String> keys) throws IOException {
-		if (!keys.isEmpty()) {
-			Collections.sort(keys);
+	private void exportParameters(FileWriter writer, Map<String,String> map) throws IOException {
+		if (!map.isEmpty()) {
 			//writer.write("\\begin{table}[h!]"+rc);
 			writer.write("\\begin{tabular}{lr}"+rc);
 			writer.write("\\hline"+rc);
 			writer.write("parameter & value \\\\"+rc);
 			writer.write("\\hline"+rc);
-			for(String key:keys) {
-				writer.write(key+"&"+parameters.get(key)+"\\\\"+rc);
+			for(Entry<String,String> entry:parameters.entrySet()) {
+				writer.write(entry.getKey()+"&"+entry.getValue()+"\\\\"+rc);
 			}
 			writer.write("\\hline"+rc);
 			writer.write("\\end{tabular}"+rc);		
@@ -214,9 +215,9 @@ public class SimulationReport {
 
 	/**
 	 * Sets the parameters of the simulation.
-	 * @param parameters  an HashMap that contains the keys and the values.
+	 * @param parameters  an Map that contains the keys and the values.
 	 */
-	public void setParameters(HashMap<String, String> parameters) {
+	public void setParameters(Map<String, String> parameters) {
 		this.parameters = parameters;
 	}
 

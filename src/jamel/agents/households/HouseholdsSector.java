@@ -201,11 +201,11 @@ public class HouseholdsSector extends JamelObject {
 	 * Selects a capital owner at random.
 	 * @return the selected capital owner.
 	 */
-	public CapitalOwner selectRandomCapitalOwner() {
+	/*public CapitalOwner selectRandomCapitalOwner() {
 		final int size = householdsList.size();
 		if (size==0) return null;//throw new RuntimeException("The list of households is empty.");
 		return householdsList.get( getRandom().nextInt( size ) ) ;
-	}
+	}*/
 
 	/**
 	 * Sets the type of the households.

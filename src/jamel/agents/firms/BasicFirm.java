@@ -90,7 +90,6 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 	final private PurchasingManager purchasingManager;
 
 	/** The verbosity of the firm; */
-	@SuppressWarnings("unused")
 	private boolean verbose=false;
 
 	/** The bank account of the firm. */
@@ -119,8 +118,8 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 
 	/**
 	 * Creates a new firm with the given parameters.
-	 * @param aName - the name. 
-	 * @param owner - the owner.
+	 * @param aName  the name. 
+	 * @param owner  the owner.
 	 */
 	public BasicFirm( 
 			String aName, 
@@ -454,7 +453,10 @@ public class BasicFirm extends JamelObject implements Firm, FirmComponent {
 		if (bankrupt)
 			throw new RuntimeException("Bankrupted.");
 		this.data = new FirmDataset();
-		this.mediator.get(Labels.OPENING); // Opens each component. 
+		this.mediator.get(Labels.OPENING); // Opens each component.
+		if (this.verbose) {
+			this.mediator.get(Labels.VERBOSE);
+		}
 	}
 
 	/**

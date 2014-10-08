@@ -55,11 +55,11 @@ public class EmotionalHousehold extends BasicHousehold {
 	/** The friends of the household. */
 	final private LinkedList<EmotionalHousehold> friends = new LinkedList<EmotionalHousehold>();
 	
-	/** The new optimism state of the household. */
-	private boolean newOptimist=getRandom().nextBoolean();
-
 	/** A flag that indicates whether the household is optimist or not. */
 	private boolean optimist=getRandom().nextBoolean();
+
+	/** The new optimism state of the household. */
+	protected boolean newOptimist=getRandom().nextBoolean();
 
 	/**
 	 * Creates a new household.

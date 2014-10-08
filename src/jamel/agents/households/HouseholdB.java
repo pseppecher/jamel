@@ -36,14 +36,12 @@ import java.util.TreeSet;
 
 /**
  * An extension of the basic household.
- * <p>
- * A household has two main functions : labor and consumption.
  */
 public class HouseholdB extends BasicHousehold {
 
 	/**
 	 * Creates a new household.
-	 * @param aName - the name.
+	 * @param aName  the name.
 	 */
 	public HouseholdB(String aName) {
 		super(aName);
@@ -59,7 +57,7 @@ public class HouseholdB extends BasicHousehold {
 			if ((!provider.isBankrupt())&&(provider.getGoodsOffer()!=null))
 				newSet.add(provider);
 		}
-		for (int count = 0; count<this.maxSize; count++){
+		for (int count = 0; count<this.maxProviders; count++){
 			final Provider provider = (Provider) Circuit.getResource(Circuit.SELECT_A_PROVIDER_OF_FINAL_GOODS);
 			if ((provider!=null)&&(provider.getGoodsOffer()!=null)) {
 				newSet.add(provider);
@@ -67,7 +65,7 @@ public class HouseholdB extends BasicHousehold {
 		}
 		this.providers.clear();
 		this.providers.addAll(newSet);
-		while (this.providers.size()>maxSize)
+		while (this.providers.size()>maxProviders)
 			this.providers.removeLast();
 	}
 	

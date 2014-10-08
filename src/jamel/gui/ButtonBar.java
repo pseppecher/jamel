@@ -239,6 +239,21 @@ class ButtonBar extends JPanel {
 		pauseButton.setEnabled(!b) ;
 		pauseButton.setSelected(b) ;
 		playButton.setEnabled(b) ;
-		playButton.setSelected(!b) ;			
+		playButton.setSelected(!b) ;
+		this.window.updatePanel(null);
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+

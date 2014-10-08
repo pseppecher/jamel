@@ -50,9 +50,6 @@ public class EmotionalCapitalManager extends BasicCapitalManager {
 	@SuppressWarnings("javadoc")
 	protected static final String PARAM_HIGH_CAPITAL_RATIO_TARGET = "Firms.capital.highRatio";
 
-	@SuppressWarnings("javadoc")
-	protected static final String PARAM_SALES_RATIO_NORMAL = "Firms.sales.normalRatio";
-
 	/** New optimism. */
 	protected boolean newOptimist = true;
 
@@ -82,7 +79,8 @@ public class EmotionalCapitalManager extends BasicCapitalManager {
 	 */
 	protected boolean getFundamentalOptimism() {
 		final float salesRatio = (Float) this.mediator.get(Labels.SALES_RATIO);
-		final float salesRatioNormalLevel = Float.parseFloat(Circuit.getParameter(PARAM_SALES_RATIO_NORMAL));
+		final float salesRatioNormalLevel = (Float) this.mediator.get(Labels.SALES_RATIO_NORMAL);
+		//System.out.println(salesRatio+"/"+salesRatioNormalLevel);
 		return (salesRatio>salesRatioNormalLevel);
 	}
 

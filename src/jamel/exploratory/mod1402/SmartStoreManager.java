@@ -29,6 +29,7 @@
 
 package jamel.exploratory.mod1402;
 
+import jamel.Circuit;
 import jamel.agents.firms.Labels;
 import jamel.agents.firms.managers.BasicStoreManager;
 import jamel.agents.firms.util.Mediator;
@@ -41,6 +42,9 @@ import jamel.util.markets.GoodsOffer;
  */
 public class SmartStoreManager extends BasicStoreManager {
 
+	@SuppressWarnings("javadoc")
+	protected static final String PARAM_SALES_RATIO_NORMAL = "Firms.sales.normalRatio";
+
 	/**
 	 * Creates a new manager.
 	 * @param mediator  the mediator.
@@ -50,8 +54,33 @@ public class SmartStoreManager extends BasicStoreManager {
 	}
 
 	/**
+	 * Returns the normal level of the sales ratio.
+	 * @return a Float.
+	 */
+	protected Float getNormalSalesRatio() {
+		return Float.parseFloat(Circuit.getParameter(PARAM_SALES_RATIO_NORMAL));
+	}
+	/*protected float getNormalSalesRatio() { DELETE
+		final int productionMax = (Integer)this.mediator.get(Labels.PRODUCTION_MAX);
+		return this.getAverageSales(1200)/productionMax;
+	}*/
+	
+	/* (non-Javadoc)
+	 * @see jamel.agents.firms.managers.StoreManager#get(java.lang.String)
+	 */
+	@Override
+	public Object get(String key) {
+		Object result=super.get(key);
+		if (key.equals(Labels.SALES_RATIO_NORMAL)) {
+			result=getNormalSalesRatio();
+		}
+		return result;
+	}
+
+	/**
 	 * Creates a new offer and posts it on the goods market.
 	 */
+	@Override
 	public void offerCommodities() {
 		double aPrice = (Double)this.mediator.get(Labels.PRICE);
 		if (this.inventory!=null) 
@@ -78,5 +107,5 @@ public class SmartStoreManager extends BasicStoreManager {
 			}
 		}
 	}
-	
+
 }

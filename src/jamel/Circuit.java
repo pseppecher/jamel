@@ -42,10 +42,11 @@ import jamel.util.data.TimeseriesCollection;
 import jamel.util.data.YearDataset;
 
 import java.security.InvalidKeyException;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.TreeMap;
 
 import javax.swing.JOptionPane;
 
@@ -190,7 +191,7 @@ public abstract class Circuit extends JamelObject {
 	 * Returns the parameters.
 	 * @return the parameters. 
 	 */
-	public static HashMap<String, String> getParameters() {
+	public static Map<String, String> getParameters() {
 		return(circuit.parameters);// TODO faudrait renvoyer une copie plut™t que l'original.
 	}
 
@@ -265,7 +266,7 @@ public abstract class Circuit extends JamelObject {
 	protected final LinkedList<PeriodDataset> monthlyData = new LinkedList<PeriodDataset>();
 
 	/** The parameters of the simulation. */
-	protected final HashMap<String,String> parameters = new HashMap<String,String>();
+	protected final Map<String,String> parameters = new TreeMap<String,String>();
 
 	/** The list of events for the circuit. */
 	final protected LinkedList<String> scenario = new LinkedList<String>();

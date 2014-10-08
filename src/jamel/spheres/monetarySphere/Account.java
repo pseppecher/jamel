@@ -73,9 +73,9 @@ public interface Account extends FirmComponent {
 
 	/**
 	 * Returns a new check from this account.
-	 * @param amount the amount of the check
-	 * @param payee the payee
-	 * @return the new check
+	 * @param amount the amount of the check.
+	 * @param payee the payee.
+	 * @return the new check.
 	 */
 	Check newCheck(long amount, AccountHolder payee);
 

@@ -42,6 +42,8 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.swing.JEditorPane;
 import javax.swing.JFrame;
@@ -66,6 +68,18 @@ import org.jfree.ui.TextAnchor;
  */
 public class JamelWindow extends JFrame {
 
+	@SuppressWarnings("javadoc")
+	private static final String CONSOLE_PANE = "Console";
+
+	@SuppressWarnings("javadoc")
+	private static final String INFO_PANE = "Info";
+
+	@SuppressWarnings("javadoc")
+	private static final String MATRIX_PANE = "Matrix";
+
+	@SuppressWarnings("javadoc")
+	private static final String PARAM_PANE = "Parameters";
+
 	/** serialVersionUID */
 	private static final long serialVersionUID = 1L;
 
@@ -81,6 +95,9 @@ public class JamelWindow extends JFrame {
 	@SuppressWarnings("javadoc")
 	public static final String COMMAND_ZOOM = "windowSetZoom";
 
+	/** Line break tag. */
+	private final String br = "<br>";
+
 	/** The button bar. */
 	private final ButtonBar buttonBar;
 
@@ -95,6 +112,9 @@ public class JamelWindow extends JFrame {
 
 	/** The matrix panel. */
 	private JEditorPane matrixPane;
+
+	/** The parameter panel. */
+	private JEditorPane parameterPane;
 
 	/** The tabbed pane. */
 	private final JTabbedPane tabbedPane ;
@@ -120,14 +140,40 @@ public class JamelWindow extends JFrame {
 		setDefaultCloseOperation(EXIT_ON_CLOSE) ;
 		// ********
 		getContentPane().add( tabbedPane ) ;
-		this.tabbedPane.add("Matrix",getMatrixPanel());
-		this.tabbedPane.add("Console",getConsolePanel());
-		this.tabbedPane.add("Info",getInfoPanel());
-		this.tabbedPane.setSelectedIndex(1);
+		this.tabbedPane.add(getInfoPanel(),0);
+		this.tabbedPane.add(getConsolePanel(),0);
+		this.tabbedPane.add(getParameterPanel(),0);
+		this.tabbedPane.add(getMatrixPanel(),0);
+		this.tabbedPane.setSelectedIndex(2);
 		this.buttonBar = new ButtonBar(this) ;
 		getContentPane().add( this.buttonBar, "South" );
 		this.buttonBar.pause(false);
 		this.setVisible(true);
+	}
+
+	/**
+	 * Adds a marker to all time charts.
+	 * @param label the label of the marker.
+	 * @param aMonth the month of the marker.
+	 */
+	private void addMarker(String label, Month aMonth) {
+		final ValueMarker marker = new ValueMarker(aMonth.getFirstMillisecond()) ;
+		marker.setLabel(label);
+		marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
+		marker.setOutlinePaint(Color.WHITE);
+		final int max = tabbedPane.getTabCount();
+		for (int i = 0; i<max; i++) { 
+			final Component currentTab = tabbedPane.getComponentAt(i);
+			if (JPanel.class.isInstance(currentTab)) {
+				int chartPanelCount = ((JPanel)currentTab).getComponentCount() ;
+				for (int index=0 ; index<chartPanelCount ; index++) {
+					final JamelChart chart = (JamelChart) (((ChartPanel)((JPanel)currentTab).getComponent(index)).getChart()) ;
+					if (chart!=null) 
+						chart.addMarker(marker);
+				}
+			}
+		}
+
 	}
 
 	/**
@@ -141,8 +187,9 @@ public class JamelWindow extends JFrame {
 				"font-size: " + font.getSize() + "pt; }";
 		((HTMLDocument)consolePane.getDocument()).getStyleSheet().addRule(bodyRule);
 		consolePane.setEditable(false);
-		JScrollPane scrollPane = new JScrollPane(consolePane) ;
-		return scrollPane;
+		final JScrollPane pane = new JScrollPane(consolePane);
+		pane.setName(CONSOLE_PANE);
+		return pane ;
 	}
 
 	/**
@@ -150,8 +197,8 @@ public class JamelWindow extends JFrame {
 	 * @return the info panel.
 	 */
 	private Component getInfoPanel() {
-		final JEditorPane editorPane = new JEditorPane("text/html","<center>"+this.infoString+"</center>");
-		editorPane.addHyperlinkListener(new HyperlinkListener()
+		final JEditorPane infoPane = new JEditorPane("text/html","<center>"+this.infoString+"</center>");
+		infoPane.addHyperlinkListener(new HyperlinkListener()
 		{
 			public void hyperlinkUpdate(HyperlinkEvent e)
 			{
@@ -170,9 +217,10 @@ public class JamelWindow extends JFrame {
 					}	        
 			}
 		});		
-		editorPane.setEditable(false);
-		final JScrollPane scrollPane = new JScrollPane(editorPane) ;
-		return scrollPane;
+		infoPane.setEditable(false);
+		final JScrollPane pane = new JScrollPane(infoPane);
+		pane.setName(INFO_PANE);
+		return pane ;
 	}
 
 	/**
@@ -180,10 +228,109 @@ public class JamelWindow extends JFrame {
 	 * @return the matrix panel.
 	 */
 	private JScrollPane getMatrixPanel() {
-		matrixPane = new JEditorPane("text/html","<H2>The balance sheet matrix panel.</H2>");
+		matrixPane = new JEditorPane("text/html","");
 		matrixPane.setEditable(false);
-		JScrollPane scrollPane = new JScrollPane(matrixPane) ;
-		return scrollPane;
+		final JScrollPane pane = new JScrollPane(matrixPane);
+		pane.setName(MATRIX_PANE);
+		return pane ;
+	}
+
+	/**
+	 * Returns a string representation of a list of parameters starting by the specified prefix.
+	 * @param parameters  a Map containing all the parameters. 
+	 * @param prefix  the prefix.
+	 * @return a string.
+	 */
+	private String getParameters(Map<String, String> parameters, String prefix) {
+		String result="";
+		for(Entry<String,String> entry:parameters.entrySet()) {
+			final String key = entry.getKey();
+			if (key.startsWith(prefix)) {
+				result+=key+"="+entry.getValue()+br;
+			}
+		}
+		result+="<hr>";
+		return result;
+	}
+
+	/**
+	 * Returns the parameter panel.
+	 * @return the parameter panel.
+	 */
+	private JScrollPane getParameterPanel() {
+		this.parameterPane = new JEditorPane("text/html","");
+		this.parameterPane.setEditable(false);
+		final JScrollPane pane = new JScrollPane(parameterPane);
+		pane.setName(PARAM_PANE);
+		return pane ;
+	}
+
+	/**
+	 * Updates the parameter panel.
+	 */
+	private void updateParameterPane() {
+		final Map<String, String> parameters = Circuit.getParameters();
+		String txt = "";
+		txt+=getParameters(parameters,"Bank.");
+		txt+=getParameters(parameters,"Firms.");
+		txt+=getParameters(parameters,"Households.");
+		this.parameterPane.setText(txt);
+	}
+
+	/**
+	 * Exports a simulation report in the latex format.
+	 */
+	void exportLatexReport() {
+		updatePanel(null);
+		final SimulationReport report = new SimulationReport();
+		final int max = tabbedPane.getTabCount();
+		report.setTitle((this.getTitle().split("\\."))[0]);
+		report.setDates(viewManager.getStart().getDate(),viewManager.getEnd().getDate());
+		for (int tabIndex = 0; tabIndex < max; tabIndex ++) {
+			try {
+				final JPanel currentTab = (JPanel)tabbedPane.getComponentAt(tabIndex) ;
+				final String tabTitle = tabbedPane.getTitleAt(tabIndex);					
+				final int chartPanelCount = currentTab.getComponentCount() ;
+				for (int chartIndex=0 ; chartIndex<chartPanelCount ; chartIndex++) {
+					final ChartPanel aChartPanel = (ChartPanel)currentTab.getComponent(chartIndex);
+					final JamelChart chart = (JamelChart) aChartPanel.getChart() ;
+					report.addChart(tabTitle,chart);
+				}
+			} catch (ClassCastException e) {
+				// The current panel is not a chart panel: nothing to do.
+			}
+		}
+		report.setParameters(Circuit.getParameters());
+		report.export();
+	}
+
+	/**
+	 * Updates the panel.
+	 * @param pane  the name of the panel to update.
+	 */
+	void updatePanel(String pane) {
+		final int max = tabbedPane.getTabCount();
+		for (int i = 0; i<max; i++) { 
+			final Component currentTab = tabbedPane.getComponentAt(i);
+			if (currentTab.getName().equals(pane) || pane==null) {
+				if (JPanel.class.isInstance(currentTab)) {
+					int chartPanelCount = ((JPanel)currentTab).getComponentCount() ;
+					for (int index=0 ; index<chartPanelCount ; index++) {
+						JamelChart chart = (JamelChart) (((ChartPanel)((JPanel)currentTab).getComponent(index)).getChart()) ;
+						if (chart != null) {
+							chart.setTimeRange(viewManager.getStart().getDate(), viewManager.getEnd().getDate()) ;
+						}
+					}
+				}
+				if (pane==MATRIX_PANE || pane==null) {
+					this.matrixPane.setText((String) Circuit.getResource(Circuit.GET_HTML_MATRIX));
+				}
+				if (pane==PARAM_PANE || pane==null) {
+					updateParameterPane();
+				}
+			}
+		}
+		
 	}
 
 	/**
@@ -192,32 +339,7 @@ public class JamelWindow extends JFrame {
 	 */
 	void zoom(int z) {
 		viewManager.setRange(z) ;
-		update() ;		
-	}
-
-	/**
-	 * Adds a marker to all time charts.
-	 * @param label the label of the marker.
-	 * @param aMonth the month of the marker.
-	 */
-	public void addMarker(String label, Month aMonth) {
-		final ValueMarker marker = new ValueMarker(aMonth.getFirstMillisecond()) ;
-		marker.setLabel(label);
-		marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
-		marker.setOutlinePaint(Color.WHITE);
-		final int max = tabbedPane.getTabCount();
-		for (int i = 0; i<max; i++) { 
-			final Component currentTab = tabbedPane.getComponentAt(i);
-			if (JPanel.class.isInstance(currentTab)) {
-				int chartPanelCount = ((JPanel)currentTab).getComponentCount() ;
-				for (int index=0 ; index<chartPanelCount ; index++) {
-					final JamelChart chart = (JamelChart) (((ChartPanel)((JPanel)currentTab).getComponent(index)).getChart()) ;
-					if (chart!=null) 
-						chart.addMarker(marker);
-				}
-			}
-		}
-
+		updatePanel(null) ;
 	}
 
 	/**
@@ -311,32 +433,6 @@ public class JamelWindow extends JFrame {
 	}
 
 	/**
-	 * Exports a simulation report in the latex format.
-	 */
-	public void exportLatexReport() {
-		final SimulationReport report = new SimulationReport();
-		final int max = tabbedPane.getTabCount();
-		report.setTitle((this.getTitle().split("\\."))[0]);
-		report.setDates(viewManager.getStart().getDate(),viewManager.getEnd().getDate());
-		for (int tabIndex = 0; tabIndex < max; tabIndex ++) {
-			try {
-				final JPanel currentTab = (JPanel)tabbedPane.getComponentAt(tabIndex) ;
-				final String tabTitle = tabbedPane.getTitleAt(tabIndex);					
-				final int chartPanelCount = currentTab.getComponentCount() ;
-				for (int chartIndex=0 ; chartIndex<chartPanelCount ; chartIndex++) {
-					final ChartPanel aChartPanel = (ChartPanel)currentTab.getComponent(chartIndex);
-					final JamelChart chart = (JamelChart) aChartPanel.getChart() ;
-					report.addChart(tabTitle,chart);
-				}
-			} catch (ClassCastException e) {
-				// The current panel is not a chart panel: nothing to do.
-			}
-		}
-		report.setParameters(Circuit.getParameters());
-		report.export();
-	}
-
-	/**
 	 * Shows a dialog that indicates the bank failure.
 	 */
 	public void failure() {
@@ -350,17 +446,16 @@ public class JamelWindow extends JFrame {
 	 * @param s the String to print.
 	 */
 	public void println(final String s) {
-		final String cr = "<br>";//System.getProperty("line.separator" );
 		if (SwingUtilities.isEventDispatchThread()) {
 			consoleText.append(s);
-			consoleText.append(cr);
+			consoleText.append(br);
 			consolePane.setText(consoleText.toString());
 		}
 		else {
 			SwingUtilities.invokeLater(new Runnable(){
 				public void run() {
 					consoleText.append(s);
-					consoleText.append(cr);
+					consoleText.append(br);
 					consolePane.setText(consoleText.toString());
 				}}
 					);
@@ -368,25 +463,13 @@ public class JamelWindow extends JFrame {
 	}
 
 	/**
-	 * 
+	 * Updates the window.
 	 */
 	public void update() {
 		viewManager.update() ;
 		this.buttonBar.setMinMax(viewManager.getStart().toString(),viewManager.getEnd().toString()) ;
-		final int max = tabbedPane.getTabCount();
-		for (int i = 0; i<max; i++) { 
-			final Component currentTab = tabbedPane.getComponentAt(i);
-			if (JPanel.class.isInstance(currentTab)) {
-				int chartPanelCount = ((JPanel)currentTab).getComponentCount() ;
-				for (int index=0 ; index<chartPanelCount ; index++) {
-					JamelChart chart = (JamelChart) (((ChartPanel)((JPanel)currentTab).getComponent(index)).getChart()) ;
-					if (chart != null) {
-						chart.setTimeRange(viewManager.getStart().getDate(), viewManager.getEnd().getDate()) ;
-					}
-				}
-			}
-		}
-		this.matrixPane.setText((String) Circuit.getResource(Circuit.GET_HTML_MATRIX));
+		final String selectedPane = tabbedPane.getSelectedComponent().getName();
+		updatePanel(selectedPane);
 	}
 
 	/**
@@ -406,3 +489,12 @@ public class JamelWindow extends JFrame {
 	}	
 
 }
+
+
+
+
+
+
+
+
+

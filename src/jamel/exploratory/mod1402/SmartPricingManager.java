@@ -39,7 +39,7 @@ import jamel.agents.firms.util.Mediator;
  * (new version of the old PricingManager131201).
  */
 public class SmartPricingManager extends AbstractPricingManager {
-	
+
 	@SuppressWarnings("javadoc")
 	protected static final String PARAM_PRICE_SPAN_MAX = "Firms.price.spanMax";
 
@@ -64,7 +64,7 @@ public class SmartPricingManager extends AbstractPricingManager {
 
 	/** The lower price. */
 	private Double lowPrice = null;
-	
+
 	/** The ratio volume of sales to volume of commodities offered. */
 	private Float salesRatio;
 
@@ -106,7 +106,7 @@ public class SmartPricingManager extends AbstractPricingManager {
 		string+=", currentPrice="+currentPrice;
 		return string;
 	}
-	
+
 	/**
 	 * Updates the unit price.
 	 */
@@ -115,7 +115,7 @@ public class SmartPricingManager extends AbstractPricingManager {
 		final Float priceFlexibility = Float.parseFloat(Circuit.getParameter(PARAM_PRICE_FLEX));
 		final int spanMin = Integer.parseInt(Circuit.getParameter(PARAM_PRICE_SPAN_MIN));
 		final int spanMax = Integer.parseInt(Circuit.getParameter(PARAM_PRICE_SPAN_MAX));
-		if (spanMin>=spanMax) {
+		if (spanMin>spanMax) {
 			throw new RuntimeException("Scenario Error: Firms.price.spanMax must be higher then Firms.price.spanMin.");
 		}
 		span--;
@@ -131,7 +131,11 @@ public class SmartPricingManager extends AbstractPricingManager {
 					this.lowPrice = this.currentPrice;
 					if (inventoryRatio<1) {
 						this.currentPrice = getNewPrice(this.lowPrice,this.highPrice);
-						span=spanMin+getRandom().nextInt(spanMax-spanMin);
+						if (spanMax>spanMin) {
+							span=spanMin+getRandom().nextInt(spanMax-spanMin);
+						} else {
+							span=spanMin;
+						}
 					}
 					this.highPrice =  this.highPrice*(1f+priceFlexibility);
 				}
@@ -139,13 +143,35 @@ public class SmartPricingManager extends AbstractPricingManager {
 					this.highPrice = this.currentPrice;
 					if (inventoryRatio>1) {
 						this.currentPrice = getNewPrice(this.lowPrice,this.highPrice);
-						span=spanMin+getRandom().nextInt(spanMax-spanMin);
+						if (spanMax>spanMin) {
+							span=spanMin+getRandom().nextInt(spanMax-spanMin);
+						} else {
+							span=spanMin;
+						}
 					}					
 					this.lowPrice =  this.lowPrice*(1f-priceFlexibility);
 				}
 			}
 		}
 	}
+
+	@Override
+	public Object get(String key) {
+		Object result=super.get(key);
+		if (key.equals(Labels.VERBOSE)) {
+			this.verbose();
+		}
+		return result;
+	}
+
+	/**
+	 * 
+	 */
+	private void verbose() {
+		System.out.println(getCurrentPeriod().getValue()+","+highPrice+","+lowPrice+","+currentPrice);
+	}
+	
+	
 
 }
 

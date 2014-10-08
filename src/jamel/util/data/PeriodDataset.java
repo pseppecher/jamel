@@ -45,29 +45,17 @@ import jamel.spheres.realSphere.IntermediateFactory;
  */
 public class PeriodDataset extends GlobalDataset {
 
-	/** dividendsFinal */
-	private long dividendsFinal;
-
 	/** dividendsIntermediate */
 	private long dividendsIntermediate;
-
-	/** fPessimism */
-	public int fPessimism;
-	
-	/** hOptimism */
-	public int hOptimism;	
-
-	/** hPessimism */
-	public int hPessimism;
 
 	/** averageDividendFinal */
 	public double averageDividendFinal;
 
 	/** averageDividendIntermediate */
 	public double averageDividendIntermediate;
-
+	
 	/** avWorkforceS1 */
-	public int avWorkforceS1;
+	public int avWorkforceS1;	
 
 	/** avWorkforceS2 */
 	public int avWorkforceS2;
@@ -84,11 +72,23 @@ public class PeriodDataset extends GlobalDataset {
 	/** bankruptciesFinal */
 	public int bankruptS2;
 
+	public long capConsumptionVal;
+
+	public int capConsumptionVol;
+
+	public long capDeposits;
+
+	public long capWages;
+	
+	public long capDividends;
+
 	/** CAPITAL_ADEQUACY_RATIO */
 	public double CAPITAL_ADEQUACY_RATIO;
 
 	/** BANK_CAPITAL */
 	public long capitalBank;
+
+	public int capitalists;
 
 	/** capitalS1 */
 	public long capitalS1;
@@ -122,14 +122,17 @@ public class PeriodDataset extends GlobalDataset {
 	/** DIVIDENDS */
 	public long DIVIDENDS;
 
+	/** dividendsFinal */
+	public long dividendsFinal;
+
+	/** DOUBTFUL_DEBTS */
+	public long doubtDebt;
+
 	/** doubtDebtS1 */
 	public long doubtDebtS1;
 
 	/** doubtDebtS2 */
 	public long doubtDebtS2;
-
-	/** DOUBTFUL_DEBTS */
-	public long doubtDebt;
 
 	/** DOUBTFUL_DEBTS_RATIO */
 	public double DOUBTFUL_DEBTS_RATIO;
@@ -137,11 +140,11 @@ public class PeriodDataset extends GlobalDataset {
 	/** EMPLOYED */
 	public long EMPLOYED;
 
-	/** finalCapUtil */
-	public double finalCapUtil;
-
 	/** FIRMS_DEPOSITS */
 	public long fDeposits;
+
+	/** finalCapUtil */
+	public double finalCapUtil;
 
 	/** firmsIntermediate */
 	public int firmsS1;
@@ -155,29 +158,42 @@ public class PeriodDataset extends GlobalDataset {
 	/** FORCED_SAVINGS_RATE */
 	public double FORCED_SAVINGS_RATE;
 
+	/** fPessimism */
+	public int fPessimism;
+
 	public float fPessimismRatio;
 
 	/** The gross profit */
 	public long grossProfit;
 
-	/** grossProfitFinal */
-	public long grossProfitS2;
-
 	/** grossProfitIntermediate */
 	public long grossProfitS1;
 
-	/** hHoardingRatio */
-	public float hHoardingRatio;
+	/** grossProfitFinal */
+	public long grossProfitS2;
 
-	/** HOUSEHOLDS */
-	public long HOUSEHOLDS;
+	public long hCapital;
 
 	/** HOUSEHOLDS_DEPOSITS */
 	public long hDeposits;
 
+	/** hHoardingRatio */
+	public float hHoardingRatio;
+
+	/** hOptimism */
+	public int hOptimism;
+
+	/** HOUSEHOLDS */
+	public long HOUSEHOLDS;
+
+	/** hPessimism */
+	public int hPessimism;
+
 	public float hPessimismRatio;
 
 	public long hSavingTarget;
+	
+	public long hSavings;
 
 	/** INCOME */
 	public long INCOME;
@@ -406,11 +422,11 @@ public class PeriodDataset extends GlobalDataset {
 	/** utilizationListIntermediate */
 	public final LinkedList<Float> utilizationListIntermediate = new LinkedList<Float>();
 
-	/** vacanciesFinal */
-	public long vacanciesS2;
-
 	/** vacanciesIntermediate */
 	public long vacanciesS1;
+
+	/** vacanciesFinal */
+	public long vacanciesS2;
 
 	/** vacanciesTotal */
 	public long vacanciesTotal;
@@ -471,7 +487,6 @@ public class PeriodDataset extends GlobalDataset {
 			this.fPessimism++;
 		}
 		this.debtTarget += data.debtTarget;
-		//System.out.println(this.debtTarget); DELETE
 		this.jobOffers += data.jobOffers;
 		this.fDeposits += data.deposit;
 		this.invFinVal += data.invFiVal;
@@ -537,12 +552,22 @@ public class PeriodDataset extends GlobalDataset {
 	 * @param data - the data to add.
 	 */
 	private void addIndividualData(HouseholdDataset data) {
+		this.hSavings+=data.savings;
 		this.hSavingTarget+=data.savingTarget;
 		if (data.getOptimism()) {
-			this.hOptimism++;			
+			this.hOptimism++;	
 		}
 		else {
 			this.hPessimism++;
+		}
+		if (data.capital>0) {
+			this.capitalists++;
+			this.hCapital += data.capital;
+			this.capConsumptionVal += data.getConsumptionValue();
+			this.capConsumptionVol += data.getConsumptionVolume();
+			this.capWages += data.getWage();
+			this.capDividends += data.getDividend();
+			this.capDeposits += data.getDeposits();
 		}
 		this.CONSUMPTION_BUDGET += data.getConsumptionBudget();
 		this.FORCED_SAVINGS += data.getForcedSavings();

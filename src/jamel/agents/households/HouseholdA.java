@@ -36,14 +36,12 @@ import java.util.Collections;
 
 /**
  * An extension of the basic household.
- * <p>
- * A household has two main functions : labor and consumption.
  */
 public class HouseholdA extends BasicHousehold {
 
 	/**
 	 * Creates a new household.
-	 * @param aName - the name.
+	 * @param aName  the name.
 	 */
 	public HouseholdA(String aName) {
 		super(aName);
@@ -54,7 +52,7 @@ public class HouseholdA extends BasicHousehold {
 	 */
 	@Override
 	protected void updateProvidersList() {
-		while (providers.size()<maxSize){
+		while (providers.size()<maxProviders){
 			final Provider provider = (Provider) Circuit.getResource(Circuit.SELECT_A_PROVIDER_OF_FINAL_GOODS);
 			if (provider==null) break;
 			if (!this.providers.contains(provider)) {
@@ -62,7 +60,7 @@ public class HouseholdA extends BasicHousehold {
 			}
 		}
 		Collections.sort(providers, PROVIDER_COMPARATOR);
-		if (this.providers.size()>maxSize-1)
+		if (this.providers.size()>maxProviders-1)
 			this.providers.removeLast();
 	}
 	
