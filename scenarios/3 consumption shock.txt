@@ -1,52 +1,254 @@
-******************
-Consumption Shock
-******************
+************
+  Baseline
+ Jamel (v2)
+  08-10-14
+************
 
-*PREAMBLE*
+*BEGIN*
 
-Circuit=jamel.BasicCircuit
-RandomSeed=0
-WindowRange=1200
+Circuit {
+	type=jamel.basic.BasicCircuit
+	randomSeed=0
+	sectors=Bank,Industry,Households,Data,GUI
+	phases=Bank.opening,Industry.opening,Households.opening,Bank.pay_dividend,Industry.pay_dividend,Industry.plan_production,Households.job_search,Industry.production,Households.consumption,Bank.debt_recovery,Bank.closure,Industry.closure,Households.closure,Data.closure
+	redirect {
+		getSeries=Data.getSeries
+		getNewAccount=Bank.getNewAccount
+		putData=Data.putData
+		selectCapitalOwner=Households.getRandomHousehold
+		getJobOffers=Industry.getJobOffers
+		getSupplies=Industry.getSupplies
+		Balance Sheet Panel=Data.getBalanceSheetPanel
+	}
+	events.1 = Industry.new=100, Households.new=1000
+	events.200 = Households.savings.propensityToSave=0.3, Households.savings.ratioTarget=0.3 
+	events.600 = pause
+}
 
-Bank.rate:normal=0.05,penalty=0.10
-Bank.capital:targetedRatio=0.1,propensityToDistributeExcess=0.5
-Bank:term=12,accommodating=true
+Industry { 
+	type=jamel.basic.agents.firms.BasicIndustrialSector
+	agents.type=jamel.basic.agents.firms.BasicFirm
+	capital {
+		propensityToDistribute = 1
+		target = 0.2
+	}
+	inventory.normalLevel = 2
+	labourContract {
+		max = 18
+		min = 6
+	}
+	price.flexibility = 0.1
+	production {
+		capacity = 10
+		time = 5
+		productivity = 100
+	}
+	utilizationRate.flexibility = 0.1
+	utilizationRate.initialValue = 0.75
+	vacancy.normalRate = 0.03
+	wage.initialValue = 3000
+	wage.flexibility.downward = 0.09
+	wage.flexibility.upward = 0.06
+	wage.minimum = 0
+	regenerationLapse.min = 12
+	regenerationLapse.max = 24
+}
 
-Households=jamel.agents.households.HouseholdC // A basic household
-Households.savings:propensityToSave=0.05,ratioTarget=0.05,propensityToConsumeExcess=0.5
-Households.wage:resistance=12,flexibility=0.05
-Households.memory:providers=3,employers=3
+Data {
+	type=jamel.basic.data.DataManager
+	
+	series {
+		Bank Assets = Bank.assets
+		Bank Liabilities = Bank.liabilities
+		Bank Capital = Bank.capital
+		Bank Dividends = Bank.dividends
+		Bankruptcies (bank side) = Bank.bankruptcies
+		Bankruptcies (industry side) = Industry.bankruptcies
+		Capacity = Industry.capacity
+		Consumption Budget = Households.consumption.budget
+		Consumption Value = Households.consumption.val
+		Consumption Volume = Households.consumption.vol
+		Employed = Households.employed
+		Gross Profit = Industry.grossProfit
+		Households = Households.households
+		Households Capital = Households.capital
+		Households Cash = Households.cash 
+		Industry Assets = Industry.assets
+		Industry Cash = Industry.cash
+		Industry Dividends = Industry.dividends
+		Industry Liabilities = Industry.liabilities		
+		Inventories Volume = Industry.inventories.fg.vol
+		Inventories Normal Volume = Industry.inventories.fg.vol.normal
+		Production Volume = Industry.production.vol
+		Supply Volume = Industry.supply.vol
+		Unemployed = Households.unemployed
+		Wages = Households.wages
+		Workforce = Industry.workforce
+		Inventories Firm 1 = Industry.Firm1.inventories.fg.vol
+		Inventories (Normal) Firm 1 = Industry.Firm1.inventories.fg.vol.normal
+		Insolvents = Industry.insolvents
+	}
+	
+	ratios {
+		Average Wage (Industry side) = Industry.wageBill, Industry.workforce
+		Average Wage (Households side) = Households.wages, Households.employed
+		Savings = Households.cash, Households.income
+		Unemployment = Households.unemployed, Households.households
+		Dividends Share = Households.dividend, Households.income
+		Wages Share = Households.wages, Households.income
+		Doubtful Debt Ratio = Bank.doubtfulDebt, Bank.liabilities
+		Bank Capital Ratio = Bank.capital, Bank.liabilities
+		Velocity of Money (1) = Households.income, Bank.liabilities
+		Velocity of Money (2) = Industry.income, Bank.liabilities
+		
+		Average Price (Supply) = Industry.supply.val, Industry.supply.vol
+		Average Price (Sales) = Industry.sales.val, Industry.sales.vol
+		Average Cost (Inventories) = Industry.inventories.fg.val, Industry.inventories.fg.vol
+		Capital Ratio = Industry.capital, Industry.liabilities
+		Capacity Utilization = Industry.workforce, Industry.capacity
+		
+		Cash to Wages Ratio = Industry.cash, Industry.wageBill
+		Circulating Capital to Wages Ratio = Industry.inventories.total.val, Industry.wageBill
+		Production Value to Wages Ratio = Industry.production.val, Industry.wageBill
+		
+		Price Firm 1 = Industry.Firm1.sales.val, Industry.Firm1.sales.vol
+		Wage Firm 1 = Industry.Firm1.wageBill, Industry.Firm1.workforce
+		Capacity Utilization F1 = Industry.Firm1.workforce, Industry.Firm1.capacity
+		
+	}
+	
+	sfc { // Definition of the balance sheet matrix.
+		
+		sectors = Households, Industry, Bank
+		rows = Inventories, Deposits, Loans, Capital
+		
+		Households {
+			Deposits = Households.cash
+			Capital = Households.capital
+		}
+		
+		Industry {
+			Inventories = Industry.inventories.total.val
+			Deposits = Industry.cash
+			Loans = -Industry.liabilities
+			Capital = -Industry.capital
+		}
+		
+		Bank {
+			Deposits = -Bank.liabilities
+			Loans = Bank.assets
+			Capital = -Bank.capital
+		}
+		
+	}
+	
+}
 
-Firms=jamel.agents.firms.ModularFirm // A modular firm
-Firms.managers.pricingManager=jamel.agents.firms.managers.BasicPricingManager
-Firms.managers.storeManager=jamel.agents.firms.managers.BasicStoreManager
-Firms.managers.capitalManager=jamel.agents.firms.managers.BasicCapitalManager
-Firms.managers.publicRelationManager=jamel.agents.firms.managers.BasicPublicRelationManager
-Firms.managers.productionManager=jamel.agents.firms.managers.BasicProductionManager
-Firms.managers.workforceManager=jamel.agents.firms.managers.BasicWorkforceManager
-Firms.wage:minimum=0,default=3000,downFlex=0.09,upFlex=0.06
-Firms.laborContract:min=6,max=18
-Firms.capital:normalRatio=0.5,propensityToDistributeExcess=0.5
-Firms.vacancies:normalRate=0.03,period=4
-Firms.regenerationTime:min=12,max=12
-Firms.price:flexibility=0.1
-Firms.inventories:normalLevel=4,propensityToSell=0.5
-Firms.productionTime=6
-Firms.productivity=100
-Firms.machinery=10
-Firms.utilizationRate:flexibility=10,init.min=50,init.max=100
+GUI { // The Graphical User Interface
+	
+	type=jamel.basic.gui.GUI
+	
+	panel {
+	
+		list = Balance Sheet Panel
+		
+	}
+	
+	chartPanel {
+		
+		list=Households,Bank,Industry,Firm1
+		
+		Firm1 {
+			
+			list = Price,Wage,Inventories,Capacity Utilization
+			
+			Price.series = Price Firm 1,Average Price (Sales)
+			Wage.series = Wage Firm 1,Average Wage (Industry side)
+			Inventories.series = Inventories Firm 1,Inventories (Normal) Firm 1
+			Capacity Utilization.series = Capacity Utilization F1,Capacity Utilization
+		
+		}
+				
+		Industry {
+		
+			list = Workforce,Prices,Wages,Inventories,Production,Balance sheet,Financial Ratio,Capacity Utilization,Other Ratios
+			
+			Workforce.series = Workforce,Capacity,Employed
+			Wages.series = Average Wage (Industry side)
+			Wages.colors = blue
+			Inventories.series = Inventories Volume,Supply Volume,Inventories Normal Volume 
+			Inventories.colors = green,blue
+			Production.series = Production Volume,Consumption Volume
+			Prices.series = Average Price (Supply),Average Price (Sales),Average Cost (Inventories)
+			Balance sheet.series = Industry Assets,Industry Liabilities
+			Balance sheet.colors = blue,red
+			Financial Ratio.series = Capital Ratio
+			Financial Ratio.colors = green
+			Capacity Utilization.series = Capacity Utilization
+			Other Ratios.series = Cash to Wages Ratio,Circulating Capital to Wages Ratio,Production Value to Wages Ratio
+		}
+		
+		Bank {
+		
+			list=Deposits,Balance sheet,Financial Ratios,Velocity of Money,Bankruptcies
+			
+			Financial Ratios.series=Doubtful Debt Ratio,Bank Capital Ratio
+			Ratios.colors=red,green
+			Balance sheet.series=Bank Assets,Bank Liabilities,Bank Capital
+			Balance sheet.colors=blue,red,green
+			Deposits.series=Households Cash,Industry Cash
+			Velocity of Money.series=Velocity of Money (1),Velocity of Money (2)
+			Bankruptcies.series = Bankruptcies (bank side),Bankruptcies (industry side),Insolvents
+		}
+		
+		Households {
+			
+			list=Unemployment,Cash,Wages,Consumption1,Consumption2,Income,Savings,Income2,Dividends
 
-*START*
+			Unemployment.series=Unemployment
+			Cash.series=Households Cash,Households Capital
+			Wages.series=Average Wage (Households side)
+			Consumption1.series=Consumption Budget,Consumption Value
+			Consumption2.series=Consumption Volume
+			Income.series=Wages,Gross Profit
+			Savings.series=Savings
+			Income2.series= Dividends Share,Wages Share
+			Dividends.series=Bank Dividends,Industry Dividends
 
-2000-01.newFirms(firms=660)
-2000-01.newHouseholds(households=5000)
+		}
+		
+	}
+}
 
-2005-01.set(Bank:accommodating=false)
+Households{
+	type=jamel.basic.agents.households.BasicHouseholdsSector
+	agents.type=jamel.basic.agents.households.BasicHousehold
+	savings{
+		propensityToSave=0.2
+		ratioTarget=0.2
+		propensityToConsumeExcess=0.5
+	}
+	wage{
+		resistance=12
+		flexibility=0.05
+	}
+}
 
-2040-01.windowMarker(Shock)
-2040-01.set(Households.savings:propensityToSave=0.15,ratioTarget=0.15)
-
-2100-01.pause()
+Bank{
+	type=jamel.basic.agents.banks.BankingSector
+	rate{
+		normal=0.004
+		penalty=0.008
+	}
+	capital{
+		targetedRatio=0.1
+		propensityToDistributeExcess=1.
+	}
+	term.normal=12
+	term.extended=24
+	accommodating=true
+	patience=1000
+}
 
 *END*
 
