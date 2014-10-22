@@ -14,3 +14,5 @@ public interface Employer extends Agent {
 	JobOffer getJobOffer();
 
 }
+
+//***

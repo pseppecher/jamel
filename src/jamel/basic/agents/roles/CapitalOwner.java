@@ -27,3 +27,5 @@ public interface CapitalOwner extends Agent {
 	void receiveDividend(Cheque cheque,Asset asset);
 
 }
+
+//***

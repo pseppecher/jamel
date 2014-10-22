@@ -26,3 +26,5 @@ public interface Worker extends Agent {
 	void jobSearch();
 
 }
+
+// ***

@@ -24,3 +24,5 @@ public interface Deposit {
 	long getAmount();
 
 }
+
+// ***

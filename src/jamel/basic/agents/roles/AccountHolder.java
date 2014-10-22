@@ -23,3 +23,5 @@ public interface AccountHolder extends Agent {
 	boolean isBankrupted();
 
 }
+
+//***

@@ -48,7 +48,7 @@ public class BasicAgentSet<T extends Agent> implements AgentSet<T> {
 								}
 							}
 							else {
-								//System.out.println("BasicAgentSet.collectData(): "+key+" not found"); // DELETE
+								// TODO ???
 							}
 						}
 					}
@@ -116,3 +116,5 @@ public class BasicAgentSet<T extends Agent> implements AgentSet<T> {
 	}
 
 }
+
+// ***

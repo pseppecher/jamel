@@ -144,6 +144,7 @@ public class BankingSector implements Sector, Asset {
 		 * Returns <code>true</code> if the account holder is solvent, <code>false</code> otherwise.
 		 * @return a boolean.
 		 */
+		@SuppressWarnings("unused")
 		private boolean isSolvent() {
 			return this.accountHolder.getAssets()>this.debt;
 		}
@@ -412,6 +413,7 @@ public class BankingSector implements Sector, Asset {
 		private Integer normalTerm = null;
 
 		/** The patience of the bank with the startups. */
+		@SuppressWarnings("unused")
 		private Integer patience = null;
 
 		/** The penalty interest rate. */
@@ -539,13 +541,13 @@ public class BankingSector implements Sector, Asset {
 	private void debtRecovery() {
 		Collections.shuffle(accounts, Circuit.getRandom());
 		final Iterator<Account> iterAccount = accounts.iterator();
-		final int now = Circuit.getCurrentPeriod().getValue();
+		@SuppressWarnings("unused")	final int now = Circuit.getCurrentPeriod().getValue();
 		while(iterAccount.hasNext()){
 			Account account = iterAccount.next();
 			if(account.getDebt()>0) {
 				account.payInterest();
 				account.recover();
-				/*if (!account.isSolvent()) {
+				/*if (!account.isSolvent()) { // FIXME: insolvency
 					if (now-account.creation>this.p.patience) {
 						account.bankrupt=true;
 					}
@@ -631,7 +633,7 @@ public class BankingSector implements Sector, Asset {
 	@Override
 	public boolean doPhase(String phaseName) {
 
-		checkConsistency(); // DELETE
+		//checkConsistency(); // For debugging purpose.
 
 		if (phaseName.equals("opening")) {
 			this.open();
@@ -653,7 +655,7 @@ public class BankingSector implements Sector, Asset {
 			throw new IllegalArgumentException(this.name+": Unknown phase <"+phaseName+">");
 		}
 
-		checkConsistency(); // DELETE
+		//checkConsistency(); // For debugging purpose.
 
 		return true;
 
@@ -721,4 +723,3 @@ public class BankingSector implements Sector, Asset {
 }
 
 // ***
-

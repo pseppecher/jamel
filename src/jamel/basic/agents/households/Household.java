@@ -21,3 +21,5 @@ public interface Household extends Worker,Consumer,AccountHolder,CapitalOwner {
 	void open();
 
 }
+
+//***

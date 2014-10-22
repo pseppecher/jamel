@@ -9,7 +9,7 @@ import jamel.util.Period;
 public class BasicPeriod implements Period {
 
 	/** The value of the period. */
-	private final int value;
+	private final Integer value;
 	
 	/**
 	 * Creates a period.
@@ -17,6 +17,11 @@ public class BasicPeriod implements Period {
 	 */
 	public BasicPeriod(int t) {
 		this.value = t;
+	}
+
+	@Override
+	public int compareTo(Period arg0) {
+		return value.compareTo(arg0.getValue());
 	}
 
 	@Override
@@ -63,13 +68,15 @@ public class BasicPeriod implements Period {
 	}
 
 	@Override
-	public Period plus(int term) {
-		return new BasicPeriod(this.value+term);
-	}
-
-	@Override
 	public boolean isPresent() {
 		return this.equals(Circuit.getCurrentPeriod());
 	}
+
+	@Override
+	public Period plus(int term) {
+		return new BasicPeriod(this.value+term);
+	}
 	
 }
+
+// ***

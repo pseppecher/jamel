@@ -2,6 +2,7 @@ package jamel.basic.gui;
 
 import jamel.basic.util.JamelParameters.Param;
 import jamel.util.Circuit;
+import jamel.util.FileParser;
 import jamel.util.Sector;
 
 import java.awt.Color;
@@ -10,11 +11,16 @@ import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Frame;
 import java.awt.GridLayout;
+import java.awt.Paint;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
@@ -32,19 +38,115 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.jfree.chart.plot.ValueMarker;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
+import org.jfree.ui.TextAnchor;
+
 /**
  *  The graphical user interface.
  */
 public class GUI implements Sector {
 
 	/**
+	 * Enumerates the colors.
+	 */
+	private static enum JamelColor {
+
+		/** black */
+		black(Color.black),
+
+		/** blue */
+		blue(Color.blue),
+
+		/** cyan */
+		cyan(Color.cyan),
+
+		/** gray */
+		gray(Color.gray),
+
+		/** green */
+		green(Color.green),
+
+		/** magenta */
+		magenta(Color.magenta),
+
+		/** orange */
+		orange(Color.orange),
+
+		/** red */
+		red(Color.red),
+
+		/** white */
+		white(Color.white),
+
+		/** yellow */
+		yellow(Color.yellow);
+
+		/**
+		 * Returns the specified color.
+		 * @param name the name of the color to return.
+		 * @return a color.
+		 */
+		private static Color get(String name) {
+			return valueOf(name).color;
+		}
+
+		/**
+		 * Returns the array of paints.
+		 * @param colorKeys the keys of the paints to return.
+		 * @return an array of paints.
+		 */
+		private static Paint[] getColors(String... colorKeys) {
+			final Paint[] colors;
+			if (colorKeys.length>0){
+				colors = new Paint[colorKeys.length];
+				for (int count = 0; count<colors.length ; count++){
+					colors[count] = JamelColor.get(colorKeys[count]);
+				}
+			}
+			else {
+				colors = null;
+			}
+			return colors;
+		}
+
+		/** The color. */
+		private final Color color;
+
+		/**
+		 * Creates a color.
+		 * @param color the color to create.
+		 */
+		private JamelColor(Color color){
+			this.color=color;
+		}
+
+		/**
+		 * Returns the color.
+		 * @return the color.
+		 */
+		@SuppressWarnings("unused")
+		private Color get() {
+			return this.color;
+		}
+
+	}
+
+	/**
 	 * The Jamel window.
 	 */
 	@SuppressWarnings("serial")
 	private final class JamelWindow extends JFrame {
+		
+		/** A map thaht contains the description of the chart panels. */
+		private final Map<String, String> chartDescription;
 
 		/** The control panel. */
 		private final Component controlPanel;
+		
+		/** The list of the timeChartPanel. */
+		private final List<TimeChartPanel> timeChartPanelList = new ArrayList<TimeChartPanel>(45);
 
 		{
 			this.setMinimumSize(new Dimension(400,200));
@@ -59,8 +161,9 @@ public class GUI implements Sector {
 		 */
 		private JamelWindow() {
 			super();
+			this.chartDescription = getChartDescription();
 			final JTabbedPane tabbedPane = new JTabbedPane() ;
-			for(JPanel chartPanel: getChartPanelList(circuit,name)){
+			for(JPanel chartPanel: getChartPanelList()){
 				tabbedPane.add(chartPanel);
 			};
 			for(Component component: getOtherPanelList(circuit,name)){
@@ -78,6 +181,108 @@ public class GUI implements Sector {
 		}
 
 		/**
+		 * Add a marker to all time charts.
+		 * @param label the label of the marker to add.
+		 */
+		private void addMarker(String label) {
+			final ValueMarker marker = new ValueMarker(Circuit.getCurrentPeriod().getValue()) ;
+			marker.setLabel(label);
+			marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
+			marker.setOutlinePaint(Color.WHITE);
+			for (TimeChartPanel panel:this.timeChartPanelList) {
+				panel.addMarker(marker);
+			}
+		}
+
+		/**
+		 * Returns the data for the specified chart.
+		 * @param dataKeys an array of strings representing the name of the series.
+		 * @return an XYSeriesCollection.
+		 */
+		private XYSeriesCollection getChartData(String[] dataKeys) {
+			final XYSeriesCollection data = new XYSeriesCollection();
+			for (String key:dataKeys){
+				final XYSeries series = (XYSeries) circuit.forward(KEY.GET_SERIES,"XYSeries",key);
+				if (series!=null) {
+					data.addSeries(series);
+				}
+				else {
+					throw new RuntimeException(key+" XYSeries not found.");
+				}
+			}
+			return data;
+		}
+
+		/**
+		 * Returns a map that contains the description of the chart panels. 
+		 * @return a map that contains the description of the chart panels.
+		 */
+		private Map<String,String> getChartDescription() {
+			final String fileName = circuit.getParameter(name,"chart panels description");
+			final Map<String,String> map;
+			try {
+				map = FileParser.parse(fileName);
+				return map;
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				new RuntimeException("Chart panels description not found.");
+			}
+			return null;
+		}
+
+		/**
+		 * Returns the list of the chart panels.
+		 * @return an array of panels.
+		 */
+		private JPanel[] getChartPanelList() {
+			final String value = chartDescription.get("panels");
+			final JPanel[] result;
+			if (value!=null){
+				final String[] panelTitles = FileParser.toArray(value);
+				result = new JPanel[panelTitles.length];
+				int index = 0;
+				for (String panelTitle:panelTitles) {
+					final JPanel panel = new JPanel(new GridLayout(3,3,10,10));
+					panel.setBackground(new Color(0,0,0,0));
+					panel.setName(panelTitle);
+					final String chartList = chartDescription.get(panelTitle+".list");
+					if (chartList!=null){
+						final String[] titles = FileParser.toArray(chartList);
+						for (String title:titles) {
+							final String truc = chartDescription.get(panelTitle+"."+title+".series");
+							if (truc==null) {
+								throw new RuntimeException(panelTitle+"."+title+".series: not found.");
+							}
+							final XYSeriesCollection data = getChartData(FileParser.toArray(truc));
+							final String colors = chartDescription.get(panelTitle+"."+title+".colors");
+							final Paint[] paints;
+							if (colors!=null) {
+								paints = JamelColor.getColors(FileParser.toArray(colors));
+							}
+							else {
+								paints = null;
+							}
+							final TimeChartPanel newPanel = new TimeChartPanel(title,data,paints);
+							panel.add(newPanel);
+							timeChartPanelList.add(newPanel);
+						}
+						if (titles.length<9) {
+							for (int i=titles.length; i<9; i++) {
+								panel.add(emptyPanel());						
+							}
+						}
+					}
+					result[index] = panel;
+					index++;
+				}
+			}
+			else {
+				result=new JPanel[0];
+			}
+			return result;
+		}
+
+		/**
 		 * Updates the control panel.
 		 */
 		private void pause() {
@@ -91,20 +296,20 @@ public class GUI implements Sector {
 	 */
 	private static final class KEY {
 
-		/** The "chartPanel" keyword. */
-		private static final String CHART_PANEL = "chartPanel";
-
 		/** The "Circuit" keyword. */
 		private static final String CIRCUIT = "Circuit";
 
 		/** the "fileName" keyword. */
 		private static final String FILE_NAME = "fileName";
 
+		/** The "getData" message. */
+		private static final String GET_SERIES = "getSeries";
+
 		/** The title of the info tab. */
 		private static final String INFO = "Info";
 
 		/** The "panel" keyword. */
-		private static final String PANEL = "panel";
+		private static final String OTHER_PANELS = "otherPanels";
 
 		/** The title of the parameters tab. */
 		@SuppressWarnings("unused")
@@ -129,44 +334,6 @@ public class GUI implements Sector {
 				this.setBackground(new Color(230,230,230));
 			}
 		};
-	}
-
-	/**
-	 * Returns the list of the chart panels.
-	 * @param circuit the circuit.
-	 * @param name the name of the GUI.
-	 * @return an array of panels.
-	 */
-	private static JPanel[] getChartPanelList(Circuit circuit,String name) {
-		final String value = circuit.getParameter(name,KEY.CHART_PANEL,"list");
-		final JPanel[] result;
-		if (value!=null){
-			final String[] panelTitles = value.split(",");
-			result = new JPanel[panelTitles.length];
-			int index = 0;
-			for (String panelTitle:panelTitles) {
-				final JPanel panel = new JPanel(new GridLayout(3,3,10,10));
-				panel.setBackground(new Color(0,0,0,0));
-				panel.setName(panelTitle);
-				final String[] chartList = circuit.getParameterArray(name,KEY.CHART_PANEL,panelTitle,"list");
-				if (chartList!=null){
-					for (String title:chartList) {
-						panel.add(new GraphPanel(circuit, name+"."+KEY.CHART_PANEL+"."+panelTitle,title));							
-					}
-				}
-				if (chartList.length<9) {
-					for (int i=chartList.length; i<9; i++) {
-						panel.add(emptyPanel());						
-					}
-				}
-				result[index] = panel;
-				index++;
-			}
-		}
-		else {
-			result=new JPanel[0];
-		}
-		return result;
 	}
 
 	/**
@@ -263,10 +430,9 @@ public class GUI implements Sector {
 	 * @return an array of component.
 	 */
 	private static Component[] getOtherPanelList(Circuit circuit,String name) {
-		final String[] panelTitles = circuit.getParameterArray(name,KEY.PANEL,"list");
+		final String[] panelTitles = circuit.getParameterArray(name,KEY.OTHER_PANELS);
 		final Component[] result;
 		if (panelTitles!=null){
-			//final String[] panelTitles = value.split(",");
 			result = new Component[panelTitles.length];
 			int index = 0;
 			for (String panelTitle:panelTitles) {
@@ -371,7 +537,9 @@ public class GUI implements Sector {
 
 	@Override
 	public Object forward(String message, Object ... args) {
-		// Does nothing (unused).
+		if (message.equals("marker")) {
+			this.window.addMarker((String) args[0]);
+		}
 		return null;
 	}
 

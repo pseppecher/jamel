@@ -33,3 +33,5 @@ public interface Loan {
 	boolean isDoubtfull();
 
 }
+
+// ***

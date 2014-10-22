@@ -1,6 +1,5 @@
 package jamel.util;
 
-
 /**
  * The timer.
  */
@@ -18,3 +17,5 @@ public interface Timer {
 	public void next();
 	
 }
+
+// ***

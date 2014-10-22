@@ -1,5 +1,6 @@
 package jamel.basic.agents.firms;
 
+import jamel.Simulator;
 import jamel.basic.agents.roles.CapitalOwner;
 import jamel.basic.agents.util.AgentSet;
 import jamel.basic.agents.util.BasicAgentSet;
@@ -9,13 +10,12 @@ import jamel.basic.util.Supply;
 import jamel.util.Circuit;
 import jamel.util.Sector;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import javax.swing.JOptionPane;
 
 /**
  * A basic industrial sector.
@@ -56,9 +56,6 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 	/** The sector name. */
 	private final String name;
 
-	/** The random. */
-	//private final Random random;
-
 	/** A scheduler for the regeneration of firms. */
 	private final Map<Integer,Integer> regeneration = new HashMap<Integer,Integer>();
 
@@ -70,9 +67,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 	public BasicIndustrialSector(String name, Circuit circuit) {
 		this.name=name;
 		this.circuit=circuit;
-		//this.random=(Random) circuit.forward("getRandom");
 		this.firms=new BasicAgentSet<Firm>();
-		//this.firms.putAll(this.createFirms(this.circuit.getParameter(this.name,PARAM.FIRMS_TYPE),Integer.parseInt(this.circuit.getParameter(this.name,PARAM.FIRMS_NUMBER))));
 	}
 
 	/**
@@ -108,25 +103,32 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 			}
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, // TODO revoir ça: il ne devrait pas y avoir de dialog dans cet objet.
-					"<html>Error while creating the firms.<br>"
-					+ "Class not found: "+e.getMessage()
-					+ ".<html>",
-					"Error",
-					JOptionPane.ERROR_MESSAGE);			
+			Simulator.showErrorDialog("Error while creating the firms.<br>Class not found:<br>"+e.getMessage());
 			throw new RuntimeException("Firm creation failure"); 
 		} catch (NoSuchMethodException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(null,
-					"<html>Error while creating the firms.<br>"
-							+ "No such method: "+e.getMessage()
-							+ ".<html>",
-							"Error",
-							JOptionPane.ERROR_MESSAGE);			
+			Simulator.showErrorDialog("Error while creating the firms.<br>No such method:<br>"+e.getMessage());
 			throw new RuntimeException("Firm creation failure"); 			
-		} catch (Exception e) {
+		} catch (IllegalArgumentException e) {
 			e.printStackTrace();
-			throw new RuntimeException("Firm creation failure"); 
+			Simulator.showErrorDialog("Error while creating the firms.<br>Illegal argument:<br>"+e.getMessage());
+			throw new RuntimeException("Firm creation failure"); 			
+		} catch (SecurityException e) {
+			e.printStackTrace();
+			Simulator.showErrorDialog("Error while creating the firms.<br>Security exception:<br>"+e.getMessage());
+			throw new RuntimeException("Firm creation failure"); 			
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+			Simulator.showErrorDialog("Error while creating the firms.<br>Instantiation exception:<br>"+e.getMessage());
+			throw new RuntimeException("Firm creation failure"); 			
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			Simulator.showErrorDialog("Error while creating the firms.<br>Illegal access:<br>"+e.getMessage());
+			throw new RuntimeException("Firm creation failure"); 			
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+			Simulator.showErrorDialog("Error while creating the firms.<br>Invocation target exception:<br>"+e.getMessage());
+			throw new RuntimeException("Firm creation failure");
 		}
 		return result;
 	}

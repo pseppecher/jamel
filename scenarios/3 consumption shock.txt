@@ -1,8 +1,8 @@
-************
-  Baseline
- Jamel (v2)
-  08-10-14
-************
+*******************
+ Consumption shock
+    Jamel (v2)
+    19-10-2014
+*******************
 
 *BEGIN*
 
@@ -21,7 +21,7 @@ Circuit {
 		Balance Sheet Panel=Data.getBalanceSheetPanel
 	}
 	events.1 = Industry.new=100, Households.new=1000
-	events.200 = Households.savings.propensityToSave=0.3, Households.savings.ratioTarget=0.3 
+	events.200 = change.Households.savings.propensityToSave=0.3, change.Households.savings.ratioTarget=0.3, GUI.marker=shock
 	events.600 = pause
 }
 
@@ -33,6 +33,8 @@ Industry {
 		target = 0.2
 	}
 	inventory.normalLevel = 2
+	inventory.propensity2sell = 0.5
+	sales.capacity = 2
 	labourContract {
 		max = 18
 		min = 6
@@ -54,172 +56,6 @@ Industry {
 	regenerationLapse.max = 24
 }
 
-Data {
-	type=jamel.basic.data.DataManager
-	
-	series {
-		Bank Assets = Bank.assets
-		Bank Liabilities = Bank.liabilities
-		Bank Capital = Bank.capital
-		Bank Dividends = Bank.dividends
-		Bankruptcies (bank side) = Bank.bankruptcies
-		Bankruptcies (industry side) = Industry.bankruptcies
-		Capacity = Industry.capacity
-		Consumption Budget = Households.consumption.budget
-		Consumption Value = Households.consumption.val
-		Consumption Volume = Households.consumption.vol
-		Employed = Households.employed
-		Gross Profit = Industry.grossProfit
-		Households = Households.households
-		Households Capital = Households.capital
-		Households Cash = Households.cash 
-		Industry Assets = Industry.assets
-		Industry Cash = Industry.cash
-		Industry Dividends = Industry.dividends
-		Industry Liabilities = Industry.liabilities		
-		Inventories Volume = Industry.inventories.fg.vol
-		Inventories Normal Volume = Industry.inventories.fg.vol.normal
-		Production Volume = Industry.production.vol
-		Supply Volume = Industry.supply.vol
-		Unemployed = Households.unemployed
-		Wages = Households.wages
-		Workforce = Industry.workforce
-		Inventories Firm 1 = Industry.Firm1.inventories.fg.vol
-		Inventories (Normal) Firm 1 = Industry.Firm1.inventories.fg.vol.normal
-		Insolvents = Industry.insolvents
-	}
-	
-	ratios {
-		Average Wage (Industry side) = Industry.wageBill, Industry.workforce
-		Average Wage (Households side) = Households.wages, Households.employed
-		Savings = Households.cash, Households.income
-		Unemployment = Households.unemployed, Households.households
-		Dividends Share = Households.dividend, Households.income
-		Wages Share = Households.wages, Households.income
-		Doubtful Debt Ratio = Bank.doubtfulDebt, Bank.liabilities
-		Bank Capital Ratio = Bank.capital, Bank.liabilities
-		Velocity of Money (1) = Households.income, Bank.liabilities
-		Velocity of Money (2) = Industry.income, Bank.liabilities
-		
-		Average Price (Supply) = Industry.supply.val, Industry.supply.vol
-		Average Price (Sales) = Industry.sales.val, Industry.sales.vol
-		Average Cost (Inventories) = Industry.inventories.fg.val, Industry.inventories.fg.vol
-		Capital Ratio = Industry.capital, Industry.liabilities
-		Capacity Utilization = Industry.workforce, Industry.capacity
-		
-		Cash to Wages Ratio = Industry.cash, Industry.wageBill
-		Circulating Capital to Wages Ratio = Industry.inventories.total.val, Industry.wageBill
-		Production Value to Wages Ratio = Industry.production.val, Industry.wageBill
-		
-		Price Firm 1 = Industry.Firm1.sales.val, Industry.Firm1.sales.vol
-		Wage Firm 1 = Industry.Firm1.wageBill, Industry.Firm1.workforce
-		Capacity Utilization F1 = Industry.Firm1.workforce, Industry.Firm1.capacity
-		
-	}
-	
-	sfc { // Definition of the balance sheet matrix.
-		
-		sectors = Households, Industry, Bank
-		rows = Inventories, Deposits, Loans, Capital
-		
-		Households {
-			Deposits = Households.cash
-			Capital = Households.capital
-		}
-		
-		Industry {
-			Inventories = Industry.inventories.total.val
-			Deposits = Industry.cash
-			Loans = -Industry.liabilities
-			Capital = -Industry.capital
-		}
-		
-		Bank {
-			Deposits = -Bank.liabilities
-			Loans = Bank.assets
-			Capital = -Bank.capital
-		}
-		
-	}
-	
-}
-
-GUI { // The Graphical User Interface
-	
-	type=jamel.basic.gui.GUI
-	
-	panel {
-	
-		list = Balance Sheet Panel
-		
-	}
-	
-	chartPanel {
-		
-		list=Households,Bank,Industry,Firm1
-		
-		Firm1 {
-			
-			list = Price,Wage,Inventories,Capacity Utilization
-			
-			Price.series = Price Firm 1,Average Price (Sales)
-			Wage.series = Wage Firm 1,Average Wage (Industry side)
-			Inventories.series = Inventories Firm 1,Inventories (Normal) Firm 1
-			Capacity Utilization.series = Capacity Utilization F1,Capacity Utilization
-		
-		}
-				
-		Industry {
-		
-			list = Workforce,Prices,Wages,Inventories,Production,Balance sheet,Financial Ratio,Capacity Utilization,Other Ratios
-			
-			Workforce.series = Workforce,Capacity,Employed
-			Wages.series = Average Wage (Industry side)
-			Wages.colors = blue
-			Inventories.series = Inventories Volume,Supply Volume,Inventories Normal Volume 
-			Inventories.colors = green,blue
-			Production.series = Production Volume,Consumption Volume
-			Prices.series = Average Price (Supply),Average Price (Sales),Average Cost (Inventories)
-			Balance sheet.series = Industry Assets,Industry Liabilities
-			Balance sheet.colors = blue,red
-			Financial Ratio.series = Capital Ratio
-			Financial Ratio.colors = green
-			Capacity Utilization.series = Capacity Utilization
-			Other Ratios.series = Cash to Wages Ratio,Circulating Capital to Wages Ratio,Production Value to Wages Ratio
-		}
-		
-		Bank {
-		
-			list=Deposits,Balance sheet,Financial Ratios,Velocity of Money,Bankruptcies
-			
-			Financial Ratios.series=Doubtful Debt Ratio,Bank Capital Ratio
-			Ratios.colors=red,green
-			Balance sheet.series=Bank Assets,Bank Liabilities,Bank Capital
-			Balance sheet.colors=blue,red,green
-			Deposits.series=Households Cash,Industry Cash
-			Velocity of Money.series=Velocity of Money (1),Velocity of Money (2)
-			Bankruptcies.series = Bankruptcies (bank side),Bankruptcies (industry side),Insolvents
-		}
-		
-		Households {
-			
-			list=Unemployment,Cash,Wages,Consumption1,Consumption2,Income,Savings,Income2,Dividends
-
-			Unemployment.series=Unemployment
-			Cash.series=Households Cash,Households Capital
-			Wages.series=Average Wage (Households side)
-			Consumption1.series=Consumption Budget,Consumption Value
-			Consumption2.series=Consumption Volume
-			Income.series=Wages,Gross Profit
-			Savings.series=Savings
-			Income2.series= Dividends Share,Wages Share
-			Dividends.series=Bank Dividends,Industry Dividends
-
-		}
-		
-	}
-}
-
 Households{
 	type=jamel.basic.agents.households.BasicHouseholdsSector
 	agents.type=jamel.basic.agents.households.BasicHousehold
@@ -232,6 +68,8 @@ Households{
 		resistance=12
 		flexibility=0.05
 	}
+	jobs.selection = 10
+	supplies.selection = 10
 }
 
 Bank{
@@ -246,8 +84,19 @@ Bank{
 	}
 	term.normal=12
 	term.extended=24
-	accommodating=true
-	patience=1000
+	accommodating=false
+	patience=12
+}
+
+Data { // The data manager
+	type = jamel.basic.data.DataManager
+	details = data.details	
+}
+
+GUI { // The Graphical User Interface
+	type = jamel.basic.gui.GUI
+	chart panels description = charts.details
+	otherPanels = Balance Sheet Panel
 }
 
 *END*

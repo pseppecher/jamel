@@ -58,3 +58,5 @@ public interface Firm extends Agent, AccountHolder, Asset, Supplier {
 	void production();
 
 }
+
+//***

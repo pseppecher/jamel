@@ -6,3 +6,5 @@ package jamel.basic.agents.roles;
 public interface Supplier {
 
 }
+
+//***

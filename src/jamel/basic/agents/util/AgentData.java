@@ -40,8 +40,6 @@ public class AgentData {
 		map.get(p).put(key, value);
 	}
 	
-	// TODO Work in progress
-
 }
 
 // ***

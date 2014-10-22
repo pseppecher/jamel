@@ -1,9 +1,11 @@
 package jamel.basic.data;
 
 import jamel.util.Circuit;
+import jamel.util.FileParser;
 import jamel.util.Sector;
 
 import java.awt.Component;
+import java.io.FileNotFoundException;
 import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Locale;
@@ -95,6 +97,9 @@ public class DataManager implements Sector {
 	/** A collection of XYSeries. */
 	private final TreeMap<String,XYSeries> series = new TreeMap<String,XYSeries>();
 
+	/** The specification. */
+	private Map<String, String> details;
+
 	/**
 	 * Creates a new sector for data management.
 	 * @param name the name of the sector.
@@ -103,9 +108,27 @@ public class DataManager implements Sector {
 	public DataManager(String name, Circuit circuit) {
 		this.name = name;
 		this.circuit = circuit;
-		this.init();
+		this.details = getDataDescription();
+		this.initSeries();
 		this.balanceSheetMatrix = createBalanceSheetMatrix();
 		this.balanceSheetPanel = createBalanceSheetPanel();
+	}
+
+	/**
+	 * Returns a map that contains the description of the data. 
+	 * @return a map that contains the description of the data.
+	 */
+	private Map<String,String> getDataDescription() {
+		final String fileName = circuit.getParameter(name,"details");
+		final Map<String,String> map;
+		try {
+			map = FileParser.parse(fileName);
+			return map;
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			new RuntimeException("Data description not found.");
+		}
+		return null;
 	}
 
 	/**
@@ -113,14 +136,15 @@ public class DataManager implements Sector {
 	 * @return the new balance sheet matrix.
 	 */
 	private BalanceSheetMatrix createBalanceSheetMatrix() {
-		final String[] sectors = circuit.getParameterArray(name,"sfc.sectors");
-		final String rows[] = circuit.getParameterArray(name,"sfc.rows");
-		final HashMap<String,String> map = new HashMap<String,String>();
+		final String[] sectors = FileParser.toArray(details.get("sfc.sectors"));
+		final String rows[] = FileParser.toArray(details.get("sfc.rows"));
+		
+		final HashMap<String,String> sfcMap = new HashMap<String,String>();
 		for (String sector:sectors) {
 			for (String row:rows) {
-				final String val = circuit.getParameter(name,"sfc",sector,row);
+				final String val = details.get("sfc."+sector+"."+row);
 				if (val!=null) {
-					map.put(sector+"."+row, val);
+					sfcMap.put(sector+"."+row, val);
 				}
 			}
 		}
@@ -155,7 +179,7 @@ public class DataManager implements Sector {
 					table.append("<TR><TH>" + row);
 					double sum = 0l;
 					for(String sector:sectors) {
-						final String key = map.get(sector+"."+row);
+						final String key = sfcMap.get(sector+"."+row);
 						table.append("<TD align=right>");						
 						if (key!=null) {
 							final Double value = dataSet.get(key);
@@ -225,36 +249,37 @@ public class DataManager implements Sector {
 	}
 
 	/**
-	 * Initializes the data manager.
+	 * Initializes the series and ratios.
 	 */
-	private void init() {
+	private void initSeries() {
 
-		String prefix = this.name+".series.";
-		String[] keys = this.circuit.getStartingWith(prefix);
+		final Set<String> dataToCollect = new TreeSet<String>();
 
-		final Set<String> labels = new TreeSet<String>();
-		for(String key:keys) {
-			final String shortKey = key.substring(prefix.length());
-			final String param = this.circuit.getParameter(key);
-			this.raw.put(shortKey, param);
-			this.series.put(shortKey, new XYSeries(shortKey,false));
-			labels.add(param);
+		// Initializes the raw series.
+		for(String key:details.keySet()) {
+			if (key.startsWith("series.")) {
+				final String shortKey = key.split("\\.", 2)[1];
+				final String param = this.details.get(key);
+				this.raw.put(shortKey, param);
+				this.series.put(shortKey, new XYSeries(shortKey,false));
+				dataToCollect.add(param);				
+			}
 		}
-
-		prefix = this.name+".ratios.";
-		keys = this.circuit.getStartingWith(prefix);
-		for(String key:keys) {
-			final String shortKey = key.substring(prefix.length());
-			final String[] param = this.circuit.getParameter(key).split(",",2);
-			param[0]=param[0].trim();
-			param[1]=param[1].trim();
-			this.ratios.put(shortKey, param);
-			this.series.put(shortKey, new XYSeries(shortKey,false));
-			labels.add(param[0]);
-			labels.add(param[1]);
+		
+		// Initializes the ratios.
+		for(String key:details.keySet()) {
+			if (key.startsWith("ratios.")) {
+				final String shortKey = key.split("\\.", 2)[1];
+				final String[] param = FileParser.toArray(this.details.get(key));
+				this.ratios.put(shortKey, param);
+				this.series.put(shortKey, new XYSeries(shortKey,false));
+				dataToCollect.add(param[0]);
+				dataToCollect.add(param[1]);
+			}
 		}
-
-		this.circuit.forward("dataKeys", labels.toArray());
+		
+		this.circuit.forward("dataKeys", dataToCollect.toArray());
+		
 	}
 
 	/**

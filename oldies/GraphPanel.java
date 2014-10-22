@@ -19,6 +19,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 /**
+ * 
  * A graph panel. Extends ChartPanel.
  */
 @SuppressWarnings("serial")
@@ -234,3 +235,5 @@ public class GraphPanel extends ChartPanel {
 	}
 
 }
+
+// ***

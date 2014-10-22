@@ -37,7 +37,7 @@ public class BasicFirm implements Firm {
 	private class Parameters {
 
 		@SuppressWarnings("javadoc")
-		private final static String CAPITAL_PROPENSITY_TO_DISTRIBUTE = "capital.propensityToDistribute";
+		private final static String CAPITAL_PROPENSITY2DISTRIBUTE = "capital.propensityToDistribute";
 
 		@SuppressWarnings("javadoc")
 		private final static String CAPITAL_TARGET = "capital.target";
@@ -65,6 +65,12 @@ public class BasicFirm implements Firm {
 
 		@SuppressWarnings("javadoc")
 		private static final String PRODUCTIVITY = "production.productivity";
+
+		@SuppressWarnings("javadoc")
+		private static final String PROPENSITY2SELL = "inventory.propensity2sell";
+
+		@SuppressWarnings("javadoc")
+		private static final String SELLING_CAPACITY = "sales.capacity";
 
 		@SuppressWarnings("javadoc")
 		private final static String UTILIZATION_RATE_FLEXIBILITY = "utilizationRate.flexibility";
@@ -115,7 +121,13 @@ public class BasicFirm implements Firm {
 		private float productivity;
 
 		/** The propensity to distribute the capital. */
-		private float propensityToDistributeCapital;
+		private float propensity2DistributeCapital;
+
+		/** The propensity to sell the inventories. */
+		private float propensity2Sell;
+
+		/** The selling capacity. */
+		private float sellingCapacity;
 
 		/** The flexibility of the utilization rate. */
 		private float utilizationRateFlexibility;
@@ -191,7 +203,9 @@ public class BasicFirm implements Firm {
 			this.productionCapacity= getInteger(PRODUCTION_CAPACITY);
 			this.productionTime = getInteger(PRODUCTION_TIME);
 			this.productivity = getFloat(PRODUCTIVITY);
-			this.propensityToDistributeCapital = getFloat(CAPITAL_PROPENSITY_TO_DISTRIBUTE);
+			this.propensity2DistributeCapital = getFloat(CAPITAL_PROPENSITY2DISTRIBUTE);
+			this.propensity2Sell = getFloat(PROPENSITY2SELL);
+			this.sellingCapacity = getFloat(SELLING_CAPACITY);
 			this.utilizationRateFlexibility = getFloat(UTILIZATION_RATE_FLEXIBILITY);
 			this.utilizationRateInitialValue = getFloat(UTILIZATION_RATE_INITIAL_VALUE);
 			this.wageInitialValue = getInteger(WAGE_INITIAL_VALUE);
@@ -414,10 +428,8 @@ public class BasicFirm implements Firm {
 	 */
 	private Supply createSupply() {
 		final Supply supply;
-		final float propensityToSell = 0.5f; // TODO Should be a parameter.
-		final float sellingCapacity = 2f; // TODO Should be a parameter.
 		final Period validPeriod = Circuit.getCurrentPeriod();
-		final long initialSize = Math.min((long) (propensityToSell*factory.getFinishedGoodsVolume()), (long) (sellingCapacity*factory.getMaxUtilAverageProduction()));
+		final long initialSize = Math.min((long) (p.propensity2Sell*factory.getFinishedGoodsVolume()), (long) (p.sellingCapacity*factory.getMaxUtilAverageProduction()));
 		if (initialSize==0) {
 			supply = null;
 		}
@@ -712,7 +724,7 @@ public class BasicFirm implements Firm {
 				this.factory.getValue(),
 				this.account.getDebt(),
 				this.p.capitalRatioTarget,
-				this.p.propensityToDistributeCapital
+				this.p.propensity2DistributeCapital
 				);
 		if (dividend>0) {
 			this.owner.receiveDividend( this.account.newCheque(dividend), this) ;

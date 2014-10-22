@@ -3,7 +3,7 @@ package jamel.util;
 /**
  * Represents a basic time period of the simulation.
  */
-public interface Period {
+public interface Period extends Comparable<Period> {
 
 	/**
 	 * Returns <code>true</code> if the value of the time period equals <code>t</code>, <code>false</code> otherwise.
@@ -73,3 +73,5 @@ public interface Period {
 	Period plus(int term);
 
 }
+
+// ***

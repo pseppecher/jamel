@@ -37,3 +37,5 @@ public interface JobContract {
 	void payWage(Cheque cheque);
 
 }
+
+// ***

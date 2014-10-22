@@ -8,6 +8,7 @@ import jamel.util.Period;
 import jamel.util.Sector;
 import jamel.util.Timer;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -127,11 +128,6 @@ public class BasicCircuit extends Circuit {
 			return jamelParameters.getJTree();			
 		}
 
-		/*@SuppressWarnings("unused")
-		public Random getRandom() {
-			return random;			
-		}*/
-
 		@SuppressWarnings("unused")
 		public String htmlParameters() {
 			return jamelParameters.toHtml();			
@@ -157,9 +153,6 @@ public class BasicCircuit extends Circuit {
 
 	/** The phases of the circuit. */
 	private final LinkedList<Phase> phases = new LinkedList<Phase>();
-
-	/** The pseudo-random numbers generator. */
-	// private final Random random = new Random(); DELETE
 
 	/** A flag that indicates if the simulation is running or not. */
 	private boolean run = true;
@@ -189,11 +182,11 @@ public class BasicCircuit extends Circuit {
 
 		},
 		new Random() {
-			
+
 			private static final long serialVersionUID = 1L;
-			
+
 			{this.setSeed(Integer.parseInt(jamelParameters.get(KEY.CIRCUIT,KEY.RANDOM_SEED)));}
-			
+
 		}
 				);
 		this.jamelParameters = jamelParameters;
@@ -209,7 +202,7 @@ public class BasicCircuit extends Circuit {
 		final String event = this.jamelParameters.get("Circuit.events."+getCurrentPeriod().getValue());
 		if (event!=null) {
 			final String[] events = JamelParameters.split(event,",");
-			for(String string:events) {
+			for(final String string:events) {
 
 				if (string.equals("pause")) {
 					this.pause=true;
@@ -218,16 +211,17 @@ public class BasicCircuit extends Circuit {
 					}
 				}
 
+				else if (string.startsWith("change.")) {
+					final String[] truc1 = JamelParameters.split(string.substring(7),"=");
+					final String[] truc2 = truc1[0].split("\\.", 2);
+					this.jamelParameters.put(truc1[0], truc1[1]);
+					this.sectors.get(truc2[0]).forward("change in parameters");					
+				}
+
 				else {
 					final String[] truc1 = JamelParameters.split(string,"=");
 					final String[] truc2 = truc1[0].split("\\.", 2);
-					if (truc2[1].equals("new")) {
-						this.sectors.get(truc2[0]).forward("new",truc1[1]);						
-					}
-					else {
-						this.jamelParameters.put(truc1[0], truc1[1]);
-						this.sectors.get(truc2[0]).forward("change in parameters");
-					}
+					this.sectors.get(truc2[0]).forward(truc2[1],truc1[1]);						
 				}
 
 			}
@@ -311,40 +305,47 @@ public class BasicCircuit extends Circuit {
 	 */
 	private void initSectors() {
 		String sectors = this.getParameter(KEY.CIRCUIT,KEY.SECTORS);
-		try {
-			if (sectors==null) {
-				throw new RuntimeException(KEY.SECTORS+" not found");
+		if (sectors==null) {
+			throw new RuntimeException(KEY.SECTORS+" not found");
+		}
+		sectors=sectors.replaceAll(" ","");
+		if (sectors.isEmpty()) {
+			throw new RuntimeException(KEY.SECTORS+" is empty");
+		}
+		final String[] sectors2 = sectors.split(",");
+		for (String sectorName:sectors2) {
+			String sectorQualifiedName = this.jamelParameters.get(sectorName+".type");				
+			if (sectorQualifiedName==null) {
+				throw new RuntimeException(sectorName+".type not found");
 			}
-			sectors=sectors.replaceAll(" ","");
-			if (sectors.isEmpty()) {
-				throw new RuntimeException(KEY.SECTORS+" is empty");
+			sectorQualifiedName.trim();
+			Sector sector;
+			try {
+				sector = (Sector) Class.forName(sectorQualifiedName,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,Circuit.class).newInstance(sectorName,this);
+				this.sectors.put(sectorName, sector);
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Error while creating "+sectorName+" as "+sectorQualifiedName);					
+			} catch (SecurityException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Error while creating "+sectorName+" as "+sectorQualifiedName);					
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Error while creating "+sectorName+" as "+sectorQualifiedName);					
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Error while creating "+sectorName+" as "+sectorQualifiedName);					
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Error while creating "+sectorName+" as "+sectorQualifiedName);					
+			} catch (NoSuchMethodException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Error while creating "+sectorName+" as "+sectorQualifiedName);					
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+				throw new RuntimeException("Error while creating "+sectorName+" as "+sectorQualifiedName);					
 			}
-			final String[] sectors2 = sectors.split(",");
-			for (String sectorName:sectors2) {
-				String sectorQualifiedName = this.jamelParameters.get(sectorName+".type");				
-				if (sectorQualifiedName==null) {
-					throw new RuntimeException(sectorName+".type not found");
-				}
-				sectorQualifiedName.trim();
-				try {
-					final Sector sector = (Sector) Class.forName(sectorQualifiedName,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,Circuit.class).newInstance(sectorName,this);
-					this.sectors.put(sectorName, sector);
-				} catch (Exception e) {
-					e.printStackTrace();
-					throw new RuntimeException("Error while creating "+sectorName+" as "+sectorQualifiedName);					
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(null,
-					"<html>Error while creating the circuit.<br>"
-							+ "Error while creating the sectors of the circuit.<br>"
-							+ e.getMessage()
-							+ ".<html>",
-							"Error",
-							JOptionPane.ERROR_MESSAGE);			
-			this.run=false;
-		}			
+		}
 	}
 
 	@Override

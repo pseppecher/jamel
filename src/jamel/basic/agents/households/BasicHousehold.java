@@ -1,5 +1,6 @@
 package jamel.basic.agents.households;
 
+import jamel.Simulator;
 import jamel.basic.agents.roles.Asset;
 import jamel.basic.agents.util.LaborPower;
 import jamel.basic.data.DataSeries;
@@ -46,8 +47,20 @@ public class BasicHousehold implements Household {
 		@SuppressWarnings("javadoc")
 		private final static String WAGE_RESIST = "wage.resistance";
 
+		@SuppressWarnings("javadoc")
+		private static final String N_SUPPLIES = "supplies.selection";
+
+		@SuppressWarnings("javadoc")
+		private static final String N_JOB_OFFERS = "jobs.selection";
+
 		/** The flexibility of the reservation wage. */
 		private float flexibility;
+
+		/** The number of job offers selected. */
+		private int nJobOffers;
+
+		/** The number of supplies selected. */
+		private int nSupplies;
 
 		/** The propensity to consume excess saving. */
 		private float propensityToConsumeExcessSaving;
@@ -64,14 +77,22 @@ public class BasicHousehold implements Household {
 		/**
 		 * Updates the parameters.
 		 * Called when the household is created.
-		 * TODO: Should be called after an exogenous event.
 		 */
 		private void update() {
+			try {
+			this.flexibility = Float.parseFloat(BasicHousehold.this.sector.getParameter(WAGE_FLEX));
+			this.nJobOffers=Integer.parseInt(BasicHousehold.this.sector.getParameter(N_JOB_OFFERS));
+			this.nSupplies=Integer.parseInt(BasicHousehold.this.sector.getParameter(N_SUPPLIES));
+			this.propensityToConsumeExcessSaving = Float.parseFloat(BasicHousehold.this.sector.getParameter(SAV_PROP2_CONSUM_EXCESS));
+			this.resistance = Integer.parseInt(BasicHousehold.this.sector.getParameter(WAGE_RESIST));
 			this.savingPropensity = Float.parseFloat(BasicHousehold.this.sector.getParameter(SAV_PROP));
 			this.savingRatioTarget = Float.parseFloat(BasicHousehold.this.sector.getParameter(SAV_TARGET));
-			this.propensityToConsumeExcessSaving = Float.parseFloat(BasicHousehold.this.sector.getParameter(SAV_PROP2_CONSUM_EXCESS));
-			this.flexibility = Float.parseFloat(BasicHousehold.this.sector.getParameter(WAGE_FLEX));
-			this.resistance = Integer.parseInt(BasicHousehold.this.sector.getParameter(WAGE_RESIST));		
+			}
+			catch (NumberFormatException e) {
+				Simulator.showErrorDialog("BasicHousehold: NumberFormatException while updating parameters");
+				e.printStackTrace();
+				throw new RuntimeException("BasicHousehold: NumberFormatException while updating parameters");
+			}
 		}
 
 	}
@@ -319,12 +340,10 @@ public class BasicHousehold implements Household {
 		this.history.add("Consumption Budget: "+consumptionBudget);			
 
 		this.data.put("consumption.budget", (double) consumptionBudget);
-		//this.data.put("consumption.supplies.count", 0.);
-		//this.data.put("consumption.supplies.volume", 0.);
 		long consumptionValue=0;
 		long consumptionVolume=0;
 		if (consumptionBudget>0) {
-			final Supply[] supplies = this.sector.getSupplies(10);// TODO 10 should be a parameter.
+			final Supply[] supplies = this.sector.getSupplies(p.nSupplies);
 			this.history.add("Supplies: "+supplies.length);			
 			if (supplies.length>0) {
 				double supplyVolume=0;
@@ -332,8 +351,6 @@ public class BasicHousehold implements Household {
 					supplyVolume+=supply.getVolume();
 				}
 				this.history.add("Supplies volume: "+supplyVolume);			
-				//this.data.put("consumption.supplies.volume", supplyVolume);				
-				//this.data.put("consumption.supplies.count", (double) supplies.length);
 				Arrays.sort(supplies,supplyComparator);
 				for(Supply supply: supplies) {
 					this.history.add(supply.toString());			
@@ -518,7 +535,7 @@ public class BasicHousehold implements Household {
 				this.history.add("Reservation wage updated.");
 			}
 			this.history.add("Reservation wage: "+this.v.reservationWage);
-			final JobOffer[] jobOffers = this.sector.getJobOffers(10); // TODO 10 should be a parameter.
+			final JobOffer[] jobOffers = this.sector.getJobOffers(p.nJobOffers);
 			if (jobOffers.length>0) {
 				Arrays.sort(jobOffers,jobComparator);
 				if (jobOffers[0].getWage()>=this.v.reservationWage) {

@@ -60,3 +60,5 @@ public class DataSeries extends LinkedList<Double>{
 	}
 
 }
+
+// ***

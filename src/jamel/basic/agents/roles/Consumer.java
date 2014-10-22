@@ -11,3 +11,5 @@ public interface Consumer extends Agent {
 	void consumption();
 
 }
+
+//***

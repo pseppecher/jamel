@@ -42,3 +42,5 @@ public interface LaborPower {
 	boolean isExhausted();
 
 }
+
+// ***

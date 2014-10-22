@@ -29,3 +29,5 @@ public interface IndustrialSector {
 	CapitalOwner selectCapitalOwner();
 
 }
+
+//***

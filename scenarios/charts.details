@@ -1,0 +1,59 @@
+// ******************************************
+// Description of the chart panels of the GUI
+// ******************************************
+
+panels = Households, Bank, Industry, Firm1
+
+// ***
+
+Firm1.list = Price,Wage,Inventories,Capacity Utilization			
+
+Firm1.Price.series = Price Firm 1,Average Price (Sales)
+Firm1.Wage.series = Wage Firm 1,Average Wage (Industry side)
+Firm1.Inventories.series = Inventories Firm 1,Inventories (Normal) Firm 1
+Firm1.Capacity Utilization.series = Capacity Utilization F1,Capacity Utilization
+
+// ***
+
+Industry.list = Workforce, Prices, Wages, Inventories, Production, Balance sheet, Financial Ratio, Capacity Utilization, Other Ratios		
+
+Industry.Workforce.series = Workforce,Capacity,Employed
+Industry.Wages.series = Average Wage (Industry side)
+Industry.Wages.colors = blue
+Industry.Inventories.series = Inventories Volume,Supply Volume,Inventories Normal Volume 
+Industry.Inventories.colors = green,blue
+Industry.Production.series = Production Volume,Consumption Volume
+Industry.Prices.series = Average Price (Supply),Average Price (Sales),Average Cost (Inventories)
+Industry.Balance sheet.series = Industry Assets,Industry Liabilities
+Industry.Balance sheet.colors = blue,red
+Industry.Financial Ratio.series = Capital Ratio
+Industry.Financial Ratio.colors = green
+Industry.Capacity Utilization.series = Capacity Utilization
+Industry.Other Ratios.series = Cash to Wages Ratio,Circulating Capital to Wages Ratio,Production Value to Wages Ratio
+		
+// ***
+
+Bank.list=Deposits,Balance sheet,Financial Ratios,Velocity of Money,Bankruptcies
+			
+Bank.Financial Ratios.series=Doubtful Debt Ratio,Bank Capital Ratio
+Bank.Ratios.colors=red,green
+Bank.Balance sheet.series=Bank Assets,Bank Liabilities,Bank Capital
+Bank.Balance sheet.colors=blue,red,green
+Bank.Deposits.series=Households Cash,Industry Cash
+Bank.Velocity of Money.series=Velocity of Money (1), Velocity of Money (2)
+Bank.Bankruptcies.series = Bankruptcies (bank side),Bankruptcies (industry side),Insolvents
+		
+// ***
+
+Households.list=Unemployment, Wealth, Wages, Consumption (Value), Consumption (Volume), Income, Savings, Income Distribution, Dividends
+
+Households.Unemployment.series=Unemployment
+Households.Wealth.series=Households Cash,Households Capital
+Households.Wages.series=Average Wage (Households side)
+Households.Consumption (Value).series=Consumption Budget,Consumption Value
+Households.Consumption (Volume).series=Consumption Volume
+Households.Income.series=Wages,Gross Profit
+Households.Savings.series=Savings
+Households.Income Distribution.series= Dividends Share,Wages Share
+Households.Dividends.series=Bank Dividends,Industry Dividends
+

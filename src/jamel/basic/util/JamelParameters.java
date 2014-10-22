@@ -81,8 +81,7 @@ public class JamelParameters extends TreeMap<String, String> {
 		final LinkedList<String> preamble = new LinkedList<String>();
 
 		for (String line: scenario) {
-			line = line.split("//",2)[0];
-			line = line.trim();
+			line = line.split("//",2)[0].trim();
 			if (!line.isEmpty()) {
 				if (line.equals(CMD_BEGIN)){
 					inPreamble=true;
@@ -206,14 +205,17 @@ public class JamelParameters extends TreeMap<String, String> {
 	 */
 	public String[] getArray(String[] keys) {
 		final String string = get(keys);
-		final String[] array;
+		final String[] result;
 		if (string!=null) {
-			array = split(string,",");
+			result = split(string,",");
+			for(int i =0; i<result.length; i++) {
+				result[i] = result[i].trim();
+			}
 		}
 		else {
-			array = new String[0];
+			result = new String[0];
 		}
-		return array;
+		return result;
 	}
 
 	/**

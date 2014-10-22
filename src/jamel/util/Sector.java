@@ -1,7 +1,7 @@
 package jamel.util;
 
 /**
- * The interfaces for the sector components of the macro-economic circuit. 
+ * The interface for the sector components of the macro-economic circuit. 
  */
 public interface Sector {
 

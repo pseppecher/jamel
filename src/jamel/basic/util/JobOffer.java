@@ -27,3 +27,5 @@ public interface JobOffer {
 	long getWage();
 
 }
+
+// ***

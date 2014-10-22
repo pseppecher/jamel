@@ -1,5 +1,6 @@
 package jamel.basic.agents.households;
 
+import jamel.Simulator;
 import jamel.basic.agents.util.AgentSet;
 import jamel.basic.agents.util.BasicAgentSet;
 import jamel.basic.data.SectorData;
@@ -9,6 +10,7 @@ import jamel.basic.util.Supply;
 import jamel.util.Circuit;
 import jamel.util.Sector;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,7 +38,7 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 		public static final String HOUSEHOLDS_TYPE = "agents.type";
 
 	}
-	
+
 	/** The sector name. */
 	private final String name;
 
@@ -83,17 +85,44 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 	 * @return a list containing the new households.
 	 */
 	private List<Household> createHousholds(String type, int lim) {
+		final String errorMsg = "BasicHousholdsSector: error while creating household";
 		final List<Household> list = new ArrayList<Household>(lim);
-		try {
-			for(int index=0;index<lim;index++) {
-				this.countHouseholds++;
-				final String name = "Household"+this.countHouseholds;
-				final Household household = (Household) Class.forName(type,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,HouseholdsSector.class).newInstance(name,this);;
+		for(int index=0;index<lim;index++) {
+			this.countHouseholds++;
+			final String name = "Household"+this.countHouseholds;
+			Household household;
+			try {
+				household = (Household) Class.forName(type,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,HouseholdsSector.class).newInstance(name,this);
 				list.add(household);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new RuntimeException("Agent creation failure"); 
+			} catch (IllegalArgumentException e) {
+				Simulator.showErrorDialog(errorMsg);
+				e.printStackTrace();
+				throw new RuntimeException(errorMsg);
+			} catch (SecurityException e) {
+				Simulator.showErrorDialog(errorMsg);
+				e.printStackTrace();
+				throw new RuntimeException(errorMsg);
+			} catch (InstantiationException e) {
+				Simulator.showErrorDialog(errorMsg);
+				e.printStackTrace();
+				throw new RuntimeException(errorMsg);
+			} catch (IllegalAccessException e) {
+				Simulator.showErrorDialog(errorMsg);
+				e.printStackTrace();
+				throw new RuntimeException(errorMsg);
+			} catch (InvocationTargetException e) {
+				Simulator.showErrorDialog(errorMsg);
+				e.printStackTrace();
+				throw new RuntimeException(errorMsg);
+			} catch (NoSuchMethodException e) {
+				Simulator.showErrorDialog(errorMsg);
+				e.printStackTrace();
+				throw new RuntimeException(errorMsg);
+			} catch (ClassNotFoundException e) {
+				Simulator.showErrorDialog(errorMsg);
+				e.printStackTrace();
+				throw new RuntimeException(errorMsg);
+			};
 		}
 		return list;
 	}

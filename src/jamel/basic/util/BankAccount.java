@@ -51,3 +51,5 @@ public interface BankAccount {
 	Cheque newCheque(long amount);
 
 }
+
+// ***
