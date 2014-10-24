@@ -2,13 +2,14 @@ package jamel.basic.agents.util;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
 import jamel.basic.agents.roles.Agent;
+import jamel.basic.data.BasicSectorDataSet;
+import jamel.basic.data.SectorDataset;
 import jamel.util.Circuit;
 
 /**
@@ -24,36 +25,12 @@ public class BasicAgentSet<T extends Agent> implements AgentSet<T> {
 	private final Map<String,T> map = new TreeMap<String,T>();
 
 	@Override
-	public Map<String,Double> collectData(final List<String> keys, final String prefix) {
-		return new HashMap<String,Double>() {
-			private static final long serialVersionUID = 1L;
-			{
-				for (final Agent agent:arrayList) {
-					final String agentPrefix=agent.getName()+".";
-					for (final String key:keys) {
-						if (key.startsWith(agentPrefix)) {
-							final Double value = agent.getData(key.substring(agentPrefix.length()));
-							if (value!=null) {
-								this.put(prefix+key,value);								
-							}
-						}
-						else {
-							final Double value = agent.getData(key);
-							if (value!=null) {
-								if (this.containsKey(prefix+key)) {
-									this.put(prefix+key,this.get(prefix+key) + value);							
-								}
-								else {
-									this.put(prefix+key,value);
-								}
-							}
-							else {
-								// TODO ???
-							}
-						}
-					}
-				}
-			}};
+	public SectorDataset collectData() {
+		final SectorDataset sectorDataset = new BasicSectorDataSet(arrayList.size());
+		for (final Agent agent:arrayList) {
+			sectorDataset.put(agent.getData());
+		}
+		return sectorDataset;	
 	}
 
 	@Override

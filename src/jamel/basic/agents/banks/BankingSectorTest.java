@@ -7,6 +7,7 @@ import java.util.Random;
 import jamel.basic.agents.roles.AccountHolder;
 import jamel.basic.agents.roles.Asset;
 import jamel.basic.agents.roles.CapitalOwner;
+import jamel.basic.data.AgentDataset;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.BasicPeriod;
 import jamel.basic.util.Cheque;
@@ -95,7 +96,7 @@ public class BankingSectorTest {
 		return new AccountHolder(){
 			@Override public void bankrupt() {}
 			@Override public long getAssets() {return 0;}
-			@Override public Double getData(String key) {return null;}
+			@Override public AgentDataset getData() {return null;}
 			@Override public String getName(){return "Basic Account Holder";}
 			@Override public boolean isBankrupted() {return false;}
 			@Override public void updateParameters() {}
@@ -626,7 +627,7 @@ public class BankingSectorTest {
 		
 		circuit.defaultCapitalOwner = new CapitalOwner() {
 			@Override public void addAsset(Asset asset) {}
-			@Override public Double getData(String key) {return null;}
+			@Override public AgentDataset getData() {return null;}
 			@Override public String getName() {return "Basic Capital Owner";}
 			@Override public void receiveDividend(Cheque cheque,Asset asset) {account2.deposit(cheque);}
 			@Override public void removeAsset(Asset asset) {}

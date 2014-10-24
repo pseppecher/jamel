@@ -1,5 +1,6 @@
 package jamel.basic.data;
 
+import jamel.Simulator;
 import jamel.util.Circuit;
 import jamel.util.FileParser;
 import jamel.util.Sector;
@@ -27,16 +28,6 @@ import org.jfree.data.xy.XYSeries;
 public class DataManager implements Sector {
 
 	/**
-	 * A class to store string constants.
-	 */
-	private static class KEY {
-
-		/** The "XYSeries" key. */ 
-		private static final String XYSeries = "XYSeries";
-
-	}
-
-	/**
 	 * The balance sheet matrix of the economy.
 	 */
 	private interface BalanceSheetMatrix {
@@ -46,6 +37,16 @@ public class DataManager implements Sector {
 		 * @return a html representation of the balance sheet matrix.
 		 */
 		String toHtml();
+
+	}
+
+	/**
+	 * A class to store string constants.
+	 */
+	private static class KEY {
+
+		/** The "XYSeries" key. */ 
+		private static final String XYSeries = "XYSeries";
 
 	}
 
@@ -61,29 +62,11 @@ public class DataManager implements Sector {
 	/** The circuit. */
 	private final Circuit circuit;
 
-	/** dataSet */
-	private final Map<String,Double> dataSet = new TreeMap<String,Double>() {
-
-		/** serialVersionUID */
-		private static final long serialVersionUID = 1L;
-
-		@Override
-		public Double get(Object key) {
-			String key2 = (String) key;
-			Double val;
-			if (key2.startsWith("-")) {
-				val = super.get(key2.substring(1));
-				if (val!=null) {
-					val=-val;
-				}
-			}
-			else {
-				val = super.get(key2);
-			}
-			return val;
-		}
-
-	};
+	/** The specification. */
+	private Map<String, String> details;
+	
+	/** The macro dataset. */
+	private final MacroDataset macroDataset = new BasicMacroDataset();
 
 	/** The sector name. */
 	private final String name;
@@ -97,9 +80,6 @@ public class DataManager implements Sector {
 	/** A collection of XYSeries. */
 	private final TreeMap<String,XYSeries> series = new TreeMap<String,XYSeries>();
 
-	/** The specification. */
-	private Map<String, String> details;
-
 	/**
 	 * Creates a new sector for data management.
 	 * @param name the name of the sector.
@@ -112,23 +92,6 @@ public class DataManager implements Sector {
 		this.initSeries();
 		this.balanceSheetMatrix = createBalanceSheetMatrix();
 		this.balanceSheetPanel = createBalanceSheetPanel();
-	}
-
-	/**
-	 * Returns a map that contains the description of the data. 
-	 * @return a map that contains the description of the data.
-	 */
-	private Map<String,String> getDataDescription() {
-		final String fileName = circuit.getParameter(name,"details");
-		final Map<String,String> map;
-		try {
-			map = FileParser.parse(fileName);
-			return map;
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			new RuntimeException("Data description not found.");
-		}
-		return null;
 	}
 
 	/**
@@ -182,7 +145,7 @@ public class DataManager implements Sector {
 						final String key = sfcMap.get(sector+"."+row);
 						table.append("<TD align=right>");						
 						if (key!=null) {
-							final Double value = dataSet.get(key);
+							final Double value = macroDataset.get(key);
 							if (value !=null) {
 								table.append(nf.format(value));
 								sum+=value;
@@ -196,6 +159,7 @@ public class DataManager implements Sector {
 					table.append("<TD align=right>"+nf.format(sum));
 					sumSector.put("sum", sumSector.get("sum")+sum);
 				}
+				
 				table.append("<TR><TD colspan=5><HR>");
 				table.append("<TR><TH>Sum");
 				for (String sector:sectors) {
@@ -227,6 +191,24 @@ public class DataManager implements Sector {
 	}
 
 	/**
+	 * Returns a map that contains the description of the data. 
+	 * @return a map that contains the description of the data.
+	 */
+	private Map<String,String> getDataDescription() {
+		final String fileName = circuit.getParameter(name,"details");
+		final Map<String,String> map;
+		try {
+			map = FileParser.parse(fileName);
+			return map;
+		} catch (FileNotFoundException e) {
+			Simulator.showErrorDialog("DataManager: Data description not found.");
+			e.printStackTrace();
+			new RuntimeException("DataManager: Data description not found.");
+		}
+		return null;
+	}
+
+	/**
 	 * Returns a series.
 	 * @param message a string defining the data to return (XYSeries or other ?).
 	 * @param args the key whose associated value is to be returned. 
@@ -251,7 +233,7 @@ public class DataManager implements Sector {
 	/**
 	 * Initializes the series and ratios.
 	 */
-	private void initSeries() {
+	private void initSeries() { // TODO: CLEAN UP
 
 		final Set<String> dataToCollect = new TreeSet<String>();
 
@@ -278,7 +260,7 @@ public class DataManager implements Sector {
 			}
 		}
 		
-		this.circuit.forward("dataKeys", dataToCollect.toArray());
+		//this.circuit.forward("dataKeys", dataToCollect.toArray()); 
 		
 	}
 
@@ -289,7 +271,7 @@ public class DataManager implements Sector {
 	private void updateSeries() {
 		final int period = Circuit.getCurrentPeriod().getValue();
 		for (Entry<String,String>entry:raw.entrySet()) {
-			final Number value = this.dataSet.get(entry.getValue());
+			final Double value = this.macroDataset.get(entry.getValue());
 			if (value!=null) {
 				final XYSeries series = this.series.get(entry.getKey());
 				series.add(period, value);
@@ -300,8 +282,8 @@ public class DataManager implements Sector {
 		}
 		for (Entry<String,String[]>entry:ratios.entrySet()) {
 			final String[] datakey=entry.getValue();
-			final Number val0 = this.dataSet.get(datakey[0]);
-			final Number val1 = this.dataSet.get(datakey[1]);
+			final Number val0 = this.macroDataset.get(datakey[0]);
+			final Number val1 = this.macroDataset.get(datakey[1]);
 			if (val0== null || val1==null) {
 				//throw new RuntimeException("Null value for "+entry.getKey()+": "+datakey[0]+"="+val0+", "+datakey[1]+"="+val1);
 			}
@@ -344,7 +326,7 @@ public class DataManager implements Sector {
 					balanceSheetPanel.setText(text);
 				}
 			});			
-			this.dataSet.clear();
+			this.macroDataset.clear();
 		}
 		else {
 			throw new IllegalArgumentException("Unknown phase <"+phase+">");
@@ -352,26 +334,32 @@ public class DataManager implements Sector {
 		return true;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Object forward(String request, Object ... args) {
+		
 		final Object result;
+		
 		if (request.equals("getSeries")) {
 			result = this.getSeries((String) args[0],(String) args[1]);;
 		}
+		
 		else if (request.equals("putData")) {
-			this.dataSet.putAll((Map<String, Double>) args[0]);
+			this.macroDataset.putData((String) args[0], (SectorDataset) args[1]);
 			result = null;
 		}
+		
 		else if (request.equals("getBalanceSheetPanel")) {
 			final Component pane = new JScrollPane(balanceSheetPanel);
 			pane.setName("Balance sheet");
 			result = pane;
 		}
+		
 		else {
 			throw new IllegalArgumentException("Unknown request <"+request+">");			
 		}
+		
 		return result;
+		
 	}
 
 	/**

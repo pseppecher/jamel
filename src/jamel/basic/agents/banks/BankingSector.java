@@ -5,6 +5,8 @@ import jamel.basic.agents.banks.util.Loan;
 import jamel.basic.agents.roles.AccountHolder;
 import jamel.basic.agents.roles.Asset;
 import jamel.basic.agents.roles.CapitalOwner;
+import jamel.basic.data.BasicAgentDataset;
+import jamel.basic.data.RepresentativeAgentDataset;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.Cheque;
 import jamel.util.Circuit;
@@ -13,11 +15,9 @@ import jamel.util.Sector;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A basic banking sector.
@@ -472,10 +472,7 @@ public class BankingSector implements Sector, Asset {
 	private final Circuit circuit;
 
 	/** The data. */
-	private final Map<String,Double> data = new HashMap<String,Double>();
-
-	/** The keys */
-	private final List<String> dataKeys = new ArrayList<String>(); // FIXME: unused
+	private BasicAgentDataset dataset;
 
 	/** The sector name. */
 	private final String name;
@@ -529,7 +526,7 @@ public class BankingSector implements Sector, Asset {
 	 */
 	private void close() {
 		this.updateData();
-		this.circuit.forward(KEY.putData,this.data);
+		this.circuit.forward(KEY.putData,this.name,new RepresentativeAgentDataset(this.dataset));
 		if (!checkConsistency()) {
 			throw new RuntimeException("Inconsistency");
 		}
@@ -578,7 +575,7 @@ public class BankingSector implements Sector, Asset {
 	 * Opens the sector.
 	 */
 	private void open() {
-		this.data.clear();
+		this.dataset = new BasicAgentDataset(this.name);
 		this.v.bankruptcies=0;
 	}
 
@@ -589,7 +586,7 @@ public class BankingSector implements Sector, Asset {
 		final long requiredCapital = (long)(v.assets*p.targetedCapitalRatio );
 		final long excedentCapital = Math.max(0, v.capital-requiredCapital);
 		final long dividend = (long) (excedentCapital*p.propensityToDistributeCapitalExcess);
-		data.put(name+".dividends", (double) dividend);
+		dataset.put("dividends", (double) dividend);
 		if (dividend!=0) {
 			if (BankingSector.this.bankOwner==null) {
 				BankingSector.this.bankOwner=(CapitalOwner) BankingSector.this.circuit.forward(KEY.selectCapitalOwner);
@@ -623,11 +620,11 @@ public class BankingSector implements Sector, Asset {
 	 * Updates the data.
 	 */
 	private void updateData() {
-		data.put(name+".doubtfulDebt", (double) this.getDoubtfulDebt());
-		data.put(name+".capital", (double) v.capital);
-		data.put(name+".liabilities", (double) v.liabilities);
-		data.put(name+".assets", (double) v.assets);
-		data.put(name+".bankruptcies", (double) v.bankruptcies);
+		dataset.put("doubtfulDebt", (double) this.getDoubtfulDebt());
+		dataset.put("capital", (double) v.capital);
+		dataset.put("liabilities", (double) v.liabilities);
+		dataset.put("assets", (double) v.assets);
+		dataset.put("bankruptcies", (double) v.bankruptcies);
 	}
 
 	@Override
@@ -693,8 +690,9 @@ public class BankingSector implements Sector, Asset {
 			result = null;
 		}
 
-		else if (request.equals("addDataKey")) {
-			result = this.dataKeys.add((String) args[0]);
+		else if (request.equals("addDataKey")) { // DELETE
+			throw new RuntimeException("This request is obsolete.");
+			//result = this.dataKeys .add((String) args[0]);
 		}
 
 		else {

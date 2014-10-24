@@ -9,7 +9,9 @@ panels = Households, Bank, Industry, Firm1
 Firm1.list = Price,Wage,Inventories,Capacity Utilization			
 
 Firm1.Price.series = Price Firm 1,Average Price (Sales)
-Firm1.Wage.series = Wage Firm 1,Average Wage (Industry side)
+Firm1.Wage.series = Wage Firm 1, Mean Wage, Max Wage, Min Wage
+Firm1.Wage.colors = red, blue, veryLightBlue, veryLightBlue
+
 Firm1.Inventories.series = Inventories Firm 1,Inventories (Normal) Firm 1
 Firm1.Capacity Utilization.series = Capacity Utilization F1,Capacity Utilization
 
@@ -18,8 +20,8 @@ Firm1.Capacity Utilization.series = Capacity Utilization F1,Capacity Utilization
 Industry.list = Workforce, Prices, Wages, Inventories, Production, Balance sheet, Financial Ratio, Capacity Utilization, Other Ratios		
 
 Industry.Workforce.series = Workforce,Capacity,Employed
-Industry.Wages.series = Average Wage (Industry side)
-Industry.Wages.colors = blue
+Industry.Wages.series = Mean Wage, Max Wage, Min Wage
+Industry.Wages.colors = blue, veryLightBlue, veryLightBlue
 Industry.Inventories.series = Inventories Volume,Supply Volume,Inventories Normal Volume 
 Industry.Inventories.colors = green,blue
 Industry.Production.series = Production Volume,Consumption Volume

@@ -3,7 +3,6 @@ package jamel.basic.agents.households;
 import jamel.Simulator;
 import jamel.basic.agents.util.AgentSet;
 import jamel.basic.agents.util.BasicAgentSet;
-import jamel.basic.data.SectorData;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.JobOffer;
 import jamel.basic.util.Supply;
@@ -42,17 +41,11 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 	/** The sector name. */
 	private final String name;
 
-	/** The data. */
-	private final SectorData sectorData = new SectorData();
-
 	/** The circuit. */
 	private final Circuit circuit;
 
 	/** The households counter. */
 	private int countHouseholds;
-
-	/** The list of the keys for the data to be collected. */
-	private final List<String> dataKeys = new ArrayList<String>();
 
 	/** The collection of households. */
 	private final AgentSet<Household> households;
@@ -75,7 +68,7 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 		for (final Household household:this.households.getList()) {
 			household.close();
 		}
-		this.circuit.forward(KEY.putData,this.households.collectData(this.dataKeys,this.getName()+"."));
+		this.circuit.forward(KEY.putData,this.name,this.households.collectData());
 	}
 
 	/**
@@ -131,7 +124,6 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 	public boolean doPhase(String phaseName) {
 
 		if (phaseName.equals("opening")) {
-			sectorData.clear();
 			for (final Household household:households.getList()) {
 				household.open();
 			}
@@ -173,8 +165,9 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 			result = households.getRandomList((Integer) args[0]);
 		}
 
-		else if (request.equals("addDataKey")) {
-			result = this.dataKeys .add((String) args[0]);
+		else if (request.equals("addDataKey")) { // DELETE
+			throw new RuntimeException("This request is obsolete.");
+			//result = this.dataKeys .add((String) args[0]);
 		}
 
 		else if (request.equals("change in parameters")) {

@@ -38,6 +38,7 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
 
+import org.jfree.chart.ChartColor;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
@@ -49,7 +50,7 @@ import org.jfree.ui.TextAnchor;
 public class GUI implements Sector {
 
 	/**
-	 * Enumerates the colors.
+	 * Enumerates the colors used by the charts.
 	 */
 	private static enum JamelColor {
 
@@ -67,6 +68,9 @@ public class GUI implements Sector {
 
 		/** green */
 		green(Color.green),
+
+		/** very light blue */
+		veryLightBlue(ChartColor.VERY_LIGHT_BLUE),
 
 		/** magenta */
 		magenta(Color.magenta),

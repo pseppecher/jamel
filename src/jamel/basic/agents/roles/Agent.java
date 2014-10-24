@@ -1,5 +1,7 @@
 package jamel.basic.agents.roles;
 
+import jamel.basic.data.AgentDataset;
+
 /**
  * Represents an agent.
  */
@@ -12,11 +14,10 @@ public interface Agent {
 	String getName();
 
 	/**
-	 * Returns the value to which the specified key is associated, or <code>null</code> if this agent contains no value for the key. 
-	 * @param key the key whose associated value is to be returned
-	 * @return the value to which the specified key is associated, or <code>null</code> if this agent contains no value for the key.
+	 * Returns the data of the agent.
+	 * @return the data of the agent.
 	 */
-	Double getData(String key);
+	AgentDataset getData();
 
 	/**
 	 * Forces the agent to update its parameters.

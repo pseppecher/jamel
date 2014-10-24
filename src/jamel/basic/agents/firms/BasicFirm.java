@@ -11,6 +11,8 @@ import jamel.basic.agents.roles.CapitalOwner;
 import jamel.basic.agents.roles.Supplier;
 import jamel.basic.agents.roles.Worker;
 import jamel.basic.agents.util.LaborPower;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.data.DataSeries;
 import jamel.basic.util.AnachronismException;
 import jamel.basic.util.BankAccount;
@@ -22,9 +24,7 @@ import jamel.basic.util.Supply;
 import jamel.util.Circuit;
 import jamel.util.Period;
 
-import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Map;
 
 /**
  * A basic firm.
@@ -225,8 +225,8 @@ public class BasicFirm implements Firm {
 	/** Date of creation. */
 	private final int creation = Circuit.getCurrentPeriod().getValue();
 
-	/** The data. */
-	private Map<String, Double> data;
+	/** The data of the agent. */
+	private AgentDataset data;
 
 	/** The dividend. */
 	private long dividend;
@@ -292,10 +292,10 @@ public class BasicFirm implements Firm {
 
 	/** The data series for the vacancies. */
 	private DataSeries vacanciesSeries = new DataSeries(4);// 4 should be a parameter.
-
+	
 	/** The wage bill */
 	private long wageBill;
-	
+
 	/** The payroll. */
 	private final Workforce workforce = new Workforce();
 
@@ -549,9 +549,8 @@ public class BasicFirm implements Firm {
 	 * Returns the data of the period.
 	 * @return the data.
 	 */
-	private Map<String, Double> newData() {
-		return new HashMap<String,Double>() {
-			private static final long serialVersionUID = 1L;
+	@SuppressWarnings("serial") private AgentDataset newData() {
+		return new BasicAgentDataset(this.name) {
 			{
 				this.put("firms", 1.);
 				this.put("wages", employerBehavior.getWage());
@@ -639,7 +638,9 @@ public class BasicFirm implements Firm {
 		}
 
 		this.data=newData();
+		
 		// ***
+		
 		this.supply=null;
 		this.jobOffer=null;
 	}
@@ -655,13 +656,8 @@ public class BasicFirm implements Firm {
 	}
 
 	@Override
-	public Map<String, Double> getData() {
+	public AgentDataset getData() {
 		return this.data;
-	}
-
-	@Override
-	public Double getData(String key) {
-		return this.data.get(key);
 	}
 
 	@Override

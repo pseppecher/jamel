@@ -47,9 +47,6 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 	/** To count the number of firms created since the start of the simulation. */
 	private int countFirms;
 
-	/** The list of the keys for the data to be collected. */
-	private final List<String> dataKeys = new ArrayList<String>();
-
 	/** The collection of firms. */
 	private final AgentSet<Firm> firms;
 
@@ -82,7 +79,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 				prepareRegeneration();
 			}
 		}
-		this.circuit.forward(MSG_PUT_DATA,this.firms.collectData(this.dataKeys,this.name+"."));
+		this.circuit.forward(MSG_PUT_DATA,this.name,this.firms.collectData());
 		this.firms.removeAll(bankrupted);
 	}
 
@@ -231,7 +228,9 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 		}
 
 		else if (request.equals("addDataKey")) {
-			result = this.dataKeys .add((String) args[0]);
+			// DELETE
+			throw new RuntimeException("This request is obsolete.");
+			//result = this.dataKeys .add((String) args[0]);
 		}
 
 		else if (request.equals("change in parameters")) {

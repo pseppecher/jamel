@@ -1,9 +1,9 @@
 package jamel.basic.agents.util;
 
 import jamel.basic.agents.roles.Agent;
+import jamel.basic.data.SectorDataset;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * A set of agents.
@@ -13,11 +13,9 @@ public interface AgentSet<T extends Agent> {
 
 	/**
 	 * Collects and returns the data from the agents in this set.
-	 * @param keys the keys of the data to be collected.
-	 * @param prefix a string to add at the start of the keys (usually the name of the sector).
-	 * @return a map that associates each key with the corresponding data.
+	 * @return an object that contains the data of each agent in this set.
 	 */
-	Map<String,Double> collectData(final List<String> keys, final String prefix);
+	SectorDataset collectData();
 
 	/**
 	 * Returns the list of agents.

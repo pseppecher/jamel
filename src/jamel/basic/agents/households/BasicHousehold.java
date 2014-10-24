@@ -3,6 +3,8 @@ package jamel.basic.agents.households;
 import jamel.Simulator;
 import jamel.basic.agents.roles.Asset;
 import jamel.basic.agents.util.LaborPower;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.data.DataSeries;
 import jamel.basic.util.AnachronismException;
 import jamel.basic.util.BankAccount;
@@ -16,10 +18,8 @@ import jamel.util.Period;
 
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -31,6 +31,12 @@ public class BasicHousehold implements Household {
 	 * A class to store the parameters of the household.
 	 */
 	private class Parameters {
+
+		@SuppressWarnings("javadoc")
+		private static final String N_JOB_OFFERS = "jobs.selection";
+
+		@SuppressWarnings("javadoc")
+		private static final String N_SUPPLIES = "supplies.selection";
 
 		@SuppressWarnings("javadoc")
 		private final static String SAV_PROP = "savings.propensityToSave";
@@ -46,12 +52,6 @@ public class BasicHousehold implements Household {
 
 		@SuppressWarnings("javadoc")
 		private final static String WAGE_RESIST = "wage.resistance";
-
-		@SuppressWarnings("javadoc")
-		private static final String N_SUPPLIES = "supplies.selection";
-
-		@SuppressWarnings("javadoc")
-		private static final String N_JOB_OFFERS = "jobs.selection";
 
 		/** The flexibility of the reservation wage. */
 		private float flexibility;
@@ -178,6 +178,7 @@ public class BasicHousehold implements Household {
 	 * To compare jobs according to the wage they offer.
 	 */
 	static final Comparator<JobOffer>jobComparator = new Comparator<JobOffer>() {
+		@Override
 		public int compare(JobOffer offer1, JobOffer offer2) {
 			return (new Long(offer2.getWage()).compareTo(offer1.getWage()));
 		}
@@ -188,6 +189,7 @@ public class BasicHousehold implements Household {
 	 * To compare supplies according to their price.
 	 */
 	static final Comparator<Supply> supplyComparator = new Comparator<Supply>() {
+		@Override
 		public int compare(Supply offer1, Supply offer2) {
 			return (-(new Double(offer2.getPrice())).compareTo(offer1.getPrice()));
 		}
@@ -199,8 +201,8 @@ public class BasicHousehold implements Household {
 	/** The annual income. */
 	private DataSeries annualIncome = new DataSeries(12);
 
-	/** The data. */
-	private final Map<String, Double> data = new HashMap<String, Double>();
+	/** The data of the agent. */
+	private BasicAgentDataset data;
 
 	/** The history of the household. */
 	private final LinkedList<String> history = new LinkedList<String>() {
@@ -411,8 +413,8 @@ public class BasicHousehold implements Household {
 	}
 
 	@Override
-	public Double getData(String key) {
-		return this.data.get(key);
+	public AgentDataset getData() {
+		return this.data;
 	}
 
 	@Override
@@ -569,7 +571,7 @@ public class BasicHousehold implements Household {
 		this.v.income=0;
 		this.v.wage=0;
 		this.v.dividend=0;
-		this.data.clear();
+		this.data = new BasicAgentDataset(this.name);
 		this.data.put("households", 1.);
 	}
 

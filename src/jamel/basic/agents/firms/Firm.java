@@ -1,7 +1,5 @@
 package jamel.basic.agents.firms;
 
-import java.util.Map;
-
 import jamel.basic.agents.roles.AccountHolder;
 import jamel.basic.agents.roles.Agent;
 import jamel.basic.agents.roles.Asset;
@@ -18,12 +16,6 @@ public interface Firm extends Agent, AccountHolder, Asset, Supplier {
 	 * Closes the firm at the end of the period.
 	 */
 	void close();
-
-	/**
-	 * Returns the data of the firm.
-	 * @return the data.
-	 */
-	Map<String, Double> getData();
 
 	/**
 	 * Returns the job offer (if any) of the firm.
