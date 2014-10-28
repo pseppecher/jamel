@@ -69,9 +69,6 @@ public class GUI implements Sector {
 		/** green */
 		green(Color.green),
 
-		/** very light blue */
-		veryLightBlue(ChartColor.VERY_LIGHT_BLUE),
-
 		/** magenta */
 		magenta(Color.magenta),
 
@@ -80,6 +77,15 @@ public class GUI implements Sector {
 
 		/** red */
 		red(Color.red),
+
+		/** very light blue */
+		veryLightBlue(ChartColor.VERY_LIGHT_BLUE),
+
+		/** very light green */
+		veryLightGreen(ChartColor.VERY_LIGHT_GREEN),
+
+		/** very light red */
+		veryLightRed(ChartColor.VERY_LIGHT_RED),
 
 		/** white */
 		white(Color.white),
@@ -142,13 +148,13 @@ public class GUI implements Sector {
 	 */
 	@SuppressWarnings("serial")
 	private final class JamelWindow extends JFrame {
-		
+
 		/** A map thaht contains the description of the chart panels. */
 		private final Map<String, String> chartDescription;
 
 		/** The control panel. */
 		private final Component controlPanel;
-		
+
 		/** The list of the timeChartPanel. */
 		private final List<TimeChartPanel> timeChartPanelList = new ArrayList<TimeChartPanel>(45);
 
@@ -165,7 +171,7 @@ public class GUI implements Sector {
 		 */
 		private JamelWindow() {
 			super();
-			this.chartDescription = getChartDescription();
+			this.chartDescription = getChartConfig();
 			final JTabbedPane tabbedPane = new JTabbedPane() ;
 			for(JPanel chartPanel: getChartPanelList()){
 				tabbedPane.add(chartPanel);
@@ -199,6 +205,23 @@ public class GUI implements Sector {
 		}
 
 		/**
+		 * Returns a map that contains the description of the chart panels. 
+		 * @return a map that contains the description of the chart panels.
+		 */
+		private Map<String,String> getChartConfig() {
+			final String fileName = circuit.getParameter(name,"config.charts");
+			final Map<String,String> map;
+			try {
+				map = FileParser.parse(fileName);
+				return map;
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				new RuntimeException("Chart panels description not found.");
+			}
+			return null;
+		}
+
+		/**
 		 * Returns the data for the specified chart.
 		 * @param dataKeys an array of strings representing the name of the series.
 		 * @return an XYSeriesCollection.
@@ -218,24 +241,7 @@ public class GUI implements Sector {
 		}
 
 		/**
-		 * Returns a map that contains the description of the chart panels. 
-		 * @return a map that contains the description of the chart panels.
-		 */
-		private Map<String,String> getChartDescription() {
-			final String fileName = circuit.getParameter(name,"chart panels description");
-			final Map<String,String> map;
-			try {
-				map = FileParser.parse(fileName);
-				return map;
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				new RuntimeException("Chart panels description not found.");
-			}
-			return null;
-		}
-
-		/**
-		 * Returns the list of the chart panels.
+		 * Returns the chart panels.
 		 * @return an array of panels.
 		 */
 		private JPanel[] getChartPanelList() {
@@ -259,16 +265,32 @@ public class GUI implements Sector {
 							}
 							final XYSeriesCollection data = getChartData(FileParser.toArray(truc));
 							final String colors = chartDescription.get(panelTitle+"."+title+".colors");
+							final String option = chartDescription.get(panelTitle+"."+title+".option");
+							final String legend = chartDescription.get(panelTitle+"."+title+".legend");
 							final Paint[] paints;
+							final String[] legendItems;
 							if (colors!=null) {
 								paints = JamelColor.getColors(FileParser.toArray(colors));
 							}
 							else {
 								paints = null;
 							}
-							final TimeChartPanel newPanel = new TimeChartPanel(title,data,paints);
-							panel.add(newPanel);
-							timeChartPanelList.add(newPanel);
+							if (legend!=null) {
+								legendItems = FileParser.toArray(legend);
+							}
+							else {
+								legendItems = null;
+							}
+							final JamelChartPanel chartPanel;
+							if ("scatter".equals(option)) {
+								chartPanel = new ScatterChartPanel(title,data,paints,legendItems);
+							}
+							else {
+								final TimeChartPanel timeChartPanel = new TimeChartPanel(title,data,paints,legendItems);
+								timeChartPanelList.add(timeChartPanel);
+								chartPanel = timeChartPanel;
+							}
+							panel.add(chartPanel);
 						}
 						if (titles.length<9) {
 							for (int i=titles.length; i<9; i++) {

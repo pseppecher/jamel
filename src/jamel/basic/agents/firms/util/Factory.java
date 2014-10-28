@@ -37,7 +37,7 @@ public interface Factory {
 	 * @return the volume of finished goods.
 	 */
 	long getFinishedGoodsVolume();
-	
+
 	/**
 	 * Returns the value of inventory losses for the current period. 
 	 * @return the value of inventory losses for the current period.
@@ -64,12 +64,17 @@ public interface Factory {
 
 	/**
 	 * Returns the unit cost of the finished goods in the inventory.
+	 * The unit cost is "The cost incurred by a company to produce, store and sell one unit of a particular product."
+	 * @see <a href="http://www.investopedia.com/terms/u/unitcost.asp">www.investopedia.com/terms/u/unitcost.asp</a>
 	 * @return the unit cost.
 	 */
 	double getUnitCost();
 
 	/**
-	 * Returns the total value of the finished and unfinished goods in the inventories.
+	 * Returns the total value of finished and unfinished goods present in the inventories.
+	 * (= "the raw materials, work-in-process goods and completely finished goods that are considered 
+	 * to be the portion of a business's assets that are ready or will be ready for sale")
+	 * @see <a href="http://www.investopedia.com/articles/04/031004.asp">investopedia.com</a>
 	 * @return the total value.
 	 */
 	long getValue();

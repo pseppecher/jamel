@@ -1,4 +1,5 @@
-jamel
-=====
+Jamel: Java Agent-based MacroEconomic Laboratory
+================================================
 
-Java Agent-based Macroeconomic Laboratory
+Modeling, simulation and analysis of complex monetary economies
+---------------------------------------------------------------

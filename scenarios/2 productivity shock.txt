@@ -1,7 +1,7 @@
 ********************
  Productivity shock
      Jamel (v2)
-     19-10-2014
+     27-10-2014
 ********************
 
 *BEGIN*
@@ -89,16 +89,15 @@ Bank{
 }
 
 Data { // The data manager
-	
 	type = jamel.basic.data.DataManager
-	details = data.details
-	
+	config.data = data.ini
+	config.matrix = matrix.ini	
 }
 
 GUI { // The Graphical User Interface
 	
 	type = jamel.basic.gui.GUI
-	chart panels description = charts.details
+	config.charts = charts.ini
 	otherPanels = Balance Sheet Panel
 	
 }

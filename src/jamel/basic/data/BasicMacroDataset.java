@@ -1,6 +1,9 @@
 package jamel.basic.data;
 
 import java.util.HashMap;
+import java.util.List;
+
+import org.jfree.data.xy.XYDataItem;
 
 /**
  * A basic dataset for macro-economic data.
@@ -34,6 +37,20 @@ public class BasicMacroDataset extends HashMap<String,SectorDataset> implements 
 		else {
 			result=val;
 		}
+		return result;
+	}
+
+	@Override
+	public List<XYDataItem> getScatter(String sector, String xKey, String yKey) {
+		final List<XYDataItem> result;
+		final String[] word = sector.split("\\.",2); 
+		final SectorDataset sectorDataset = super.get(word[0]);
+		if (sectorDataset!=null) {
+			result = sectorDataset.getScatter(word[1],xKey,yKey);
+		}
+		else {
+			result=null;
+		}		
 		return result;
 	}
 

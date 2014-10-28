@@ -2,10 +2,10 @@ package jamel.basic.agents.households;
 
 import jamel.Simulator;
 import jamel.basic.agents.roles.Asset;
+import jamel.basic.agents.util.Memory;
 import jamel.basic.agents.util.LaborPower;
 import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
-import jamel.basic.data.DataSeries;
 import jamel.basic.util.AnachronismException;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.Cheque;
@@ -199,7 +199,7 @@ public class BasicHousehold implements Household {
 	private final BankAccount account;
 
 	/** The annual income. */
-	private DataSeries annualIncome = new DataSeries(12);
+	private Memory annualIncome = new Memory(12);
 
 	/** The data of the agent. */
 	private BasicAgentDataset data;

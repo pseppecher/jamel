@@ -1,4 +1,4 @@
-package jamel.basic.data;
+package jamel.basic.agents.util;
 
 import static org.junit.Assert.*;
 
@@ -7,9 +7,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 /**
- * JUnit test case for {@link jamel.basic.data.DataSeries}.
+ * JUnit test case for {@link jamel.basic.agents.util.Memory}.
  */
-public class DataSeriesTest {
+public class MemoryTest {
 
 	@SuppressWarnings("javadoc")
 	@Before
@@ -26,7 +26,7 @@ public class DataSeriesTest {
 	 */
 	@Test
 	public void test() {
-		final DataSeries series = new DataSeries(5);
+		final Memory series = new Memory(5);
 		series.add(10);
 		assertEquals("Average", 10, series.getMean(),0);
 		series.add(20);

@@ -1,6 +1,9 @@
 package jamel.basic.data;
 
+import java.util.List;
 import java.util.Set;
+
+import org.jfree.data.xy.XYDataItem;
 
 /**
  * A dataset that can be used when one single agent represents one sector. 
@@ -29,13 +32,19 @@ public class RepresentativeAgentDataset implements AgentDataset, SectorDataset{
 	}
 
 	@Override
+	public List<XYDataItem> getScatter(String method, String xKey, String yKey) {
+		throw new RuntimeException("Not implemented");
+	}
+
+	@Override
 	public Set<String> keySet() {
 		return this.data.keySet();
 	}
 
 	@Override
 	public void put(AgentDataset agentData) {
-		throw new RuntimeException("The final field RepresentativeAgentDataset.data cannot be assigned.");
+		// Not used.
+		throw new RuntimeException("Not implemented");
 	}
 
 }

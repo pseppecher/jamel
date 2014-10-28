@@ -1,12 +1,12 @@
-package jamel.basic.data;
+package jamel.basic.agents.util;
 
 import java.util.LinkedList;
 
 /**
- * Data series.
+ * A convenient class to store some past data.
  */
 @SuppressWarnings("serial")
-public class DataSeries extends LinkedList<Double>{
+public class Memory extends LinkedList<Double>{
 	
 	/** The maximum number of data in the series. */
 	private final int limit;
@@ -15,7 +15,7 @@ public class DataSeries extends LinkedList<Double>{
 	 * Creates a new series/
 	 * @param limit the maximum number of data.
 	 */
-	public DataSeries(int limit) {
+	public Memory(int limit) {
 		super();
 		this.limit=limit;
 	}

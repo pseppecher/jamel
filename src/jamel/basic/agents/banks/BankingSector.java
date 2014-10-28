@@ -341,6 +341,7 @@ public class BankingSector implements Sector, Asset {
 					}
 					else {
 						result = false;
+						throw new RuntimeException("Inconsistency");
 					}
 					return result;
 				}

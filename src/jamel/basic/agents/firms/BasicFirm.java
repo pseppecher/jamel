@@ -1,19 +1,15 @@
 package jamel.basic.agents.firms;
 
-import jamel.basic.agents.firms.behaviors.BasicDividendBehavior;
-import jamel.basic.agents.firms.behaviors.EmployerBehavior;
-import jamel.basic.agents.firms.behaviors.ProductionBehavior;
-import jamel.basic.agents.firms.behaviors.SmartPricingBehavior;
 import jamel.basic.agents.firms.util.BasicFactory;
 import jamel.basic.agents.firms.util.Factory;
 import jamel.basic.agents.firms.util.Workforce;
 import jamel.basic.agents.roles.CapitalOwner;
 import jamel.basic.agents.roles.Supplier;
 import jamel.basic.agents.roles.Worker;
+import jamel.basic.agents.util.Memory;
 import jamel.basic.agents.util.LaborPower;
 import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
-import jamel.basic.data.DataSeries;
 import jamel.basic.util.AnachronismException;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.Cheque;
@@ -30,6 +26,24 @@ import java.util.LinkedList;
  * A basic firm.
  */
 public class BasicFirm implements Firm {
+
+	/**
+	 * The capital manager.
+	 */
+	private interface CapitalManager {
+
+		/**
+		 * Updates the dividend.
+		 */
+		void updateDividend();
+
+		/**
+		 * Returns the dividend.
+		 * @return the dividend paid.
+		 */
+		long getDividend();
+
+	}
 
 	/**
 	 * A class to store the parameters of the firm.
@@ -193,7 +207,7 @@ public class BasicFirm implements Firm {
 		 * Called when the firm is created.
 		 * (Should be called after an exogenous event.)
 		 */
-		private void update() {
+		private void updateCapacityUtilizationTarget() {
 			this.capitalRatioTarget = getFloat(CAPITAL_TARGET);
 			this.inventoryNormalLevel = getFloat(INVENTORY_NORMAL_LEVEL);
 			this.labourContractMax = getInteger(LABOUR_CONTRACT_MAX);
@@ -216,11 +230,118 @@ public class BasicFirm implements Firm {
 
 	}
 
+	/**
+	 * The pricing manager.
+	 */
+	private interface PricingManager {
+
+		/**
+		 * Returns the price.
+		 * @return the price.
+		 */
+		Double getPrice();
+
+		/**
+		 * Sets the price equal to the unit cost.
+		 */
+		void setUnitCostPrice();
+
+		/**
+		 * Updates the price.
+		 */
+		void updatePrice();
+
+	}
+
+	/**
+	 * The production manager.
+	 */
+	private interface ProductionManager {
+
+		/**
+		 * Returns the capacity utilization targeted.
+		 * @return a float in [0,1].
+		 */
+		float getTarget();
+
+		/**
+		 * Updates the target of capacity utilization.
+		 */
+		void updateCapacityUtilizationTarget();
+
+	}
+
+	/**
+	 * The workforce manager.
+	 */
+	private interface WorkforceManager {
+
+		/**
+		 * Computes some technical operations at the end of the period. 
+		 */
+		void close();
+
+		/**
+		 * Returns the job offer.
+		 * @return the job offer.
+		 */
+		JobOffer getJobOffer();
+
+		/**
+		 * Returns the wage.
+		 * @return the wage.
+		 */
+		double getWage();
+
+		/**
+		 * Creates a new job offer.
+		 * @param jobs the number of vacancies.
+		 */
+		void updateJobOffer(int jobs);
+
+		/**
+		 * Updates the wage.
+		 */
+		public void updateWage();
+
+	}
+
 	/** The account. */
 	private final BankAccount account;
 
 	/** A flag that indicates if the firm is bankrupted. */
 	private boolean bankrupted = false;
+
+	/** The capital manager. */
+	private final  CapitalManager capitalManager = new CapitalManager() {
+
+		/** The dividend. */
+		private Long dividend = null;
+		
+		@Override
+		public void updateDividend() {
+			final long cash = account.getAmount();
+			final long assets=cash+factory.getValue();
+			final long capital=assets-account.getDebt();
+			final long capitalTarget = (long) ((assets)*p.capitalRatioTarget );
+			if (capital<=0) {
+				dividend=0l;
+			}
+			else {
+				if (capital<=capitalTarget) {
+					dividend=0l;
+				}
+				else {
+					dividend = Math.min((long) ((capital-capitalTarget)*p.propensity2DistributeCapital),cash);
+				}
+			}
+		}
+
+		@Override
+		public long getDividend() {
+			return dividend;
+		}
+	};
 
 	/** Date of creation. */
 	private final int creation = Circuit.getCurrentPeriod().getValue();
@@ -229,10 +350,7 @@ public class BasicFirm implements Firm {
 	private AgentDataset data;
 
 	/** The dividend. */
-	private long dividend;
-
-	/** The employer behavior. */
-	private final EmployerBehavior employerBehavior;
+	//private long dividend;
 
 	/** The factory. */
 	private final Factory factory;
@@ -255,16 +373,10 @@ public class BasicFirm implements Firm {
 	};
 
 	/** The data series for the income. */
-	private DataSeries incomeSeries = new DataSeries(12);// 4 should be a parameter.
-
-	/** jobOffer */
-	private JobOffer jobOffer;
+	private Memory incomeSeries = new Memory(12);// 4 should be a parameter.
 
 	/** The name. */
 	private final String name;
-
-	/** The data series for the newJobs. */
-	private DataSeries newJobsSeries = new DataSeries(4);// 4 should be a parameter.
 
 	/** The owner. */
 	private CapitalOwner owner;
@@ -272,11 +384,129 @@ public class BasicFirm implements Firm {
 	/** The parameters. */
 	private final Parameters p=new Parameters();
 
-	/** The pricing behavior. */
-	private final SmartPricingBehavior pricingBehavior;
+	/** The pricing manager. */
+	private final PricingManager pricingManager = new PricingManager() {
 
-	/** The production behavior. */
-	private final ProductionBehavior productionBehavior ;
+		/** The higher price. */
+		private Double highPrice = null;
+
+		/** The lower price. */
+		private Double lowPrice = null;
+
+		/** The price. */
+		private Double price;
+
+		/**
+		 * Returns a new price chosen at random in the given interval.
+		 * @param lowPrice  the lower price
+		 * @param highPrice  the higher price
+		 * @return the new price.
+		 */
+		private double getNewPrice(Double lowPrice, Double highPrice) {
+			if (lowPrice>highPrice) {
+				throw new IllegalArgumentException("lowPrice > highPrice.");
+			}
+			return lowPrice+Circuit.getRandom().nextFloat()*(highPrice-lowPrice);
+		}
+
+		@Override
+		public Double getPrice() {
+			final Double result;
+			if (this.price==null) {
+				result=null;
+			}
+			else {
+				result=new Double(this.price);
+			}
+			return result;
+		}
+
+		@Override
+		public void setUnitCostPrice() {
+			final double unitCost = factory.getUnitCost();
+			if (!Double.isNaN(unitCost)) {
+				this.price = unitCost;
+				this.highPrice = (1f+p.priceFlexibility)*this.price;
+				this.lowPrice = (1f-p.priceFlexibility)*this.price;
+			}
+		}
+
+		@Override
+		public void updatePrice() {
+			final double inventoryRatio = getInventoryRatio();
+			if (this.price==null) {
+				this.setUnitCostPrice();
+			}
+			if (this.price!=null && salesRatio!=null) {
+				if ((salesRatio==1)) {
+					this.lowPrice = this.price;
+					if (inventoryRatio<1) {
+						this.price = getNewPrice(this.lowPrice,this.highPrice);
+					}
+					this.highPrice =  this.highPrice*(1f+p.priceFlexibility);
+				}
+				else {
+					this.highPrice = this.price;
+					if (inventoryRatio>1) {
+						this.price = getNewPrice(this.lowPrice,this.highPrice);
+					}					
+					this.lowPrice =  this.lowPrice*(1f-p.priceFlexibility);
+				}
+			}
+		}
+
+	};;
+
+	/** The production manager. */
+	private final ProductionManager productionManager = new ProductionManager() {
+
+		/** The capacity utilization rate targeted.<p>
+		 * Capacity utilization rate: "A metric used to measure the rate at which 
+		 * potential output levels are being met or used. Displayed as a percentage, 
+		 * capacity utilization levels give insight into the overall slack that is 
+		 * in the economy or a firm at a given point in time. If a company is running 
+		 * at a 70% capacity utilization rate, it has room to increase production up 
+		 * to a 100% utilization rate without incurring the expensive costs of 
+		 * building a new plant or facility.
+		 * Also known as "operating rate".
+		 * (<a href="http://www.investopedia.com/terms/c/capacityutilizationrate.asp">Investopedia</a>)  
+		 */
+		private Float utilizationRateTargeted = null;
+
+		@Override
+		public float getTarget() {
+			if (this.utilizationRateTargeted==null) {
+				this.utilizationRateTargeted=p.utilizationRateInitialValue;
+			}
+			return this.utilizationRateTargeted;
+		}
+
+		@Override
+		public void updateCapacityUtilizationTarget() {
+			if (this.utilizationRateTargeted==null) {
+				this.utilizationRateTargeted=p.utilizationRateInitialValue;
+			}
+			else {
+				final double inventoryRatio = getInventoryRatio();
+				final float alpha1 = Circuit.getRandom().nextFloat();
+				final float alpha2 = Circuit.getRandom().nextFloat();
+				final float delta = (alpha1*p.utilizationRateFlexibility);
+				if (inventoryRatio<1-alpha1*alpha2) { // Low level
+					this.utilizationRateTargeted += delta;
+					if (this.utilizationRateTargeted>1) {
+						this.utilizationRateTargeted = 1f;
+					}
+				}
+				else if (inventoryRatio>1+alpha1*alpha2) { // High level
+					this.utilizationRateTargeted -= delta;
+					if (this.utilizationRateTargeted<0) {
+						this.utilizationRateTargeted = 0f;
+					}
+				}
+			}
+		}
+
+	};
 
 	/** A flag that indicates if the agent records its history. */
 	private boolean recordHistoric = false;
@@ -290,14 +520,209 @@ public class BasicFirm implements Firm {
 	/** The supply. */
 	private Supply supply;
 
-	/** The data series for the vacancies. */
-	private DataSeries vacanciesSeries = new DataSeries(4);// 4 should be a parameter.
-	
 	/** The wage bill */
 	private long wageBill;
 
 	/** The payroll. */
 	private final Workforce workforce = new Workforce();
+
+	/** The employer behavior. */
+	private final WorkforceManager workforceManager = new WorkforceManager() {
+
+		/** jobOffer */
+		private JobOffer jobOffer;
+
+		/** The data series for the newJobs. */
+		private Memory newJobsSeries = new Memory(4);// 4 should be a parameter.
+
+		/** The data series for the vacancies. */
+		private Memory vacanciesSeries = new Memory(4);// 4 should be a parameter.
+
+		/** The wage. */
+		private Double wage;
+
+		/**
+		 * Returns the vacancy rate.
+		 * @return the vacancy rate.
+		 */
+		private double getVacancyRate() {
+			final double result;
+			if (vacanciesSeries.size()!=newJobsSeries.size()) {
+				throw new RuntimeException("Inconsistent series.");
+			}
+			final double vacancies = vacanciesSeries.getSum();
+			final double jobs = newJobsSeries.getSum();
+			if (vacancies==0) {
+				result=0;
+			}
+			else {
+				result=vacancies/jobs;
+			}
+			return result;
+		}
+
+		@Override
+		public void close() {
+			if (this.jobOffer==null) {
+				this.vacanciesSeries.add(0);
+			}
+			else {
+				this.vacanciesSeries.add(this.jobOffer.getVacancies());
+			}			
+			this.jobOffer=null;
+		}
+
+		@Override
+		public JobOffer getJobOffer() {
+			final JobOffer result;
+			if (this.jobOffer!=null && this.jobOffer.getVacancies()>0) {
+				result=this.jobOffer;
+			}
+			else {
+				result=null;
+			}
+			return result;
+		}
+
+		/**
+		 * Returns the wage.
+		 * @return the wage.
+		 */
+		public double getWage() {
+			if (this.wage==null) {
+				this.wage = (double) p.wageInitialValue;
+			}
+			return this.wage;
+		}
+
+		@Override
+		public void updateJobOffer(final int jobs) {
+			//final JobOffer newJobOffer;
+			newJobsSeries.add(jobs);
+			if (jobs==0) {
+				jobOffer = null;
+			}
+			else {
+				final Period validPeriod = Circuit.getCurrentPeriod();
+				jobOffer = new JobOffer() {
+					
+					private final long jobWage = (long) Math.floor(wage);
+					
+					private int vacancies = jobs;
+		
+					@Override
+					public JobContract apply(final Worker worker) {
+						if (!validPeriod.isPresent()) {
+							throw new AnachronismException("Out of date.");					
+						}
+						if (!(this.vacancies>0)) {
+							throw new RuntimeException("No vacancy.");
+						}
+						this.vacancies--;
+						final JobContract jobContract = new JobContract() {
+		
+							private Period end;
+		
+							final private Period start = Circuit.getCurrentPeriod();
+		
+							{
+								final int term;
+								if (p.labourContractMax==p.labourContractMin) { 
+									term = p.labourContractMin ; 
+								}
+								else {
+									term = p.labourContractMin+Circuit.getRandom().nextInt(p.labourContractMax-p.labourContractMin) ;
+								}
+								end = start.plus(term);
+							}
+		
+							@Override
+							public void breach() {
+								this.end  = Circuit.getCurrentPeriod();
+								// TODO Inform the worker ?
+							}
+		
+							@Override
+							public LaborPower getLaborPower() {
+								if (!isValid()) {
+									throw new RuntimeException("Invalid job contract.");
+								}
+								return worker.getLaborPower();
+							}
+		
+							@Override
+							public long getWage() {
+								return jobWage;
+							}
+		
+							@Override
+							public boolean isValid() {
+								return this.end.isAfter(Circuit.getCurrentPeriod());
+							}
+		
+							@Override
+							public void payWage(Cheque paycheck) {
+								if (!isValid()) {
+									throw new RuntimeException("Invalid job contract.");
+								}
+								worker.earnWage(paycheck);
+							}
+		
+							@Override
+							public String toString() {
+								return "Employer: "+name+
+										", Employee: "+worker.getName()+
+										", start: "+start.getValue()+
+										", end: "+end.getValue()+
+										", wage: "+wage;
+							}
+		
+						};
+						workforce.add(jobContract);
+						return jobContract;
+		
+					}
+		
+					@Override
+					public int getVacancies() {
+						return this.vacancies;
+					}
+		
+					@Override
+					public long getWage() {
+						return jobWage;
+					}
+				};
+			}
+		}
+
+		/**
+		 * Updates the wage.
+		 */
+		@Override
+		public void updateWage() {
+			if (this.wage==null) {
+				this.wage = (double) p.wageInitialValue;
+			}
+			else {
+				final float alpha1 = Circuit.getRandom().nextFloat();
+				final float alpha2 = Circuit.getRandom().nextFloat();
+				final double vacancyRatio = getVacancyRate()/p.normalVacancyRate;
+				final double newWage;
+				if (vacancyRatio<1-alpha1*alpha2) {
+					newWage=this.wage*(1f-alpha1*p.wageFlexDown);
+				}
+				else if (vacancyRatio>1+alpha1*alpha2) {
+					newWage=this.wage*( 1f+alpha1*p.wageFlexUp);
+				}
+				else {
+					newWage=this.wage;
+				}
+				this.wage = Math.max(newWage, p.wageMinimum);
+			}
+		}
+
+	};
 
 	/**
 	 * Creates a new firm.
@@ -308,118 +733,10 @@ public class BasicFirm implements Firm {
 		this.history.add("Creation: "+name);
 		this.name=name;
 		this.sector=sector;
-		this.p.update();
+		this.p.updateCapacityUtilizationTarget();
 		this.account = this.sector.getNewAccount(this);
 		this.factory = new BasicFactory(p.productionTime,p.productionCapacity, p.productivity);
-		this.pricingBehavior = new SmartPricingBehavior();
-		this.productionBehavior = new ProductionBehavior(p.utilizationRateInitialValue);
-		this.employerBehavior = new EmployerBehavior(p.wageInitialValue);
-	}
-
-	/**
-	 * Creates a new job offer.
-	 * @param jobs the number of vacancies.
-	 * @param wage the wage.
-	 * @return a job offer.
-	 */
-	private JobOffer createJobOffer(final int jobs, final long wage) {
-		final JobOffer newJobOffer;
-		this.newJobsSeries.add(jobs);
-		if (jobs==0) {
-			newJobOffer = null;
-		}
-		else {
-			final Period validPeriod = Circuit.getCurrentPeriod();
-			newJobOffer = new JobOffer() {
-
-				private int vacancies = jobs;
-
-
-				@Override
-				public JobContract apply(final Worker worker) {
-					if (!validPeriod.isPresent()) {
-						throw new AnachronismException("Out of date.");					
-					}
-					if (!(this.vacancies>0)) {
-						throw new RuntimeException("No vacancy.");
-					}
-					this.vacancies--;
-					final JobContract jobContract = new JobContract() {
-
-						private Period end;
-
-						final private Period start = Circuit.getCurrentPeriod();
-
-						{
-							final int term;
-							if (p.labourContractMax==p.labourContractMin) { 
-								term = p.labourContractMin ; 
-							}
-							else {
-								term = p.labourContractMin+Circuit.getRandom().nextInt(p.labourContractMax-p.labourContractMin) ;
-							}
-							end = start.plus(term);
-						}
-
-						@Override
-						public void breach() {
-							this.end  = Circuit.getCurrentPeriod();
-							// TODO Inform the worker ?
-						}
-
-						@Override
-						public LaborPower getLaborPower() {
-							if (!isValid()) {
-								throw new RuntimeException("Invalid job contract.");
-							}
-							return worker.getLaborPower();
-						}
-
-						@Override
-						public long getWage() {
-							return wage;
-						}
-
-						@Override
-						public boolean isValid() {
-							return this.end.isAfter(Circuit.getCurrentPeriod());
-						}
-
-						@Override
-						public void payWage(Cheque paycheck) {
-							if (!isValid()) {
-								throw new RuntimeException("Invalid job contract.");
-							}
-							worker.earnWage(paycheck);
-						}
-
-						@Override
-						public String toString() {
-							return "Employer: "+name+
-									", Employee: "+worker.getName()+
-									", start: "+start.getValue()+
-									", end: "+end.getValue()+
-									", wage: "+wage;
-						}
-
-					};
-					workforce.add(jobContract);
-					return jobContract;
-
-				}
-
-				@Override
-				public int getVacancies() {
-					return this.vacancies;
-				}
-
-				@Override
-				public long getWage() {
-					return wage;
-				}
-			};
-		}
-		return newJobOffer;
+		//this.productionBehavior = new ProductionBehavior(p.utilizationRateInitialValue);
 	}
 
 	/**
@@ -434,10 +751,10 @@ public class BasicFirm implements Firm {
 			supply = null;
 		}
 		else {
-			if (pricingBehavior.getPrice()==null) {
-				pricingBehavior.setPrice(factory.getUnitCost(), p.priceFlexibility);
+			if (pricingManager.getPrice()==null) {
+				pricingManager.setUnitCostPrice();
 			}
-			final double price = pricingBehavior.getPrice();
+			final double price = pricingManager.getPrice();
 			this.salesRatio=0.;
 			supply = new Supply() {
 
@@ -526,23 +843,14 @@ public class BasicFirm implements Firm {
 	}
 
 	/**
-	 * Returns the vacancy rate.
-	 * @return the vacancy rate.
+	 * Returns the inventory ratio.<br>
+	 * If inventoryRatio > 1 : the volume of finished goods exceeds the normal volume,<br>
+	 * If inventoryRatio = 1 : the volume of finished goods meets the normal volume,<br>
+	 * If inventoryRatio < 1 : the volume of finished goods is under the normal volume.
+	 * @return the inventory ratio.
 	 */
-	private double getVacancyRate() {
-		final double result;
-		if (vacanciesSeries.size()!=newJobsSeries.size()) {
-			throw new RuntimeException("Inconsistent series.");
-		}
-		final double vacancies = this.vacanciesSeries.getSum();
-		final double jobs = this.newJobsSeries.getSum();
-		if (vacancies==0) {
-			result=0;
-		}
-		else {
-			result=vacancies/jobs;
-		}
-		return result;
+	private double getInventoryRatio() {
+		return this.factory.getFinishedGoodsVolume()/(p.inventoryNormalLevel*this.factory.getMaxUtilAverageProduction());
 	}
 
 	/**
@@ -553,7 +861,8 @@ public class BasicFirm implements Firm {
 		return new BasicAgentDataset(this.name) {
 			{
 				this.put("firms", 1.);
-				this.put("wages", employerBehavior.getWage());
+				this.put("prices", pricingManager.getPrice());
+				this.put("wages", workforceManager.getWage());
 				this.put("workforce", (double) factory.getWorkforce());
 				this.put("inventories.fg.vol", (double) factory.getFinishedGoodsVolume());
 				this.put("inventories.total.val", (double) factory.getValue());
@@ -562,7 +871,7 @@ public class BasicFirm implements Firm {
 				this.put("production.vol", (double) factory.getProductionVolume());
 				this.put("production.val", (double) factory.getProductionValue());
 				this.put("wageBill", (double) wageBill);
-				this.put("dividends", (double) dividend);
+				this.put("dividends", (double) capitalManager.getDividend());
 				if (supply!=null) {
 					this.put("supply.vol",(double) supply.getInitialVolume());
 					this.put("supply.val",(double) supply.getPrice(supply.getInitialVolume()));
@@ -599,7 +908,7 @@ public class BasicFirm implements Firm {
 				else {
 					this.put("insolvents", 0.);					
 				}
-				
+
 			}};
 	}
 
@@ -624,12 +933,7 @@ public class BasicFirm implements Firm {
 
 	@Override
 	public void close() {
-		if (this.jobOffer==null) {
-			this.vacanciesSeries.add(0);
-		}
-		else {
-			this.vacanciesSeries.add(this.jobOffer.getVacancies());
-		}
+		this.workforceManager.close();
 		if (supply==null) {
 			this.incomeSeries.add((double) wageBill);
 		}
@@ -638,11 +942,10 @@ public class BasicFirm implements Firm {
 		}
 
 		this.data=newData();
-		
+
 		// ***
-		
+
 		this.supply=null;
-		this.jobOffer=null;
 	}
 
 	@Override
@@ -662,14 +965,7 @@ public class BasicFirm implements Firm {
 
 	@Override
 	public JobOffer getJobOffer() {
-		final JobOffer result;
-		if (this.jobOffer!=null && this.jobOffer.getVacancies()>0) {
-			result=this.jobOffer;
-		}
-		else {
-			result=null;
-		}
-		return result;
+		return this.workforceManager.getJobOffer();
 	}
 
 	@Override
@@ -715,13 +1011,8 @@ public class BasicFirm implements Firm {
 		this.history.add("assets: "+ (factory.getValue() + account.getAmount()));
 		this.history.add("liabilities: "+ account.getDebt());
 		this.history.add("capital: "+ (factory.getValue() + account.getAmount() - account.getDebt()));
-		final long dividend = BasicDividendBehavior.getDividend(
-				this.account.getAmount(),
-				this.factory.getValue(),
-				this.account.getDebt(),
-				this.p.capitalRatioTarget,
-				this.p.propensity2DistributeCapital
-				);
+		capitalManager.updateDividend();
+		final long dividend = capitalManager.getDividend();
 		if (dividend>0) {
 			this.owner.receiveDividend( this.account.newCheque(dividend), this) ;
 			this.history.add("dividend: "+ dividend);
@@ -730,47 +1021,27 @@ public class BasicFirm implements Firm {
 			this.history.add("liabilities: "+ account.getDebt());
 			this.history.add("capital: "+ (factory.getValue() + account.getAmount() - account.getDebt()));
 		}
-		this.dividend=dividend;
 	}
 
 	@Override
 	public void prepareProduction() {
 
-		/*
-		 * The inventory ratio.
-		 * if inventoryRatio > 1 : the volume of finished goods exceeds the normal volume,
-		 * if inventoryRatio = 1 : the volume of finished goods meets the normal volume,
-		 * if inventoryRatio < 1 : the volume of finished goods is under the normal volume.
-		 */
-		final double inventoryRatio = this.factory.getFinishedGoodsVolume()/(p.inventoryNormalLevel*this.factory.getMaxUtilAverageProduction());
-
 		// *** Updates the price.
 
-		this.pricingBehavior.updatePrice(
-				inventoryRatio,
-				this.salesRatio,
-				p.priceFlexibility,
-				this.factory.getUnitCost()
-				);
+		this.pricingManager.updatePrice();
 
 		// *** Updates the wage.
 
-		this.employerBehavior.update(
-				this.getVacancyRate(),
-				this.p.normalVacancyRate,
-				this.p.wageFlexDown,
-				this.p.wageFlexUp,
-				this.p.wageMinimum
-				);
+		this.workforceManager.updateWage();
 
 		// *** Updates the targeted production level.
 
-		this.productionBehavior.update(p.utilizationRateFlexibility,inventoryRatio);
+		this.productionManager.updateCapacityUtilizationTarget();
 
 		// *** Updates the workforce and computes the payroll.
 
 		this.workforce.cleanUp();
-		final int manpowerTarget = Math.round(this.factory.getCapacity()*this.productionBehavior.getTarget());
+		final int manpowerTarget = Math.round(this.factory.getCapacity()*this.productionManager.getTarget());
 		final long payroll;
 		final int newJobs;
 		if (manpowerTarget<=workforce.size()) {
@@ -782,7 +1053,7 @@ public class BasicFirm implements Firm {
 		}
 		else {
 			newJobs = manpowerTarget-workforce.size();
-			payroll = workforce.getPayroll() + newJobs*(long) (this.employerBehavior.getWage());
+			payroll = workforce.getPayroll() + newJobs*(long) (this.workforceManager.getWage());
 		}
 
 		// *** Secures financing.
@@ -794,7 +1065,7 @@ public class BasicFirm implements Firm {
 			throw new RuntimeException("Production is not financed.") ;
 		}
 
-		this.jobOffer = createJobOffer(newJobs,(long) this.employerBehavior.getWage());
+		this.workforceManager.updateJobOffer(newJobs);
 
 	}
 
@@ -811,7 +1082,7 @@ public class BasicFirm implements Firm {
 
 	@Override
 	public void updateParameters() {
-		this.p.update();
+		this.p.updateCapacityUtilizationTarget();
 		this.factory.setProductivity(p.productivity);
 	}
 
