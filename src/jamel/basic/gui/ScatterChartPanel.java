@@ -33,14 +33,14 @@ public class ScatterChartPanel extends JamelChartPanel {
 	 * @param legend the legend.
 	 */
 	public ScatterChartPanel(String title, XYSeriesCollection data, Paint[] colors,String[] legend) {
-		super(title, data, colors, legend);
+		super(title, null, null, data, colors, legend);
 	}
 
 	@Override
-	protected LegendItem getNewLegendItem(String label, Paint color) {
+	protected LegendItem getNewLegendItem(String label, String toolTipText, Paint color) {
 		return new LegendItem
-				(label, "description",
-						"toolTipText", null,
+				(label, null,
+						toolTipText, null,
 						true, square,
 						true, color,
 						true, lineColor,

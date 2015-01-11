@@ -25,10 +25,6 @@ public class BasicHouseholdTest {
 			public long getWage() {
 				return wage;
 			}
-			@Override
-			public int getVacancies() {
-				return 0;
-			}			
 		};
 	}
 

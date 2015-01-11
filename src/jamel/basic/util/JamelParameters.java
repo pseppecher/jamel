@@ -1,12 +1,10 @@
 package jamel.basic.util;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import javax.swing.JTree;
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -58,97 +56,8 @@ public class JamelParameters extends TreeMap<String, String> {
 	/** Line break tag. */
 	private static final String br = "<br>";
 
-	/** CMD_PREAMBLE_BEGIN */
-	private static final String CMD_BEGIN = "*BEGIN*";
-
-	/** CMD_SIMULATION_BEGIN */
-	private static final String CMD_END = "*END*";
-
-	/** Error message. */
-	private static final String ERROR_WHILE_PARSING_THE_PREAMBLE = "Error while parsing the preamble: ";
-
 	/** The line separator. */
 	private static final String rc = System.getProperty("line.separator");
-
-	/**
-	 * Returns a map that contains the initial parameters of the simulation.
-	 * @param scenario a list of strings to be parsed.
-	 * @return a Map<key,value> where key is the name of the parameter, value a string containing its value.
-	 */
-	private static TreeMap<String, String> parseScenario(List<String> scenario) {
-		final TreeMap<String, String> params = new TreeMap<String, String>();
-		boolean inPreamble = false;
-		final LinkedList<String> preamble = new LinkedList<String>();
-
-		for (String line: scenario) {
-			line = line.split("//",2)[0].trim();
-			if (!line.isEmpty()) {
-				if (line.equals(CMD_BEGIN)){
-					inPreamble=true;
-				}
-				else if (inPreamble) {
-					if (line.equals(CMD_END)) {
-						// End of the scenario.
-						break;
-					}
-					else {
-						preamble.add(line);
-					}
-				}
-			}
-		}
-
-		// Parsing the scenario // TODO a better management of errors 
-
-		LinkedList<String> prefixes = new LinkedList<String>(); 
-		for (String line: preamble) {
-			if (line.endsWith("{")) {
-				// new prefix detected.
-				String result[] = line.split("\\{",2);
-				if (!result[1].equals("")) {
-					throw new RuntimeException(ERROR_WHILE_PARSING_THE_PREAMBLE+"too many brackets in: "+line);
-				}
-				final String prefix = result[0].trim(); 
-				if (prefix.equals("")) {
-					throw new RuntimeException(ERROR_WHILE_PARSING_THE_PREAMBLE+"prefix not found in: "+line);
-				}
-				prefixes.add(prefix);
-			}
-			else if (line.equals("}")) {
-				try {
-					prefixes.removeLast();
-				} catch (NoSuchElementException e) {
-					e.printStackTrace();
-					throw new RuntimeException(ERROR_WHILE_PARSING_THE_PREAMBLE+"too many }.");				
-				}
-			}
-			else if (line.contains("{") || line.contains("}")) {
-				throw new RuntimeException(ERROR_WHILE_PARSING_THE_PREAMBLE+"unexpected bracket in: "+line);				
-			}
-			else {
-				final String prefix=prefixes.toString().replaceAll(", ",".").replaceAll("[\\[\\]]", "");;
-				final String[] word = line.split("=",2);
-				final String key;
-				if (word.length!=2 || word[0].equals("") || word[1].equals("")){
-					throw new RuntimeException(ERROR_WHILE_PARSING_THE_PREAMBLE+"something is missing in: "+line);									
-				}
-				word[0]=word[0].trim();
-				word[1]=word[1].trim();
-				if (word[0].equals("this")){
-					key = prefix;
-				}
-				else if (!prefix.equals("")) {
-					key=prefix+"."+word[0];
-				}
-				else {
-					key=word[0];
-				}
-				params.put(key, word[1]);				
-			}
-		}
-		
-		return params;
-	}
 
 	/**
 	 * Splits the specified string by the given delimiter. In each resulting item, leading and trailing white space are removed.
@@ -174,12 +83,11 @@ public class JamelParameters extends TreeMap<String, String> {
 	}
 
 	/**
-	 * Creates a new map of the parameters.
-	 * @param scenario a list of strings containing the parameters.
+	 * Creates a new set of parameters from a <code>Map&lt;key,value&gt;</code>.
+	 * @param map a <code>Map&lt;key,value&gt;</code>.
 	 */
-	public JamelParameters(List<String> scenario) {
-		super();
-		this.putAll(parseScenario(scenario));
+	public JamelParameters(Map<String, String> map) {
+		super(map);
 	}
 
 	/**
@@ -192,7 +100,7 @@ public class JamelParameters extends TreeMap<String, String> {
 		for (int index=1;index<keys.length;index++) {
 			key+="."+keys[index];
 		}
-		/*if (!this.containsKey(key)) { // a ne marche pas, rŽflŽchir ˆ a. Construire une Exception spŽcifique ?
+		/*if (!this.containsKey(key)) { // TODO a ne marche pas, rŽflŽchir ˆ a. Construire une Exception spŽcifique ?
 			throw new IllegalArgumentException("Unknown parameter: "+key);
 		}*/
 		return this.get(key);

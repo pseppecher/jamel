@@ -1,5 +1,6 @@
 package jamel.util;
 
+import java.awt.Component;
 import java.util.Random;
 
 
@@ -31,6 +32,14 @@ public abstract class Circuit {
 	}
 
 	/**
+	 * Returns a time counter (a graphical component that display simulation time).
+	 * @return a time counter.
+	 */
+	public static Component getTimeCounter() {
+		return timer.getCounter();
+	}
+
+	/**
 	 * Creates a new circuit.
 	 * @param timer the timer.
 	 * @param random the random.
@@ -46,7 +55,7 @@ public abstract class Circuit {
 	protected void nextPeriod() {
 		timer.next();
 	}
-
+	
 	/**
 	 * Returns an object.
 	 * @param message a string.
@@ -54,7 +63,7 @@ public abstract class Circuit {
 	 * @return an object.
 	 */
 	public abstract Object forward(String message,Object ... args);
-	
+
 	/**
 	 * Returns the parameter to which the specified key is mapped, or null if the circuit contains no mapping for the key.
 	 * @param keys strings that will be concatenated using dots to form the key whose associated parameter is to be returned.

@@ -36,7 +36,19 @@ public class BasicFactory implements Factory {
 	 * @param productivity the productivity. 
 	 */
 	public BasicFactory(int productionTime, int capacity, float productivity) {
-		this.workInProgress = new WorkInProgress(productionTime, capacity, productivity);
+		this.workInProgress = newWorkInProgress(productionTime, capacity, productivity);
+	}
+
+	/**
+	 * Creates and returns a new WorkInProgress object.
+	 * @param productionTime the production time.
+	 * @param capacity the capacity of production.
+	 * @param productivity the productivity. 
+	 * @return a new WorkInProgress object.
+	 * @since 23-11-2014
+	 */
+	protected WorkInProgress newWorkInProgress(int productionTime, int capacity, float productivity) {
+		return new WorkInProgress(productionTime, capacity, productivity);
 	}
 
 	/**
@@ -46,14 +58,6 @@ public class BasicFactory implements Factory {
 	float getAverageProductivity() {
 		return this.workInProgress.getAverageProductivity();
 	}	
-
-	/**
-	 * Returns the productivity.
-	 * @return the productivity.
-	 */
-	float getProductivity() {
-		return this.workInProgress.getProductivity();
-	}
 
 	/**
 	 * Returns the value of the goods at the specified stage.
@@ -115,6 +119,11 @@ public class BasicFactory implements Factory {
 	}
 
 	@Override
+	public double getGoodsInProcessValue() {
+		return this.workInProgress.getValue();
+	}
+
+	@Override
 	public double getInventoryLosses() {
 		return this.inventoryLosses;
 	}
@@ -132,6 +141,15 @@ public class BasicFactory implements Factory {
 	@Override
 	public long getProductionVolume() {
 		return this.productionVolume;
+	}
+
+	/**
+	 * Returns the productivity.
+	 * @return the productivity.
+	 */
+	@Override
+	public double getProductivity() {
+		return this.workInProgress.getProductivity();
 	}
 
 	@Override

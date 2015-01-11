@@ -112,20 +112,24 @@ public abstract class JamelChartPanel extends ChartPanel {
 	/**
 	 * Creates a panel with its chart.
 	 * @param title the title of the chart.
+	 * @param yMin the lower bound for the axis.
+	 * @param yMax the upper bound for the axis.
 	 * @param data the dataset.
 	 * @param colors the colors.
 	 * @param legend the legend.
 	 */
-	public JamelChartPanel(String title, XYSeriesCollection data,
+	public JamelChartPanel(String title, Double yMin, Double yMax, XYSeriesCollection data,
 			Paint[] colors, String[] legend) {
 		super(null);
-		this.setChart(createChart(title, null, null, data, colors,legend));
+		this.setChart(createChart(title, yMin, yMax, null, null, data, colors,legend));
 		this.setBackground(background);
 	}
 
 	/**
 	 * Creates a chart.
 	 * @param title the title.
+	 * @param yMin the lower bound for the axis.
+	 * @param yMax the upper bound for the axis.
 	 * @param xAxisLabel the xLabel.
 	 * @param yAxisLabel the yLabel.
 	 * @param dataset the data set.
@@ -133,19 +137,24 @@ public abstract class JamelChartPanel extends ChartPanel {
 	 * @param legend the legend.
 	 * @return the new chart.
 	 */
-	protected JFreeChart createChart(String title, String xAxisLabel, String yAxisLabel, final XYDataset dataset, final Paint[] colors,String[] legend) {
-		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(xAxisLabel), getNewYAxis(yAxisLabel), getNewRenderer(dataset,colors));
-		setLegend(plot,legend,colors);
+	protected JFreeChart createChart(String title, Double yMin, Double yMax, String xAxisLabel, String yAxisLabel, final XYDataset dataset, final Paint[] colors,String[] legend) {
+		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(xAxisLabel), getNewYAxis(yAxisLabel,yMin,yMax), getNewRenderer(dataset,colors));
+		final String[] tooltips = new String[dataset.getSeriesCount()];
+		for(int i=0; i<dataset.getSeriesCount();i++) {
+			tooltips[i] = (String) dataset.getSeriesKey(i);
+		}
+		setLegend(plot,legend,tooltips,colors);
 		return getNewChart(title,plot);	
 	}
 
 	/**
      * Creates and returns a new legend item.
-     * @param label  the label (<code>null</code> not permitted).
-	 * @param color  the item color.
+     * @param label the label (<code>null</code> not permitted).
+	 * @param tooltipText the tooltip text. 
+	 * @param color the item color.
 	 * @return a new legend item.
 	 */
-	protected abstract LegendItem getNewLegendItem(String label, Paint color) ;
+	protected abstract LegendItem getNewLegendItem(String label, String tooltipText, Paint color) ;
 
 	/**
      * Creates and returns a new renderer.
@@ -165,19 +174,29 @@ public abstract class JamelChartPanel extends ChartPanel {
 	/**
 	 * Creates and returns a new Y axis.
 	 * @param label the axis label (<code>null</code> permitted).
+	 * @param min the lower bound for the axis.
+	 * @param max the upper bound for the axis.
 	 * @return a new Y axis.
 	 */
-	protected NumberAxis getNewYAxis(String label) {
-		return getStandardAxis(label);
+	protected NumberAxis getNewYAxis(String label, Double min, Double max) {
+		NumberAxis axis = getStandardAxis(label);
+		if (min!=null) {
+			axis.setLowerBound(min);
+		}
+		if (max!=null) {
+			axis.setUpperBound(max);
+		}
+		return axis;
 	}
 
 	/**
      * Sets the fixed legend items for the specified plot.
 	 * @param plot  the plot to be modified.
 	 * @param legend  the legend item labels.
+	 * @param tooltip the tooltip texts.
 	 * @param colors  the series colors.
 	 */
-	protected void setLegend(XYPlot plot, String[] legend, Paint[] colors) {
+	protected void setLegend(XYPlot plot, String[] legend, String[] tooltip, Paint[] colors) {
 		if (legend!=null) {
 			final LegendItemCollection legendItemCollection = new LegendItemCollection();
 			final DefaultDrawingSupplier drawingSupplier = new DefaultDrawingSupplier();
@@ -190,9 +209,9 @@ public abstract class JamelChartPanel extends ChartPanel {
 				else {
 					color=drawingSupplier.getNextPaint();
 				}
-				final LegendItem legendItem = getNewLegendItem(label,color);
-
-				legendItemCollection.add(legendItem);
+				try {
+					legendItemCollection.add(getNewLegendItem(label,tooltip[id],color));
+				} catch (ArrayIndexOutOfBoundsException e) {}
 				id++;
 			}
 			plot.setFixedLegendItems(legendItemCollection);		

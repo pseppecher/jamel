@@ -1,5 +1,7 @@
 package jamel.basic.agents.firms;
 
+import java.util.List;
+
 import jamel.basic.agents.roles.CapitalOwner;
 import jamel.basic.util.BankAccount;
 
@@ -7,6 +9,13 @@ import jamel.basic.util.BankAccount;
  * Represents the industrial sector.
  */
 public interface IndustrialSector {
+	
+	/**
+	 * Returns the float value of the specified parameter.  
+	 * @param key the key of the parameter.
+	 * @return a Float.
+	 */
+	float getFloatParameter(String key);
 
 	/**
 	 * Returns a new bank account for the specified firm.
@@ -20,8 +29,15 @@ public interface IndustrialSector {
 	 * @param key the key whose associated parameter is to be returned.
 	 * @return a string.
 	 */
-	String getParameter(String key);
+	String getStringParameter(String key);
 
+	/**
+	 * Returns a simple random sample of firms. 
+	 * @param size the of the sample. 
+	 * @return a sample of firms.
+	 */
+	List<Firm> getSimpleRandomSample(int size);
+	
 	/**
 	 * Returns an agent selected at random in the collection of agents that can be a capital owner.
 	 * @return a capital owner.

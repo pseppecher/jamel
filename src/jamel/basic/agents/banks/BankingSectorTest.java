@@ -2,12 +2,13 @@ package jamel.basic.agents.banks;
 
 import static org.junit.Assert.*;
 
+import java.awt.Component;
 import java.util.Random;
 
 import jamel.basic.agents.roles.AccountHolder;
 import jamel.basic.agents.roles.Asset;
 import jamel.basic.agents.roles.CapitalOwner;
-import jamel.basic.data.AgentDataset;
+import jamel.basic.data.dataSets.AgentDataset;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.BasicPeriod;
 import jamel.basic.util.Cheque;
@@ -40,6 +41,7 @@ public class BankingSectorTest {
 			super(new Timer() {
 				@Override public Period getPeriod() {return new BasicPeriod(t);}
 				@Override public void next() {}
+				@Override public Component getCounter() {return null;}
 			}, new Random(0));
 			this.jamelParameters.put("Bank.rate.normal", "0.05");
 			this.jamelParameters.put("Bank.rate.penalty", "0.1");
@@ -95,11 +97,11 @@ public class BankingSectorTest {
 	private static AccountHolder newAccountHolder() {
 		return new AccountHolder(){
 			@Override public void bankrupt() {}
+			@Override public Object execute(String instruction, Object... args) {return null;}
 			@Override public long getAssets() {return 0;}
 			@Override public AgentDataset getData() {return null;}
 			@Override public String getName(){return "Basic Account Holder";}
 			@Override public boolean isBankrupted() {return false;}
-			@Override public void updateParameters() {}
 		};
 	}
 
@@ -627,11 +629,11 @@ public class BankingSectorTest {
 		
 		circuit.defaultCapitalOwner = new CapitalOwner() {
 			@Override public void addAsset(Asset asset) {}
+			@Override public Object execute(String instruction, Object... args) {return null;}
 			@Override public AgentDataset getData() {return null;}
 			@Override public String getName() {return "Basic Capital Owner";}
 			@Override public void receiveDividend(Cheque cheque,Asset asset) {account2.deposit(cheque);}
 			@Override public void removeAsset(Asset asset) {}
-			@Override public void updateParameters() {}
 		};
 
 		account1.lend(1000);

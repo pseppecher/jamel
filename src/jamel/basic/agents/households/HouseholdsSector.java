@@ -10,6 +10,13 @@ import jamel.basic.util.Supply;
 public interface HouseholdsSector {
 
 	/**
+	 * Returns the float value of the specified parameter.  
+	 * @param key the key of the parameter.
+	 * @return a Float.
+	 */
+	float getFloatParameter(String key);
+
+	/**
 	 * Returns an array of job offers.
 	 * @param i the number of job offers to be returned.
 	 * @return an array of job offers.
@@ -28,7 +35,7 @@ public interface HouseholdsSector {
 	 * @param key the key whose associated parameter is to be returned.
 	 * @return a string.
 	 */
-	String getParameter(String key);
+	String getStringParameter(String key);
 
 	/**
 	 * Returns an array of supplies.

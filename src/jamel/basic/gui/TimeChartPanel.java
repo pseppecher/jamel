@@ -25,17 +25,19 @@ public class TimeChartPanel extends JamelChartPanel {
 	/**
 	 * Creates a panel with its chart.
 	 * @param title the title of the chart.
+	 * @param yMin the lower bound for the axis.
+	 * @param yMax the upper bound for the axis.
 	 * @param data the dataset.
 	 * @param colors the colors.
 	 * @param legend the legend.
 	 */
-	public TimeChartPanel(String title, XYSeriesCollection data, Paint[] colors,String[] legend) {
-		super(title, data, colors, legend);
+	public TimeChartPanel(String title, Double yMin, Double yMax, XYSeriesCollection data, Paint[] colors,String[] legend) {
+		super(title, yMin, yMax, data, colors, legend);
 	}
 
 	@Override
-	protected LegendItem getNewLegendItem(String label, Paint color) {
-		return new LegendItem(label, null, null, null, line, basicStroke, color);
+	protected LegendItem getNewLegendItem(String label, String tooltipText, Paint color) {
+		return new LegendItem(label, null, tooltipText, null, line, basicStroke, color);
 	}
 	
 	@Override

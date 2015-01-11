@@ -2,6 +2,7 @@ package jamel.basic.agents.firms.util;
 
 import static org.junit.Assert.*;
 
+import java.awt.Component;
 import java.util.Random;
 
 import jamel.basic.agents.util.LaborPower;
@@ -106,6 +107,7 @@ public class BasicFactoryTest {
 		new Circuit(new Timer() {
 			@Override public Period getPeriod() {return period;}
 			@Override public void next() {}
+			@Override public Component getCounter() {return null;}
 		},new Random()){
 			@Override public Object forward(String message, Object... args) {return null;}
 			@Override public String getParameter(String... keys) {return null;}

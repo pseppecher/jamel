@@ -79,4 +79,14 @@ public class Workforce extends LinkedList<JobContract> {
 		}
 	}
 
+	/**
+	 * Lays off all the employees.
+	 */
+	public void layoff() {
+		for (JobContract contract:this) {
+			contract.breach();
+		}
+		this.clear();
+	}
+
 }

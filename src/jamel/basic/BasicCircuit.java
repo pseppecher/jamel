@@ -1,27 +1,105 @@
 package jamel.basic;
 
-import jamel.basic.util.BasicPeriod;
-import jamel.basic.util.Dispatcher;
+import jamel.Simulator;
+import jamel.basic.util.BasicTimer;
 import jamel.basic.util.JamelParameters;
+import jamel.basic.util.JamelParameters.Param;
 import jamel.util.Circuit;
-import jamel.util.Period;
+import jamel.util.FileParser;
 import jamel.util.Sector;
-import jamel.util.Timer;
 
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.FlowLayout;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Random;
-import java.util.TreeMap;
 
+import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JSplitPane;
+import javax.swing.JTextArea;
 import javax.swing.JTree;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
+import javax.swing.event.TreeSelectionEvent;
+import javax.swing.event.TreeSelectionListener;
+import javax.swing.tree.DefaultMutableTreeNode;
 
 /**
  * A basic class of the Circuit.
  */
 public class BasicCircuit extends Circuit {
+
+	/**
+	 * TODO WORK IN PROGRESS / ADD JAVADOC COMMENT
+	 */
+	@SuppressWarnings("javadoc")
+	private class Dispatcher {
+		
+		/**
+		 * A redirection.
+		 */
+		public class Redirection {
+			public final String method;
+			public final Sector sector;
+			public Redirection(Sector sector, String method) {
+				this.sector = sector;
+				this.method = method;
+			}
+		}
+
+		/** The redirections. */
+		private final Map<String,Redirection> redirections = new HashMap<String,Redirection>();
+
+		private Object forward(String request, Object[] args) {
+			
+			final Object result;
+			
+			if (request==null) {
+				throw new IllegalArgumentException("The request is null.");
+			}
+			
+			else if (request.equals("pause")) {
+				pause = true;
+				result = null;
+			}
+			
+			else if (request.equals("unpause")) {
+				pause = false;
+				result = null;
+			}
+			
+			else if (redirections.containsKey(request)) {
+				result = redirections.get(request).sector.forward(redirections.get(request).method, args);
+			}
+			
+			else {
+				final String def1  = getParameter(KEY.CIRCUIT,KEY.REDIRECT,request);
+				if (def1==null) {
+					throw new IllegalArgumentException("Unknown request: "+request);
+				}
+				final String[] definition = def1.split("\\.",2);
+				if (sectors.containsKey(definition[0])){
+					final Sector sector = sectors.get(definition[0]);
+					final String method = definition[1];
+					this.redirections.put(request,new Redirection(sector,method));
+					result = sector.forward(method,args);
+				}
+				else {
+					throw new IllegalArgumentException("Unknown sector: "+definition[0]);
+				}
+			}
+			return result;
+		}
+
+	}
 
 	/**
 	 * A convenient class to store String constants.
@@ -39,6 +117,9 @@ public class BasicCircuit extends Circuit {
 
 		/** The key to designate the sectors in the parameters file. */
 		private static final String SECTORS = "sectors";
+
+		/** The title of the info panel. */
+		public static final String INFO = "Info";
 
 		/** The key to designate the random seed in the parameters file. */
 		public static final String RANDOM_SEED = "randomSeed";
@@ -64,86 +145,10 @@ public class BasicCircuit extends Circuit {
 
 	}
 
-	/** The request dispatcher. */
-	private final Dispatcher dispatcher = new Dispatcher() {
-
-		/**
-		 * A redirection.
-		 */
-		class Redirection {
-			public final String method;
-			public final Sector sector;
-			public Redirection(Sector sector, String method) {
-				this.sector = sector;
-				this.method = method;
-			}
-		}
-
-		/** The redirections. */
-		private final Map<String,Redirection> redirections = new TreeMap<String,Redirection>();
-
-		/**
-		 * Called when no method reflects the specified request in the dispatcher.
-		 * The dispatcher then tries to redirect the request to an other sector.
-		 * If there is no recorded redirection for this request, the dispatcher look for an adequate redirection in the parameters.
-		 * Ultimately, if no adequate redirection is found, a <code>RuntimeException</code> is generated. 
-		 * @return an object.
-		 */
-		@Override
-		protected Object redirect(String request) {
-			final Object result;
-			if (redirections.containsKey(request)) {
-				result = redirections.get(request).sector.forward(redirections.get(request).method, getArgs());
-			}
-			else {
-				final String def1  = getParameter(KEY.CIRCUIT,KEY.REDIRECT,request);
-				if (def1==null) {
-					throw new RuntimeException("Unknown request: "+request);
-				}
-				final String[] definition = def1.split("\\.",2);
-				if (sectors.containsKey(definition[0])){
-					final Sector sector = sectors.get(definition[0]);
-					final String method = definition[1];
-					this.redirections.put(request,new Redirection(sector,method));
-					result = sector.forward(method,this.getArgs());
-				}
-				else {
-					throw new RuntimeException("Unknown sector: "+definition[0]);
-				}
-			}
-			return result;
-		}
-
-		@SuppressWarnings("unused")
-		public void dataKeys() {
-			final Object[] labels = this.getArgs();
-			for(Object key:labels) {
-				final String[] words = ((String)key).split("\\.",2);
-				sectors.get(words[0]).forward("addDataKey", words[1]);// TODO Utiliser un appel direct pour to ça
-			}
-		}
-
-		@SuppressWarnings("unused")
-		public JTree getJTreeViewOfParameters() {
-			return jamelParameters.getJTree();			
-		}
-
-		@SuppressWarnings("unused")
-		public String htmlParameters() {
-			return jamelParameters.toHtml();			
-		}
-
-		@SuppressWarnings("unused")
-		public void pause() {
-			pause=true;			
-		}
-
-		@SuppressWarnings("unused")
-		public void unpause() {
-			pause=false;			
-		}
-
-	};
+	/** 
+	 * The request dispatcher.
+	 */
+	private final Dispatcher dispatcher = new Dispatcher();
 
 	/** The parameters of the simulation. */
 	private final JamelParameters jamelParameters ;
@@ -160,39 +165,48 @@ public class BasicCircuit extends Circuit {
 	/** The sectors of the circuit. */
 	private final LinkedHashMap<String,Sector> sectors = new LinkedHashMap<String,Sector>();
 
+	/** The start. */
+	private final Date start;
+
 	/**
 	 * Creates a new basic circuit.
 	 * @param jamelParameters a map of parameters for the new circuit.
 	 */
 	public BasicCircuit(final JamelParameters jamelParameters) {
-		super(new Timer() {
-
-			/** The current period value. */
-			private Period current = new BasicPeriod(-1);
-
-			@Override
-			public Period getPeriod() {
-				return this.current;
-			}
-
-			@Override
-			public void next() {
-				this.current=this.current.getNext();
-			}
-
-		},
-		new Random() {
-
-			private static final long serialVersionUID = 1L;
-
-			{this.setSeed(Integer.parseInt(jamelParameters.get(KEY.CIRCUIT,KEY.RANDOM_SEED)));}
-
-		}
+		super(
+				new BasicTimer(-1)
+				/*new Timer() {
+					@SuppressWarnings("serial")
+					private final JTextField counter = new JTextField (5) {{
+						this.setHorizontalAlignment(RIGHT);
+						this.setEditable(false);
+					}};
+					private Period current = new BasicPeriod(-1);
+					@Override public Period getPeriod() {return this.current;}
+					@Override public void next() {
+						this.current=this.current.getNext();
+						SwingUtilities.invokeLater(new Runnable() {
+							public void run() {
+								counter.setText(""+current.getValue());
+							}
+						});			
+											
+						}
+					@Override
+					public Component getCounter() {
+						return this.counter;
+					}
+				}*/,
+				new Random() {
+					private static final long serialVersionUID = 1L;
+					{this.setSeed(Integer.parseInt(jamelParameters.get(KEY.CIRCUIT,KEY.RANDOM_SEED)));}}
 				);
+		this.start = new Date();
 		this.jamelParameters = jamelParameters;
-
 		this.initSectors();
 		this.initPhases();
+		this.forward("addPanel", this.getNewParamPanel()); // TODO ne pas utiliser forward
+		this.forward("addPanel", this.getNewInfoPanel()); // TODO ne pas utiliser forward
 	}
 
 	/**
@@ -205,6 +219,7 @@ public class BasicCircuit extends Circuit {
 			for(final String string:events) {
 
 				if (string.equals("pause")) {
+					System.out.println("Duration: "+((new Date()).getTime()-start.getTime())/1000+" s.");
 					this.pause=true;
 					for(Sector sector:sectors.values()) {
 						sector.pause();
@@ -215,17 +230,27 @@ public class BasicCircuit extends Circuit {
 					final String[] truc1 = JamelParameters.split(string.substring(7),"=");
 					final String[] truc2 = truc1[0].split("\\.", 2);
 					this.jamelParameters.put(truc1[0], truc1[1]);
-					this.sectors.get(truc2[0]).forward("change in parameters");					
+					final Sector sector = this.sectors.get(truc2[0]);
+					if (sector!=null) {
+						sector.forward("change in parameters");					
+					}
+					else {
+						throw new RuntimeException("Sector not found: "+truc2[0]);
+					}
 				}
 
 				else {
 					final String[] truc1 = JamelParameters.split(string,"=");
 					final String[] truc2 = truc1[0].split("\\.", 2);
-					this.sectors.get(truc2[0]).forward(truc2[1],truc1[1]);						
+					final Sector sector = this.sectors.get(truc2[0]);
+					if (sector!=null) {
+						sector.forward(truc2[1],truc1[1]);
+					}
+					else {
+						throw new RuntimeException("Error while parsing the event <"+event+">: Sector not found <"+truc2[0]+">.");
+					}
 				}
-
 			}
-
 		}
 	}
 
@@ -241,6 +266,76 @@ public class BasicCircuit extends Circuit {
 				throw new RuntimeException("Failure phase <"+phase.toString()+">");
 			};
 		}
+	}
+
+	/**
+	 * Returns a new info panel.
+	 * @return a new info panel.
+	 */
+	private Component getNewInfoPanel() {
+		final Component jEditorPane = new JEditorPane() {
+			private static final long serialVersionUID = 1L;
+			{
+				String infoString = FileParser.readResourceFile("info.html");
+				this.setContentType("text/html");
+				this.setText("<center><h3>Jamel2 ("+Simulator.version+")</h3>"+infoString+"</center>");
+				this.setEditable(false);
+				this.addHyperlinkListener(new HyperlinkListener() {
+					public void hyperlinkUpdate(HyperlinkEvent e) {
+						if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
+							try {
+								java.awt.Desktop.getDesktop().browse(e.getURL().toURI());
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}	        
+					}
+				});
+			}
+		};
+		final JScrollPane pane = new JScrollPane(jEditorPane);
+		pane.setName(KEY.INFO);
+		return pane;
+	}
+
+	/**
+	 * Returns a new parameters panel.
+	 * @return a new parameters panel.
+	 */
+	@SuppressWarnings("serial")
+	private Component getNewParamPanel() {
+		return new JSplitPane(JSplitPane.HORIZONTAL_SPLIT){{
+			this.setBorder(null);
+			this.setDividerSize(5);
+			final JTextArea fieldDetailsTextArea = new JTextArea() {{
+				this.setEditable(false);
+				this.setBackground(Color.WHITE);
+			}};
+			final JPanel rightPanel = new JPanel() {{
+				this.setLayout(new FlowLayout(FlowLayout.LEFT));
+				this.add(fieldDetailsTextArea);
+				this.setBackground(Color.WHITE);
+			}};
+			final JPanel leftPanel = new JPanel() {{
+				this.setLayout(new FlowLayout(FlowLayout.LEFT));
+				final JTree jTree = jamelParameters.getJTree();
+				jTree.addTreeSelectionListener(new TreeSelectionListener() {
+					@Override
+					public void valueChanged(TreeSelectionEvent e) {
+						DefaultMutableTreeNode node = (DefaultMutableTreeNode) jTree.getLastSelectedPathComponent();
+						if (node != null) {
+							final Param nodeInfo = (Param) node.getUserObject();
+							fieldDetailsTextArea.setText(nodeInfo.getValue());
+						}
+					}
+				});
+				this.add(jTree);
+				this.setBackground(Color.white);
+			}};
+			this.setName("Parameters");
+			this.setResizeWeight(0.3);
+			this.setLeftComponent(new JScrollPane(leftPanel));
+			this.setRightComponent(new JScrollPane(rightPanel));
+		}};
 	}
 
 	/**

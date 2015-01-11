@@ -30,6 +30,12 @@ public interface Firm extends Agent, AccountHolder, Asset, Supplier {
 	Supply getSupply();
 
 	/**
+	 * Returns the wage offered.
+	 * @return the wage offered.
+	 */
+	Double getWage();
+
+	/**
 	 * Opens the firm at the beginning of the period. 
 	 */
 	void open();

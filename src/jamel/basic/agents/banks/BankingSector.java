@@ -5,8 +5,8 @@ import jamel.basic.agents.banks.util.Loan;
 import jamel.basic.agents.roles.AccountHolder;
 import jamel.basic.agents.roles.Asset;
 import jamel.basic.agents.roles.CapitalOwner;
-import jamel.basic.data.BasicAgentDataset;
-import jamel.basic.data.RepresentativeAgentDataset;
+import jamel.basic.data.dataSets.BasicAgentDataset;
+import jamel.basic.data.dataSets.RepresentativeAgentDataset;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.Cheque;
 import jamel.util.Circuit;
@@ -144,7 +144,6 @@ public class BankingSector implements Sector, Asset {
 		 * Returns <code>true</code> if the account holder is solvent, <code>false</code> otherwise.
 		 * @return a boolean.
 		 */
-		@SuppressWarnings("unused")
 		private boolean isSolvent() {
 			return this.accountHolder.getAssets()>this.debt;
 		}
@@ -414,7 +413,6 @@ public class BankingSector implements Sector, Asset {
 		private Integer normalTerm = null;
 
 		/** The patience of the bank with the startups. */
-		@SuppressWarnings("unused")
 		private Integer patience = null;
 
 		/** The penalty interest rate. */
@@ -526,7 +524,7 @@ public class BankingSector implements Sector, Asset {
 	 * The data of the period are computed and forwarded to the circuit.
 	 */
 	private void close() {
-		this.updateData();
+		this.dataset.update();
 		this.circuit.forward(KEY.putData,this.name,new RepresentativeAgentDataset(this.dataset));
 		if (!checkConsistency()) {
 			throw new RuntimeException("Inconsistency");
@@ -539,17 +537,17 @@ public class BankingSector implements Sector, Asset {
 	private void debtRecovery() {
 		Collections.shuffle(accounts, Circuit.getRandom());
 		final Iterator<Account> iterAccount = accounts.iterator();
-		@SuppressWarnings("unused")	final int now = Circuit.getCurrentPeriod().getValue();
+		final int now = Circuit.getCurrentPeriod().getValue();
 		while(iterAccount.hasNext()){
 			Account account = iterAccount.next();
 			if(account.getDebt()>0) {
 				account.payInterest();
 				account.recover();
-				/*if (!account.isSolvent()) { // FIXME: insolvency
+				if (!account.isSolvent()) {
 					if (now-account.creation>this.p.patience) {
 						account.bankrupt=true;
 					}
-				}*/
+				}
 				if (account.bankrupt) {
 					account.close();
 					account.getAccountHolder().bankrupt();
@@ -576,7 +574,24 @@ public class BankingSector implements Sector, Asset {
 	 * Opens the sector.
 	 */
 	private void open() {
-		this.dataset = new BasicAgentDataset(this.name);
+		if (this.bankOwner==null) {
+			newOwner();
+		}
+		this.dataset = new BasicAgentDataset(this.name){
+
+			/** serialVersionUID */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void update() {
+				this.put("doubtfulDebt", (double) getDoubtfulDebt());
+				this.put("capital", (double) v.capital);
+				this.put("liabilities", (double) v.liabilities);
+				this.put("assets", (double) v.assets);
+				this.put("bankruptcies", (double) v.bankruptcies);
+			}
+			
+		};
 		this.v.bankruptcies=0;
 	}
 
@@ -590,8 +605,7 @@ public class BankingSector implements Sector, Asset {
 		dataset.put("dividends", (double) dividend);
 		if (dividend!=0) {
 			if (BankingSector.this.bankOwner==null) {
-				BankingSector.this.bankOwner=(CapitalOwner) BankingSector.this.circuit.forward(KEY.selectCapitalOwner);
-				bankOwner.addAsset(this);
+				newOwner();
 			}
 			if (BankingSector.this.bankOwner!=null) {
 				BankingSector.this.bankOwner.receiveDividend(new Cheque() {
@@ -618,14 +632,16 @@ public class BankingSector implements Sector, Asset {
 	}
 
 	/**
-	 * Updates the data.
+	 * Selects a new owner.
 	 */
-	private void updateData() {
-		dataset.put("doubtfulDebt", (double) this.getDoubtfulDebt());
-		dataset.put("capital", (double) v.capital);
-		dataset.put("liabilities", (double) v.liabilities);
-		dataset.put("assets", (double) v.assets);
-		dataset.put("bankruptcies", (double) v.bankruptcies);
+	private void newOwner() {
+		if (this.bankOwner!=null) {
+			throw new RuntimeException("There is already an owner.");
+		}
+		this.bankOwner=(CapitalOwner) BankingSector.this.circuit.forward(KEY.selectCapitalOwner);
+		if (this.bankOwner!=null) {
+			bankOwner.addAsset(this);		
+		}
 	}
 
 	@Override
@@ -689,11 +705,6 @@ public class BankingSector implements Sector, Asset {
 		else if (request.equals("updateParameters")) {
 			p.update();
 			result = null;
-		}
-
-		else if (request.equals("addDataKey")) { // DELETE
-			throw new RuntimeException("This request is obsolete.");
-			//result = this.dataKeys .add((String) args[0]);
 		}
 
 		else {

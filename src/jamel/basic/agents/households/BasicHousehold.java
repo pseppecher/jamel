@@ -1,11 +1,10 @@
 package jamel.basic.agents.households;
 
-import jamel.Simulator;
 import jamel.basic.agents.roles.Asset;
 import jamel.basic.agents.util.Memory;
 import jamel.basic.agents.util.LaborPower;
-import jamel.basic.data.AgentDataset;
-import jamel.basic.data.BasicAgentDataset;
+import jamel.basic.data.dataSets.AgentDataset;
+import jamel.basic.data.dataSets.BasicAgentDataset;
 import jamel.basic.util.AnachronismException;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.Cheque;
@@ -27,11 +26,6 @@ import java.util.Set;
  */
 public class BasicHousehold implements Household {
 
-	/**
-	 * A class to store the parameters of the household.
-	 */
-	private class Parameters {
-
 		@SuppressWarnings("javadoc")
 		private static final String N_JOB_OFFERS = "jobs.selection";
 
@@ -52,50 +46,6 @@ public class BasicHousehold implements Household {
 
 		@SuppressWarnings("javadoc")
 		private final static String WAGE_RESIST = "wage.resistance";
-
-		/** The flexibility of the reservation wage. */
-		private float flexibility;
-
-		/** The number of job offers selected. */
-		private int nJobOffers;
-
-		/** The number of supplies selected. */
-		private int nSupplies;
-
-		/** The propensity to consume excess saving. */
-		private float propensityToConsumeExcessSaving;
-
-		/** The resistance to a cut of the reservation wage. */
-		private int resistance;
-
-		/** The saving propensity. */
-		private float savingPropensity;
-
-		/** The ratio of targeted savings to annual income. */
-		private float savingRatioTarget;
-
-		/**
-		 * Updates the parameters.
-		 * Called when the household is created.
-		 */
-		private void update() {
-			try {
-			this.flexibility = Float.parseFloat(BasicHousehold.this.sector.getParameter(WAGE_FLEX));
-			this.nJobOffers=Integer.parseInt(BasicHousehold.this.sector.getParameter(N_JOB_OFFERS));
-			this.nSupplies=Integer.parseInt(BasicHousehold.this.sector.getParameter(N_SUPPLIES));
-			this.propensityToConsumeExcessSaving = Float.parseFloat(BasicHousehold.this.sector.getParameter(SAV_PROP2_CONSUM_EXCESS));
-			this.resistance = Integer.parseInt(BasicHousehold.this.sector.getParameter(WAGE_RESIST));
-			this.savingPropensity = Float.parseFloat(BasicHousehold.this.sector.getParameter(SAV_PROP));
-			this.savingRatioTarget = Float.parseFloat(BasicHousehold.this.sector.getParameter(SAV_TARGET));
-			}
-			catch (NumberFormatException e) {
-				Simulator.showErrorDialog("BasicHousehold: NumberFormatException while updating parameters");
-				e.printStackTrace();
-				throw new RuntimeException("BasicHousehold: NumberFormatException while updating parameters");
-			}
-		}
-
-	}
 
 	/**
 	 * Enumeration of the social status of the household.
@@ -227,9 +177,6 @@ public class BasicHousehold implements Household {
 	/** The name of  the household. */
 	private final String name;
 
-	/** The parameters of the household. */
-	private final Parameters p = new Parameters();
-
 	/** Items of property. */
 	private final Possessions possessions = new Possessions(){
 
@@ -287,7 +234,7 @@ public class BasicHousehold implements Household {
 		this.history.add("Creation: "+name);
 		this.name = name;
 		this.sector = sector;
-		this.p.update();
+		//this.p.update();
 		this.account = sector.getNewAccount(this);
 	}
 
@@ -316,24 +263,20 @@ public class BasicHousehold implements Household {
 	@Override
 	public void close() {
 		this.annualIncome.add(this.v.income);
-		this.data.put("cash", (double) this.account.getAmount());
-		this.data.put("wages", (double) this.v.wage);
-		this.data.put("dividend", (double) this.v.dividend);
-		this.data.put("income", (double) this.v.income);
-		this.data.put("capital", (double) this.possessions.getNetValue());
+		this.data.update();
 	}
 
 	@Override
 	public void consumption() {
 		final double averageIncome = annualIncome.getMean();
-		final long savingsTarget = (long) (12*averageIncome*this.p.savingRatioTarget);
+		final long savingsTarget = (long) (12*averageIncome*this.sector.getFloatParameter(SAV_TARGET));
 		final long savings = (long) (this.account.getAmount()-averageIncome);
 		long consumptionBudget;
 		if (savings<savingsTarget) {
-			consumptionBudget = Math.min(this.account.getAmount(), (long) ((1.-this.p.savingPropensity)*averageIncome));
+			consumptionBudget = Math.min(this.account.getAmount(), (long) ((1.-this.sector.getFloatParameter(SAV_PROP))*averageIncome));
 		}
 		else {
-			consumptionBudget = Math.min(this.account.getAmount(), (long) (averageIncome + (savings-savingsTarget)*this.p.propensityToConsumeExcessSaving));
+			consumptionBudget = Math.min(this.account.getAmount(), (long) (averageIncome + (savings-savingsTarget)*this.sector.getFloatParameter(SAV_PROP2_CONSUM_EXCESS)));
 		}
 
 		this.history.add("Average income: "+averageIncome);
@@ -345,7 +288,7 @@ public class BasicHousehold implements Household {
 		long consumptionValue=0;
 		long consumptionVolume=0;
 		if (consumptionBudget>0) {
-			final Supply[] supplies = this.sector.getSupplies(p.nSupplies);
+			final Supply[] supplies = this.sector.getSupplies((int) sector.getFloatParameter(N_SUPPLIES));
 			this.history.add("Supplies: "+supplies.length);			
 			if (supplies.length>0) {
 				double supplyVolume=0;
@@ -405,6 +348,17 @@ public class BasicHousehold implements Household {
 		this.v.income += paycheck.getAmount();
 		this.v.wage += paycheck.getAmount();
 		this.account.deposit(paycheck);
+	}
+
+	/* 
+	 * (non-Javadoc)
+	 * @see jamel.basic.agents.roles.Agent#execute(java.lang.String, java.lang.Object[])
+	 * @since 23-11-2014
+	 * TODO IMPLEMENT ME
+	 */
+	@Override
+	public Object execute(String instruction, Object... args) {
+		throw new RuntimeException("Not yet implemented.");
 	}
 
 	@Override
@@ -532,12 +486,12 @@ public class BasicHousehold implements Household {
 		switch(this.v.status) {
 		case unemployed:
 			// Attention, c'est un peu plus compliquŽ dans les dernires versions de Jamel1.
-			if (this.v.unempDuration>this.p.resistance){
-				this.v.reservationWage = (this.v.reservationWage*(1f-this.p.flexibility*Circuit.getRandom().nextFloat()));
+			if (this.v.unempDuration>this.sector.getFloatParameter(WAGE_RESIST)){
+				this.v.reservationWage = (this.v.reservationWage*(1f-this.sector.getFloatParameter(WAGE_FLEX)*Circuit.getRandom().nextFloat()));
 				this.history.add("Reservation wage updated.");
 			}
 			this.history.add("Reservation wage: "+this.v.reservationWage);
-			final JobOffer[] jobOffers = this.sector.getJobOffers(p.nJobOffers);
+			final JobOffer[] jobOffers = this.sector.getJobOffers((int) sector.getFloatParameter(N_JOB_OFFERS));
 			if (jobOffers.length>0) {
 				Arrays.sort(jobOffers,jobComparator);
 				if (jobOffers[0].getWage()>=this.v.reservationWage) {
@@ -571,8 +525,22 @@ public class BasicHousehold implements Household {
 		this.v.income=0;
 		this.v.wage=0;
 		this.v.dividend=0;
-		this.data = new BasicAgentDataset(this.name);
-		this.data.put("households", 1.);
+		this.data = new BasicAgentDataset(this.name) {
+
+			/** serialVersionUID */
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void update() {
+				this.put("cash", (double) account.getAmount());
+				this.put("wages", (double) v.wage);
+				this.put("dividend", (double) v.dividend);
+				this.put("income", (double) v.income);
+				this.put("capital", (double) possessions.getNetValue());				
+				this.put("agents", 1.);
+			}
+			
+		};
 	}
 
 	@Override
@@ -589,11 +557,6 @@ public class BasicHousehold implements Household {
 	@Override
 	public void removeAsset(Asset asset) {
 		this.possessions.remove(asset);
-	}
-
-	@Override
-	public void updateParameters() {
-		this.p.update();
 	}
 
 }

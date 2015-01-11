@@ -1,25 +1,27 @@
 package jamel.basic.data;
 
-import jamel.Simulator;
+import jamel.basic.data.dataSets.BasicMacroDataset;
+import jamel.basic.data.dataSets.JamelXYSeries;
+import jamel.basic.data.dataSets.MacroDataset;
+import jamel.basic.data.dataSets.SectorDataset;
+import jamel.basic.data.util.AbstractBalanceSheetMatrix;
+import jamel.basic.data.util.AbstractChartManager;
+import jamel.basic.data.util.AbstractDataValidator;
+import jamel.basic.data.util.BalanceSheetMatrix;
+import jamel.basic.data.util.ChartManager;
+import jamel.basic.data.util.DataValidator;
 import jamel.util.Circuit;
-import jamel.util.FileParser;
 import jamel.util.Sector;
 
 import java.awt.Component;
 import java.io.FileNotFoundException;
 import java.lang.reflect.InvocationTargetException;
-import java.text.NumberFormat;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.TreeSet;
 
-import javax.swing.JEditorPane;
-import javax.swing.JScrollPane;
 import javax.swing.SwingUtilities;
 
 import org.jfree.data.xy.XYDataItem;
@@ -31,41 +33,15 @@ import org.jfree.data.xy.XYSeries;
 public class DataManager implements Sector {
 
 	/**
-	 * The balance sheet matrix of the economy.
+	 * A convenient class to store String constants.
 	 */
-	private interface BalanceSheetMatrix {
-
-		/**
-		 * Returns a panel containing a representation of the balance sheet matrix.
-		 * @return a panel containing a representation of the balance sheet matrix.
-		 */
-		Component getPanel();
-
-		/**
-		 * Returns a html representation of the balance sheet matrix.
-		 * @return a html representation of the balance sheet matrix.
-		 */
-		String toHtml();
-
-		/**
-		 * Updates the representation of the balance sheet matrix.
-		 */
-		void update();
-
+	@SuppressWarnings("javadoc") private static class KEY {
+		public static final String MATRIX_FILE_CONFIG = "config.matrix";
+		public static final String VALIDATION_FILE_CONFIG = "config.validation";
 	}
 
-	/**
-	 * A class to store string constants.
-	 */
-	private static class KEY {
-
-		/** The "XYSeries" key. */ 
-		private static final String XYSeries = "XYSeries";
-
-	}
-
-	/** The number format. */
-	final private static NumberFormat nf = NumberFormat.getInstance(Locale.US);
+	/** The chart manager. */
+	private final ChartManager chartManager;
 
 	/** The balance sheet matrix. */
 	private final BalanceSheetMatrix balanceSheetMatrix;
@@ -73,23 +49,23 @@ public class DataManager implements Sector {
 	/** The circuit. */
 	private final Circuit circuit;
 
+	/** The data validator. */
+	final private DataValidator dataValidator;
+
 	/** The macro dataset. */
 	private final MacroDataset macroDataset = new BasicMacroDataset();
 
 	/** The sector name. */
 	private final String name;
 
-	/** Description of the ratio series. */
-	private final TreeMap<String,String[]> ratios = new TreeMap<String,String[]>();
-
-	/** Description of the raw series. */
-	private final TreeMap<String,String> raw = new TreeMap<String,String>();
-
 	/** Description of the scatter series. */
-	private final TreeMap<String,String[]> scatter = new TreeMap<String,String[]>();
+	private final Map<String,String[]> scatterSeriesDescription = new LinkedHashMap<String,String[]>();
 
 	/** A collection of XYSeries. */
-	private final TreeMap<String,JamelXYSeries> series = new TreeMap<String,JamelXYSeries>();
+	private final Map<String,JamelXYSeries> series = new LinkedHashMap<String,JamelXYSeries>();
+
+	/** Description of the time series. */
+	private final List<String> timeSeriesDescription = new LinkedList<String>();
 
 	/**
 	 * Creates a new sector for data management.
@@ -99,205 +75,159 @@ public class DataManager implements Sector {
 	public DataManager(String name, Circuit circuit) {
 		this.name = name;
 		this.circuit = circuit;
-		this.initSeries();
-		this.balanceSheetMatrix = createBalanceSheetMatrix();
+		this.chartManager = getNewChartManager();
+		if (this.chartManager!=null) {
+			for(final Component panel: this.chartManager.getChartPanelList()) {
+				circuit.forward("addPanel", panel);				
+			}
+		}
+		this.balanceSheetMatrix = getNewBalanceSheetMatrix();
+		if (this.balanceSheetMatrix!=null) {
+			circuit.forward("addPanel", this.balanceSheetMatrix.getPanel());
+		}
+		this.dataValidator = getNewDataValidator();
+		if (this.dataValidator!=null) {
+			circuit.forward("addPanel", this.dataValidator.getPanel());
+		}
 	}
 
 	/**
 	 * Creates the balance sheet matrix.
 	 * @return the new balance sheet matrix.
 	 */
-	private BalanceSheetMatrix createBalanceSheetMatrix() {
-
-		final Map<String, String> matrixConfig = getConfig("config.matrix");
-
-		final String[] sectors = FileParser.toArray(matrixConfig.get("sectors"));
-
-		final String rows[] = FileParser.toArray(matrixConfig.get("rows"));
-
-		final HashMap<String,String> sfcMap = new HashMap<String,String>();
-		for (String sector:sectors) {
-			for (String row:rows) {
-				final String val = matrixConfig.get(sector+"."+row);
-				if (val!=null) {
-					sfcMap.put(sector+"."+row, val);
-				}
+	private BalanceSheetMatrix getNewBalanceSheetMatrix() {		
+		BalanceSheetMatrix chartManager;
+		final String fileName = circuit.getParameter(name,KEY.MATRIX_FILE_CONFIG);
+		if (fileName != null) {
+			try {
+				chartManager = new AbstractBalanceSheetMatrix(fileName){
+					@Override protected Double get(String key) {
+						return macroDataset.get(key);
+					}
+				};
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				chartManager = null;
 			}
 		}
-
-		// A JPanel containing the balance Sheet Panel.
-		final JEditorPane jEditorPane = new JEditorPane() {
-			private static final long serialVersionUID = 1L;
-			{
-				this.setContentType("text/html");
-				this.setText("Hello world");
-				this.setEditable(false);
-			}
-		};
-
-		final BalanceSheetMatrix matrix = new BalanceSheetMatrix () {
-
-			private final JEditorPane balanceSheetPanel = jEditorPane;
-
-			@Override
-			public Component getPanel() {
-				return this.balanceSheetPanel;
-			}
-
-			@Override
-			public String toHtml() {
-
-				final StringBuffer table = new StringBuffer();
-				final int period = Circuit.getCurrentPeriod().getValue();
-				table.append("<STYLE TYPE=\"text/css\">.boldtable, .boldtable TD, .boldtable TH" +
-						"{font-family:sans-serif;font-size:12pt;}" +
-						"</STYLE>");		
-				table.append("<BR><BR><BR><BR><TABLE border=0 align=center class=boldtable cellspacing=10>");
-				table.append("<CAPTION>Balance sheet matrix (period "+ period +")</CAPTION>");
-				table.append("<TR><TD colspan=5><HR>");		
-
-				table.append("<TR><TH WIDTH=120>");
-				for(String sector:sectors) {
-					table.append("<TH WIDTH=110 align=right>" + sector);
-				}
-				table.append("<TH WIDTH=110 align=right>" + "Sum");
-				table.append("<TR><TD colspan=5><HR>");
-
-				final HashMap<String,Double> sumSector = new HashMap<String,Double>();
-				for (String sector:sectors) {
-					sumSector.put(sector, 0.);
-				}
-				sumSector.put("sum", 0.);
-
-				for(String row:rows) {
-					table.append("<TR><TH>" + row);
-					double sum = 0l;
-					for(String sector:sectors) {
-						final String key = sfcMap.get(sector+"."+row);
-						table.append("<TD align=right>");						
-						if (key!=null) {
-							final Double value = macroDataset.get(key);
-							if (value !=null) {
-								table.append(nf.format(value));
-								sum+=value;
-								sumSector.put(sector, sumSector.get(sector)+value);
-							}
-							else {
-								table.append(key+" not found");							
-							}
-						}
-					}
-					table.append("<TD align=right>"+nf.format(sum));
-					sumSector.put("sum", sumSector.get("sum")+sum);
-				}
-
-				table.append("<TR><TD colspan=5><HR>");
-				table.append("<TR><TH>Sum");
-				for (String sector:sectors) {
-					table.append("<TD align=right>"+nf.format(sumSector.get(sector)));
-				}
-				table.append("<TD align=right>"+nf.format(sumSector.get("sum")));
-				table.append("<TR><TD colspan=5><HR>");
-				table.append("</TABLE>");
-				return table.toString();
-			}
-
-			@Override
-			public void update() {
-				final String text=this.toHtml();
-				SwingUtilities.invokeLater(new Runnable() {
-					public void run() {
-						balanceSheetPanel.setText(text);
-					}
-				});			
-			}
-
-		};
-		return matrix;
+		else {
+			chartManager = null;
+		}
+		return chartManager;
 	}
 
 	/**
-	 * Returns a map that contains the description of the configuration. 
-	 * @param key the key.
-	 * @return a map that contains the description of the configuration.
+	 * Creates and returns a new chart manager.
+	 * @return a new chart manager.
 	 */
-	private Map<String,String> getConfig(String key) {
-		final String fileName = circuit.getParameter(name,key);
-		Map<String,String> map = null;
-		try {
-			map = FileParser.parse(fileName);
-		} catch (FileNotFoundException e) {
-			Simulator.showErrorDialog("DataManager: Data description not found.");
-			e.printStackTrace();
-			new RuntimeException("DataManager: Data description not found.");
+	private ChartManager getNewChartManager() {
+		ChartManager chartManager;
+		final String fileName = circuit.getParameter(name,"config.charts");
+		if (fileName != null) {
+			try {
+				chartManager = new AbstractChartManager(fileName){
+					@Override protected XYSeries getScatterSeries(String seriesX, String seriesY) {
+						return DataManager.this.getScatterSeries(seriesX,seriesY);
+					}
+					@Override protected XYSeries getSeries(String serieskey) {
+						return DataManager.this.getSeries(serieskey);
+					}
+				};
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				chartManager = null;
+			}
 		}
-		return map;
+		else {
+			chartManager = null;
+		}
+		return chartManager;
 	}
 
 	/**
-	 * Returns a series.
-	 * @param message a string defining the data to return (XYSeries or other ?).
-	 * @param args the key whose associated value is to be returned. 
-	 * @return the series.
+	 * Creates and returns a new data validator.
+	 * @return a new data validator.
 	 */
-	private XYSeries getSeries(String message, String args) {
-		final XYSeries result;
-		if (message.equals(KEY.XYSeries)) {
-			XYSeries series=this.series.get(args);
-			if (series!=null) {
-				result=series;
-			} else {
-				result=null;
+	private DataValidator getNewDataValidator() {
+		DataValidator result;
+		final String validationConfigFileName = circuit.getParameter(DataManager.this.name,KEY.VALIDATION_FILE_CONFIG);
+		if (validationConfigFileName!=null) {
+			try {
+				result = new AbstractDataValidator(validationConfigFileName){
+					@Override public Double get(String key) {
+						return DataManager.this.macroDataset.get(key);
+					}
+				};
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				result = null;
 			}
-		} else {
-			throw new RuntimeException("Not yet implemented: "+message);
-			// TODO IMPLEMENT le cas où on veut autre chose que des XYseries...
+		}
+		else {
+			result=null;
 		}
 		return result;
 	}
 
 	/**
-	 * Initializes the series and ratios.
+	 * Creates and returns a new scatter series.
+	 * @param name the name of the series.
+	 * @param keyX the key for x data.
+	 * @param keyY the key for y data.
+	 * @return a new scatter series.
 	 */
-	private void initSeries() { // TODO: CLEAN UP
+	private XYSeries getNewScatterSeries(String name, String keyX, String keyY) {
+		final JamelXYSeries result = new JamelXYSeries(name);
+		final String[] val = {keyX, keyY};
+		this.scatterSeriesDescription.put(name, val);
+		this.series.put(name, result);				
+		return result;
+	}
 
-		final Map<String, String> config = getConfig("config.data");
+	/**
+	 * Creates and returns a new series.
+	 * @param name the name of the series.
+	 * @return a new series.
+	 */
+	private XYSeries getNewSeries(String name) {
+		final JamelXYSeries result = new JamelXYSeries(name);
+		this.timeSeriesDescription.add(name);
+		this.series.put(name, result);				
+		return result;
+	}
 
-		final Set<String> dataToCollect = new TreeSet<String>();
-
-		// Initializes the raw series.
-		for(String key:config.keySet()) {
-			if (key.startsWith("series.")) {
-				final String shortKey = key.split("\\.", 2)[1];
-				final String param = config.get(key);
-				this.raw.put(shortKey, param);
-				this.series.put(shortKey, new JamelXYSeries(shortKey));
-				dataToCollect.add(param);				
-			}
+	/**
+	 * Returns a scatter series.
+	 * @param seriesX the key for X data. 
+	 * @param seriesY the key for Y data.
+	 * @return the scatter series.
+	 */
+	private XYSeries getScatterSeries(String seriesX, String seriesY) {
+		final XYSeries result;
+		final String key = seriesX+"&"+seriesY;
+		XYSeries series=this.series.get(key);
+		if (series!=null) {
+			result=series;
+		} else {
+			result=getNewScatterSeries(key,seriesX,seriesY);
 		}
+		return result;
+	}
 
-		// Initializes the ratios.
-		for(String key:config.keySet()) {
-			if (key.startsWith("ratios.")) {
-				final String shortKey = key.split("\\.", 2)[1];
-				final String[] param = FileParser.toArray(config.get(key));
-				this.ratios.put(shortKey, param);
-				this.series.put(shortKey, new JamelXYSeries(shortKey));
-				dataToCollect.add(param[0]);
-				dataToCollect.add(param[1]);
-			}
+	/**
+	 * Returns a series.
+	 * @param seriesKey the key whose associated series is to be returned. 
+	 * @return the series.
+	 */
+	private XYSeries getSeries(String seriesKey) {
+		final XYSeries result;
+		XYSeries series=this.series.get(seriesKey);
+		if (series!=null) {
+			result=series;
+		} else {
+			result=getNewSeries(seriesKey);
 		}
-
-		// Initializes the scatters.
-		for(String key:config.keySet()) {
-			if (key.startsWith("scatterSeries.")) {
-				final String shortKey = key.split("\\.", 2)[1];
-				final String[] param = FileParser.toArray(config.get(key));
-				this.scatter.put(shortKey, param);
-				this.series.put(shortKey, new JamelXYSeries(shortKey));
-			}
-		}
-
+		return result;
 	}
 
 	/**
@@ -311,31 +241,18 @@ public class DataManager implements Sector {
 				@Override public void run() {
 					final int period = Circuit.getCurrentPeriod().getValue();
 
-					for (Entry<String,String>entry:raw.entrySet()) {
-						final Double value = macroDataset.get(entry.getValue());
+					for (String seriesName:timeSeriesDescription) {
+						final Double value = macroDataset.get(seriesName);
 						if (value!=null) {
-							DataManager.this.series.get(entry.getKey()).add(period, value);
+							DataManager.this.series.get(seriesName).add(period, value);
 						}
 						else {
-							//throw new RuntimeException("Not found: "+entry.getValue()); TODO à revoir
+							//throw new RuntimeException("Not found: "+seriesName); // TODO à revoir
 						}
 					}
 
-					for (Entry<String,String[]>entry:ratios.entrySet()) {
-						final String[] datakey=entry.getValue();
-						final Number val0 = macroDataset.get(datakey[0]);
-						final Number val1 = macroDataset.get(datakey[1]);
-						if (val0== null || val1==null) {
-							//throw new RuntimeException("Null value for "+entry.getKey()+": "+datakey[0]+"="+val0+", "+datakey[1]+"="+val1);
-						}
-						else
-							if ((Double)val1!=0) { // prevents division by zero
-								series.get(entry.getKey()).add(period, ((Double)val0)/((Double)val1));									
-							}
-					}
-
-					for (Entry<String,String[]>entry:scatter.entrySet()) {
-						final List<XYDataItem> data = macroDataset.getScatter(entry.getValue()[0],entry.getValue()[1],entry.getValue()[2]);
+					for (Entry<String,String[]>entry:scatterSeriesDescription.entrySet()) {
+						final List<XYDataItem> data = macroDataset.getScatter(entry.getValue()[0],entry.getValue()[1]);
 						series.get(entry.getKey()).update(data );
 					}
 
@@ -343,8 +260,10 @@ public class DataManager implements Sector {
 			}) ;
 		} catch (InterruptedException e) {
 			e.printStackTrace();
+			throw new RuntimeException();
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
+			throw new RuntimeException();
 		}
 
 		/*for(Entry<String,XYSeries> entry: this.series.entrySet()){
@@ -375,6 +294,7 @@ public class DataManager implements Sector {
 		if (phase.equals("closure")) {
 			updateSeries();
 			balanceSheetMatrix.update();
+			this.dataValidator.CheckConsistency();
 			this.macroDataset.clear();
 		}
 		else {
@@ -386,21 +306,21 @@ public class DataManager implements Sector {
 	@Override
 	public Object forward(String request, Object ... args) {
 
-		final Object result;
-
-		if (request.equals("getSeries")) {
-			result = this.getSeries((String) args[0],(String) args[1]);;
+		if (request==null) {
+			throw new IllegalArgumentException("The request is null.");			
 		}
 
-		else if (request.equals("putData")) {
-			this.macroDataset.putData((String) args[0], (SectorDataset) args[1]);
+		final Object result;
+
+		if (request.equals("marker")) {
+			this.chartManager.addMarker((String) args[0]);
 			result = null;
 		}
 
-		else if (request.equals("getBalanceSheetPanel")) {
-			final Component pane = new JScrollPane(this.balanceSheetMatrix.getPanel());
-			pane.setName("Balance sheet");
-			result = pane;
+		else if (request.equals("putData")) {
+			// TODO vérifier que les données ne sont pas déjà présentes.
+			this.macroDataset.putData((String) args[0], (SectorDataset) args[1]);
+			result = null;
 		}
 
 		else {

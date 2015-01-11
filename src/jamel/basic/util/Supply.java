@@ -41,6 +41,12 @@ public interface Supply {
 	long getPrice(long volume);
 
 	/**
+	 * Returns the ratio (sales/initial supply).
+	 * @return the ratio (sales/initial supply).
+	 */
+	double getSalesRatio();
+
+	/**
 	 * Returns the value of the sales (at market price).
 	 * @return the value of the sales.
 	 */

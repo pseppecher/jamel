@@ -1,11 +1,11 @@
-package jamel.basic.data;
+package jamel.basic.data.dataSets;
 
 import java.util.HashMap;
 
 /**
  * A basic dataset implementing the AgentDataset interface.
  */
-public class BasicAgentDataset extends HashMap<String,Double> implements AgentDataset {
+public abstract class BasicAgentDataset extends HashMap<String,Double> implements AgentDataset {
 		
 	/** serialVersionUID */
 	private static final long serialVersionUID = 1L;
@@ -29,7 +29,12 @@ public class BasicAgentDataset extends HashMap<String,Double> implements AgentDa
 	
 	public String getName() {
 		return name;
-	};
+	}
+
+	/**
+	 * Updates the data.
+	 */
+	public abstract void update();
 
 }
 

@@ -1,6 +1,7 @@
 package jamel.basic.agents.util;
 
 import java.util.LinkedList;
+import java.util.ListIterator;
 
 /**
  * A convenient class to store some past data.
@@ -45,6 +46,30 @@ public class Memory extends LinkedList<Double>{
 			i++;
 		}
 		return sum/i;
+	}
+
+	/**
+	 * Returns the mean of the i last values.
+	 * @param i the number of values to consider.
+	 * @return the mean of the i last values.
+	 */
+	public double getMean(int i) {
+		final ListIterator<Double> iterator = this.listIterator(this.size());
+		double sum = 0d;
+		int j=0;
+		while (true) {
+			if (iterator.hasPrevious()) {
+				j++;
+				sum += iterator.previous();
+			}
+			else {
+				break;
+			}
+			if (j==3) {
+				break;
+			}
+		}
+		return sum/j;
 	}
 
 	/**

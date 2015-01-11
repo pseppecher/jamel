@@ -2,12 +2,20 @@ package jamel;
 
 import jamel.basic.util.JamelParameters;
 import jamel.util.Circuit;
+import jamel.util.FileParser;
 
+import java.awt.Desktop;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.util.prefs.Preferences;
 
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -18,14 +26,64 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  */
 public class Simulator {
 
-	/** The key for the parameter that contains the fully qualified name of the desired class of Circuit. */
-	private static final String KEY_CIRCUIT_TYPE = "Circuit.type";
+	/**
+	 * A convenient class to store String constants.
+	 */
+	private static class KEY {
 
-	/** The key for the parameter that contains the name of the scenario file. */
-	private static final String KEY_FILENAME = "Circuit.fileName";
+		/** The key for the parameter that contains the fully qualified name of the desired class of Circuit. */
+		public static final String CIRCUIT_TYPE = "Circuit.type"; 
+
+		/** The "Download" string. */
+		public static final String DOWNLOAD = "Download";
+
+		/** The URI to download the latest version of Jamel. */
+		public static final String DOWNLOAD_URI = "http://p.seppecher.free.fr/jamel/download.php";
+
+		/** The key for the parameter that contains the name of the scenario file. */
+		public static final String FILENAME = "Circuit.fileName";
+
+		/** The "Remind me later" string. */
+		public static final String REMIND_ME_LATER = "Remind me later";
+
+		/** The URL to check the latest version. */
+		public static final String VERSION_URL = "http://p.seppecher.free.fr/jamel/version.php";
+
+	}
+
+	/** The remind-me-later period (in ms). */
+	private static final long remindMeLaterPeriod = 15*24*60*60*1000;
 
 	/** The scenario file. */
 	private static File scenarioFile;
+
+	/** This version of Jamel. */
+	final public static int version = 20150101;
+
+	/**
+	 * Downloads the latest version of Jamel.
+	 * @return <code>true</code> if the download is successful, <code>false</code> otherwise.
+	 */
+	private static boolean download() { // TODO WORK IN PROGRESS
+		if(Desktop.isDesktopSupported()) {
+			try {
+				Desktop.getDesktop().browse(new URI(KEY.DOWNLOAD_URI));
+				return true;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			} catch (URISyntaxException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+				return false;
+			}
+		}
+		else {
+			// TODO proposer un lien dans un dialog
+			return false;
+		}
+	}
 
 	/**
 	 * Returns a new circuit.
@@ -34,7 +92,7 @@ public class Simulator {
 	 */
 	private static Circuit getNewCircuit(JamelParameters jamelParameters) {
 		Circuit circuit = null;
-		final String circuitName = jamelParameters.get(KEY_CIRCUIT_TYPE);
+		final String circuitName = jamelParameters.get(KEY.CIRCUIT_TYPE);
 		if (circuitName!=null) {
 			try {
 				circuit = (Circuit) Class.forName(circuitName,false,ClassLoader.getSystemClassLoader()).getConstructor(JamelParameters.class).newInstance(jamelParameters);
@@ -68,19 +126,40 @@ public class Simulator {
 	}
 
 	/**
-	 * Reads the file and returns its content as a list of strings. 
-	 * @param file  the file to read.
-	 * @return a list of strings.
-	 * @throws FileNotFoundException if the file is not found.
+	 * Returns <code>true</code> if this version of Jamel is out of date, <code>false</code> otherwise.
+	 * @return <code>true</code> if this version of Jamel is out of date, <code>false</code> otherwise.
 	 */
-	private static ArrayList<String> read(File file) throws FileNotFoundException {
-		final ArrayList<String> lines = new ArrayList<String>();
-		final Scanner scanner=new Scanner(file);
-		while (scanner.hasNextLine()) {
-			lines.add(scanner.nextLine());
+	private static boolean isOutOfDate() {
+		class FileReader extends Thread {
+			private boolean isOutOfDate = false;
+			@Override
+			public void run() {
+				try {
+					final URL u = new URL(KEY.VERSION_URL);
+					BufferedReader d = new BufferedReader(new InputStreamReader(u.openStream()));
+					String line;
+					while ((line = d.readLine()) != null) {
+						final String words[] = line.split(":");
+						if (words.length==2) {
+							if ("version".equals(words[0].trim())) {
+								final int newVersion = Integer.parseInt(words[1]);
+								isOutOfDate=(newVersion>version);
+							}
+						}
+					}
+					d.close();
+				} catch (MalformedURLException e) {
+				} catch (IOException e) {
+				}				
+			}
 		}
-		scanner.close();
-		return lines;
+		final FileReader fileReader = new FileReader();
+		fileReader.start();
+		try {
+			fileReader.join(500);
+		} catch (InterruptedException e) {
+		}
+		return fileReader.isOutOfDate;
 	}
 
 	/**
@@ -106,11 +185,34 @@ public class Simulator {
 	}
 
 	/**
-	 * Brings up a dialog that displays an error message.
-	 * @param message the message to display.
+	 * Looks for the latest version of Jamel.
+	 * @return <code>true</code> if a new version is available and the user chooses to download it, <code>false</code> otherwise.
 	 */
-	public static void showErrorDialog(String message) {
-		JOptionPane.showMessageDialog(null,"<html>"+message+"</html>","Error",JOptionPane.ERROR_MESSAGE);
+	private static boolean updateJamel() {
+		final boolean result;
+		if (isOutOfDate()) {
+			final Preferences prefs = Preferences.systemRoot();
+			final long now = System.currentTimeMillis();
+			long previous = prefs.getLong(KEY.REMIND_ME_LATER,0);
+			if (now>previous+remindMeLaterPeriod) {
+				final Object[] options = {KEY.DOWNLOAD, KEY.REMIND_ME_LATER};
+				final int n = JOptionPane.showOptionDialog(null, "A new version of Jamel is available.", "New version", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+				if (n==0) {
+					result = download();
+				}
+				else {
+					prefs.putLong(KEY.REMIND_ME_LATER,now);
+					result = false;
+				}
+			}
+			else {
+				result = false;
+			}
+		}
+		else {
+			result = false;
+		}
+		return result;
 	}
 
 	/**
@@ -126,27 +228,37 @@ public class Simulator {
 	 * @param args unused.
 	 */
 	public static void main(String[] args) {
-		// Selects a file containing a scenario
-		scenarioFile = selectScenario();
-		if (scenarioFile!=null) {
-			try {
-				// Reads the file and parses parameters and events.
-				final ArrayList<String> scenario = read(scenarioFile);
-				final JamelParameters jamelParameters = new JamelParameters(scenario);
-				jamelParameters.put(KEY_FILENAME, scenarioFile.getName());
-				// Creates the circuit.
-				Circuit circuit = getNewCircuit(jamelParameters);
-				// Launches the simulation.
-				if (circuit!=null) {
-					circuit.run();					
+		if (updateJamel()) {} else 
+		{
+			// Selects a file containing a scenario
+			scenarioFile = selectScenario();
+			if (scenarioFile!=null) {
+				try {
+					// Reads the file and parses parameters and events.
+					final JamelParameters jamelParameters = new JamelParameters(FileParser.parseMap(scenarioFile));					
+					jamelParameters.put(KEY.FILENAME, scenarioFile.getName());
+					// Creates the circuit.
+					Circuit circuit = getNewCircuit(jamelParameters);
+					// Launches the simulation.
+					if (circuit!=null) {
+						circuit.run();					
+					}
+					else {
+						showErrorDialog("The circuit is null.");
+					}
+				} catch (FileNotFoundException e) {
+					e.printStackTrace();
 				}
-				else {
-					showErrorDialog("The circuit is null.");
-				}
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
 			}
 		}
+	}
+
+	/**
+	 * Brings up a dialog that displays an error message.
+	 * @param message the message to display.
+	 */
+	public static void showErrorDialog(String message) {
+		JOptionPane.showMessageDialog(null,"<html>"+message+"</html>","Error",JOptionPane.ERROR_MESSAGE);
 	}
 
 }

@@ -1,4 +1,4 @@
-package jamel.basic.data;
+package jamel.basic.data.dataSets;
 
 import java.util.List;
 import java.util.Set;

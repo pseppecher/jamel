@@ -15,12 +15,6 @@ public interface JobOffer {
 	JobContract apply(Worker applicant);
 
 	/**
-	 * Returns the number of vacancies.
-	 * @return the number of vacancies.
-	 */
-	int getVacancies();
-	
-	/**
 	 * Returns the wage.
 	 * @return the wage.
 	 */

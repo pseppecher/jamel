@@ -39,6 +39,12 @@ public interface Factory {
 	long getFinishedGoodsVolume();
 
 	/**
+	 * Returns the value of goods in process.
+	 * @return the value of goods in process.
+	 */
+	double getGoodsInProcessValue();
+
+	/**
 	 * Returns the value of inventory losses for the current period. 
 	 * @return the value of inventory losses for the current period.
 	 */
@@ -61,6 +67,12 @@ public interface Factory {
 	 * @return the volume of product.
 	 */
 	long getProductionVolume();
+
+	/**
+	 * Returns the productivity.
+	 * @return the productivity.
+	 */
+	double getProductivity();
 
 	/**
 	 * Returns the unit cost of the finished goods in the inventory.

@@ -1,4 +1,4 @@
-package jamel.basic.data;
+package jamel.basic.data.dataSets;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public class JamelXYSeries extends XYSeries {
 	 * Constructs a new empty series, with the auto-sort flag set as <code>false</code>, and duplicate values allowed.
 	 * @param key the series key (<code>null</code> not permitted).
 	 */
-	public JamelXYSeries(@SuppressWarnings("rawtypes") Comparable key) {
+	public JamelXYSeries(String key) {
 		super(key,false);
 	}
 

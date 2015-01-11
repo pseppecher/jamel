@@ -1,5 +1,10 @@
-Jamel: Java Agent-based MacroEconomic Laboratory
-================================================
+#Jamel: Java Agent-based MacroEconomic Laboratory
 
-Modeling, simulation and analysis of complex monetary economies
----------------------------------------------------------------
+**Jamel** is an open source, macro-economic agent-based model with heterogeneous households, heterogeneous firms and a banking sector. 
+It provides a fully decentralized and stock-flow consistent framework for the analysis of economic dynamics.
+It is developped by [Dr. P. Seppecher](http://p.seppecher.free.fr/) (University of Paris North and University of Nice Sophia Antipolis, France) 
+and [Dr. I. Salle](http://www.uva.nl/en/about-the-uva/organisation/staff-members/content/s/a/i.l.salle/i.l.salle.html) (University of Amsterdam).
+
+A demo version of **Jamel**, together with several simulation scenarios, can be downloaded here: [http://p.seppecher.free.fr/jamel/download.php](http://p.seppecher.free.fr/jamel/download.php)
+
+The *javadoc* of **Jamel** is available here: [http://p.seppecher.free.fr/jamel/javadoc/index.html](http://p.seppecher.free.fr/jamel/javadoc/index.html)

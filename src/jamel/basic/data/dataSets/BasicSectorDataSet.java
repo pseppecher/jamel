@@ -1,8 +1,6 @@
-package jamel.basic.data;
+package jamel.basic.data.dataSets;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -12,8 +10,70 @@ import jamel.Simulator;
 
 /**
  * A basic implementation of the SectorDataSet interface.
+ * Last modification: 23-11-2014.
  */
 public class BasicSectorDataSet implements SectorDataset {
+
+	/**
+	 * Returns the maximum value of the given collection.
+	 * @param values the collection whose maximum value is to be determined.
+	 * @return the maximum value of the given collection.
+	 * @since 23-11-2014.
+	 */
+	private static Double getMax(Double[] values) {
+		Double max = null;
+		for(Double value: values) {
+			if (value!=null && !Double.isNaN(value)) {
+				if (max==null || max<value) {
+					max = value;
+				}
+			}
+		}
+		return max;
+	}
+
+	/**
+	 * Returns the mean of the specified values.
+	 * @param values the values.
+	 * @return the mean.
+	 */
+	private static Double getMean(Double[] values) {
+		final Double result;
+		double sum = 0;
+		int count = 0;
+		for(Double value: values) {
+			if (value!=null && !Double.isNaN(value)) {
+				sum+=value;
+				count++;
+			}
+		}
+		if (count!=0) {
+			result = sum/count;
+		}
+		else {
+			result=null;
+		}
+		return result;
+	}
+
+
+	/**
+	 * Returns the minimum value of the given collection.
+	 * @param values the collection whose minimum value is to be determined.
+	 * @return the minimum value of the given collection.
+	 * @since 23-11-2014.
+	 */
+	private static Double getMin(Double[] values) {
+		Double min = null;
+		for(Double value: values) {
+			if (value!=null && !Double.isNaN(value)) {
+				if (min==null || min>value) {
+					min = value;
+				}
+			}
+		}
+		return min;
+	}
 
 	/** A map that associated each agent with its index. */
 	private final HashMap<String,Integer> agents = new HashMap<String,Integer>();
@@ -65,14 +125,16 @@ public class BasicSectorDataSet implements SectorDataset {
 			result = 0d;
 			if (size!=0) {
 				final Double[] values = this.fields.get(keys[1]);
-				if (values==null) {
-					final String error = "Field not found: "+keys[1];
-					Simulator.showErrorDialog(error);
-					throw new RuntimeException(error);
+				if (values!=null) {
+					for(final double value:values) {
+						if (!Double.isNaN(value)) {
+							result+=value;
+						}
+					}
 				}
-				for(final double value:values) {
-					result+=value;
-				}			
+				else {
+					result = null;
+				}
 			}
 		}
 
@@ -81,35 +143,21 @@ public class BasicSectorDataSet implements SectorDataset {
 			if (size!=0) {
 				final Double[] values = this.fields.get(keys[1]);
 				if (values==null) {
-					final String error = "Field not found: "+keys[1];
-					Simulator.showErrorDialog(error);
-					throw new RuntimeException(error);
+					result = null;
 				}
-				if (size==1) {
+				else if (size==1) {
 					result=values[0];
 				}
 				else {
+					// modified: 23-11-2014 
 					if (keys[0].equals("max")) {
-						try {
-							result = Collections.max(Arrays.asList(values));
-						} 
-						catch (NullPointerException e) {}
+						result = getMax(values);
 					}
 					else if (keys[0].equals("min")) {
-						try {
-							result = Collections.min(Arrays.asList(values));
-						} 
-						catch (NullPointerException e) {}
+						result = getMin(values);
 					}
 					else if (keys[0].equals("mean")) {
-						try {
-							result=0d;
-							for(final double value:values) {
-								result+=value;
-							}			
-							result = result/size;
-						} 
-						catch (NullPointerException e) {}
+						result = getMean(values);
 					}
 				}
 			}
@@ -122,11 +170,11 @@ public class BasicSectorDataSet implements SectorDataset {
 			if (agents.containsKey(keys2[0])) {
 				final Double[] values = this.fields.get(keys2[1]);
 				if (values==null) {
-					final String error = "Field not found: "+keys2[1];
-					Simulator.showErrorDialog(error);
-					throw new RuntimeException(error);
+					result = null;
 				}
-				result=values[agents.get(keys2[0])];
+				else {
+					result=values[agents.get(keys2[0])];
+				}
 			}
 		}
 
@@ -144,9 +192,9 @@ public class BasicSectorDataSet implements SectorDataset {
 	public List<XYDataItem> getScatter(String method, String xKey, String yKey) {
 		final List<XYDataItem> result;
 
-		if (method.equals("all")) {
-			final Double[] xValues = this.fields.get(xKey);
+		if ("all".equals(method)) {
 			final Double[] yValues = this.fields.get(yKey);
+			final Double[] xValues = this.fields.get(xKey);
 			if (xValues!=null && yValues!=null) {
 				result = new ArrayList<XYDataItem>(xValues.length);
 				if (xValues.length!=yValues.length) {
@@ -162,23 +210,28 @@ public class BasicSectorDataSet implements SectorDataset {
 			}
 		}
 
-		else {
-			final String[] instruction = method.split("\\.",2);
-			if (instruction.length==2 && instruction[0].equals("agent")) {
-				if (agents.containsKey(instruction[1])) {
-					result = new ArrayList<XYDataItem>(1);
-					final XYDataItem item = new XYDataItem(getValue(instruction[1],xKey), getValue(instruction[1],yKey));
-					result.add(item);
-				}
-				else {
-					result=null;
-				}
+		else if ("agent".equals(method)) {
+			final String[] wordX = xKey.split("\\.",2); 
+			final String[] wordY = yKey.split("\\.",2);
+			if (!wordX[0].equals(wordY[0])) {
+				throw new RuntimeException("Data Inconstistency: "+xKey+" is not consistent with "+yKey);
 			}
+			if (agents.containsKey(wordX[0])) {
+				result = new ArrayList<XYDataItem>(1);
+				final XYDataItem item = new XYDataItem(getValue(wordX[0],wordX[1]), getValue(wordX[0],wordY[1]));
+				result.add(item);
+			}
+
 			else {
 				result=null;
-				throw new IllegalArgumentException("Unknown method: "+method);
 			}
 		}
+
+		else {
+			result=null;
+			throw new IllegalArgumentException("Unknown method: "+method);
+		}
+
 		return result;
 	}
 

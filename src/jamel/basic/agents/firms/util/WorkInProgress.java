@@ -10,34 +10,34 @@ import jamel.util.Period;
  * Represents the work-in-progress inventory.
  * This object encapsulates the production process.
  */
-class WorkInProgress {
+public class WorkInProgress {
 
 	/** The capacity. */
-	final private int capacity;
+	protected final int capacity;
 
 	/** The date of the last call of the process method. */
-	private Period lastUse;
+	protected Period lastUse;
 
-	/** Statistic of calls of the process() method since the creation of the process. */
-	private int process=0;
+	/** Number of labor powers expended for this process since the creation of the process. */
+	protected int totalLaborPowers=0;
 
 	/** Statistic of the volume of the production (finished goods) since the creation of the process. */
-	private long production=0;
+	protected long production=0;
 
 	/** The production time, ie the number of stages of the production process. */
-	final private int productionTime;
+	protected final int productionTime;
 
 	/** The productivity. */
-	private float productivity;
+	protected float productivity;
 
 	/** The list of values of the different unfinished goods. */
-	final private long[] value;
+	protected final long[] value;
 
 	/** The list of volumes of the different unfinished goods. */
-	final private long[] volume;
+	protected final long[] volume;
 
 	/** A flag that indicates either the process is closed or not. */
-	private boolean closed = false;
+	protected boolean closed = false;
 
 	/**
 	 * Creates a new work-in-process inventory.
@@ -45,7 +45,7 @@ class WorkInProgress {
 	 * @param capacity the production capacity.
 	 * @param productivity the productivity.
 	 */
-	WorkInProgress(int productionTime, int capacity, float productivity) {
+	public WorkInProgress(int productionTime, int capacity, float productivity) {
 		this.productionTime = productionTime;
 		this.capacity = capacity;
 		this.productivity = productivity;
@@ -103,7 +103,7 @@ class WorkInProgress {
 	 * @param laborPowers the labor powers.
 	 * @return the product.
 	 */
-	Commodities process(LaborPower... laborPowers) {
+	public Commodities process(LaborPower... laborPowers) {
 		if (this.closed) {
 			throw new RuntimeException("This process is definitively closed.");
 		}
@@ -123,7 +123,7 @@ class WorkInProgress {
 		final long[] volume2 = new long[productionTime];
 		int index=productionTime-1;
 		for(LaborPower laborPower:laborPowers) {
-			this.process++;
+			this.totalLaborPowers++;
 			while(!laborPower.isExhausted()) {
 				if (index==0) {
 					volume2[0]+=this.productionTime*this.productivity*laborPower.getEnergy();
@@ -131,10 +131,7 @@ class WorkInProgress {
 					laborPower.expend();
 				}
 				else {
-					if (volume[index-1]==0) {
-						//index--;
-					}
-					else {
+					if (volume[index-1]!=0) {
 						long pVolume = (long) (this.productionTime*this.productivity*laborPower.getEnergy());
 						if (pVolume==volume[index-1]) {
 							value2[index]+=value[index-1]+laborPower.getValue();
@@ -187,7 +184,7 @@ class WorkInProgress {
 	 * @return the average productivity.
 	 */
 	public float getAverageProductivity() {
-		return ((float)this.production)/this.process;
+		return ((float)this.production)/this.totalLaborPowers;
 	}
 
 	/**

@@ -1,4 +1,4 @@
-package jamel.basic.data;
+package jamel.basic.data.dataSets;
 
 import java.util.List;
 
@@ -22,21 +22,20 @@ public interface MacroDataset {
 	Double get(String key);
 	
 	/**
+	 * Returns a list of XYDataItem that contains the specified values for each agent selected.
+	 * @param xKey the key for x values.
+	 * @param yKey the key for y values.
+	 * @return a list of XYDataItem.
+	 */
+	List<XYDataItem> getScatter(String xKey, String yKey);
+	
+	/**
 	 * Associates the specified SectorDataset with the specified sector in this macro dataset. 
 	 * If the macro dataset previously contained a mapping for the sector, the old SectorDataset is replaced.
 	 * @param sector the name of the sector with which the specified value is to be associated.
 	 * @param sectorDataset SectorDataset to be associated with the specified sector.
 	 */
 	void putData(String sector, SectorDataset sectorDataset);
-
-	/**
-	 * Returns a list of XYDataItem that contains the specified values for each agent selected.
-	 * @param target a string that contain the instructions to select the agents: the name of the sector + dot + the method of selection of the agents. 
-	 * @param xKey the key for x values.
-	 * @param yKey the key for y values.
-	 * @return a list of XYDataItem.
-	 */
-	List<XYDataItem> getScatter(String target, String xKey, String yKey);
 
 }
 

@@ -1,50 +1,51 @@
-********************
- Productivity shock
-     Jamel (v2)
-     27-10-2014
-********************
+// ********************
+//  Productivity shock
+//      Jamel (v2)
+//      01-01-2015
+// ********************
 
-*BEGIN*
-
-Circuit {
+\begin{Circuit}
+	
 	type=jamel.basic.BasicCircuit
 	randomSeed=0
-	sectors=Bank,Industry,Households,Data,GUI
+	sectors=Bank,Industry,Households,GUI,Data
 	phases=Bank.opening,Industry.opening,Households.opening,Bank.pay_dividend,Industry.pay_dividend,Industry.plan_production,Households.job_search,Industry.production,Households.consumption,Bank.debt_recovery,Bank.closure,Industry.closure,Households.closure,Data.closure
-	redirect {
-		getSeries=Data.getSeries
+	
+	\begin{redirect}
+		addPanel=GUI.addPanel
 		getNewAccount=Bank.getNewAccount
 		putData=Data.putData
 		selectCapitalOwner=Households.getRandomHousehold
 		getJobOffers=Industry.getJobOffers
 		getSupplies=Industry.getSupplies
-		Balance Sheet Panel=Data.getBalanceSheetPanel
-	}
-	events.1 = Industry.new=100, Households.new=1000
-	events.200 = change.Industry.production.productivity=200, GUI.marker=shock
+	\end{redirect}
+	
+	events.1 = Industry.new=100, Households.new=1200,
+	events.200 = Industry.productivityShock=200, Data.marker=shock
 	events.600 = pause
-}
+	
+\end{Circuit}
 
-Industry { 
+\begin{Industry} 
 	type=jamel.basic.agents.firms.BasicIndustrialSector
 	agents.type=jamel.basic.agents.firms.BasicFirm
-	capital {
+	\begin{capital}
 		propensityToDistribute = 1
 		target = 0.2
-	}
+	\end{capital}
 	inventory.normalLevel = 2
 	inventory.propensity2sell = 0.5
-	sales.capacity = 2	
-	labourContract {
+	sales.capacity = 2
+	\begin{labourContract}
 		max = 18
 		min = 6
-	}
+	\end{labourContract}
 	price.flexibility = 0.1
-	production {
+	\begin{production}
 		capacity = 10
 		time = 5
 		productivity = 100
-	}
+	\end{production}
 	utilizationRate.flexibility = 0.1
 	utilizationRate.initialValue = 0.75
 	vacancy.normalRate = 0.03
@@ -54,56 +55,49 @@ Industry {
 	wage.minimum = 0
 	regenerationLapse.min = 12
 	regenerationLapse.max = 24
-}
+\end{Industry}
 
-Households{
+\begin{Households}
 	type=jamel.basic.agents.households.BasicHouseholdsSector
 	agents.type=jamel.basic.agents.households.BasicHousehold
-	savings{
+	\begin{savings}
 		propensityToSave=0.2
 		ratioTarget=0.2
 		propensityToConsumeExcess=0.5
-	}
-	wage{
+	\end{savings}
+	\begin{wage}
 		resistance=12
 		flexibility=0.05
-	}
+	\end{wage}
 	jobs.selection = 10
 	supplies.selection = 10
-}
+\end{Households}
 
-Bank{
+\begin{Bank}
 	type=jamel.basic.agents.banks.BankingSector
-	rate{
+	\begin{rate}
 		normal=0.004
 		penalty=0.008
-	}
-	capital{
+	\end{rate}
+	\begin{capital}
 		targetedRatio=0.1
 		propensityToDistributeExcess=1.
-	}
+	\end{capital}
 	term.normal=12
 	term.extended=24
 	accommodating=false
 	patience=12
-}
+\end{Bank}
 
-Data { // The data manager
+\begin{Data} // The data manager
 	type = jamel.basic.data.DataManager
-	config.data = data.ini
-	config.matrix = matrix.ini	
-}
+	config.charts = config/baselineCharts.ini
+	config.matrix = config/baselineMatrix.ini
+	config.validation = config/baselineValidation.ini
+\end{Data}
 
-GUI { // The Graphical User Interface
-	
+\begin{GUI} // The Graphical User Interface
 	type = jamel.basic.gui.GUI
-	config.charts = charts.ini
-	otherPanels = Balance Sheet Panel
-	
-}
+\end{GUI}
 
-*END*
-
-********
-Now, run 
-********
+// ***

@@ -3,6 +3,7 @@ package jamel.basic.agents.households;
 import jamel.Simulator;
 import jamel.basic.agents.util.AgentSet;
 import jamel.basic.agents.util.BasicAgentSet;
+import jamel.basic.agents.util.Parameters;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.JobOffer;
 import jamel.basic.util.Supply;
@@ -31,24 +32,27 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 	/**
 	 * The keys of the parameters of the sector.
 	 */
-	private static class PARAM {
+	protected static class PARAM {
 
 		/** The key for the type of agents to create*/
 		public static final String HOUSEHOLDS_TYPE = "agents.type";
 
 	}
 
-	/** The sector name. */
-	private final String name;
+	/** The parameters of the agents. */
+	private final Parameters parameters;
+
+	/** The collection of agents. */
+	protected final AgentSet<Household> agents;
 
 	/** The circuit. */
-	private final Circuit circuit;
+	protected final Circuit circuit;
 
-	/** The households counter. */
-	private int countHouseholds;
+	/** The agent counter. */
+	protected int countAgents;
 
-	/** The collection of households. */
-	private final AgentSet<Household> households;
+	/** The sector name. */
+	protected final String name;
 
 	/**
 	 * Creates a new sector for households.
@@ -56,19 +60,20 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 	 * @param circuit the circuit.
 	 */
 	public BasicHouseholdsSector(String name, Circuit circuit) {
-		this.circuit=circuit;
-		this.name=name;
-		this.households = new BasicAgentSet<Household>();
+		this.circuit = circuit;
+		this.name = name;
+		this.agents = new BasicAgentSet<Household>();
+		this.parameters = new Parameters(name,circuit);
 	}
 
 	/**
 	 * Closes the sector at the end of the period.
 	 */
 	private void close() {
-		for (final Household household:this.households.getList()) {
+		for (final Household household:this.agents.getList()) {
 			household.close();
 		}
-		this.circuit.forward(KEY.putData,this.name,this.households.collectData());
+		this.circuit.forward(KEY.putData,this.name,this.agents.collectData());
 	}
 
 	/**
@@ -77,16 +82,14 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 	 * @param lim the number of households to create.
 	 * @return a list containing the new households.
 	 */
-	private List<Household> createHousholds(String type, int lim) {
+	protected List<Household> createHousholds(String type, int lim) {
 		final String errorMsg = "BasicHousholdsSector: error while creating household";
 		final List<Household> list = new ArrayList<Household>(lim);
 		for(int index=0;index<lim;index++) {
-			this.countHouseholds++;
-			final String name = "Household"+this.countHouseholds;
-			Household household;
+			this.countAgents++;
+			final String name = this.name+"-"+this.countAgents;
 			try {
-				household = (Household) Class.forName(type,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,HouseholdsSector.class).newInstance(name,this);
-				list.add(household);
+				list.add((Household) Class.forName(type,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,HouseholdsSector.class).newInstance(name,this));
 			} catch (IllegalArgumentException e) {
 				Simulator.showErrorDialog(errorMsg);
 				e.printStackTrace();
@@ -124,19 +127,19 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 	public boolean doPhase(String phaseName) {
 
 		if (phaseName.equals("opening")) {
-			for (final Household household:households.getList()) {
+			for (final Household household:agents.getList()) {
 				household.open();
 			}
 		} 
 
 		else if (phaseName.equals("job_search")) {
-			for (final Household household:households.getShuffledList()) {
+			for (final Household household:agents.getShuffledList()) {
 				household.jobSearch();
 			}
 		}
 
 		else if (phaseName.equals("consumption")) {
-			for (final Household household:households.getShuffledList()) {
+			for (final Household household:agents.getShuffledList()) {
 				household.consumption();
 			}
 		}
@@ -158,27 +161,20 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 		final Object result;
 
 		if (request.equals("getRandomHousehold")) {
-			result = households.getRandomAgent();
+			result = agents.getRandomAgent();
 		}
 
 		else if (request.equals("getRandomHouseholds")) {
-			result = households.getRandomList((Integer) args[0]);
-		}
-
-		else if (request.equals("addDataKey")) { // DELETE
-			throw new RuntimeException("This request is obsolete.");
-			//result = this.dataKeys .add((String) args[0]);
+			result = agents.getSimpleRandomSample((Integer) args[0]);
 		}
 
 		else if (request.equals("change in parameters")) {
-			for (final Household household:households.getList()) {
-				household.updateParameters();
-			}
+			this.parameters.update();
 			result = null;
 		}
 
 		else if (request.equals("new")) {
-			this.households.putAll(this.createHousholds(this.circuit.getParameter(this.name,PARAM.HOUSEHOLDS_TYPE),Integer.parseInt((String) args[0])));
+			this.agents.putAll(this.createHousholds(this.circuit.getParameter(this.name,PARAM.HOUSEHOLDS_TYPE),Integer.parseInt((String) args[0])));
 			result = null;
 		}
 
@@ -188,6 +184,11 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 
 		return result;
 
+	}
+
+	@Override
+	public float getFloatParameter(String key) {
+		return this.parameters.get(key);
 	}
 
 	@Override
@@ -209,7 +210,7 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 		return (BankAccount) circuit.forward("getNewAccount", household);
 	}
 
-	public String getParameter(String key) {
+	public String getStringParameter(String key) {
 		return this.circuit.getParameter(this.name,key);
 	}
 

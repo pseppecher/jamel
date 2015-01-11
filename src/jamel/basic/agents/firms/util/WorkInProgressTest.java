@@ -9,6 +9,7 @@ import jamel.util.Circuit;
 import jamel.util.Period;
 import jamel.util.Timer;
 
+import java.awt.Component;
 import java.util.Random;
 
 import org.junit.After;
@@ -82,6 +83,7 @@ public class WorkInProgressTest {
 		new Circuit(new Timer(){
 			@Override public Period getPeriod() {return period;}
 			@Override public void next() {}
+			@Override public Component getCounter() {return null;}
 		},new Random()){
 			public Object forward(String message, Object... args) {return null;}
 			public String getParameter(String... keys) {return null;
