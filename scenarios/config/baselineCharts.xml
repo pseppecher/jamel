@@ -1,0 +1,539 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<!-- 
+	********************************* 
+	Configuration of the chart panels
+	for the baseline scenario
+	date: 07/02/2015
+	*********************************
+-->
+
+<gui>
+
+<panel title = "Main">
+
+	<chart title = "Prices">
+		<series 
+			value = "Industry.mean.prices"
+			color = "red"
+			label = "Mean"
+		/>
+		<series 
+			value = "Industry.max.prices"
+			color = "veryLightRed"
+			label = "Max"
+		/>
+		<series 
+			value = "Industry.min.prices"
+			color = "veryLightRed"
+			label = "Min"
+		/>
+	</chart>
+
+	<chart title = "Goods Market">
+		<series
+			value = "Industry.sum.production.vol"
+			color = "red"
+			label = "Production"
+		/>
+		<series
+			value = "Households.sum.consumption.vol"
+			color = "blue"
+			label = "Consumption"
+		/>
+	</chart>
+
+	<chart title = "Inventories">
+		<series
+			value = "Industry.sum.inventories.fg.vol"
+			color = "green"
+			label = "Volume"
+		/>
+		<series
+			value = "Industry.sum.inventories.fg.vol.normal"
+			color = "orange"
+			label = "Target"
+		/>
+	</chart>
+
+	<chart title = "Wages">
+		<series
+			value = "Industry.mean.wages"
+			color = "blue"
+			label = "Mean"
+		/>
+		<series
+			value = "Industry.max.wages"
+			color = "veryLightBlue"
+			label = "Max"
+		/>
+		<series
+			value = "Industry.min.wages"
+			color = "veryLightBlue"
+			label = "Min"
+		/>
+	</chart>
+	
+	<chart title = "Unemployment">
+		<series
+			value = "Households.sum.unemployed/Households.sum.agents"
+			label = "Unemployment"
+		/>
+		<yAxis 
+			min = "0" 
+			max = "1" 
+		/>
+	</chart>
+	
+	<chart title = "Bank Ratios">
+		<series
+			value = "Bank.capital/Bank.liabilities"
+			color = "green"
+			label = "Capital"
+		/>
+		<series
+			value = "Bank.doubtfulDebt/Bank.liabilities"
+			color = "red"
+			label = "Doubtful Debt"
+		/>
+	</chart>
+	
+	<chart title = "Test Income">
+		<series
+			value = "Industry.sum.grossProfit"
+		/>
+		<series
+			value = "Industry.sum.dividends+Bank.dividends"
+		/>
+	</chart>
+		
+	<chart title = "Income Distribution">
+		<series
+			value = "Households.sum.wages/(Households.sum.wages+Households.sum.dividend)"
+			color = "blue"
+			label = "Wages"
+		/>
+		<series
+			value = "Households.sum.dividend/(Households.sum.wages+Households.sum.dividend)"
+			color = "red"
+			label = "Dividends"
+		/>
+		<yAxis 
+			min = "0" 
+			max = "1" 
+		/>
+	</chart>
+</panel>
+
+<panel title = "Industry">
+	
+	<chart title = "Workforce">
+		<series
+			value = "Industry.sum.workforce"
+			color = "blue"
+			label = "Workforce"
+		/>
+		<series
+			value = "Industry.sum.capacity"
+			color = "orange"
+			label = "Capacity"
+		/>
+	</chart>
+	
+	<chart title = "Capacity Utilization">
+		<series
+			value = "Industry.sum.workforce/Industry.sum.capacity"
+			color = "blue"
+			label = "Capacity utilization"
+		/>
+	</chart>
+	
+	<chart title = "Markup">
+		<series
+			value = "Industry.sum.grossProfit/Industry.sum.sales.costValue"
+			color = "blue"
+			label = "Mean"
+		/>
+		<yAxis min = "0"/>
+	</chart>
+	
+	<chart title = "Gross Margin Ratio">
+		<series
+			value = "Industry.sum.grossProfit/Industry.sum.sales.val"
+			color = "blue"
+			label = "Mean"
+		/>
+	</chart>
+	
+	<chart title = "Wages">
+		<series
+			value = "Industry.mean.wages"
+			color = "blue"
+			label = "Mean"
+		/>
+		<series
+			value = "Industry.max.wages"
+			color = "veryLightBlue"
+			label = "Max"
+		/>
+		<series
+			value = "Industry.min.wages"
+			color = "veryLightBlue"
+			label = "Min"
+		/>
+	</chart>
+		
+	<chart title = "Inventories">
+		<series
+			value = "Industry.sum.inventories.fg.vol"
+			color = "green"
+			label = "Volume"
+		/>
+		<series
+			value = "Industry.sum.inventories.fg.vol.normal"
+			color = "orange"
+			label = "Target"
+		/>
+	</chart>
+	
+	<chart title = "Production">
+		<series
+			value = "Industry.sum.production.vol"
+			color = "red"
+			label = "Production"
+		/>
+		<series
+			value = "Households.sum.consumption.vol"
+			color = "blue"
+			label = "Consumption"
+		/>
+	</chart>
+	
+	<chart title = "Prices">
+		<series
+			value = "Industry.sum.supply.val/Industry.sum.supply.vol"
+			label = "Average Price (Supply)"
+		/>
+		<series
+			value = "Industry.sum.sales.val/Industry.sum.sales.vol"
+			label = "Average Price (Sales)"
+		/>
+		<series
+			value = "Industry.sum.inventories.fg.val/Industry.sum.inventories.fg.vol"
+			label = "Average Cost (Inventories)"
+		/>
+	</chart>
+	
+	<chart title = "Balance sheet">
+		<series
+			value = "Industry.sum.assets"
+			color = "blue"
+			label = "Assets"
+		/>
+		<series
+			value = "Industry.sum.liabilities"
+			color = "red"
+			label = "Liabilities"
+		/>
+		<series
+			value = "Industry.sum.capital"
+			color = "green"
+			label = "Capital"
+		/>
+	</chart>
+	
+	<chart title = "Financial Ratio">
+		<series
+			value = "Industry.sum.liabilities/Industry.sum.assets"
+			color = "blue"
+			label = "Liabilities"
+		/>
+		<series
+			value = "Industry.sum.liabilities.target/Industry.sum.assets"
+			color = "orange"
+			label = "Target"
+		/>
+	</chart>
+	
+	<chart title = "Other Ratios">
+		<series
+			value = "Industry.sum.cash/Industry.sum.wageBill"
+			label = "Cash to Wages Ratio"
+		/>
+		<series
+			value = "Industry.sum.inventories.total.val/Industry.sum.wageBill"
+			label = "Circulating Capital to Wages Ratio"
+		/>
+		<series
+			value = "Industry.sum.production.val/Industry.sum.wageBill"
+			label = "Production Value to Wages Ratio"
+		/>
+	</chart>
+	
+</panel>
+
+<panel title = "Firm 1">
+
+	<chart title = "Wages and Prices" options = "scatter">
+		<series 
+			value = "Industry.agent.Firm1.wages, Industry.agent.Firm1.prices" 
+			color = "transparentRed"
+			label = "Firm 1" 
+		/>
+		<series 
+			value = "Industry.all.wages, Industry.all.prices" 
+			color = "transparentBlue" 
+			label = "Other firms" 
+		/>
+	</chart>
+
+	<chart title = "Price">
+		<series 
+			value = "Industry.agent.Firm1.prices" 
+			color = "red" 
+			label = "Firm 1" 
+		/>
+		<series 
+			value = "Industry.mean.prices" 
+			color = "blue" 
+			label = "Mean" 
+		/>
+		<series 
+			value = "Industry.max.prices" 
+			color = "veryLightBlue" 
+			label = "Max" 
+		/>
+		<series 
+			value = "Industry.min.prices" 
+			color = "veryLightBlue" 
+			label = "Min" 
+		/>
+	</chart>
+
+	<chart title = "Wage">
+		<series 
+			value = "Industry.agent.Firm1.wages" 
+			color = "red" 
+			label = "Firm 1" 
+		/>
+		<series 
+			value = "Industry.mean.wages" 
+			color = "blue" 
+			label = "Mean" 
+		/>
+		<series 
+			value = "Industry.max.wages" 
+			color = "veryLightBlue" 
+			label = "Max" 
+		/>
+		<series 
+			value = "Industry.min.wages" 
+			color = "veryLightBlue" 
+			label = "Min" 
+		/>
+	</chart>
+
+	<chart title = "Inventories">
+		<series 
+			value = "Industry.agent.Firm1.inventories.fg.vol" 
+			color = "red" 
+			label = "Firm 1" 
+		/>
+		<series 
+			value = "Industry.agent.Firm1.inventories.fg.vol.normal" 
+			color = "orange" 
+			label = "Target" 
+		/>
+		<series 
+			value = "Industry.mean.inventories.fg.vol" 
+			color = "blue" 
+			label = "Mean" 
+		/>
+	</chart>
+
+	<chart title = "Capacity Utilization">
+		<series 
+			value = "Industry.agent.Firm1.workforce/Industry.agent.Firm1.capacity" 
+			color = "red" 
+			label = "Firm 1" 
+		/>
+		<series 
+			value = "Industry.sum.workforce/Industry.sum.capacity" 
+			color = "blue" 
+			label = "Average" 
+		/>
+		<yAxis 
+			min = "0" 
+			max = "1" 
+		/>
+	</chart>
+		
+</panel>
+
+<panel title = "Bank">
+	
+	<chart title = "Ratios">
+		<series 
+			value = "Bank.capital/Bank.liabilities" 
+			color = "green" 
+			label = "Capital" 
+		/>
+		<series 
+			value = "Bank.doubtfulDebt/Bank.liabilities" 
+			color = "red" 
+			label = "Doubtful Debt" 
+		/>
+	</chart>
+	
+	<chart title = "Dividends">
+		<series 
+			value = "Bank.dividends" 
+			color = "blue" 
+			label = "Dividends" 
+		/>
+	</chart>
+	
+	<chart title = "Balance sheet">
+		<series 
+			value = "Bank.assets" 
+			color = "blue" 
+			label = "Assets" 
+		/>
+		<series 
+			value = "Bank.liabilities" 
+			color = "red" 
+			label = "Liabilities" 
+		/>
+		<series 
+			value = "Bank.capital" 
+			color = "green" 
+			label = "Capital" 
+		/>
+	</chart>
+	
+	<chart title = "Deposits">
+		<series 
+			value = "Industry.sum.cash" 
+			label = "Firms" 
+		/>
+		<series 
+			value = "Households.sum.cash" 
+			label = "Households" 
+		/>
+	</chart>
+	
+	<chart title = "Velocity of Money">
+		<series 
+			value = "12*(Industry.sum.wageBill+Industry.sum.grossProfit)/Bank.liabilities" 
+			label = "Velocity of Money" 
+		/>
+		<yAxis 
+			min = "0" 
+			max = "6" 
+		/>
+	</chart>
+	
+	<chart title = "Bankruptcies">
+		<series 
+			value = "Bank.bankruptcies" 
+			label = "Bankruptcies" 
+		/>
+	</chart>
+
+</panel>
+
+<panel title = "Households">
+
+	<chart title = "Unemployment">
+		<series 
+			value = "Households.sum.unemployed/Households.sum.agents" 
+			label = "Unemployment" 
+		/>
+		<yAxis min = "0" max = "1" />
+	</chart>
+	
+	<chart title = "Wealth">
+		<series 
+			value = "Households.sum.cash" 
+			label = "Households Cash" 
+		/>
+		<series 
+			value = "Households.sum.capital" 
+			label = "Households Capital" 
+		/>
+	</chart>
+	
+	<chart title = "Wages">
+		<series 
+			value = "Households.sum.wages/Households.sum.employed" 
+			label = "Average" 
+		/>
+	</chart>
+	
+	<chart title = "Consumption (Value)">
+		<series 
+			value = "Households.sum.consumption.budget" 
+			label = "Consumption Budget" 
+		/>
+		<series 
+			value = "Households.sum.consumption.val" 
+			label = "Consumption Value" 
+		/>
+	</chart>
+	
+	<chart title = "Consumption (Volume)">
+		<series 
+			value = "Households.sum.consumption.vol"
+			label = "Consumption (Volume)" 
+		/>
+	</chart>
+	
+	<chart title = "Income">
+		<series 
+			value = "Households.sum.wages" 
+			label = "Wages" 
+		/>
+		<series 
+			value = "Industry.sum.grossProfit" 
+			label = "Profits" 
+		/>
+	</chart>
+	
+	<chart title = "Savings">
+		<series 
+			value = "(Households.sum.cash+Households.sum.capital)/(Households.sum.wages+Industry.sum.grossProfit)" 
+			label = "Savings" 
+		/>
+	</chart>
+	
+	<chart title = "Income Distribution">
+		<series 
+			value = "Households.sum.wages/(Households.sum.wages+Households.sum.dividend)" 
+			color = "blue" 
+			label = "Wages" 
+		/>
+		<series 
+			value = "Households.sum.dividend/(Households.sum.wages+Households.sum.dividend)" 
+			color = "red" 
+			label = "Dividends" 
+		/>
+		<yAxis 
+			min = "0" 
+			max = "1" 
+		/>
+	</chart>
+	
+	<chart title = "Dividends">
+		<series 
+			value = "Bank.dividends" 
+			label = "Bank dividends" 
+		/>
+		<series 
+			value = "Industry.sum.dividends" 
+			label = "Industry dividends" 
+		/>
+	</chart>
+	
+</panel>
+
+</gui>

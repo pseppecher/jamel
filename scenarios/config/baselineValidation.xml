@@ -1,0 +1,28 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<!-- 
+	************************************************* 
+	Baseline validation tests
+	Used by the DataManager to check data consistency
+	Date: 07/02/2015
+	*************************************************
+-->
+
+<root>
+
+	<test val1="Households.sum.employed" val2="Industry.sum.workforce"/>
+	<test val1="Households.sum.agents" val2="Households.sum.employed+Households.sum.unemployed"/>
+	<test val1="Households.sum.wages" val2="Industry.sum.wageBill"/>
+
+	<test val1="Households.sum.capital" val2="Industry.sum.capital+Bank.capital"/>
+	<test val1="Households.sum.dividend" val2="Industry.sum.dividends+Bank.dividends"/>
+	<test val1="Households.sum.dividend + Households.sum.capital_variation" val2="Industry.sum.grossProfit"/>
+
+	<test val1="Industry.sum.sales.vol" val2="Households.sum.consumption.vol"/>
+	<test val1="Industry.sum.sales.val" val2="Households.sum.consumption.val"/>
+	<test val1="Industry.sum.inventories.fg.val+Industry.sum.inventories.inProcess.val" val2="Households.sum.cash+Households.sum.capital"/>
+	<test val1="Industry.sum.interest" val2="Bank.interest"/>
+	<test val1="Industry.sum.bankruptcies" val2="Bank.bankruptcies"/>
+	<test val1="Industry.sum.insolvents" val2="0"/>
+
+</root>
