@@ -2,7 +2,7 @@ package jamel.basic.agents.firms;
 
 import java.util.List;
 
-import jamel.basic.agents.roles.CapitalOwner;
+import jamel.basic.agents.roles.Shareholder;
 import jamel.basic.util.BankAccount;
 
 /**
@@ -25,24 +25,31 @@ public interface IndustrialSector {
 	BankAccount getNewAccount(Firm firm);
 
 	/**
-	 * Returns the parameter to which the specified key is mapped, or null if the parameters contain no mapping for the key.
-	 * @param key the key whose associated parameter is to be returned.
-	 * @return a string.
-	 */
-	String getStringParameter(String key);
-
-	/**
 	 * Returns a simple random sample of firms. 
 	 * @param size the of the sample. 
 	 * @return a sample of firms.
 	 */
 	List<Firm> getSimpleRandomSample(int size);
+
+	/**
+	 * Returns the parameter to which the specified key is mapped, or null if the parameters contain no mapping for the key.
+	 * @param key the key whose associated parameter is to be returned.
+	 * @return a string.
+	 */
+	String getStringParameter(String key);
 	
 	/**
 	 * Returns an agent selected at random in the collection of agents that can be a capital owner.
 	 * @return a capital owner.
 	 */
-	CapitalOwner selectCapitalOwner();
+	Shareholder selectCapitalOwner();
+
+	/**
+	 * Returns a sample of agents selected at random in the collection of agents that can be a capital owner.
+	 * @param n the number of capital owners to select.
+	 * @return an list of capital owners.
+	 */
+	List<Shareholder> selectCapitalOwner(int n);
 
 }
 

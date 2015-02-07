@@ -118,7 +118,7 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 				Simulator.showErrorDialog(errorMsg);
 				e.printStackTrace();
 				throw new RuntimeException(errorMsg);
-			};
+			}
 		}
 		return list;
 	}
@@ -210,6 +210,7 @@ public class BasicHouseholdsSector implements Sector, HouseholdsSector {
 		return (BankAccount) circuit.forward("getNewAccount", household);
 	}
 
+	@Override
 	public String getStringParameter(String key) {
 		return this.circuit.getParameter(this.name,key);
 	}

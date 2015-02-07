@@ -6,7 +6,7 @@ import jamel.basic.agents.roles.AccountHolder;
  * Represents a bank account.
  */
 public interface BankAccount {
-
+	
 	/**
 	 * Deposits the cheque.
 	 * @param cheque the cheque to be deposited.
@@ -30,6 +30,12 @@ public interface BankAccount {
 	 * @return the total debt.
 	 */
 	long getDebt();
+
+	/**
+	 * Returns the amount paid as interest for the current period.
+	 * @return the amount paid as interest for the current period.
+	 */
+	long getInterest();
 
 	/**
 	 * Returns <code>true</code> if the account is open, <code>false</code> otherwise.

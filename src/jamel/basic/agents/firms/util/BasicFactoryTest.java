@@ -30,6 +30,7 @@ public class BasicFactoryTest {
 				energy=0;
 				value=0;
 			}
+			@Override
 			public void expend(float work) {
 				if (work>energy) {
 					if ((work-energy)<0.001) {
@@ -47,6 +48,7 @@ public class BasicFactoryTest {
 					}
 				}
 			}
+			@Override
 			public float getEnergy() {
 				return energy;
 			}
@@ -54,9 +56,11 @@ public class BasicFactoryTest {
 			public long getValue() {
 				return value;
 			}
+			@Override
 			public long getWage() {
 				return wage;
 			}
+			@Override
 			public boolean isExhausted() {
 				return energy==0;
 			}
@@ -102,6 +106,7 @@ public class BasicFactoryTest {
 	 * Setup.
 	 * @throws Exception exception.
 	 */
+	@SuppressWarnings("unused")
 	@Before
 	public void setUp() throws Exception {
 		new Circuit(new Timer() {

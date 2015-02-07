@@ -7,7 +7,7 @@ import java.util.Random;
 
 import jamel.basic.agents.roles.AccountHolder;
 import jamel.basic.agents.roles.Asset;
-import jamel.basic.agents.roles.CapitalOwner;
+import jamel.basic.agents.roles.Shareholder;
 import jamel.basic.data.dataSets.AgentDataset;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.BasicPeriod;
@@ -35,7 +35,7 @@ public class BankingSectorTest {
 		/** The parameters of the simulation. */
 		private final JamelParameters jamelParameters = new JamelParameters();
 
-		public CapitalOwner defaultCapitalOwner;
+		public Shareholder defaultCapitalOwner;
 
 		private TCircuit() {
 			super(new Timer() {
@@ -627,7 +627,7 @@ public class BankingSectorTest {
 		final BankAccount account1 = (BankAccount) this.bank.forward("getNewAccount", newAccountHolder());
 		final BankAccount account2 = (BankAccount) this.bank.forward("getNewAccount", newAccountHolder());
 		
-		circuit.defaultCapitalOwner = new CapitalOwner() {
+		circuit.defaultCapitalOwner = new Shareholder() {
 			@Override public void addAsset(Asset asset) {}
 			@Override public Object execute(String instruction, Object... args) {return null;}
 			@Override public AgentDataset getData() {return null;}

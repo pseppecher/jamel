@@ -60,7 +60,7 @@ public enum JamelColor {
 	 * @param name the name of the color to return.
 	 * @return a color.
 	 */
-	private static Color get(String name) {
+	public static Color getColor(String name) {
 		return valueOf(name).color;
 	}
 
@@ -74,7 +74,7 @@ public enum JamelColor {
 		if (colorKeys.length>0){
 			colors = new Paint[colorKeys.length];
 			for (int count = 0; count<colors.length ; count++){
-				colors[count] = JamelColor.get(colorKeys[count]);
+				colors[count] = JamelColor.getColor(colorKeys[count]);
 			}
 		}
 		else {

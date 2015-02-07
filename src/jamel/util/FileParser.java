@@ -64,6 +64,7 @@ public class FileParser {
 	public static Map<String, String> parseMap(File file) throws FileNotFoundException {
 		final Map<String, String> map = new LinkedHashMap<String,String>();
 		@SuppressWarnings("serial") final LinkedList<String> prefix = new LinkedList<String>() {
+			@Override
 			public String toString() {
 				String result = "";
 				for(String string:this) {

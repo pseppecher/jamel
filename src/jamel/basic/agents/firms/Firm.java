@@ -2,15 +2,14 @@ package jamel.basic.agents.firms;
 
 import jamel.basic.agents.roles.AccountHolder;
 import jamel.basic.agents.roles.Agent;
-import jamel.basic.agents.roles.Asset;
+import jamel.basic.agents.roles.Corporation;
 import jamel.basic.agents.roles.Supplier;
 import jamel.basic.util.JobOffer;
-import jamel.basic.util.Supply;
 
 /**
  * Represents an individual firm.
  */
-public interface Firm extends Agent, AccountHolder, Asset, Supplier {
+public interface Firm extends Agent, AccountHolder, Corporation, Supplier {
 
 	/**
 	 * Closes the firm at the end of the period.
@@ -18,16 +17,17 @@ public interface Firm extends Agent, AccountHolder, Asset, Supplier {
 	void close();
 
 	/**
+	 * Returns something.
+	 * @param string the key for the thing to return.
+	 * @return something.
+	 */
+	Object get(String string);
+
+	/**
 	 * Returns the job offer (if any) of the firm.
 	 * @return the job offer.
 	 */
 	JobOffer getJobOffer();
-
-	/**
-	 * Returns the supply (if any) of the firm.
-	 * @return the supply.
-	 */
-	Supply getSupply();
 
 	/**
 	 * Returns the wage offered.

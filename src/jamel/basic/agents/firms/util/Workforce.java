@@ -89,4 +89,26 @@ public class Workforce extends LinkedList<JobContract> {
 		this.clear();
 	}
 
+	/**
+	 * Returns the average wage.
+	 * @return the average wage.
+	 */
+	public Double getAverageWage() {
+		final Double result;
+		if (this.size()==0) {
+			result = null;
+		}
+		else {
+			double sum = 0;
+			for (JobContract contract:this) {
+				sum += contract.getWage();
+			}
+			result = sum/this.size();
+		}
+		return result;
+	}
+
 }
+
+// ***
+

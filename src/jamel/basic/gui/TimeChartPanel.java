@@ -1,5 +1,7 @@
 package jamel.basic.gui;
 
+import jamel.basic.data.util.xml.ChartDescription;
+
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Line2D;
@@ -19,20 +21,16 @@ import org.jfree.data.xy.XYSeriesCollection;
 @SuppressWarnings("serial")
 public class TimeChartPanel extends JamelChartPanel {
 
-	/** line */
+	/** A shape line. */
 	private final static Shape line = new Line2D.Double(0, 0, 15, 0);
 
 	/**
 	 * Creates a panel with its chart.
-	 * @param title the title of the chart.
-	 * @param yMin the lower bound for the axis.
-	 * @param yMax the upper bound for the axis.
+	 * @param chartDescription the description of the chart. 
 	 * @param data the dataset.
-	 * @param colors the colors.
-	 * @param legend the legend.
 	 */
-	public TimeChartPanel(String title, Double yMin, Double yMax, XYSeriesCollection data, Paint[] colors,String[] legend) {
-		super(title, yMin, yMax, data, colors, legend);
+	public TimeChartPanel(ChartDescription chartDescription, XYSeriesCollection data) {
+		super(chartDescription,data);
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package jamel.basic.gui;
 
+import jamel.basic.data.util.xml.ChartDescription;
+
 import java.awt.Color;
 import java.awt.Paint;
 import java.awt.Shape;
@@ -23,17 +25,15 @@ public class ScatterChartPanel extends JamelChartPanel {
 	private static final Paint lineColor = new Color(0.3f,0.3f,0.3f,0.5f);
 
 	/** A square shape. */
-	private final static Shape square = new Rectangle2D.Double(-3, -3, 6, 6);;
+	private final static Shape square = new Rectangle2D.Double(-3, -3, 6, 6);
 
 	/**
 	 * Creates a panel with its chart.
-	 * @param title the title of the chart.
+	 * @param chartDescription the description of the chart.
 	 * @param data the dataset.
-	 * @param colors the colors.
-	 * @param legend the legend.
 	 */
-	public ScatterChartPanel(String title, XYSeriesCollection data, Paint[] colors,String[] legend) {
-		super(title, null, null, data, colors, legend);
+	public ScatterChartPanel(ChartDescription chartDescription, XYSeriesCollection data) {
+		super(chartDescription,data);
 	}
 
 	@Override

@@ -1,5 +1,7 @@
 package jamel.basic.gui;
 
+import jamel.basic.data.util.xml.ChartDescription;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -16,7 +18,6 @@ import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.data.xy.XYDataset;
-import org.jfree.data.xy.XYSeriesCollection;
 
 /**
  * A convenient extension of ChartPanel.
@@ -40,7 +41,7 @@ public abstract class JamelChartPanel extends ChartPanel {
 	protected static final Font tickLabelFont = new Font("Tahoma", Font.PLAIN, 10);
 
 	/** The tick unit source. */
-	protected static final TickUnitSource tickUnitSource = NumberAxis.createIntegerTickUnits();;
+	protected static final TickUnitSource tickUnitSource = NumberAxis.createIntegerTickUnits();
 
 	/** The font used for chart titles. */
 	protected static final Font titleFont = new Font("Tahoma", Font.PLAIN, 14);
@@ -111,40 +112,26 @@ public abstract class JamelChartPanel extends ChartPanel {
 	
 	/**
 	 * Creates a panel with its chart.
-	 * @param title the title of the chart.
-	 * @param yMin the lower bound for the axis.
-	 * @param yMax the upper bound for the axis.
-	 * @param data the dataset.
-	 * @param colors the colors.
-	 * @param legend the legend.
+	 * @param chartDescription the description of the chart to create. 
+	 * @param dataset the dataset.
 	 */
-	public JamelChartPanel(String title, Double yMin, Double yMax, XYSeriesCollection data,
-			Paint[] colors, String[] legend) {
+	public JamelChartPanel(ChartDescription chartDescription, XYDataset dataset) {
 		super(null);
-		this.setChart(createChart(title, yMin, yMax, null, null, data, colors,legend));
+		this.setChart(createChart(chartDescription, dataset));
 		this.setBackground(background);
 	}
 
 	/**
-	 * Creates a chart.
-	 * @param title the title.
-	 * @param yMin the lower bound for the axis.
-	 * @param yMax the upper bound for the axis.
-	 * @param xAxisLabel the xLabel.
-	 * @param yAxisLabel the yLabel.
-	 * @param dataset the data set.
-	 * @param colors the series colors.
-	 * @param legend the legend.
-	 * @return the new chart.
+	 * Returns a new chart.
+	 * @param chartDescription the description of the chart to create.
+	 * @param dataset the dataset.
+	 * @return a new chart.
 	 */
-	protected JFreeChart createChart(String title, Double yMin, Double yMax, String xAxisLabel, String yAxisLabel, final XYDataset dataset, final Paint[] colors,String[] legend) {
-		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(xAxisLabel), getNewYAxis(yAxisLabel,yMin,yMax), getNewRenderer(dataset,colors));
-		final String[] tooltips = new String[dataset.getSeriesCount()];
-		for(int i=0; i<dataset.getSeriesCount();i++) {
-			tooltips[i] = (String) dataset.getSeriesKey(i);
-		}
-		setLegend(plot,legend,tooltips,colors);
-		return getNewChart(title,plot);	
+	private JFreeChart createChart(ChartDescription chartDescription, XYDataset dataset) {
+		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(null), getNewYAxis(null,chartDescription.getYAxisMin(),chartDescription.getYAxisMax()), getNewRenderer(dataset,chartDescription.getColors()));
+		final LegendItemCollection legendItemCollection = chartDescription.getLegendItemCollection();
+		plot.setFixedLegendItems(legendItemCollection );		
+		return getNewChart(chartDescription.getName(),plot);	
 	}
 
 	/**

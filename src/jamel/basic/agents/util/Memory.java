@@ -1,89 +1,66 @@
 package jamel.basic.agents.util;
 
-import java.util.LinkedList;
-import java.util.ListIterator;
-
 /**
- * A convenient class to store some past data.
+ * The memory of an agent or an object.
  */
-@SuppressWarnings("serial")
-public class Memory extends LinkedList<Double>{
-	
-	/** The maximum number of data in the series. */
-	private final int limit;
+public interface Memory {
 	
 	/**
-	 * Creates a new series/
-	 * @param limit the maximum number of data.
+	 * Adds the specified value to the previous value.
+	 * If there is no previous mapping for this key, the mapping is created with the given value.
+	 * @param key key of the data with which the specified value is to be added.
+	 * @param value the value to be added.
 	 */
-	public Memory(int limit) {
-		super();
-		this.limit=limit;
-	}
-	
-	/**
-	 * Appends the specified value to the end of this series.
-	 * @param val the value to be appended to this series.
-	 * @return <code>true</code>
-	 */
-	public boolean add(double val) {
-		final boolean result = super.add(val);
-		if (this.size()>this.limit) {
-			this.removeFirst();
-		}
-		return result;			
-	}
-	
-	/**
-	 * Returns the mean of all values in the series.
-	 * @return the mean.
-	 */
-	public double getMean() {
-		double sum=0;
-		int i=0;
-		for (Double num:this) {
-			sum+=num;
-			i++;
-		}
-		return sum/i;
-	}
+	public void add(String key, double value);
 
 	/**
-	 * Returns the mean of the i last values.
-	 * @param i the number of values to consider.
-	 * @return the mean of the i last values.
+	 * Checks if the tow given series of data are consistent.
+	 * @param key1 the key for the first series.
+	 * @param key2 the key for the second series.
+	 * @return <code>true</code> if the series are consistent, <code>false</code> otherwise.
 	 */
-	public double getMean(int i) {
-		final ListIterator<Double> iterator = this.listIterator(this.size());
-		double sum = 0d;
-		int j=0;
-		while (true) {
-			if (iterator.hasPrevious()) {
-				j++;
-				sum += iterator.previous();
-			}
-			else {
-				break;
-			}
-			if (j==3) {
-				break;
-			}
-		}
-		return sum/j;
-	}
+	public boolean checkConsistency(String key1, String key2);
 
 	/**
-	 * Returns the sum of all values in the series.
-	 * @return the sum.
+	 * Returns <code>true</code> if this memory contains data for the specified key.
+	 * @param key the key whose presence in this memory is to be tested.
+	 * @return <code>true</code> if this memory contains data for the specified key.
 	 */
-	public double getSum() {
-		double sum=0;
-		for (Double num:this) {
-			sum+=num;
-		}
-		return sum;
-	}
+	public boolean containsKey(String key);
+	
+	/**
+	 * Returns the current <code>Double</code> value for the specified key. 
+	 * @param key the key of the value to return.
+	 * @return the current <code>Double</code> value for the specified key.
+	 */
+	public Double get(String key);
 
+	/**
+	 * Returns the mean of the specified series for the given period.
+	 * @param key the key of the series.
+	 * @param start the value of the last period to consider.
+	 * @param lim the number of periods to consider.
+	 * @return the mean of the values.
+	 */
+	public Double getMean(String key, int start,int lim);
+	
+	/**
+	 * Returns the sum of the specified series for the given period.
+	 * @param key the key of the series.
+	 * @param start the value of the last period to consider.
+	 * @param lim the number of periods to consider.
+	 * @return the sum of the values.
+	 */
+	public Double getSum(String key, int start,int lim);
+
+	/**
+	 * Associates the specified value with the specified key in this memory. 
+	 * If the memory previously contained a value for the key, the old value is replaced.
+	 * @param key key with which the specified value is to be associated.
+	 * @param value value to be associated with the specified key.
+	 */
+	public void put(String key, double value);
+	
 }
 
 // ***

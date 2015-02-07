@@ -1,15 +1,17 @@
 package jamel.basic.agents.firms;
 
 import jamel.basic.agents.firms.util.BasicFactory;
+import jamel.basic.agents.firms.util.CapitalManager;
 import jamel.basic.agents.firms.util.Factory;
 import jamel.basic.agents.firms.util.Workforce;
-import jamel.basic.agents.roles.CapitalOwner;
+import jamel.basic.agents.roles.Shareholder;
 import jamel.basic.agents.roles.Supplier;
 import jamel.basic.agents.roles.Worker;
-import jamel.basic.agents.util.Memory;
+import jamel.basic.agents.util.BasicMemory;
 import jamel.basic.agents.util.LaborPower;
+import jamel.basic.agents.util.Memory;
 import jamel.basic.data.dataSets.AgentDataset;
-import jamel.basic.data.dataSets.BasicAgentDataset;
+import jamel.basic.data.dataSets.AbstractAgentDataset;
 import jamel.basic.util.AnachronismException;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.Cheque;
@@ -29,39 +31,9 @@ import java.util.List;
 public class BasicFirm implements Firm {
 
 	/**
-	 * The capital manager.
-	 */
-	protected interface CapitalManager {
-
-		/**
-		 * Returns the dividend.
-		 * @return the dividend paid.
-		 */
-		long getDividend();
-
-		/**
-		 * Returns the amount of debt exceeding the firm target. 
-		 * @return the amount of debt exceeding the firm target.
-		 */
-		double getLiabilitiesExcess();
-
-		/**
-		 * Returns the target value of the liabilities.
-		 * @return the target value of the liabilities.
-		 */
-		double getLiabilitiesTarget();
-
-		/**
-		 * Updates the dividend.
-		 */
-		void updateDividend();
-
-	}
-
-	/**
 	 * The pricing manager.
 	 */
-	protected interface PricingManager {
+	public interface PricingManager {
 
 		/**
 		 * Returns the price.
@@ -79,7 +51,7 @@ public class BasicFirm implements Firm {
 	/**
 	 * The production manager.
 	 */
-	protected interface ProductionManager {
+	public interface ProductionManager {
 
 		/**
 		 * Returns the capacity utilization targeted.
@@ -97,12 +69,18 @@ public class BasicFirm implements Firm {
 	/**
 	 * The workforce manager.
 	 */
-	protected interface WorkforceManager {
+	public interface WorkforceManager {
 
 		/**
 		 * Closes the manager.
 		 */
 		void close();
+
+		/**
+		 * Returns the average wage paid of the current workforce.
+		 * @return the average wage paid of the current workforce.
+		 */
+		Double getAverageWage();
 
 		/**
 		 * Returns the job offer.
@@ -133,6 +111,12 @@ public class BasicFirm implements Firm {
 		 * @return the wageBill of the period.
 		 */
 		long getWageBill();
+
+		/**
+		 * Returns the size of the workforce (the number of employees)
+		 * @return the size of the workforce (the number of employees)
+		 */
+		int getWorkforceSize();
 
 		/**
 		 * Layoffs all the workforce.
@@ -182,6 +166,9 @@ public class BasicFirm implements Firm {
 	public final static String LABOUR_CONTRACT_MIN = "labourContract.min";
 
 	@SuppressWarnings("javadoc")
+	public static final String MEM_DIVIDEND = "dividend";
+
+	@SuppressWarnings("javadoc")
 	public final static String NORMAL_VACANCY_RATE = "vacancy.normalRate";
 
 	@SuppressWarnings("javadoc")
@@ -220,17 +207,32 @@ public class BasicFirm implements Firm {
 	@SuppressWarnings("javadoc")
 	public final static String WAGE_MINIMUM = "wage.minimum";
 
+	/** The name. */
+	private final String name;
+
+	/** A flag that indicates if the agent records its history. */
+	private boolean recordHistoric = false;
+
+	/** The account. */
+	protected final BankAccount account;
+
 	/** A flag that indicates if the firm is bankrupted. */
-	private boolean bankrupted = false;
+	protected boolean bankrupted = false;
 
 	/** The capital manager. */
-	private final  CapitalManager capitalManager = getNewCapitalManager();
+	protected final CapitalManager capitalManager = getNewCapitalManager();
 
 	/** Date of creation. */
-	private final int creation = Circuit.getCurrentPeriod().getValue();
+	protected final int creation = Circuit.getCurrentPeriod().intValue();
+
+	/** The data of the agent. */
+	protected AgentDataset data;
+
+	/** The factory. */
+	protected final Factory factory;
 
 	/** The history of the firm. */
-	private final LinkedList<String> history = new LinkedList<String>() {
+	protected final LinkedList<String> history = new LinkedList<String>() {
 		/** serialVersionUID */
 		private static final long serialVersionUID = 1L;
 		@Override
@@ -246,23 +248,8 @@ public class BasicFirm implements Firm {
 		}
 	};
 
-	/** The name. */
-	private final String name;
-
-	/** The owner. */
-	private CapitalOwner owner;
-
-	/** A flag that indicates if the agent records its history. */
-	private boolean recordHistoric = false;
-
-	/** The account. */
-	protected final BankAccount account;;
-
-	/** The data of the agent. */
-	protected BasicAgentDataset data;
-
-	/** The factory. */
-	protected final Factory factory;
+	/** The memory. */
+	protected final Memory memory = new BasicMemory(24);
 
 	/** The pricing manager. */
 	protected final PricingManager pricingManager;
@@ -316,11 +303,8 @@ public class BasicFirm implements Firm {
 			}
 		}
 
-	};;
-
-	/** The memory of past sales. */
-	protected Memory salesMemory = new Memory(12);// 12 should be a parameter.
-
+	};
+	
 	/** The sector. */
 	protected final IndustrialSector sector;
 
@@ -333,16 +317,10 @@ public class BasicFirm implements Firm {
 		/** jobOffer */
 		private JobOffer jobOffer;
 
-		/** The data series for the newJobs. */
-		private Memory newJobsSeries = new Memory(4);// 4 should be a parameter.
-
 		/** The payroll (= the anticipated wage bill) */
 		private long payroll;
 
 		private int vacancies;
-
-		/** The data series for the vacancies. */
-		private Memory vacanciesSeries = new Memory(4);// 4 should be a parameter.
 
 		/** The wage. */
 		private Double wage;
@@ -391,11 +369,11 @@ public class BasicFirm implements Firm {
 		 */
 		private double getVacancyRate() {
 			final double result;
-			if (vacanciesSeries.size()!=newJobsSeries.size()) {
+			if (!memory.checkConsistency("vacancies","jobs")) {
 				throw new RuntimeException("Inconsistent series.");
 			}
-			final double vacancies = vacanciesSeries.getSum();
-			final double jobs = newJobsSeries.getSum();
+			final double vacancies = memory.getSum("vacancies", Circuit.getCurrentPeriod().intValue()-1,4);
+			final double jobs = memory.getSum("jobs", Circuit.getCurrentPeriod().intValue()-1,4);
 			if (vacancies==0) {
 				result=0;
 			}
@@ -411,6 +389,11 @@ public class BasicFirm implements Firm {
 			this.wageBill=0;
 			this.payroll=0;
 			this.vacancies=0;
+		}
+
+		@Override
+		public Double getAverageWage() {
+			return this.workforce.getAverageWage();
 		}
 
 		@Override
@@ -446,6 +429,11 @@ public class BasicFirm implements Firm {
 		}
 
 		@Override
+		public int getWorkforceSize() {
+			return this.workforce.size();
+		}
+
+		@Override
 		public void layoff() {
 			workforce.layoff();
 		}
@@ -461,7 +449,7 @@ public class BasicFirm implements Firm {
 
 		@Override
 		public void updateJobOffer() {
-			newJobsSeries.add(vacancies);
+			memory.put("jobs",vacancies);
 			if (vacancies==0) {
 				jobOffer = null;
 			}
@@ -535,8 +523,8 @@ public class BasicFirm implements Firm {
 							public String toString() {
 								return "Employer: "+name+
 										", Employee: "+worker.getName()+
-										", start: "+start.getValue()+
-										", end: "+end.getValue()+
+										", start: "+start.intValue()+
+										", end: "+end.intValue()+
 										", wage: "+wage;
 							}
 
@@ -556,7 +544,7 @@ public class BasicFirm implements Firm {
 
 		@Override
 		public void updateVacancies() {
-			this.vacanciesSeries.add(this.vacancies);			
+			memory.put("vacancies",this.vacancies);			
 		}
 
 		/**
@@ -746,7 +734,7 @@ public class BasicFirm implements Firm {
 	 * @return the age of the agent.
 	 */
 	protected int getAge() {
-		return Circuit.getCurrentPeriod().getValue()-this.creation;
+		return Circuit.getCurrentPeriod().intValue()-this.creation;
 	}
 
 	/**
@@ -768,11 +756,24 @@ public class BasicFirm implements Firm {
 		return 	new CapitalManager() {
 
 			/** The dividend. */
-			private Long dividend = null;
+			//protected Long dividend = null;
+
+			/** The owner. */
+			protected Shareholder owner;
 
 			@Override
-			public long getDividend() {
-				return dividend;
+			public void bankrupt() {
+				owner.removeAsset(BasicFirm.this);				
+			}
+
+			@Override
+			public void close() {
+				// Does nothing.
+			}
+
+			@Override
+			public long getCapital() {
+				return factory.getValue() + account.getAmount() - account.getDebt();
 			}
 
 			@Override
@@ -791,10 +792,20 @@ public class BasicFirm implements Firm {
 			}
 
 			@Override
-			public void updateDividend() {
+			public boolean isSatisfacing() {
 				final long cash = account.getAmount();
-				final long assets=cash+factory.getValue();
-				final long capital=assets-account.getDebt();
+				final long assets = cash+factory.getValue();
+				final long capital = getCapital();
+				final long capitalTarget = (long) ((assets)*sector.getFloatParameter(CAPITAL_TARGET));
+				return (capital>=capitalTarget);
+			}
+
+			@Override
+			public long newDividend() {
+				final long dividend;
+				final long cash = account.getAmount();
+				final long assets = cash+factory.getValue();
+				final long capital = getCapital();
 				final long capitalTarget = (long) ((assets)*sector.getFloatParameter(CAPITAL_TARGET));
 				if (capital<=0) {
 					dividend=0l;
@@ -807,19 +818,50 @@ public class BasicFirm implements Firm {
 						dividend = Math.min((long) ((capital-capitalTarget)*sector.getFloatParameter(CAPITAL_PROPENSITY2DISTRIBUTE)),cash);
 					}
 				}
+				return dividend;
+			}
+
+			@Override
+			public void open() {
+				this.updateOwnership();
+			}
+
+			@Override
+			public void payDividend() {
+				BasicFirm.this.history.add("cash: "+ account.getAmount());
+				BasicFirm.this.history.add("assets: "+ (factory.getValue() + account.getAmount()));
+				BasicFirm.this.history.add("liabilities: "+ account.getDebt());
+				BasicFirm.this.history.add("capital: "+ getCapital());
+				final long dividend = newDividend();
+				memory.put(MEM_DIVIDEND, dividend);
+				if (dividend>0) {
+					this.owner.receiveDividend( BasicFirm.this.account.newCheque(dividend), BasicFirm.this) ;
+					BasicFirm.this.history.add("dividend: "+ dividend);
+					BasicFirm.this.history.add("cash: "+ account.getAmount());
+					BasicFirm.this.history.add("assets: "+ (factory.getValue() + account.getAmount()));
+					BasicFirm.this.history.add("liabilities: "+ account.getDebt());
+					BasicFirm.this.history.add("capital: "+ (factory.getValue() + account.getAmount() - account.getDebt()));
+				}
+				BasicFirm.this.data.put("debt2target.ratio", (account.getDebt())/capitalManager.getLiabilitiesTarget());
+			}
+
+			@Override
+			public void updateOwnership() {
+				if (this.owner==null){
+					this.owner=BasicFirm.this.sector.selectCapitalOwner();
+					this.owner.addAsset(BasicFirm.this);
+					BasicFirm.this.history.add("New capital owner: "+this.owner.getName());
+				}
 			}
 		};
 	}
 
 	/**
-	 * Creates and returns a new basic agent dataset.
-	 * @return a new basic agent dataset.
+	 * Creates and returns a new agent dataset.
+	 * @return a new agent dataset.
 	 */
-	protected BasicAgentDataset getNewDataset() {
-		return new BasicAgentDataset(name) {
-
-			/** serialVersionUID */
-			private static final long serialVersionUID = 1L;
+	protected AgentDataset getNewDataset() {
+		return new AbstractAgentDataset(name) {
 
 			@Override
 			public void update() {
@@ -828,22 +870,22 @@ public class BasicFirm implements Firm {
 				this.put("prices", pricingManager.getPrice());
 				this.put("wages", workforceManager.getWage());
 				this.put("workforce", (double) factory.getWorkforce());
-				this.put("inventories.inProcess.val", (double) factory.getGoodsInProcessValue());
+				this.put("inventories.inProcess.val", factory.getGoodsInProcessValue());
 				this.put("inventories.fg.vol", (double) factory.getFinishedGoodsVolume());
 				this.put("inventories.fg.val", (double) factory.getFinishedGoodsValue());
-				this.put("inventories.fg.vol.normal", (double) (sector.getFloatParameter(INVENTORY_NORMAL_LEVEL)*factory.getMaxUtilAverageProduction()));						
+				this.put("inventories.fg.vol.normal", sector.getFloatParameter(INVENTORY_NORMAL_LEVEL)*factory.getMaxUtilAverageProduction());						
 				this.put("production.vol", (double) factory.getProductionVolume());
 				this.put("production.val", (double) factory.getProductionValue());
-				this.put("productivity", (double) factory.getProductivity());
+				this.put("productivity", factory.getProductivity());
 				this.put("wageBill", (double) workforceManager.getWageBill());
-				this.put("dividends", (double) capitalManager.getDividend());
+				this.put("dividends", (double) memory.get(MEM_DIVIDEND).longValue());
 				if (supply!=null) {
 					this.put("supply.vol",(double) supply.getInitialVolume());
 					this.put("supply.val",(double) supply.getPrice(supply.getInitialVolume()));
-					this.put("sales.vol", (double) supply.getSalesVolume());
-					this.put("sales.val", (double) supply.getSalesValue());
-					this.put("sales.costValue", (double) supply.getSalesValueAtCost());
-					this.put("grossProfit", (double) supply.getGrossProfit()+factory.getInventoryLosses());
+					this.put("sales.vol", supply.getSalesVolume());
+					this.put("sales.val", supply.getSalesValue());
+					this.put("sales.costValue", supply.getSalesValueAtCost());
+					this.put("grossProfit", supply.getGrossProfit()+factory.getInventoryLosses());
 				} 
 				else {
 					this.put("supply.vol", 0.);
@@ -851,8 +893,9 @@ public class BasicFirm implements Firm {
 					this.put("sales.vol", 0.);
 					this.put("sales.val", 0.);
 					this.put("sales.costValue", 0.);
-					this.put("grossProfit", (double) factory.getInventoryLosses());
+					this.put("grossProfit", factory.getInventoryLosses());
 				}
+				this.put("interest", (double) account.getInterest());
 				if (bankrupted){
 					this.put("bankruptcies", 1.);
 				}
@@ -862,11 +905,11 @@ public class BasicFirm implements Firm {
 				this.put("cash", (double) account.getAmount());
 				this.put("assets", (double) factory.getValue() + account.getAmount());
 				this.put("liabilities", (double) account.getDebt());
-				this.put("liabilities.target", (double) capitalManager.getLiabilitiesTarget());
-				this.put("liabilities.excess", (double) capitalManager.getLiabilitiesExcess());
+				this.put("liabilities.target", capitalManager.getLiabilitiesTarget());
+				this.put("liabilities.excess", capitalManager.getLiabilitiesExcess());
 				this.put("capital", (double) factory.getValue() + account.getAmount() - account.getDebt());
 				this.put("capacity", (double) factory.getCapacity());
-				if (Circuit.getCurrentPeriod().getValue()-creation > 12 // 12 should be a parameter 
+				if (Circuit.getCurrentPeriod().intValue()-creation > 12 // 12 should be a parameter 
 						&& factory.getValue() + account.getAmount() < account.getDebt()){
 					this.put("insolvents", 1.);
 				}
@@ -974,25 +1017,17 @@ public class BasicFirm implements Firm {
 	 * Updates the data.
 	 */
 	protected void updateData() {
-		if (supply==null) {
-			this.salesMemory.add(0);
-		}
-		else {
-			this.salesMemory.add(supply.getSalesVolume());
-		}
 		this.data.update();
 	}
 
 	@Override
 	public void bankrupt() {
 		this.bankrupted = true;
-		/*System.out.println(this.name+","
-				+this.factory.getCapacity()+","+
-				+(Circuit.getCurrentPeriod().getValue()-this.creation));*/
 	}
 
 	@Override
 	public void close() {
+		this.capitalManager.close();
 		this.workforceManager.updateVacancies();
 		this.updateData();
 		this.workforceManager.close();
@@ -1040,12 +1075,17 @@ public class BasicFirm implements Firm {
 	}
 
 	@Override
+	public Object get(String string) {
+		return null;
+	}
+
+	@Override
 	public long getAssets() {
 		return factory.getValue() + account.getAmount();
 	}
 
 	@Override
-	public long getCapital() {
+	public long getBookValue() {
 		return getAssets() - account.getDebt();
 	}
 
@@ -1059,11 +1099,11 @@ public class BasicFirm implements Firm {
 		return this.workforceManager.getJobOffer();
 	}
 
+
 	@Override
 	public String getName() {
 		return this.name;
 	}
-
 
 	@Override
 	public Supply getSupply() {
@@ -1089,16 +1129,16 @@ public class BasicFirm implements Firm {
 
 	@Override
 	public void open() {
-		/*if (this.bankrupted) {
-			throw new RuntimeException("This firm is bankrupted.");
-		}*/
 		this.data=getNewDataset();
 		this.history.add("");
-		this.history.add("Period: "+Circuit.getCurrentPeriod().getValue());
+		this.history.add("Period: "+Circuit.getCurrentPeriod().intValue());
 		if (this.bankrupted) {
-			this.owner.removeAsset(this);
+			this.capitalManager.bankrupt();
 			this.factory.bankrupt();
 			this.workforceManager.layoff();
+		}
+		else {
+			this.capitalManager.open();
 		}
 	}
 
@@ -1107,26 +1147,7 @@ public class BasicFirm implements Firm {
 		if (this.bankrupted) {
 			throw new RuntimeException("This firm is bankrupted.");
 		}
-		if (this.owner==null){
-			this.owner=this.sector.selectCapitalOwner();
-			this.owner.addAsset(this);
-			this.history.add("New capital owner: "+this.owner.getName());
-		}
-		this.history.add("cash: "+ account.getAmount());
-		this.history.add("assets: "+ (factory.getValue() + account.getAmount()));
-		this.history.add("liabilities: "+ account.getDebt());
-		this.history.add("capital: "+ (factory.getValue() + account.getAmount() - account.getDebt()));
-		capitalManager.updateDividend();
-		final long dividend = capitalManager.getDividend();
-		if (dividend>0) {
-			this.owner.receiveDividend( this.account.newCheque(dividend), this) ;
-			this.history.add("dividend: "+ dividend);
-			this.history.add("cash: "+ account.getAmount());
-			this.history.add("assets: "+ (factory.getValue() + account.getAmount()));
-			this.history.add("liabilities: "+ account.getDebt());
-			this.history.add("capital: "+ (factory.getValue() + account.getAmount() - account.getDebt()));
-		}
-		this.data.put("debt2target.ratio", ((double) account.getDebt())/capitalManager.getLiabilitiesTarget());
+		this.capitalManager.payDividend();
 	}
 
 	@Override
@@ -1175,7 +1196,7 @@ public class BasicFirm implements Firm {
 		factory.process(this.workforceManager.getLaborPowers()) ;
 		this.supply = createSupply();
 	}
-
+	
 }
 
 // ***

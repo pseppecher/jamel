@@ -38,26 +38,38 @@ import javax.swing.tree.DefaultMutableTreeNode;
 public class BasicCircuit extends Circuit {
 
 	/**
-	 * TODO WORK IN PROGRESS / ADD JAVADOC COMMENT
+	 * Dispatches messages between the different components of the circuit.
 	 */
-	@SuppressWarnings("javadoc")
 	private class Dispatcher {
 		
 		/**
 		 * A redirection.
 		 */
 		public class Redirection {
-			public final String method;
+			/** Message. */
+			public final String message;
+			/** The recipient sector. */
 			public final Sector sector;
-			public Redirection(Sector sector, String method) {
+			/**
+			 * Creates a new redirection.
+			 * @param sector the recipient.
+			 * @param message the message.
+			 */
+			public Redirection(Sector sector, String message) {
 				this.sector = sector;
-				this.method = method;
+				this.message = message;
 			}
 		}
 
 		/** The redirections. */
 		private final Map<String,Redirection> redirections = new HashMap<String,Redirection>();
 
+		/**
+		 * Forwards a request.
+		 * @param request the request to be forwarded.
+		 * @param args additional arguments.
+		 * @return an object.
+		 */
 		private Object forward(String request, Object[] args) {
 			
 			final Object result;
@@ -77,7 +89,7 @@ public class BasicCircuit extends Circuit {
 			}
 			
 			else if (redirections.containsKey(request)) {
-				result = redirections.get(request).sector.forward(redirections.get(request).method, args);
+				result = redirections.get(request).sector.forward(redirections.get(request).message, args);
 			}
 			
 			else {
@@ -145,6 +157,36 @@ public class BasicCircuit extends Circuit {
 
 	}
 
+	/**
+	 * Returns a new info panel.
+	 * @return a new info panel.
+	 */
+	private static Component getNewInfoPanel() {
+		final Component jEditorPane = new JEditorPane() {
+			private static final long serialVersionUID = 1L;
+			{
+				String infoString = FileParser.readResourceFile("info.html");
+				this.setContentType("text/html");
+				this.setText("<center><h3>Jamel2 ("+Simulator.version+")</h3>"+infoString+"</center>");
+				this.setEditable(false);
+				this.addHyperlinkListener(new HyperlinkListener() {
+					@Override
+					public void hyperlinkUpdate(HyperlinkEvent e) {
+						if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
+							try {
+								java.awt.Desktop.getDesktop().browse(e.getURL().toURI());
+							} catch (Exception ex) {
+								ex.printStackTrace();
+							}	        
+					}
+				});
+			}
+		};
+		final JScrollPane pane = new JScrollPane(jEditorPane);
+		pane.setName(KEY.INFO);
+		return pane;
+	}
+
 	/** 
 	 * The request dispatcher.
 	 */
@@ -174,29 +216,7 @@ public class BasicCircuit extends Circuit {
 	 */
 	public BasicCircuit(final JamelParameters jamelParameters) {
 		super(
-				new BasicTimer(-1)
-				/*new Timer() {
-					@SuppressWarnings("serial")
-					private final JTextField counter = new JTextField (5) {{
-						this.setHorizontalAlignment(RIGHT);
-						this.setEditable(false);
-					}};
-					private Period current = new BasicPeriod(-1);
-					@Override public Period getPeriod() {return this.current;}
-					@Override public void next() {
-						this.current=this.current.getNext();
-						SwingUtilities.invokeLater(new Runnable() {
-							public void run() {
-								counter.setText(""+current.getValue());
-							}
-						});			
-											
-						}
-					@Override
-					public Component getCounter() {
-						return this.counter;
-					}
-				}*/,
+				new BasicTimer(-1),
 				new Random() {
 					private static final long serialVersionUID = 1L;
 					{this.setSeed(Integer.parseInt(jamelParameters.get(KEY.CIRCUIT,KEY.RANDOM_SEED)));}}
@@ -206,14 +226,14 @@ public class BasicCircuit extends Circuit {
 		this.initSectors();
 		this.initPhases();
 		this.forward("addPanel", this.getNewParamPanel()); // TODO ne pas utiliser forward
-		this.forward("addPanel", this.getNewInfoPanel()); // TODO ne pas utiliser forward
+		this.forward("addPanel", getNewInfoPanel()); // TODO ne pas utiliser forward
 	}
 
 	/**
 	 * Executes the events of the simulation.
 	 */
 	private void doEvents() {
-		final String event = this.jamelParameters.get("Circuit.events."+getCurrentPeriod().getValue());
+		final String event = this.jamelParameters.get("Circuit.events."+getCurrentPeriod().intValue());
 		if (event!=null) {
 			final String[] events = JamelParameters.split(event,",");
 			for(final String string:events) {
@@ -264,37 +284,8 @@ public class BasicCircuit extends Circuit {
 			if (phase.getSector().doPhase(phase.getName())) {}
 			else {
 				throw new RuntimeException("Failure phase <"+phase.toString()+">");
-			};
-		}
-	}
-
-	/**
-	 * Returns a new info panel.
-	 * @return a new info panel.
-	 */
-	private Component getNewInfoPanel() {
-		final Component jEditorPane = new JEditorPane() {
-			private static final long serialVersionUID = 1L;
-			{
-				String infoString = FileParser.readResourceFile("info.html");
-				this.setContentType("text/html");
-				this.setText("<center><h3>Jamel2 ("+Simulator.version+")</h3>"+infoString+"</center>");
-				this.setEditable(false);
-				this.addHyperlinkListener(new HyperlinkListener() {
-					public void hyperlinkUpdate(HyperlinkEvent e) {
-						if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
-							try {
-								java.awt.Desktop.getDesktop().browse(e.getURL().toURI());
-							} catch (Exception ex) {
-								ex.printStackTrace();
-							}	        
-					}
-				});
 			}
-		};
-		final JScrollPane pane = new JScrollPane(jEditorPane);
-		pane.setName(KEY.INFO);
-		return pane;
+		}
 	}
 
 	/**

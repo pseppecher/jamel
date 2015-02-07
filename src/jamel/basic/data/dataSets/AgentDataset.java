@@ -28,6 +28,20 @@ public interface AgentDataset {
 	 */
 	public Set<String> keySet();
 	
+	/**
+	 * Associates the specified value with the specified key in this dataset. 
+	 * If the dataset previously contained a mapping for the key, the old value is replaced.
+	 * @param key a String with which the specified value is to be associated
+	 * @param value a Long value to be associated with the specified key
+	 * @return the previous value associated with <code>key</code>, or <code>null</code> if there was no mapping for <code>key</code>. 
+	 */
+	public Double put(String key, Double value);
+
+	/**
+	 * Updates the data.
+	 */
+	public void update();
+	
 }
 
 // ***

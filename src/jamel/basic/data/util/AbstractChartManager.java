@@ -1,33 +1,40 @@
 package jamel.basic.data.util;
 
+import jamel.basic.data.util.xml.ChartDescription;
+import jamel.basic.data.util.xml.SeriesDescription;
 import jamel.basic.gui.JamelChartPanel;
-import jamel.basic.gui.JamelColor;
 import jamel.basic.gui.ScatterChartPanel;
 import jamel.basic.gui.TimeChartPanel;
 import jamel.util.Circuit;
-import jamel.util.FileParser;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
-import java.awt.Paint;
-import java.io.FileNotFoundException;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import javax.swing.JPanel;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.ui.TextAnchor;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.SAXException;
 
 
 /**
  * An abstract chart manager.
  */
 public abstract class AbstractChartManager implements ChartManager {
+
+	@SuppressWarnings("javadoc") private class EmptyPanel extends JPanel {{this.setBackground(new Color(230,230,230));}}
 
 	/** The list of the panels.*/
 	private final JPanel[] panels;
@@ -37,112 +44,98 @@ public abstract class AbstractChartManager implements ChartManager {
 
 	/**
 	 * Creates the chart manager.
-	 * @param fileName the name of config file.
-	 * @throws FileNotFoundException if the config file is not found.
+	 * @param file a XML file that contains chart panel configuration.
+	 * @throws ParserConfigurationException in the case of a serious configuration error. 
+	 * @throws IOException in the case of failed or interrupted I/O operation.
+	 * @throws SAXException in the case of a general SAX error or warning.
 	 */
-	public AbstractChartManager(String fileName) throws FileNotFoundException {
-		final Map<String,String> chartDescription = FileParser.parseMap(fileName);
-		final String value = chartDescription.get("panels");
-		if (value!=null) {
-			@SuppressWarnings("serial") class EmptyPanel extends JPanel {{this.setBackground(new Color(230,230,230));}}
-			final String[] panelTitles = FileParser.toArray(value);
-			panels = new JPanel[panelTitles.length];
-			int index = 0;
-			for (String panelTitle:panelTitles) {
-				final JPanel panel = new JPanel(new GridLayout(3,3,10,10));
-				panel.setBackground(new Color(0,0,0,0));
-				panel.setName(panelTitle);
-				final String chartList = chartDescription.get(panelTitle+".list");
-				if (chartList!=null){
-					final String[] titles = FileParser.toArray(chartList);
-					for (String title:titles) {
-						if (title.equals("Empty")) {
-							panel.add(new EmptyPanel());								
-						}
-						else {
-							final String series = chartDescription.get(panelTitle+"."+title+".series");
-							if (series!=null) {
-								final String option = chartDescription.get(panelTitle+"."+title+".option");
-								final String legend = chartDescription.get(panelTitle+"."+title+".legend");
-								final String colors = chartDescription.get(panelTitle+"."+title+".colors");
-								final Paint[] paints;
-								final String[] legendItems;
-								if (colors!=null) {
-									paints = JamelColor.getColors(FileParser.toArray(colors));
-								}
-								else {
-									paints = null;
-								}
-								if (legend!=null) {
-									legendItems = FileParser.toArray(legend);
-								}
-								else {
-									legendItems = null;
-								}
-								final JamelChartPanel chartPanel;
-								if ("scatter".equals(option)) {
-									final XYSeriesCollection data = getScatterChartData(FileParser.toArray(series));
-									chartPanel = new ScatterChartPanel(title,data,paints,legendItems);
-								}
-								else {
-									final String yAxisMin = chartDescription.get(panelTitle+"."+title+".yAxis.min");
-									final String yAxisMax = chartDescription.get(panelTitle+"."+title+".yAxis.max");
-									final Double yMin;
-									if (yAxisMin!=null) {
-										yMin = Double.parseDouble(yAxisMin);
-									}
-									else {
-										yMin = null;
-									}
-									final Double yMax;
-									if (yAxisMax!=null) {
-										yMax = Double.parseDouble(yAxisMax);
-									}
-									else {
-										yMax = null;
-									}
-									final XYSeriesCollection data = getChartData(FileParser.toArray(series));
-									final TimeChartPanel timeChartPanel = new TimeChartPanel(title,yMin,yMax,data,paints,legendItems);
-									timeChartPanelList.add(timeChartPanel);
-									chartPanel = timeChartPanel;
-								}
-								panel.add(chartPanel);
-							}
-							else {
-								// The case where the series description was not found.
-							}
-						}
-					}
-					if (titles.length<9) {
-						for (int i=titles.length; i<9; i++) {
-							panel.add(new EmptyPanel());						
-						}
-					}
+	public AbstractChartManager(File file) throws ParserConfigurationException, SAXException, IOException {
+
+		final NodeList panelNodeList = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).getDocumentElement().getElementsByTagName("panel");
+		this.panels = new JPanel[panelNodeList.getLength()];
+
+		for (int i = 0; i<panelNodeList.getLength(); i++) {
+
+			// for each panel element
+
+			if (panelNodeList.item(i).getNodeType() != Node.ELEMENT_NODE) {
+				throw new RuntimeException("This node should be a panel node.");					
+			}
+			final Element panelElement = (Element) panelNodeList.item(i);
+			final JPanel panel = new JPanel(new GridLayout(3,3,10,10));
+			panels[i] = panel;
+			panel.setBackground(new Color(0,0,0,0));
+			panel.setName(panelElement.getAttribute("title"));
+			final NodeList chartNodeList = panelElement.getElementsByTagName("chart");
+			for (int j = 0; j<chartNodeList.getLength(); j++) {
+				
+				// for each chart element
+				
+				final Element chartElement = (Element) chartNodeList.item(j);
+				if (chartElement.getAttribute("title").equals("Empty")) {
+					panel.add(new EmptyPanel());								
 				}
-				panels[index] = panel;
-				index++;
+				else {
+					// TODO quand on aura un peu de temps, revoir tout ca et se debarrasser des objets 'chartDescription' et 'seriesDescription'. 
+					final ChartDescription chartDescription = new ChartDescription(chartElement.getAttribute("title"));
+					final NodeList series = chartElement.getElementsByTagName("series");
+					final int nbSeries = series.getLength();
+					for (int k = 0; k<nbSeries; k++) {
+						final Element serieXML = (Element) series.item(k);
+						final SeriesDescription seriesDescription = new SeriesDescription(serieXML.getAttribute("value"),
+								serieXML.getAttribute("color"),
+								serieXML.getAttribute("label"));
+						chartDescription.addSerie(seriesDescription);
+					}
+					chartDescription.setOptions(chartElement.getAttribute("options"));
+					final NodeList yAxisList = chartElement.getElementsByTagName("yAxis");
+					final int nbYAxis = yAxisList.getLength();
+					for (int l = 0; l<nbYAxis; l++) {
+						final Element yAxis = (Element) yAxisList.item(l);
+						chartDescription.setYAxisMax(yAxis.getAttribute("max"));
+						chartDescription.setYAxisMin(yAxis.getAttribute("min"));
+					}
+					final JamelChartPanel chartPanel;
+					if ("scatter".equals(chartElement.getAttribute("options"))) {
+						final XYSeriesCollection data = getScatterChartData(chartDescription.getSeries());
+						chartPanel = new ScatterChartPanel(chartDescription,data);
+					}
+					else {
+						final XYSeriesCollection data = getChartData(chartDescription.getSeries());
+						final TimeChartPanel timeChartPanel = new TimeChartPanel(chartDescription,data);
+						timeChartPanelList.add(timeChartPanel);
+						chartPanel = timeChartPanel;
+					}
+					panel.add(chartPanel);
+				}
+			}
+			if (chartNodeList.getLength()<9) {
+				for (int j=chartNodeList.getLength(); j<9; j++) {
+					panel.add(new EmptyPanel());						
+				}
 			}
 		}
-		else {
-			this.panels = new JPanel[0]; // The panel list is empty.
-		}
-
 	}
 
 	/**
 	 * Returns the data for the specified chart.
-	 * @param dataKeys an array of strings representing the name of the series.
+	 * @param list an array of strings representing the name of the series.
 	 * @return an XYSeriesCollection.
 	 */
-	private XYSeriesCollection getChartData(String[] dataKeys) {
+	private XYSeriesCollection getChartData(List<SeriesDescription> list) {
 		final XYSeriesCollection data = new XYSeriesCollection();
-		for (String key:dataKeys){
-			final XYSeries series = getSeries(key);//this.dataManager.getSeries(key);
+		for (SeriesDescription item:list){
+			final XYSeries series = getSeries(item.getKey());
 			if (series!=null) {
-				data.addSeries(series);
+				try {
+					data.addSeries(series);
+				} catch (IllegalArgumentException e) {
+					e.printStackTrace();
+					throw new RuntimeException("This dataset already contains a series with the key "+series.getKey());
+				}
 			}
 			else {
-				throw new RuntimeException(key+" XYSeries not found.");
+				throw new RuntimeException(item.getKey()+" XYSeries not found.");
 			}
 		}
 		return data;
@@ -150,18 +143,19 @@ public abstract class AbstractChartManager implements ChartManager {
 
 	/**
 	 * Returns the data for a scatter chart.
-	 * @param dataKeys the list of the data.
+	 * @param list the list of description of the series.
 	 * @return the data for a scatter chart.
 	 */
-	private XYSeriesCollection getScatterChartData(String[] dataKeys) {
+	private XYSeriesCollection getScatterChartData(List<SeriesDescription> list) {
 		final XYSeriesCollection data = new XYSeriesCollection();
-		for (int i = 0; i<dataKeys.length; i+=2){
-			final XYSeries series = getScatterSeries(dataKeys[i],dataKeys[i+1]);
+		for (SeriesDescription item:list){
+			final String[] keys = item.getKey().split(",",2);
+			final XYSeries series = getScatterSeries(keys[0].trim(),keys[1].trim());
 			if (series!=null) {
 				data.addSeries(series);
 			}
 			else {
-				throw new RuntimeException(dataKeys[i]+","+dataKeys[i+1]+" XYSeries not found.");
+				throw new RuntimeException(keys[0]+","+keys[1]+" XYSeries not found.");
 			}
 		}
 		return data;
@@ -184,7 +178,7 @@ public abstract class AbstractChartManager implements ChartManager {
 
 	@Override
 	public void addMarker(String label) {
-		final ValueMarker marker = new ValueMarker(Circuit.getCurrentPeriod().getValue()) ;
+		final ValueMarker marker = new ValueMarker(Circuit.getCurrentPeriod().intValue()) ;
 		marker.setLabel(label);
 		marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
 		marker.setOutlinePaint(Color.WHITE);

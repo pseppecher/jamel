@@ -1,5 +1,6 @@
 package jamel.basic.data;
 
+import jamel.Simulator;
 import jamel.basic.data.dataSets.BasicMacroDataset;
 import jamel.basic.data.dataSets.JamelXYSeries;
 import jamel.basic.data.dataSets.MacroDataset;
@@ -14,7 +15,9 @@ import jamel.util.Circuit;
 import jamel.util.Sector;
 
 import java.awt.Component;
+import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -23,9 +26,11 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import javax.swing.SwingUtilities;
+import javax.xml.parsers.ParserConfigurationException;
 
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
+import org.xml.sax.SAXException;
 
 /**
  * The sector for managing data.
@@ -99,9 +104,10 @@ public class DataManager implements Sector {
 		BalanceSheetMatrix chartManager;
 		final String fileName = circuit.getParameter(name,KEY.MATRIX_FILE_CONFIG);
 		if (fileName != null) {
+			final File file = new File(Simulator.getScenarioFile().getParent()+"/"+fileName);
 			try {
-				chartManager = new AbstractBalanceSheetMatrix(fileName){
-					@Override protected Double get(String key) {
+				chartManager = new AbstractBalanceSheetMatrix(file){
+					@Override protected Double getValue(String key) {
 						return macroDataset.get(key);
 					}
 				};
@@ -124,8 +130,9 @@ public class DataManager implements Sector {
 		ChartManager chartManager;
 		final String fileName = circuit.getParameter(name,"config.charts");
 		if (fileName != null) {
+			final File file = new File(Simulator.getScenarioFile().getParent()+"/"+fileName);
 			try {
-				chartManager = new AbstractChartManager(fileName){
+				chartManager = new AbstractChartManager(file){
 					@Override protected XYSeries getScatterSeries(String seriesX, String seriesY) {
 						return DataManager.this.getScatterSeries(seriesX,seriesY);
 					}
@@ -133,7 +140,13 @@ public class DataManager implements Sector {
 						return DataManager.this.getSeries(serieskey);
 					}
 				};
-			} catch (FileNotFoundException e) {
+			} catch (ParserConfigurationException e) {
+				e.printStackTrace();
+				chartManager = null;
+			} catch (SAXException e) {
+				e.printStackTrace();
+				chartManager = null;
+			} catch (IOException e) {
 				e.printStackTrace();
 				chartManager = null;
 			}
@@ -152,16 +165,12 @@ public class DataManager implements Sector {
 		DataValidator result;
 		final String validationConfigFileName = circuit.getParameter(DataManager.this.name,KEY.VALIDATION_FILE_CONFIG);
 		if (validationConfigFileName!=null) {
-			try {
-				result = new AbstractDataValidator(validationConfigFileName){
-					@Override public Double get(String key) {
-						return DataManager.this.macroDataset.get(key);
-					}
-				};
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
-				result = null;
-			}
+			final File file = new File(Simulator.getScenarioFile().getParent()+"/"+validationConfigFileName);
+			result = new AbstractDataValidator(file){
+				@Override public Double getValue(String key) {
+					return DataManager.this.macroDataset.get(key);
+				}
+			};
 		}
 		else {
 			result=null;
@@ -239,7 +248,7 @@ public class DataManager implements Sector {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				@Override public void run() {
-					final int period = Circuit.getCurrentPeriod().getValue();
+					final int period = Circuit.getCurrentPeriod().intValue();
 
 					for (String seriesName:timeSeriesDescription) {
 						final Double value = macroDataset.get(seriesName);

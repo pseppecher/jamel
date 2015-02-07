@@ -150,14 +150,13 @@ public class BasicAgentSet<A extends Agent> implements AgentSet<A> {
 	@Override
 	public List<A> getSimpleRandomSample(Integer lim) {
 		final int size = this.arrayList.size();
-		if (lim>size) {
-			throw new IllegalArgumentException("Not enough agents.");
-		}
 		final List<A> selection = new LinkedList<A>();
-		for (int count = 0; count<lim; count++) {
-			A selected = this.arrayList.get(Circuit.getRandom().nextInt(size));
-			if (!selection.contains(selected)) {
-				selection.add(selected);
+		if (lim<size) {
+			for (int count = 0; count<lim; count++) {
+				A selected = this.arrayList.get(Circuit.getRandom().nextInt(size));
+				if (!selection.contains(selected)) {
+					selection.add(selected);
+				}
 			}
 		}
 		return selection;
@@ -188,7 +187,7 @@ public class BasicAgentSet<A extends Agent> implements AgentSet<A> {
 		}
 		if (this.map.remove(agent.getName()) != agent) {
 			throw new RuntimeException("Bad agent or null.");			
-		};
+		}
 	}
 
 	@Override

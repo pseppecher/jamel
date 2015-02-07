@@ -1,11 +1,14 @@
 package jamel.basic.agents.banks;
 
+import jamel.basic.agents.banks.util.AbstractLoan;
 import jamel.basic.agents.banks.util.Deposit;
 import jamel.basic.agents.banks.util.Loan;
 import jamel.basic.agents.roles.AccountHolder;
-import jamel.basic.agents.roles.Asset;
-import jamel.basic.agents.roles.CapitalOwner;
-import jamel.basic.data.dataSets.BasicAgentDataset;
+import jamel.basic.agents.roles.Corporation;
+import jamel.basic.agents.roles.Shareholder;
+import jamel.basic.agents.util.BasicMemory;
+import jamel.basic.agents.util.Memory;
+import jamel.basic.data.dataSets.AbstractAgentDataset;
 import jamel.basic.data.dataSets.RepresentativeAgentDataset;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.Cheque;
@@ -22,7 +25,7 @@ import java.util.List;
 /**
  * A basic banking sector.
  */
-public class BankingSector implements Sector, Asset {
+public class BankingSector implements Sector, Corporation {
 
 	/**
 	 * Represents a current account.
@@ -36,7 +39,7 @@ public class BankingSector implements Sector, Asset {
 		private boolean bankrupt=false;
 
 		/** Date of creation. */
-		private final int creation = Circuit.getCurrentPeriod().getValue();
+		private final int creation = Circuit.getCurrentPeriod().intValue();
 
 		/** The total debt of the account (equals the sum of the principal of the loans). */
 		private long debt = 0;
@@ -82,6 +85,9 @@ public class BankingSector implements Sector, Asset {
 
 		/** The list of loans for this account. */
 		private final List<Loan> loans = new LinkedList<Loan>();
+
+		/** The memory of the account. */
+		private final Memory memory = new BasicMemory(6);
 
 		/** A flag that indicates if the account is open or not. */
 		private boolean open=true;
@@ -205,6 +211,19 @@ public class BankingSector implements Sector, Asset {
 		}
 
 		@Override
+		public long getInterest() {
+			final long result;
+			Double interest = this.memory.get("interest");
+			if (interest==null) {
+				result = 0;
+			}
+			else {
+				result = interest.longValue();
+			}
+			return result;
+		}
+
+		@Override
 		public boolean isOpen() {
 			return this.open;
 		}
@@ -214,32 +233,9 @@ public class BankingSector implements Sector, Asset {
 			if (!open) {
 				throw new RuntimeException("This account is closed.");
 			}
-			this.loans.add(new Loan() {
-
-				/** The extended maturity date.*/
-				private final Period extendedDate;
-
-				/** The period of the last payment of interest. */
-				private Period lastInterestPayment;
-
-				/** The maturity date.*/
-				private final Period maturityDate;
-
-				/** The penalty interest rate. */
-				private final double penaltyRate ;
-
-				/** The remaining principal. */
-				private long principal ;
-
-				/** The interest rate. */
-				private final double rate ;
+			this.loans.add(new AbstractLoan(principalAmount, BankingSector.this.p.rate, BankingSector.this.p.penaltyRate, BankingSector.this.p.normalTerm, BankingSector.this.p.extendedTerm) {
 
 				{					
-					this.principal = principalAmount;
-					this.rate = BankingSector.this.p.rate;
-					this.penaltyRate = BankingSector.this.p.penaltyRate;
-					this.maturityDate = Circuit.getCurrentPeriod().plus(BankingSector.this.p.normalTerm);
-					this.extendedDate = Circuit.getCurrentPeriod().plus(BankingSector.this.p.extendedTerm);
 					Account.this.debt += this.principal;
 					BankingSector.this.v.assets += this.principal;
 					BankingSector.this.v.capital += this.principal;
@@ -252,16 +248,6 @@ public class BankingSector implements Sector, Asset {
 					BankingSector.this.v.capital -= this.principal;
 					Account.this.debt -= this.principal;
 					this.principal = 0;
-				}
-
-				@Override
-				public long getPrincipal() {
-					return this.principal;
-				}
-
-				@Override
-				public boolean isDoubtfull() {
-					return (Circuit.getCurrentPeriod().isAfter(this.maturityDate));
 				}
 
 				@Override
@@ -308,6 +294,8 @@ public class BankingSector implements Sector, Asset {
 							BankingSector.this.v.assets-=payment;
 							BankingSector.this.v.capital-=payment;
 						}
+						Account.this.memory.add("interest",interest);
+						v.interest += interest;
 					}
 					this.lastInterestPayment = currentPeriod;
 				}
@@ -340,7 +328,10 @@ public class BankingSector implements Sector, Asset {
 					}
 					else {
 						result = false;
-						throw new RuntimeException("Inconsistency");
+						if (paid) {
+							throw new RuntimeException("Bad cheque: Already paid.");
+						}
+						throw new RuntimeException("Bad cheque: Non-sufficient funds.");
 					}
 					return result;
 				}
@@ -458,6 +449,9 @@ public class BankingSector implements Sector, Asset {
 
 		/** The total liabilities of the sector. */
 		private long liabilities = 0l;
+		
+		/** The total interest paid to the bank for this period. */
+		private long interest = 0l;
 
 	}
 
@@ -465,13 +459,13 @@ public class BankingSector implements Sector, Asset {
 	private final List<Account> accounts = new ArrayList<Account>(1000);
 
 	/** The owner of the bank. */
-	private CapitalOwner bankOwner = null;
+	private Shareholder bankOwner = null;
 
 	/** The circuit. */
 	private final Circuit circuit;
 
 	/** The data. */
-	private BasicAgentDataset dataset;
+	private AbstractAgentDataset dataset;
 
 	/** The sector name. */
 	private final String name;
@@ -511,7 +505,7 @@ public class BankingSector implements Sector, Asset {
 				break;
 			}
 		}
-		if (result=true) {
+		if (result==true) {
 			if (sumDeposit!=v.liabilities || sumDebt!=v.assets || v.assets-v.liabilities!=v.capital) {
 				result=false;
 			}
@@ -537,7 +531,7 @@ public class BankingSector implements Sector, Asset {
 	private void debtRecovery() {
 		Collections.shuffle(accounts, Circuit.getRandom());
 		final Iterator<Account> iterAccount = accounts.iterator();
-		final int now = Circuit.getCurrentPeriod().getValue();
+		final int now = Circuit.getCurrentPeriod().intValue();
 		while(iterAccount.hasNext()){
 			Account account = iterAccount.next();
 			if(account.getDebt()>0) {
@@ -553,7 +547,7 @@ public class BankingSector implements Sector, Asset {
 					account.getAccountHolder().bankrupt();
 					iterAccount.remove();
 					this.v.bankruptcies++;
-				};
+				}
 			}
 		}		
 	}
@@ -571,13 +565,26 @@ public class BankingSector implements Sector, Asset {
 	}
 
 	/**
+	 * Selects a new owner.
+	 */
+	private void newOwner() {
+		if (this.bankOwner!=null) {
+			throw new RuntimeException("There is already an owner.");
+		}
+		this.bankOwner=(Shareholder) BankingSector.this.circuit.forward(KEY.selectCapitalOwner,1);
+		if (this.bankOwner!=null) {
+			bankOwner.addAsset(this);		
+		}
+	}
+
+	/**
 	 * Opens the sector.
 	 */
 	private void open() {
 		if (this.bankOwner==null) {
 			newOwner();
 		}
-		this.dataset = new BasicAgentDataset(this.name){
+		this.dataset = new AbstractAgentDataset(this.name){
 
 			/** serialVersionUID */
 			private static final long serialVersionUID = 1L;
@@ -589,10 +596,12 @@ public class BankingSector implements Sector, Asset {
 				this.put("liabilities", (double) v.liabilities);
 				this.put("assets", (double) v.assets);
 				this.put("bankruptcies", (double) v.bankruptcies);
+				this.put("interest", (double) v.interest);
 			}
 			
 		};
 		this.v.bankruptcies=0;
+		this.v.interest=0;
 	}
 
 	/**
@@ -628,19 +637,6 @@ public class BankingSector implements Sector, Asset {
 						return result;
 					}},BankingSector.this);
 			}
-		}
-	}
-
-	/**
-	 * Selects a new owner.
-	 */
-	private void newOwner() {
-		if (this.bankOwner!=null) {
-			throw new RuntimeException("There is already an owner.");
-		}
-		this.bankOwner=(CapitalOwner) BankingSector.this.circuit.forward(KEY.selectCapitalOwner);
-		if (this.bankOwner!=null) {
-			bankOwner.addAsset(this);		
 		}
 	}
 
@@ -716,7 +712,7 @@ public class BankingSector implements Sector, Asset {
 	}
 
 	@Override
-	public long getCapital() {
+	public long getBookValue() {
 		return v.capital;
 	}
 

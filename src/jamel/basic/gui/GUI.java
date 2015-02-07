@@ -112,12 +112,14 @@ public class GUI implements Sector {
 
 			{
 				this.pauseButton.addActionListener(new ActionListener() { 
+					@Override
 					public void actionPerformed(ActionEvent e) {
 						circuit.forward(KEY.PAUSE);
 						repaint();
 					} 
 				}) ;
 				this.playButton.addActionListener(new ActionListener() { 
+					@Override
 					public void actionPerformed(ActionEvent e) { 
 						circuit.forward(KEY.UNPAUSE);
 						repaint();
@@ -133,6 +135,7 @@ public class GUI implements Sector {
 			/**
 			 * Updates the pause/run buttons.
 			 */
+			@Override
 			public void repaint() {
 				if (circuit!=null) {
 					final boolean b = circuit.isPaused();
@@ -183,6 +186,7 @@ public class GUI implements Sector {
 
 		if ("addPanel".equals(message)) {
 			SwingUtilities.invokeLater(new Runnable() {
+				@Override
 				public void run() {
 					window.addPanel((Component) args[0]);
 				}
@@ -200,6 +204,7 @@ public class GUI implements Sector {
 	 * Returns the name of the GUI.
 	 * @return the name of the GUI.
 	 */
+	@Override
 	public String getName() {
 		return this.name;
 	}
@@ -207,6 +212,7 @@ public class GUI implements Sector {
 	@Override
 	public void pause() {
 		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
 				window.pause();		
 			}

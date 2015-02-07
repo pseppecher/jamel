@@ -2,6 +2,7 @@ package jamel.basic.agents.firms.util;
 
 import jamel.basic.agents.util.LaborPower;
 import jamel.basic.util.Commodities;
+import jamel.manhattan.InvestmentProcess;
 
 /**
  * Represents a basic factory.
@@ -48,7 +49,7 @@ public class BasicFactory implements Factory {
 	 * @since 23-11-2014
 	 */
 	protected WorkInProgress newWorkInProgress(int productionTime, int capacity, float productivity) {
-		return new WorkInProgress(productionTime, capacity, productivity);
+		return new BasicWorkInProgress(productionTime, capacity, productivity);
 	}
 
 	/**
@@ -75,13 +76,6 @@ public class BasicFactory implements Factory {
 	 */
 	double getVolumeAt(int stage) {
 		return this.workInProgress.getVolumeAt(stage);
-	}
-
-	/**
-	 * For debugging purpose.
-	 */
-	void print() {
-		this.workInProgress.print();
 	}
 
 	@Override
@@ -162,6 +156,7 @@ public class BasicFactory implements Factory {
 		return this.workInProgress.getValue()+this.finishedGoods.getValue();
 	}
 
+	@Override
 	public int getWorkforce(){
 		return this.workforce;
 	}
@@ -194,6 +189,11 @@ public class BasicFactory implements Factory {
 			throw new RuntimeException("This factory is definitively closed.");
 		}
 		this.workInProgress.setProductivity(productivity);
+	}
+
+	@Override
+	public void investment(InvestmentProcess investmentProcess) {
+		this.workInProgress.investment(investmentProcess);
 	}
 
 }

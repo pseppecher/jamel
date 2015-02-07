@@ -36,7 +36,7 @@ public class Parameters {
 	 */
 	private Float getFloat(String key) {
 		try {
-			final String string = this.circuit.getParameter(sectorName,key);// TODO parametriser "Industry"
+			final String string = this.circuit.getParameter(sectorName,key);
 			final Float result;
 			if (string!=null) {
 				result = Float.parseFloat(string); 

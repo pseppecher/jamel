@@ -1,7 +1,7 @@
 package jamel.basic.agents.firms;
 
 import jamel.Simulator;
-import jamel.basic.agents.roles.CapitalOwner;
+import jamel.basic.agents.roles.Shareholder;
 import jamel.basic.agents.util.AgentSet;
 import jamel.basic.agents.util.BasicAgentSet;
 import jamel.basic.agents.util.Parameters;
@@ -40,6 +40,15 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 	}
 
 	@SuppressWarnings("javadoc")
+	protected static class PHASE {
+		public static final String CLOSURE = "closure";
+		public static final String OPENING = "opening";
+		public static final String PAY_DIVIDEND = "pay_dividend";
+		public static final String PLAN_PRODUCTION = "plan_production";
+		public static final String PRODUCTION = "production";
+	}
+
+	@SuppressWarnings("javadoc")
 	private static final String MSG_PUT_DATA = "putData";
 
 	/** The circuit. */
@@ -47,9 +56,6 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 
 	/** To count the number of firms created since the start of the simulation. */
 	private int countFirms;
-
-	/** The collection of firms. */
-	private final AgentSet<Firm> firms;
 
 	/** The sector name. */
 	private final String name;
@@ -59,6 +65,9 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 
 	/** A scheduler for the regeneration of firms. */
 	private final Map<Integer,Integer> regeneration = new HashMap<Integer,Integer>();
+
+	/** The collection of firms. */
+	protected final AgentSet<Firm> firms;
 
 	/**
 	 * Creates a new banking sector.
@@ -94,7 +103,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 			for(int index=0;index<lim;index++) {
 				this.countFirms++;
 				final String name = "Firm"+this.countFirms;
-				final Firm firm = (Firm) Class.forName(type,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,IndustrialSector.class).newInstance(name,this);;
+				final Firm firm = (Firm) Class.forName(type,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,IndustrialSector.class).newInstance(name,this);
 				result.add(firm);
 			}
 		} catch (ClassNotFoundException e) {
@@ -129,6 +138,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 		return result;
 	}
 
+
 	/**
 	 * Opens each firm in the sector.
 	 */
@@ -145,14 +155,13 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 		this.firms.removeAll(bankrupted);
 	}
 
-
 	/**
 	 * Prepares the regeneration of a firm some periods later.
 	 */
 	private void prepareRegeneration() {
 		final int min = Integer.parseInt(circuit.getParameter(this.name,KEY.REGENERATION_MIN));
 		final int max = Integer.parseInt(circuit.getParameter(this.name,KEY.REGENERATION_MAX));		
-		final int now = Circuit.getCurrentPeriod().getValue();
+		final int now = Circuit.getCurrentPeriod().intValue();
 		final int later = now + min + Circuit.getRandom().nextInt(max);
 		Integer creations = this.regeneration.get(later);
 		if (creations!=null){
@@ -163,43 +172,43 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 		}
 		this.regeneration.put(later,creations);
 	}
-
+	
 	/**
 	 * 
 	 */
 	private void regenerate() {
-		final Integer lim = this.regeneration.get(Circuit.getCurrentPeriod().getValue());
+		final Integer lim = this.regeneration.get(Circuit.getCurrentPeriod().intValue());
 		if (lim != null) {
 			this.firms.putAll(this.createFirms(this.circuit.getParameter(this.name,KEY.FIRMS_TYPE),lim));
 		}
 	}
-
+	
 	@Override
 	public boolean doPhase(String phaseName) {
 
-		if (phaseName.equals("opening")) {
+		if (phaseName.equals(PHASE.OPENING)) {
 			this.open();
 		} 
 
-		else if (phaseName.equals("pay_dividend")) {
+		else if (phaseName.equals(PHASE.PAY_DIVIDEND)) {
 			for (final Firm firm:firms.getList()) {
 				firm.payDividend();
 			}
 		}
 
-		else if (phaseName.equals("plan_production")) {
+		else if (phaseName.equals(PHASE.PLAN_PRODUCTION)) {
 			for (final Firm firm:firms.getShuffledList()) {
 				firm.prepareProduction();
 			}			
 		}
 
-		else if (phaseName.equals("production")) {
+		else if (phaseName.equals(PHASE.PRODUCTION)) {
 			for (final Firm firm:firms.getShuffledList()) {
 				firm.production();
 			}			
 		}
 
-		else if (phaseName.equals("closure")) {
+		else if (phaseName.equals(PHASE.CLOSURE)) {
 			this.close();
 		}
 
@@ -223,7 +232,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 				if (jobOffer!=null) {
 					jobOffersList.add(jobOffer);
 				}
-			};
+			}
 			result = jobOffersList.toArray(new JobOffer[jobOffersList.size()]);
 		}
 
@@ -235,7 +244,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 				if (supply!=null) {
 					list.add(supply);
 				}
-			};
+			}
 			result = list.toArray(new Supply[list.size()]);
 		}
 
@@ -310,8 +319,14 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 	}
 
 	@Override
-	public CapitalOwner selectCapitalOwner() {
-		return (CapitalOwner) circuit.forward("selectCapitalOwner");
+	public Shareholder selectCapitalOwner() {
+		return (Shareholder) circuit.forward("selectCapitalOwner");
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public List<Shareholder> selectCapitalOwner(int n) {
+		return (List<Shareholder>) circuit.forward("selectCapitalOwnerList",n);
 	}
 
 }

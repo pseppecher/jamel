@@ -46,10 +46,19 @@ public class Simulator {
 		/** The "Remind me later" string. */
 		public static final String REMIND_ME_LATER = "Remind me later";
 
+		/** The default path to the scenario folder. */
+		public static final String SCENARIO_DEFAULT_PATHNAME = "scenarios/";
+
+		/** The key for the scenario path preference.*/
+		public static final String SCENARIO_PATHNAME_PREF = "The key for the scenario path preference";
+
 		/** The URL to check the latest version. */
 		public static final String VERSION_URL = "http://p.seppecher.free.fr/jamel/version.php";
 
 	}
+
+	/** The user preferences. */
+	private static final Preferences prefs = Preferences.userRoot();
 
 	/** The remind-me-later period (in ms). */
 	private static final long remindMeLaterPeriod = 15*24*60*60*1000;
@@ -58,31 +67,33 @@ public class Simulator {
 	private static File scenarioFile;
 
 	/** This version of Jamel. */
-	final public static int version = 20150101;
+	final public static int version = 20150207;
 
 	/**
 	 * Downloads the latest version of Jamel.
 	 * @return <code>true</code> if the download is successful, <code>false</code> otherwise.
 	 */
 	private static boolean download() { // TODO WORK IN PROGRESS
+		boolean result;
 		if(Desktop.isDesktopSupported()) {
 			try {
 				Desktop.getDesktop().browse(new URI(KEY.DOWNLOAD_URI));
-				return true;
+				result = true;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				return false;
+				result = false;
 			} catch (URISyntaxException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-				return false;
+				result = false;
 			}
 		}
 		else {
 			// TODO proposer un lien dans un dialog
-			return false;
+			result = true;
 		}
+		return result;
 	}
 
 	/**
@@ -167,16 +178,18 @@ public class Simulator {
 	 * @return the file selected.
 	 */
 	private static File selectScenario() {
+		final String path = prefs.get(KEY.SCENARIO_PATHNAME_PREF,KEY.SCENARIO_DEFAULT_PATHNAME);
 		@SuppressWarnings("serial") final JFileChooser fc = new JFileChooser() {{
-			this.setFileFilter(new FileNameExtensionFilter("Text files", "txt"));}
+			this.setFileFilter(new FileNameExtensionFilter("Scenario files", "ini"));}
 		};
-		final File dir = new File("scenarios/");
+		final File dir = new File(path);
 		final File file;
 		fc.setDialogTitle("Open Scenario");
 		fc.setCurrentDirectory(dir);
 		final int returnVal = fc.showOpenDialog(null);
 		if (returnVal==JFileChooser.APPROVE_OPTION) {
 			file = fc.getSelectedFile();
+			prefs.put(KEY.SCENARIO_PATHNAME_PREF, file.getPath());
 		}
 		else {
 			file=null;
@@ -191,7 +204,6 @@ public class Simulator {
 	private static boolean updateJamel() {
 		final boolean result;
 		if (isOutOfDate()) {
-			final Preferences prefs = Preferences.systemRoot();
 			final long now = System.currentTimeMillis();
 			long previous = prefs.getLong(KEY.REMIND_ME_LATER,0);
 			if (now>previous+remindMeLaterPeriod) {

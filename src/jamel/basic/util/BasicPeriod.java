@@ -21,7 +21,7 @@ public class BasicPeriod implements Period {
 
 	@Override
 	public int compareTo(Period arg0) {
-		return value.compareTo(arg0.getValue());
+		return value.compareTo(arg0.intValue());
 	}
 
 	@Override
@@ -31,19 +31,20 @@ public class BasicPeriod implements Period {
 
 	@Override
 	public boolean equals(Period p) {
-		return this.value==p.getValue();
+		return this.value==p.intValue();
 	}
 
 	/**
 	 * Returns the next period.
 	 * @return a period.
 	 */
+	@Override
 	public Period getNext() {
 		return new BasicPeriod(this.value+1);
 	}
 
 	@Override
-	public int getValue() {
+	public int intValue() {
 		return this.value;
 	}
 
@@ -54,7 +55,7 @@ public class BasicPeriod implements Period {
 
 	@Override
 	public boolean isAfter(Period period2) {
-		return this.value>period2.getValue();
+		return this.value>period2.intValue();
 	}
 
 	@Override
@@ -64,7 +65,7 @@ public class BasicPeriod implements Period {
 
 	@Override
 	public boolean isBefore(Period p) {
-		return this.value<p.getValue();
+		return this.value<p.intValue();
 	}
 
 	@Override

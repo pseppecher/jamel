@@ -1,10 +1,12 @@
 package jamel.basic.agents.households;
 
+import jamel.basic.agents.households.util.AssetPortfolio;
 import jamel.basic.agents.roles.Asset;
-import jamel.basic.agents.util.Memory;
+import jamel.basic.agents.util.BasicMemory;
 import jamel.basic.agents.util.LaborPower;
+import jamel.basic.agents.util.Memory;
 import jamel.basic.data.dataSets.AgentDataset;
-import jamel.basic.data.dataSets.BasicAgentDataset;
+import jamel.basic.data.dataSets.AbstractAgentDataset;
 import jamel.basic.util.AnachronismException;
 import jamel.basic.util.BankAccount;
 import jamel.basic.util.Cheque;
@@ -13,12 +15,13 @@ import jamel.basic.util.JobContract;
 import jamel.basic.util.JobOffer;
 import jamel.basic.util.Supply;
 import jamel.util.Circuit;
-import jamel.util.Period;
 
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -26,119 +29,87 @@ import java.util.Set;
  */
 public class BasicHousehold implements Household {
 
-		@SuppressWarnings("javadoc")
-		private static final String N_JOB_OFFERS = "jobs.selection";
-
-		@SuppressWarnings("javadoc")
-		private static final String N_SUPPLIES = "supplies.selection";
-
-		@SuppressWarnings("javadoc")
-		private final static String SAV_PROP = "savings.propensityToSave";
-
-		@SuppressWarnings("javadoc")
-		private final static String SAV_PROP2_CONSUM_EXCESS = "savings.propensityToConsumeExcess";
-
-		@SuppressWarnings("javadoc")
-		private final static String SAV_TARGET = "savings.ratioTarget";
-
-		@SuppressWarnings("javadoc")
-		private final static String WAGE_FLEX = "wage.flexibility";
-
-		@SuppressWarnings("javadoc")
-		private final static String WAGE_RESIST = "wage.resistance";
-
 	/**
-	 * Enumeration of the social status of the household.
+	 * A basic implementation of <code>AssetPortfolio</code>.
 	 */
-	private static enum STATUS {
+	private final class BasicAssetPortfolio implements AssetPortfolio {
 
-		@SuppressWarnings("javadoc")
-		employed,
+		/** The set of assets. */
+		private final Set<Asset> assets = new HashSet<Asset>();
 
-		@SuppressWarnings("javadoc")
-		unemployed;
+		@Override
+		public void add(Asset asset) {
+			if(this.assets.contains(asset)){
+				throw new RuntimeException("This asset is already owned.");
+			}
+			this.assets.add(asset);
+		}
 
+		@Override
+		public boolean contains(Asset asset) {
+			return this.assets.contains(asset);
+		}
+
+		@Override
+		public long getNetValue() {
+			long value = 0;
+			for(Asset asset:assets) {
+				value += asset.getBookValue();
+			}
+			return value;
+		}
+
+		@Override
+		public void remove(Asset asset) {
+			if (!this.assets.contains(asset)) {
+				throw new RuntimeException("Asset Not found.");
+			}
+			this.assets.remove(asset);
+		}
 	}
 
-	/**
-	 * A class to store the set of variables that are used to describe the state of the household.
-	 */
-	private class Variables {
+	@SuppressWarnings("javadoc")
+	private static final int EMPLOYED = 1;
 
-		/** The dividends of the current period. */
-		private long dividend = 0;
+	@SuppressWarnings("javadoc")
+	private static final String N_JOB_OFFERS = "jobs.selection";
 
-		/** The earnings of the current period. */
-		private long income = 0;
+	@SuppressWarnings("javadoc")
+	private static final String N_SUPPLIES = "supplies.selection";
 
-		/** The last time period in which the household earned a wage.  */
-		private Period lastWage = null;
+	@SuppressWarnings("javadoc")
+	private final static String SAV_PROP = "savings.propensityToSave";
 
-		/** The last time period in which the household worked.  */
-		private Period lastWork = null;
+	@SuppressWarnings("javadoc")
+	private final static String SAV_PROP2_CONSUM_EXCESS = "savings.propensityToConsumeExcess";
 
-		/** The reservation wage. */
-		private double reservationWage = 0;
+	@SuppressWarnings("javadoc")
+	private final static String SAV_TARGET = "savings.ratioTarget";
 
-		/** The social status of the household. */
-		private STATUS status = STATUS.unemployed;
+	@SuppressWarnings("javadoc")
+	private static final int UNEMPLOYED = 0;
 
-		/** The unemployment duration / employment duration when negative. */
-		private int unempDuration = 0;
+	@SuppressWarnings("javadoc")
+	private final static String WAGE_FLEX = "wage.flexibility";
 
-		/** The wage. */
-		private long wage = 0;
-
-	}
-
-	/**
-	 * The collection of possessions (company) that the household owns.
-	 */
-	public interface Possessions {
-
-		/**
-		 * Adds a company to the list.
-		 * @param asset the company to be added.
-		 */
-		void add(Asset asset);
-
-		/**
-		 * Returns <code>true</code> if the given asset is in these possessions, <code>false</code> otherwise.
-		 * @param asset the asset.
-		 * @return a boolean.
-		 */
-		boolean contain(Asset asset);
-
-		/**
-		 * Returns the net value of the possessions (the sum of the capital of each company owned).
-		 * @return the net value of the possessions.
-		 */
-		long getNetValue();
-
-		/**
-		 * Removes the specified company.
-		 * @param asset the company to be removed.
-		 */
-		void remove(Asset asset);
-
-	}
+	@SuppressWarnings("javadoc")
+	private final static String WAGE_RESIST = "wage.resistance";
 
 	/** 
 	 * The job offer comparator.<p>
 	 * To compare jobs according to the wage they offer.
 	 */
-	static final Comparator<JobOffer>jobComparator = new Comparator<JobOffer>() {
+	public static final Comparator<JobOffer>jobComparator = new Comparator<JobOffer>() {
 		@Override
 		public int compare(JobOffer offer1, JobOffer offer2) {
 			return (new Long(offer2.getWage()).compareTo(offer1.getWage()));
 		}
 	};
-
 	/** 
 	 * The supply comparator.<p>
 	 * To compare supplies according to their price.
 	 */
-	static final Comparator<Supply> supplyComparator = new Comparator<Supply>() {
+	public static final Comparator<Supply> supplyComparator = new Comparator<Supply>() {
 		@Override
 		public int compare(Supply offer1, Supply offer2) {
 			return (-(new Double(offer2.getPrice())).compareTo(offer1.getPrice()));
@@ -147,12 +118,12 @@ public class BasicHousehold implements Household {
 
 	/** The current account. */
 	private final BankAccount account;
-
-	/** The annual income. */
-	private Memory annualIncome = new Memory(12);
-
+	
+	/** Items of property. */
+	private final AssetPortfolio assetPortfolio = new BasicAssetPortfolio();
+	
 	/** The data of the agent. */
-	private BasicAgentDataset data;
+	private AbstractAgentDataset data;
 
 	/** The history of the household. */
 	private final LinkedList<String> history = new LinkedList<String>() {
@@ -177,53 +148,17 @@ public class BasicHousehold implements Household {
 	/** The name of  the household. */
 	private final String name;
 
-	/** Items of property. */
-	private final Possessions possessions = new Possessions(){
-
-		/** The items of property. */
-		private final Set<Asset> assets = new HashSet<Asset>();
-
-		@Override
-		public void add(Asset asset) {
-			if(this.assets.contains(asset)){
-				throw new RuntimeException("This asset is already owned.");
-			}
-			this.assets.add(asset);
-		}
-
-		@Override
-		public boolean contain(Asset asset) {
-			return this.assets.contains(asset);
-		}
-
-		@Override
-		public long getNetValue() {
-			long value = 0;
-			for(Asset asset:assets) {
-				value += asset.getCapital();
-			}
-			return value;
-		}
-		
-		@Override
-		public void remove(Asset asset) {
-			if (!this.assets.contains(asset)) {
-				throw new RuntimeException("Company "+asset.getName()
-						+ " Not found.");
-			}
-			this.assets.remove(asset);
-		}
-	
-	};
-
 	/** A flag that indicates if the agent records its history. */
 	private boolean recordHistoric = false;
 
 	/** The households sector. */
 	private final  HouseholdsSector sector;
 
-	/** The set of variables that are used to describe the state of the household. */
-	private final Variables v = new Variables();
+	/** A map that stores the variables of the household. */
+	private final Map<String,Number> variables = new HashMap<String,Number>();
+
+	/** The memory. */
+	final protected Memory memory = new BasicMemory(12);
 
 	/**
 	 * Creates a household.
@@ -234,8 +169,9 @@ public class BasicHousehold implements Household {
 		this.history.add("Creation: "+name);
 		this.name = name;
 		this.sector = sector;
-		//this.p.update();
 		this.account = sector.getNewAccount(this);
+		this.variables.put("status", UNEMPLOYED);
+		this.variables.put("unemployement duration", 0);
 	}
 
 	/**
@@ -252,7 +188,7 @@ public class BasicHousehold implements Household {
 
 	@Override
 	public void addAsset(Asset asset) {
-		this.possessions.add(asset);
+		this.assetPortfolio.add(asset);
 	}
 
 	@Override
@@ -262,13 +198,14 @@ public class BasicHousehold implements Household {
 
 	@Override
 	public void close() {
-		this.annualIncome.add(this.v.income);
+		//this.annualIncome.add(this.variables.get("wage").longValue()+this.variables.get("dividend").longValue());
 		this.data.update();
 	}
 
 	@Override
 	public void consumption() {
-		final double averageIncome = annualIncome.getMean();
+		this.memory.put("income", this.variables.get("wage").longValue()+this.variables.get("dividend").longValue());
+		final double averageIncome = this.memory.getMean("income", Circuit.getCurrentPeriod().intValue(),12);
 		final long savingsTarget = (long) (12*averageIncome*this.sector.getFloatParameter(SAV_TARGET));
 		final long savings = (long) (this.account.getAmount()-averageIncome);
 		long consumptionBudget;
@@ -338,15 +275,13 @@ public class BasicHousehold implements Household {
 		if (!this.jobContract.isValid()) {
 			throw new RuntimeException("Invalid job contract.");
 		}
-		if (this.v.lastWage!=null && !this.v.lastWage.isBefore(Circuit.getCurrentPeriod())) {
-			throw new AnachronismException();			
+		if (this.variables.get("wage").longValue()>0) {
+			throw new AnachronismException("Wage already earned.");			
 		}
 		if (paycheck.getAmount()!=this.jobContract.getWage()) {
 			throw new IllegalArgumentException("Bad cheque amount.");
 		}
-		this.v.lastWage= Circuit.getCurrentPeriod();
-		this.v.income += paycheck.getAmount();
-		this.v.wage += paycheck.getAmount();
+		this.variables.put("wage", this.variables.get("wage").longValue() + paycheck.getAmount());
 		this.account.deposit(paycheck);
 	}
 
@@ -363,7 +298,7 @@ public class BasicHousehold implements Household {
 
 	@Override
 	public long getAssets() {
-		return this.possessions.getNetValue()+this.account.getAmount();
+		return this.assetPortfolio.getNetValue()+this.account.getAmount();
 	}
 
 	@Override
@@ -379,13 +314,13 @@ public class BasicHousehold implements Household {
 		if (!this.jobContract.isValid()) {
 			throw new RuntimeException("Invalid job contract.");
 		}
-		if (this.v.lastWork!=null && !this.v.lastWork.isBefore(Circuit.getCurrentPeriod())) {
-			throw new AnachronismException();			
+		if (this.variables.get("worked").intValue()!=0) {
+			throw new AnachronismException("Already worked.");			
 		}
-		if (this.v.lastWage == null || !this.v.lastWage.isPresent()) {
+		if (this.variables.get("wage").longValue()==0) {
 			throw new RuntimeException("Wage not paid.");			
 		}
-		this.v.lastWork=Circuit.getCurrentPeriod();
+		this.variables.put("worked", 1);
 		return new LaborPower(){
 
 			private float energy = 1;
@@ -458,74 +393,77 @@ public class BasicHousehold implements Household {
 	public void jobSearch() {
 
 		// Updates the status.
-
+		
+		Integer unempDuration = (Integer) this.variables.get("unemployement duration");
 		if ((this.jobContract==null)||!(this.jobContract.isValid())) {
-			this.v.status=STATUS.unemployed;
-			if (this.v.unempDuration<0) {
-				this.v.unempDuration =0;
+			this.variables.put("status",UNEMPLOYED);
+			if (unempDuration<0) {
+				unempDuration =0;
 			}
 			else {
-				this.v.unempDuration++;
+				unempDuration++;
 			}
 		}
 		else {
-			this.v.status=STATUS.employed;
-			if (this.v.unempDuration>0) {
-				this.v.unempDuration=0;
+			this.variables.put("status",EMPLOYED);
+			if (unempDuration>0) {
+				unempDuration=0;
 			}
 			else {
-				this.v.unempDuration--;
+				unempDuration--;
 			}
 		}
 
-		this.history.add("Status: "+v.status.toString());
-		this.history.add("Unemployement duration: "+this.v.unempDuration);
+		this.history.add("Status: "+this.variables.get("status"));
+		this.history.add("Unemployement duration: "+unempDuration);
 
 		// Different behaviors according the status.
 
-		switch(this.v.status) {
-		case unemployed:
+		switch(this.variables.get("status").intValue()) {
+		case UNEMPLOYED:
 			// Attention, c'est un peu plus compliquŽ dans les dernires versions de Jamel1.
-			if (this.v.unempDuration>this.sector.getFloatParameter(WAGE_RESIST)){
-				this.v.reservationWage = (this.v.reservationWage*(1f-this.sector.getFloatParameter(WAGE_FLEX)*Circuit.getRandom().nextFloat()));
+			Double reservationWage = (Double) this.variables.get("reservationWage");
+			if (reservationWage==null){
+				reservationWage=0d;
+				this.variables.put("reservationWage", reservationWage);
+			}
+			if (unempDuration>this.sector.getFloatParameter(WAGE_RESIST)){
+				reservationWage = (reservationWage*(1f-this.sector.getFloatParameter(WAGE_FLEX)*Circuit.getRandom().nextFloat()));
+				this.variables.put("reservationWage", reservationWage);
 				this.history.add("Reservation wage updated.");
 			}
-			this.history.add("Reservation wage: "+this.v.reservationWage);
+			this.history.add("Reservation wage: "+reservationWage);
 			final JobOffer[] jobOffers = this.sector.getJobOffers((int) sector.getFloatParameter(N_JOB_OFFERS));
 			if (jobOffers.length>0) {
 				Arrays.sort(jobOffers,jobComparator);
-				if (jobOffers[0].getWage()>=this.v.reservationWage) {
+				if (jobOffers[0].getWage()>=reservationWage) {
 					this.jobContract=jobOffers[0].apply(this);
-					this.v.status=STATUS.employed;
-					this.v.unempDuration=0;
+					this.variables.put("status",EMPLOYED);
+					unempDuration=0;
 					this.history.add("New job contract: "+this.jobContract.toString());
 				}
 			}
 			break;
-		case employed:
-			this.v.reservationWage  = this.jobContract.getWage();
+		case EMPLOYED:
+			this.variables.put("reservationWage",(double) this.jobContract.getWage());
 			break;
 		default :
 			throw new RuntimeException("Unexpected status."); 
 		}
 
-		if(this.v.status.equals(STATUS.unemployed)) {
-			this.data.put("unemployed", 1.);			
-			this.data.put("employed", 0.);			
-		}
-		else {			
-			this.data.put("unemployed", 0.);			
-			this.data.put("employed", 1.);			
-		}
+		this.data.put("unemployed", 1d-this.variables.get("status").doubleValue());			
+		this.data.put("employed", this.variables.get("status").doubleValue());			
+		this.variables.put("unemployment duration", unempDuration);
 	}
 
 	@Override
 	public void open() {
-		this.history.add("Period "+Circuit.getCurrentPeriod().getValue());
-		this.v.income=0;
-		this.v.wage=0;
-		this.v.dividend=0;
-		this.data = new BasicAgentDataset(this.name) {
+		this.history.add("Period "+Circuit.getCurrentPeriod().intValue());
+		this.variables.put("dividend", 0l);
+		this.variables.put("worked", 0);
+		this.variables.put("wage", 0l);
+		this.variables.put("asset portfolio initial value",this.assetPortfolio.getNetValue());	
+		this.data = new AbstractAgentDataset(this.name) {
 
 			/** serialVersionUID */
 			private static final long serialVersionUID = 1L;
@@ -533,30 +471,30 @@ public class BasicHousehold implements Household {
 			@Override
 			public void update() {
 				this.put("cash", (double) account.getAmount());
-				this.put("wages", (double) v.wage);
-				this.put("dividend", (double) v.dividend);
-				this.put("income", (double) v.income);
-				this.put("capital", (double) possessions.getNetValue());				
+				this.put("wages", variables.get("wage").doubleValue());
+				this.put("dividend", variables.get("dividend").doubleValue());
+				final long capital = assetPortfolio.getNetValue();
+				this.put("capital", (double) capital);				
+				this.put("capital_variation", (double) (capital-variables.get("asset portfolio initial value").longValue()));				
 				this.put("agents", 1.);
 			}
-			
+
 		};
 	}
 
 	@Override
 	public void receiveDividend(Cheque cheque,Asset asset) {
-		if (!this.possessions.contain(asset)) {
+		if (!this.assetPortfolio.contains(asset)) {
 			throw new RuntimeException("This asset is not own.");
-		};
+		}
 		this.history.add("Receive dividend: "+cheque.toString());
-		this.v.income +=cheque.getAmount();
-		this.v.dividend +=cheque.getAmount();
+		this.variables.put("dividend", (Long) this.variables.get("dividend") + cheque.getAmount());
 		this.account.deposit(cheque);
 	}
 
 	@Override
 	public void removeAsset(Asset asset) {
-		this.possessions.remove(asset);
+		this.assetPortfolio.remove(asset);
 	}
 
 }

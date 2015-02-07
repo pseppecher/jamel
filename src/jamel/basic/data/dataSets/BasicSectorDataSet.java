@@ -253,6 +253,10 @@ public class BasicSectorDataSet implements SectorDataset {
 		}
 		else {
 			for (String key:agentDataset.keySet()) {
+				if (!this.fields.containsKey(key)) {
+					final Double[] array = new Double[this.size];
+					this.fields.put(key, array);					
+				}
 				this.fields.get(key)[index]=agentDataset.get(key);
 			}
 		}

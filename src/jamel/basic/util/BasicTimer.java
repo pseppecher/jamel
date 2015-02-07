@@ -44,8 +44,9 @@ public class BasicTimer implements Timer {
 	public void next() {
 		this.current=this.current.getNext();
 		SwingUtilities.invokeLater(new Runnable() {
+			@Override
 			public void run() {
-				counter.setText(""+current.getValue());
+				counter.setText(""+current.intValue());
 			}
 		});
 	}

@@ -1,232 +1,82 @@
 package jamel.basic.agents.firms.util;
 
 import jamel.basic.agents.util.LaborPower;
-import jamel.basic.util.AnachronismException;
 import jamel.basic.util.Commodities;
-import jamel.util.Circuit;
-import jamel.util.Period;
+import jamel.manhattan.InvestmentProcess;
 
 /**
  * Represents the work-in-progress inventory.
- * This object encapsulates the production process.
  */
-public class WorkInProgress {
-
-	/** The capacity. */
-	protected final int capacity;
-
-	/** The date of the last call of the process method. */
-	protected Period lastUse;
-
-	/** Number of labor powers expended for this process since the creation of the process. */
-	protected int totalLaborPowers=0;
-
-	/** Statistic of the volume of the production (finished goods) since the creation of the process. */
-	protected long production=0;
-
-	/** The production time, ie the number of stages of the production process. */
-	protected final int productionTime;
-
-	/** The productivity. */
-	protected float productivity;
-
-	/** The list of values of the different unfinished goods. */
-	protected final long[] value;
-
-	/** The list of volumes of the different unfinished goods. */
-	protected final long[] volume;
-
-	/** A flag that indicates either the process is closed or not. */
-	protected boolean closed = false;
+public interface WorkInProgress {
 
 	/**
-	 * Creates a new work-in-process inventory.
-	 * @param productionTime the production time.
-	 * @param capacity the production capacity.
-	 * @param productivity the productivity.
+	 * Definitively closes the the process.
 	 */
-	public WorkInProgress(int productionTime, int capacity, float productivity) {
-		this.productionTime = productionTime;
-		this.capacity = capacity;
-		this.productivity = productivity;
-		this.value=new long[productionTime];
-		this.volume=new long[productionTime];	
-	}
+	public abstract void close();
+
+	/**
+	 * Returns the ex-post average productivity.
+	 * @return the average productivity.
+	 */
+	public abstract float getAverageProductivity();
+
+	/**
+	 * Returns the capacity.
+	 * @return the capacity.
+	 */
+	public abstract float getCapacity();
+
+	/**
+	 * Returns the ex-ante average production at full utilization of the production capacity. 
+	 * @return the average production.
+	 */
+	public abstract float getMaxUtilAverageProduction();
+
+	/**
+	 * Returns the average productivity.
+	 * @return the average productivity.
+	 */
+	public abstract float getProductivity();
 
 	/**
 	 * Returns the total value of the work-in-progress inventory. 
 	 * @return the value.
 	 */
-	long getValue() {
-		long sum=0;
-		for (long val:value){
-			sum+=val;
-		}
-		return sum;
-	}
+	public abstract long getValue();
 
 	/**
 	 * Returns the value of the unfinished goods at the given stage of the production process.
 	 * @param index the stage.
 	 * @return the value.
 	 */
-	long getValueAt(int index) {
-		return this.value[index-1];
-	}
+	public abstract long getValueAt(int index);
 
 	/**
 	 * Returns the volume of the unfinished goods at the given stage of the production process.
 	 * @param index the stage.
 	 * @return the value.
 	 */
-	long getVolumeAt(int index) {
-		return this.volume[index-1];
-	}
+	public abstract long getVolumeAt(int index);
 
 	/**
-	 * Prints a description of the object.
-	 * For debugging purposes. 
+	 * Adds the specified investment process. A new machine is created.
+	 * @param investmentProcess the investment process to be added.
 	 */
-	void print() {
-		System.out.println(this);
-		System.out.println(this.capacity);
-		System.out.println(this.productionTime);
-		System.out.println(this.productivity);
-		for (int i=0;i<this.productionTime;i++) {
-			System.out.println(i+", "+this.volume[i]+", "+this.value[i]);			
-		}
-		System.out.println();
-	}
+	public abstract void investment(InvestmentProcess investmentProcess);
 
 	/**
 	 * Produces new goods by the expense of the given labor powers.
 	 * @param laborPowers the labor powers.
 	 * @return the product.
 	 */
-	public Commodities process(LaborPower... laborPowers) {
-		if (this.closed) {
-			throw new RuntimeException("This process is definitively closed.");
-		}
-		if (this.lastUse==null) {
-			this.lastUse=Circuit.getCurrentPeriod();
-		}
-		else if (!this.lastUse.isBefore(Circuit.getCurrentPeriod())) {
-			throw new AnachronismException("");
-		}
-		if (laborPowers.length>this.capacity) {
-			throw new IllegalArgumentException("Over capacity: laborPowers.length is "+laborPowers.length+" but capacity is "+this.capacity);
-		}
-		if (laborPowers.length==0) {
-			throw new IllegalArgumentException("Workforce is empty.");
-		}
-		final long[] value2 = new long[productionTime];
-		final long[] volume2 = new long[productionTime];
-		int index=productionTime-1;
-		for(LaborPower laborPower:laborPowers) {
-			this.totalLaborPowers++;
-			while(!laborPower.isExhausted()) {
-				if (index==0) {
-					volume2[0]+=this.productionTime*this.productivity*laborPower.getEnergy();
-					value2[0]+=laborPower.getValue();
-					laborPower.expend();
-				}
-				else {
-					if (volume[index-1]!=0) {
-						long pVolume = (long) (this.productionTime*this.productivity*laborPower.getEnergy());
-						if (pVolume==volume[index-1]) {
-							value2[index]+=value[index-1]+laborPower.getValue();
-							volume2[index]+=volume[index-1];
-							laborPower.expend();
-							value[index-1]=0;
-							volume[index-1]=0;
-						}
-						else if (pVolume<volume[index-1]) {
-							final long pValue=value[index-1]*pVolume/volume[index-1];
-							value2[index]+=pValue+laborPower.getValue();
-							volume2[index]+=pVolume;
-							laborPower.expend();
-							value[index-1]-=pValue;
-							volume[index-1]-=pVolume;
-						}
-						else {
-							final float work=((float)volume[index-1])/(this.productionTime*this.productivity);
-							final long lValue=(long) (laborPower.getWage()*work);
-							value2[index]+=value[index-1]+lValue;
-							volume2[index]+=volume[index-1];
-							laborPower.expend(work);
-							value[index-1]=0;
-							volume[index-1]=0;
-						}
-					}
-				}
-				index--;
-				if (index<0) {
-					index=productionTime-1;
-				}
-			}
-		}
-		// Consolidation.
-		for (index=0; index<productionTime; index++) {
-			value[index]+=value2[index];
-			volume[index]+=volume2[index];
-		}
-		return new BasicCommodities() {{
-			this.setValue(value[productionTime-1]);
-			this.setVolume(volume[productionTime-1]);
-			value[productionTime-1]=0;
-			volume[productionTime-1]=0;
-			production+=this.getVolume();
-		}};
-	}
-
-	/**
-	 * Returns the ex-post average productivity.
-	 * @return the average productivity.
-	 */
-	public float getAverageProductivity() {
-		return ((float)this.production)/this.totalLaborPowers;
-	}
-
-	/**
-	 * Returns the capacity.
-	 * @return the capacity.
-	 */
-	public float getCapacity() {
-		return this.capacity;
-	}
-
-	/**
-	 * Returns the ex-ante average production at full utilization of the production capacity. 
-	 * @return the average production.
-	 */
-	public long getMaxUtilAverageProduction() {
-		return (long) (this.capacity*this.productivity);
-	}
-
-	/**
-	 * Returns the productivity.
-	 * @return the productivity.
-	 */
-	public float getProductivity() {
-		return productivity;
-	}
+	public abstract Commodities process(LaborPower... laborPowers);
 
 	/**
 	 * Sets the productivity.
 	 * @param productivity the productivity to set.
 	 */
-	public void setProductivity(float productivity) {
-		if (this.closed) {
-			throw new RuntimeException("This process is definitively closed.");
-		}
-		this.productivity=productivity;
-	}
-
-	/**
-	 * Definitively closes the the process.
-	 */
-	public void close() {
-		this.closed  = true;
-	}
+	public abstract void setProductivity(float productivity);
 
 }
+
+// ***

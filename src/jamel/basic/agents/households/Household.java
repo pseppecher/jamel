@@ -1,14 +1,14 @@
 package jamel.basic.agents.households;
 
 import jamel.basic.agents.roles.AccountHolder;
-import jamel.basic.agents.roles.CapitalOwner;
+import jamel.basic.agents.roles.Shareholder;
 import jamel.basic.agents.roles.Consumer;
 import jamel.basic.agents.roles.Worker;
 
 /**
  * Represents a household.
  */
-public interface Household extends Worker,Consumer,AccountHolder,CapitalOwner {
+public interface Household extends Worker,Consumer,AccountHolder,Shareholder {
 
 	/**
 	 * Closes the household at the end of the period.

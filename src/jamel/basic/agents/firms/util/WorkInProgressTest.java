@@ -31,6 +31,7 @@ public class WorkInProgressTest {
 				energy=0;
 				value=0;
 			}
+			@Override
 			public void expend(float work) {
 				if (work>energy) {
 					if ((work-energy)<0.001) {
@@ -48,12 +49,15 @@ public class WorkInProgressTest {
 					}
 				}
 			}
+			@Override
 			public float getEnergy() {
 				return energy;
 			}
+			@Override
 			public long getWage() {
 				return wage;
 			}
+			@Override
 			public boolean isExhausted() {
 				return energy==0;
 			}
@@ -78,6 +82,7 @@ public class WorkInProgressTest {
 	 * Setup.
 	 * @throws Exception exception.
 	 */
+	@SuppressWarnings("unused")
 	@Before
 	public void setUp() throws Exception {
 		new Circuit(new Timer(){
@@ -85,12 +90,16 @@ public class WorkInProgressTest {
 			@Override public void next() {}
 			@Override public Component getCounter() {return null;}
 		},new Random()){
+			@Override
 			public Object forward(String message, Object... args) {return null;}
+			@Override
 			public String getParameter(String... keys) {return null;
 			}
+			@Override
 			public boolean isPaused() {
 				return false;
 			}
+			@Override
 			public void run() {				
 			}
 			@Override
@@ -124,13 +133,13 @@ public class WorkInProgressTest {
 			final float productivity = 1+this.random.nextFloat()*999f;
 			final int workforce = 1+this.random.nextInt(99);
 			final int capacity = workforce+this.random.nextInt(100-workforce);
-			final WorkInProgress workInProgress = new WorkInProgress(productionTime, capacity, productivity);
+			final WorkInProgress basicWorkInProgress = new BasicWorkInProgress(productionTime, capacity, productivity);
 			final LaborPower[] laborPowers = new LaborPower[workforce];
 			for(int k=0;k<workforce;k++) {
 				laborPowers[k]=createLaborPower(wage);
 			}
-			final Commodities product = workInProgress.process(laborPowers);
-			assertEquals("Value", workforce*wage, workInProgress.getValue()+product.getValue(),0);
+			final Commodities product = basicWorkInProgress.process(laborPowers);
+			assertEquals("Value", workforce*wage, basicWorkInProgress.getValue()+product.getValue(),0);
 		}
 	}
 
@@ -144,12 +153,12 @@ public class WorkInProgressTest {
 		final float productivity = 1+this.random.nextFloat()*999f;
 		final int capacity = 1+this.random.nextInt(99);
 		final int workforce = capacity+1+this.random.nextInt(capacity);
-		final WorkInProgress workInProgress = new WorkInProgress(productionTime, capacity, productivity);
+		final WorkInProgress basicWorkInProgress = new BasicWorkInProgress(productionTime, capacity, productivity);
 		final LaborPower[] laborPowers = new LaborPower[workforce];
 		for(int k=0;k<workforce;k++) {
 			laborPowers[k]=createLaborPower(wage);
 		}
-		workInProgress.process(laborPowers);
+		basicWorkInProgress.process(laborPowers);
 	}
 
 	/**
@@ -162,19 +171,19 @@ public class WorkInProgressTest {
 		final float productivity = 1+this.random.nextFloat()*999f;
 		final int workforce = 1+this.random.nextInt(99);
 		final int capacity = workforce+this.random.nextInt(100-workforce);
-		final WorkInProgress workInProgress = new WorkInProgress(productionTime, capacity, productivity);
+		final WorkInProgress basicWorkInProgress = new BasicWorkInProgress(productionTime, capacity, productivity);
 		final LaborPower[] laborPowers = new LaborPower[workforce];
 		for(int k=0;k<workforce;k++) {
 			laborPowers[k]=createLaborPower(wage);
 		}
-		final Commodities product = workInProgress.process(laborPowers);
-		assertEquals("Value", workforce*wage, workInProgress.getValue()+product.getValue(),0);
+		final Commodities product = basicWorkInProgress.process(laborPowers);
+		assertEquals("Value", workforce*wage, basicWorkInProgress.getValue()+product.getValue(),0);
 		// Forgets to increment the time period.
 		for(int k=0;k<workforce;k++) {
 			laborPowers[k]=createLaborPower(wage);
 		}
 		// Tries to process again.
-		workInProgress.process(laborPowers);
+		basicWorkInProgress.process(laborPowers);
 	}
 
 	/**
@@ -188,21 +197,21 @@ public class WorkInProgressTest {
 			final float productivity = 1+this.random.nextFloat()*999f;
 			final int workforce = 1+this.random.nextInt(99);
 			final int capacity = workforce+this.random.nextInt(100-workforce);
-			final WorkInProgress workInProgress = new WorkInProgress(productionTime, capacity, productivity);
+			final WorkInProgress basicWorkInProgress = new BasicWorkInProgress(productionTime, capacity, productivity);
 			final LaborPower[] laborPowers = new LaborPower[workforce];
 			for(int k=0;k<workforce;k++) {
 				laborPowers[k]=createLaborPower(wage);
 			}
-			final Commodities product1 = workInProgress.process(laborPowers);
-			assertEquals("Value", workforce*wage, workInProgress.getValue()+product1.getValue(),0);
+			final Commodities product1 = basicWorkInProgress.process(laborPowers);
+			assertEquals("Value", workforce*wage, basicWorkInProgress.getValue()+product1.getValue(),0);
 			// Increments the time period.
 			this.period=this.period.getNext();		
 			for(int k=0;k<workforce;k++) {
 				laborPowers[k]=createLaborPower(wage);
 			}
 			// Tries to process again.
-			final Commodities product2 = workInProgress.process(laborPowers);
-			assertEquals("Value", 2*workforce*wage, workInProgress.getValue()+product1.getValue()+product2.getValue(),0);
+			final Commodities product2 = basicWorkInProgress.process(laborPowers);
+			assertEquals("Value", 2*workforce*wage, basicWorkInProgress.getValue()+product1.getValue()+product2.getValue(),0);
 		}
 	}
 
@@ -219,15 +228,15 @@ public class WorkInProgressTest {
 			final float productivity = 1+this.random.nextFloat()*999f;
 			final int workforce = 1+this.random.nextInt(99);
 			final int capacity = workforce+this.random.nextInt(100-workforce);
-			final WorkInProgress workInProgress = new WorkInProgress(productionTime, capacity, productivity);
+			final WorkInProgress basicWorkInProgress = new BasicWorkInProgress(productionTime, capacity, productivity);
 
 			for (int t=1; t<duration; t++) {
 				final LaborPower[] laborPowers = new LaborPower[workforce];
 				for(int k=0;k<workforce;k++) {
 					laborPowers[k]=createLaborPower(wage);
 				}
-				workInProgress.process(laborPowers);
-				assertEquals("Value", t*workforce*wage, workInProgress.getValue(),0);
+				basicWorkInProgress.process(laborPowers);
+				assertEquals("Value", t*workforce*wage, basicWorkInProgress.getValue(),0);
 				this.period=this.period.getNext();
 			}
 		}
@@ -242,26 +251,26 @@ public class WorkInProgressTest {
 		final int productionTime = 6;
 		float productivity = 100;
 		final int capacity = 10;
-		final WorkInProgress workInProgress = new WorkInProgress(productionTime, capacity, productivity);
+		final WorkInProgress basicWorkInProgress = new BasicWorkInProgress(productionTime, capacity, productivity);
 		
 		// First round.
-		workInProgress.process(createLaborPower(wage));
-		assertEquals("Value", wage, workInProgress.getValue(),0);
-		assertEquals("Value", wage, workInProgress.getValueAt(1),0);
-		assertEquals("Volume", productionTime*productivity, workInProgress.getVolumeAt(1),0);
-		assertEquals("Value", 0, workInProgress.getValueAt(2),0);
-		assertEquals("Volume", 0, workInProgress.getVolumeAt(2),0);
+		basicWorkInProgress.process(createLaborPower(wage));
+		assertEquals("Value", wage, basicWorkInProgress.getValue(),0);
+		assertEquals("Value", wage, basicWorkInProgress.getValueAt(1),0);
+		assertEquals("Volume", productionTime*productivity, basicWorkInProgress.getVolumeAt(1),0);
+		assertEquals("Value", 0, basicWorkInProgress.getValueAt(2),0);
+		assertEquals("Volume", 0, basicWorkInProgress.getVolumeAt(2),0);
 		
 		// Second round.
 		this.period=this.period.getNext();
 		productivity=150;
-		workInProgress.setProductivity(productivity);
-		workInProgress.process(createLaborPower(wage));
-		assertEquals("Value", 200, workInProgress.getValue(),1);
-		assertEquals("Volume", productionTime*100, workInProgress.getVolumeAt(2),0);
-		assertEquals("Value", 166, workInProgress.getValueAt(2),0);
-		assertEquals("Volume", 300, workInProgress.getVolumeAt(1),1);
-		assertEquals("Value", 34, workInProgress.getValueAt(1),0);
+		basicWorkInProgress.setProductivity(productivity);
+		basicWorkInProgress.process(createLaborPower(wage));
+		assertEquals("Value", 200, basicWorkInProgress.getValue(),1);
+		assertEquals("Volume", productionTime*100, basicWorkInProgress.getVolumeAt(2),0);
+		assertEquals("Value", 166, basicWorkInProgress.getValueAt(2),0);
+		assertEquals("Volume", 300, basicWorkInProgress.getVolumeAt(1),1);
+		assertEquals("Value", 34, basicWorkInProgress.getValueAt(1),0);
 		this.period=this.period.getNext();
 	}
 

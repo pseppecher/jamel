@@ -29,7 +29,7 @@ public interface Period extends Comparable<Period> {
 	 * Returns the value of the time period.
 	 * @return an integer.
 	 */
-	int getValue();
+	int intValue();
 	
 	/**
 	 * Returns <code>true</code> if the value of the time period is higher than <code>t</code>, <code>false</code> otherwise.

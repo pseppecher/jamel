@@ -2,6 +2,7 @@ package jamel.basic.agents.firms.util;
 
 import jamel.basic.agents.util.LaborPower;
 import jamel.basic.util.Commodities;
+import jamel.manhattan.InvestmentProcess;
 
 /**
  * Represents a factory.
@@ -108,6 +109,12 @@ public interface Factory {
 	 * @param productivity the productivity to set.
 	 */
 	void setProductivity(float productivity);
+
+	/**
+	 * Receives an investment process. A new machine is then created.
+	 * @param investmentProcess the 
+	 */
+	void investment(InvestmentProcess investmentProcess);
 
 }
 
