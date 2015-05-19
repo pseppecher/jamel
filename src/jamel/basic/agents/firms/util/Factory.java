@@ -116,6 +116,12 @@ public interface Factory {
 	 */
 	void investment(InvestmentProcess investmentProcess);
 
+	/**
+	 * Scraps the machines under the specified productivity threshold.
+	 * @param threshold productivity threshold under which the machines are to be scraped.
+	 */
+	void scrap(double threshold);
+
 }
 
 // ***

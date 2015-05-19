@@ -10,25 +10,25 @@ import jamel.manhattan.InvestmentProcess;
 public class BasicFactory implements Factory {
 
 	/** A flag that indicates either the factory is closed or not. */
-	private boolean closed = false;
+	protected boolean closed = false;
 
 	/** The inventory stock of finished goods. */
-	private final Commodities finishedGoods= new BasicCommodities();
+	protected final Commodities finishedGoods= new BasicCommodities();
 
 	/** The value of inventory losses (when the firm goes bankrupt). */
-	private long inventoryLosses=0;
+	protected long inventoryLosses=0;
 	
 	/** The value of finished goods produced in the last production process. */
-	private long productionValue;
+	protected long productionValue;
 
 	/** The volume of finished goods produced in the last production process. */
-	private long productionVolume;
+	protected long productionVolume;
 	
 	/** The number of labor powers put in the last production process. */
-	private int workforce;
+	protected int workforce;
 
 	/** The work in progress. */
-	private final WorkInProgress workInProgress;
+	protected final WorkInProgress workInProgress;
 
 	/**
 	 * Creates a basic factory.
@@ -38,6 +38,32 @@ public class BasicFactory implements Factory {
 	 */
 	public BasicFactory(int productionTime, int capacity, float productivity) {
 		this.workInProgress = newWorkInProgress(productionTime, capacity, productivity);
+	}
+
+	/**
+	 * Returns the average productivity since the beginning of the factory.
+	 * @return the average productivity.
+	 */
+	protected float getAverageProductivity() {
+		return this.workInProgress.getAverageProductivity();
+	}
+
+	/**
+	 * Returns the value of the goods at the specified stage.
+	 * @param stage the stage.
+	 * @return the value.
+	 */
+	protected double getValueAt(int stage) {
+		return this.workInProgress.getValueAt(stage);
+	}	
+
+	/**
+	 * Returns the volume of the goods at the specified stage.
+	 * @param stage the stage.
+	 * @return the volume.
+	 */
+	protected double getVolumeAt(int stage) {
+		return this.workInProgress.getVolumeAt(stage);
 	}
 
 	/**
@@ -52,32 +78,6 @@ public class BasicFactory implements Factory {
 		return new BasicWorkInProgress(productionTime, capacity, productivity);
 	}
 
-	/**
-	 * Returns the average productivity since the beginning of the factory.
-	 * @return the average productivity.
-	 */
-	float getAverageProductivity() {
-		return this.workInProgress.getAverageProductivity();
-	}	
-
-	/**
-	 * Returns the value of the goods at the specified stage.
-	 * @param stage the stage.
-	 * @return the value.
-	 */
-	double getValueAt(int stage) {
-		return this.workInProgress.getValueAt(stage);
-	}
-
-	/**
-	 * Returns the volume of the goods at the specified stage.
-	 * @param stage the stage.
-	 * @return the volume.
-	 */
-	double getVolumeAt(int stage) {
-		return this.workInProgress.getVolumeAt(stage);
-	}
-
 	@Override
 	public void bankrupt() {
 		if (this.closed) {
@@ -85,7 +85,7 @@ public class BasicFactory implements Factory {
 		}
 		this.inventoryLosses=this.getValue();
 		this.finishedGoods.consume();
-		this.workInProgress.close();
+		this.workInProgress.cancel();
 		this.closed = true;
 	}
 
@@ -162,6 +162,11 @@ public class BasicFactory implements Factory {
 	}
 
 	@Override
+	public void investment(InvestmentProcess investmentProcess) {
+		this.workInProgress.investment(investmentProcess);
+	}
+
+	@Override
 	public void process(final LaborPower... laborPowers) {
 		if (this.closed) {
 			throw new RuntimeException("This factory is definitively closed.");
@@ -176,7 +181,13 @@ public class BasicFactory implements Factory {
 		else {
 			this.workforce=0;
 			this.productionVolume=0;
+			this.productionValue=0;
 		}
+	}
+
+	@Override
+	public void scrap(double threshold) {
+		throw new RuntimeException("Not yet implemented");
 	}
 
 	/**
@@ -189,11 +200,6 @@ public class BasicFactory implements Factory {
 			throw new RuntimeException("This factory is definitively closed.");
 		}
 		this.workInProgress.setProductivity(productivity);
-	}
-
-	@Override
-	public void investment(InvestmentProcess investmentProcess) {
-		this.workInProgress.investment(investmentProcess);
 	}
 
 }

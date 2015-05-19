@@ -10,9 +10,9 @@ import jamel.manhattan.InvestmentProcess;
 public interface WorkInProgress {
 
 	/**
-	 * Definitively closes the the process.
+	 * Definitively ends the the process.
 	 */
-	public abstract void close();
+	public abstract void cancel();
 
 	/**
 	 * Returns the ex-post average productivity.

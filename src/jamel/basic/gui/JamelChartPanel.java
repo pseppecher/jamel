@@ -77,8 +77,8 @@ public abstract class JamelChartPanel extends ChartPanel {
 			this.setDomainMinorGridlinesVisible(false);
 			this.setRangeGridlinesVisible(false);
 			this.setRangeMinorGridlinesVisible(false);
-			this.setRangeCrosshairVisible(true);
-			this.setDomainCrosshairVisible(true);
+			this.setRangeCrosshairVisible(false);
+			this.setDomainCrosshairVisible(false);
 			this.setBackgroundPaint(Color.WHITE);
 		}};
 	}

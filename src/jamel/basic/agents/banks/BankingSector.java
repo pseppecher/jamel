@@ -18,6 +18,7 @@ import jamel.util.Sector;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -38,6 +39,15 @@ public class BankingSector implements Sector, Corporation {
 		/** A flag that indicates if the account holder is bankrupt or not. */
 		private boolean bankrupt=false;
 
+		/** A flag that indicates if the account is canceled or not. */
+		private boolean canceled=false;
+
+		/** canceledDebt */
+		private Long canceledDebt = 0l;
+
+		/** canceledMoney */
+		private Long canceledMoney = 0l;
+
 		/** Date of creation. */
 		private final int creation = Circuit.getCurrentPeriod().intValue();
 
@@ -51,13 +61,24 @@ public class BankingSector implements Sector, Corporation {
 			private long amount = 0 ;
 
 			@Override
+			public void cancel() {
+				if (this.amount>0) {
+					BankingSector.this.v.add("canceledDeposits",this.amount);
+					BankingSector.this.v.add("liabilities", -this.amount);
+					BankingSector.this.v.add("capital", this.amount);
+					Account.this.canceledMoney += this.amount;
+					this.amount=0;
+				}
+			}
+
+			@Override
 			public void credit(long creditAmount) {
 				if (creditAmount<=0) {
 					throw new RuntimeException("Null or negative credit.");
 				}
 				this.amount += creditAmount ;
-				BankingSector.this.v.liabilities += creditAmount;
-				BankingSector.this.v.capital -= creditAmount;
+				BankingSector.this.v.add("liabilities", creditAmount);
+				BankingSector.this.v.add("capital" ,-creditAmount);
 			}
 
 			@Override
@@ -69,8 +90,8 @@ public class BankingSector implements Sector, Corporation {
 					throw new RuntimeException("Not enough money.");
 				}
 				this.amount -= debit;
-				v.liabilities -= debit;
-				v.capital += debit;
+				v.add("liabilities", -debit);
+				v.add("capital", debit);
 			}
 
 			@Override 
@@ -89,9 +110,6 @@ public class BankingSector implements Sector, Corporation {
 		/** The memory of the account. */
 		private final Memory memory = new BasicMemory(6);
 
-		/** A flag that indicates if the account is open or not. */
-		private boolean open=true;
-
 		/**
 		 * Creates a new account.
 		 * @param accountHolder the account holder.
@@ -101,28 +119,25 @@ public class BankingSector implements Sector, Corporation {
 		}
 
 		/**
-		 * Closes the account. 
+		 * Definitely closes the account. 
 		 * Cancels all the loans associated with this account. 
 		 * Called in case of a bankruptcy.
 		 */
-		private void close() {
-			if (!open) {
-				throw new RuntimeException("This account is already closed.");
+		private void cancel() {
+			if (canceled) {
+				throw new RuntimeException("This account is definitely closed.");
 			}
-			final long cash = getAmount(); 
-			if (cash!=0) {
-				this.deposit.debit(cash);
-			}
+			this.deposit.cancel();
 			for (Loan loan:loans) {
 				loan.cancel();
 			}
 			this.loans.clear();
-			this.open = false;
+			this.canceled = true;
 		}
 
 		/**
-		 * Returns the doubtfull debt amount.
-		 * @return the doubtfull debt amount.
+		 * Returns the doubtful debt amount.
+		 * @return the doubtful debt amount.
 		 */
 		private long getDoubtfulDebt() {
 			long result=0;
@@ -199,10 +214,20 @@ public class BankingSector implements Sector, Corporation {
 
 		@Override
 		public long getAmount() {
-			if (!open && this.deposit.getAmount()!=0) {
+			if (canceled && this.deposit.getAmount()!=0) {
 				throw new RuntimeException("This account is closed but the amount is not 0.");
 			}
 			return this.deposit.getAmount();
+		}
+
+		@Override
+		public double getCanceledDebt() {
+			return this.canceledDebt;
+		}
+
+		@Override
+		public double getCanceledMoney() {
+			return this.canceledMoney;
 		}
 
 		@Override
@@ -225,27 +250,29 @@ public class BankingSector implements Sector, Corporation {
 
 		@Override
 		public boolean isOpen() {
-			return this.open;
+			return !this.canceled;
 		}
 
 		@Override
 		public void lend(final long principalAmount) {
-			if (!open) {
+			if (canceled) {
 				throw new RuntimeException("This account is closed.");
 			}
 			this.loans.add(new AbstractLoan(principalAmount, BankingSector.this.p.rate, BankingSector.this.p.penaltyRate, BankingSector.this.p.normalTerm, BankingSector.this.p.extendedTerm) {
 
 				{					
 					Account.this.debt += this.principal;
-					BankingSector.this.v.assets += this.principal;
-					BankingSector.this.v.capital += this.principal;
+					BankingSector.this.v.add("assets", this.principal);
+					BankingSector.this.v.add("capital", this.principal);
 					Account.this.deposit.credit(this.principal);
 				}
 
 				@Override
 				public void cancel() {
-					BankingSector.this.v.assets -= this.principal;
-					BankingSector.this.v.capital -= this.principal;
+					BankingSector.this.v.add("assets", -this.principal);
+					BankingSector.this.v.add("capital", - this.principal);
+					BankingSector.this.v.add("canceledDebts", this.principal);
+					Account.this.canceledDebt += this.principal;
 					Account.this.debt -= this.principal;
 					this.principal = 0;
 				}
@@ -259,8 +286,8 @@ public class BankingSector implements Sector, Corporation {
 							deposit.debit(repayment);
 							this.principal -= repayment;
 							debt -= repayment;
-							v.assets -= repayment;
-							v.capital -= repayment;
+							v.add("assets", -repayment);
+							v.add("capital", -repayment);
 						}
 						if (!current.isBefore(this.extendedDate) && this.principal!=0) {
 							bankrupt=true;
@@ -284,18 +311,18 @@ public class BankingSector implements Sector, Corporation {
 					if (interest>0) {
 						this.principal+=interest;
 						debt+=interest;
-						BankingSector.this.v.assets+=interest;
-						BankingSector.this.v.capital+=interest;
+						BankingSector.this.v.add("assets", +interest);
+						BankingSector.this.v.add("capital", +interest);
 						final long payment = Math.min(interest, deposit.getAmount());
 						if (payment>0) { 
 							Account.this.deposit.debit(payment);
 							this.principal-=payment;
 							debt-=payment;
-							BankingSector.this.v.assets-=payment;
-							BankingSector.this.v.capital-=payment;
+							BankingSector.this.v.add("assets", -payment);
+							BankingSector.this.v.add("capital", -payment);
 						}
 						Account.this.memory.add("interest",interest);
-						v.interest += interest;
+						v.add("interest", + interest);
 					}
 					this.lastInterestPayment = currentPeriod;
 				}
@@ -305,7 +332,7 @@ public class BankingSector implements Sector, Corporation {
 
 		@Override
 		public Cheque newCheque(final long amount) {
-			if (!open) {
+			if (canceled) {
 				throw new RuntimeException("This account is closed.");
 			}
 			return new Cheque(){
@@ -344,6 +371,14 @@ public class BankingSector implements Sector, Corporation {
 			};
 		}
 
+		/**
+		 * Called at the beginning of the period.
+		 */
+		public void open() {
+			this.canceledDebt=0l;
+			this.canceledMoney=0l;
+		}
+
 		@Override public String toString() {
 		    final StringBuilder result = new StringBuilder();
 		    final String NEW_LINE = System.getProperty("line.separator");
@@ -359,6 +394,34 @@ public class BankingSector implements Sector, Corporation {
 	}
 
 	/**
+	 * An implementation of the Variable interface.
+	 */
+	private class BasicVariables extends HashMap<String,Long> implements Variables {
+		
+		{
+			this.put("liabilities", 0);
+			this.put("assets", 0);
+			this.put("capital", 0);			
+		}
+	
+		@Override
+		public void add(String key, Long amount) {
+			this.put(key, get(key) + amount);
+		}
+	
+		@Override
+		public Long get(String key) {
+			return super.get(key);
+		}
+	
+		@Override
+		public void put(String key, long value) {
+			super.put(key, value);
+		} 
+		
+	}
+
+	/**
 	 * Enumeration of the keys of the output messages sent by this sector.
 	 */
 	private static class KEY {
@@ -370,7 +433,7 @@ public class BankingSector implements Sector, Corporation {
 		public static final String selectCapitalOwner = "selectCapitalOwner";
 
 	}
-
+	
 	/**
 	 * A class to store the parameters of the sector.
 	 */
@@ -434,25 +497,32 @@ public class BankingSector implements Sector, Corporation {
 	}
 
 	/**
-	 * A class to store the variables of the sector.
+	 * Storage of the current variables of the bank.
 	 */
-	private class Variables {
+	private interface Variables {
 
-		/** The total assets of the sector. */
-		private long assets = 0l;
+		/**
+		 * Adds the specified value with the existing value.
+		 * @param key key of the exisiting value with which the specified value is to be added
+		 * @param value value to be added with the existing value.
+		 */
+		void add(String key, Long value);
 
-		/** The number of bankruptcies in the period. */
-		private int bankruptcies = 0;
+		/**
+		 * Returns the value to which the specified key is mapped, or null if this map contains no mapping for the key.
+		 * @param key the key whose associated value is to be returned
+		 * @return the value to which the specified key is mapped, or null if this map contains no mapping for the key
+		 */
+		Long get(String key);
 
-		/** The total capital of the sector. */
-		private long capital = 0l;
-
-		/** The total liabilities of the sector. */
-		private long liabilities = 0l;
+		/**
+		 * Associates the specified value with the specified key in this map. 
+		 * If the map previously contained a mapping for the key, the old value is replaced.
+		 * @param key key with which the specified value is to be associated
+		 * @param value value to be associated with the specified key
+		 */
+		void put(String key, long value);
 		
-		/** The total interest paid to the bank for this period. */
-		private long interest = 0l;
-
 	}
 
 	/** The list of customers accounts. */
@@ -474,7 +544,7 @@ public class BankingSector implements Sector, Corporation {
 	private final Parameters p = new Parameters();
 
 	/** The variables of the sector. */
-	private final Variables v = new Variables();
+	private final Variables v = new BasicVariables();
 
 	/**
 	 * Creates a new banking sector.
@@ -506,7 +576,7 @@ public class BankingSector implements Sector, Corporation {
 			}
 		}
 		if (result==true) {
-			if (sumDeposit!=v.liabilities || sumDebt!=v.assets || v.assets-v.liabilities!=v.capital) {
+			if (sumDeposit!=v.get("liabilities") || sumDebt!=v.get("assets") || v.get("assets")-v.get("liabilities")!=v.get("capital")) {
 				result=false;
 			}
 		}
@@ -543,10 +613,10 @@ public class BankingSector implements Sector, Corporation {
 					}
 				}
 				if (account.bankrupt) {
-					account.close();
-					account.getAccountHolder().bankrupt();
+					account.cancel();
+					account.getAccountHolder().goBankrupt();
 					iterAccount.remove();
-					this.v.bankruptcies++;
+					this.v.add("bankruptcies",1l);
 				}
 			}
 		}		
@@ -585,31 +655,33 @@ public class BankingSector implements Sector, Corporation {
 			newOwner();
 		}
 		this.dataset = new AbstractAgentDataset(this.name){
-
-			/** serialVersionUID */
-			private static final long serialVersionUID = 1L;
-
 			@Override
 			public void update() {
 				this.put("doubtfulDebt", (double) getDoubtfulDebt());
-				this.put("capital", (double) v.capital);
-				this.put("liabilities", (double) v.liabilities);
-				this.put("assets", (double) v.assets);
-				this.put("bankruptcies", (double) v.bankruptcies);
-				this.put("interest", (double) v.interest);
-			}
-			
+				this.put("capital", (double) v.get("capital"));
+				this.put("liabilities", (double) v.get("liabilities"));
+				this.put("assets", (double) v.get("assets"));
+				this.put("bankruptcies", (double) v.get("bankruptcies"));
+				this.put("interest", (double) v.get("interest"));
+				this.put("canceledDebts", (double) v.get("canceledDebts"));
+				this.put("canceledDeposits", (double) v.get("canceledDeposits"));
+			}			
 		};
-		this.v.bankruptcies=0;
-		this.v.interest=0;
+		this.v.put("bankruptcies",0);
+		this.v.put("interest",0);
+		this.v.put("canceledDebts",0);
+		this.v.put("canceledDeposits",0);
+		for(Account account:this.accounts) {
+			account.open();
+		}
 	}
 
 	/**
 	 * Pays the dividend to its owner.
 	 */
 	private void payDividend() {
-		final long requiredCapital = (long)(v.assets*p.targetedCapitalRatio );
-		final long excedentCapital = Math.max(0, v.capital-requiredCapital);
+		final long requiredCapital = (long)(v.get("assets")*p.targetedCapitalRatio );
+		final long excedentCapital = Math.max(0, v.get("capital")-requiredCapital);
 		final long dividend = (long) (excedentCapital*p.propensityToDistributeCapitalExcess);
 		dataset.put("dividends", (double) dividend);
 		if (dividend!=0) {
@@ -625,7 +697,7 @@ public class BankingSector implements Sector, Corporation {
 					@Override
 					public boolean payment() {
 						final boolean result;
-						if (!paid && BankingSector.this.v.capital>=dividend) {
+						if (!paid && BankingSector.this.v.get("capital")>=dividend) {
 							this.paid = true;
 							result = true;
 							// In this case, there is no deposit to debit: 
@@ -676,19 +748,7 @@ public class BankingSector implements Sector, Corporation {
 
 		final Object result;
 
-		if (request.equals("getAssets")) {
-			result = v.assets;
-		}
-
-		else if (request.equals("getCapital")) {
-			result = v.capital;
-		}
-
-		else if (request.equals("getLiabilities")) {
-			result = v.liabilities;
-		}
-
-		else if (request.equals("getNewAccount")) {
+		if (request.equals("getNewAccount")) {
 			final Account account = new Account((AccountHolder) args[0]);
 			accounts.add(account);
 			result = account;
@@ -713,7 +773,7 @@ public class BankingSector implements Sector, Corporation {
 
 	@Override
 	public long getBookValue() {
-		return v.capital;
+		return v.get("capital");
 	}
 
 	@Override

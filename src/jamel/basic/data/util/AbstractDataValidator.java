@@ -37,7 +37,7 @@ public abstract class AbstractDataValidator implements DataValidator {
 	final private static String rc = System.getProperty("line.separator");
 
 	/** The style for the text panel. */
-	final private static String style = "<STYLE TYPE=\"text/css\"> body {font-family:sans-serif; font-size:12pt} div.ok {color:green} div.failure {color:red}</STYLE>";
+	final private static String textPanelStyle = "<STYLE TYPE=\"text/css\"> body {font-family:sans-serif; font-size:12pt} div.ok {color:green} div.failure {color:red}</STYLE>";
 
 	/** A string buffer to store test failure declarations. */
 	final private StringBuffer failures = new StringBuffer("<br>"+rc);
@@ -100,7 +100,7 @@ public abstract class AbstractDataValidator implements DataValidator {
 	 * @return a string representation of the results of the tests.
 	 */
 	private String getTestResults() {
-		final StringBuffer content = new StringBuffer(style);
+		final StringBuffer content = new StringBuffer(textPanelStyle);
 		content.append("<H3>Data Consistency Validation</H3>"+rc);
 		for (int i=0; i<tests.length; i++) {
 			final String result;
@@ -137,7 +137,7 @@ public abstract class AbstractDataValidator implements DataValidator {
 			final Double b = getValue(tests[i][1]);
 			if ((a!=null && !a.equals(b)) || (a==null && b!=null)) {
 				success=false;
-				failures.append("Period="+Circuit.getCurrentPeriod().intValue()+", failure: "+tests[i][0]+"="+a+", "+tests[i][1]+"="+b+"<br>"+rc);
+				failures.append("Period "+Circuit.getCurrentPeriod().intValue()+", test "+i+": failure ("+a+", "+b+")<br>"+rc);
 				results[i]=false;
 			}
 		}

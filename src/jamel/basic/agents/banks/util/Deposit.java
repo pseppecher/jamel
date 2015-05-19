@@ -23,6 +23,8 @@ public interface Deposit {
 	 */
 	long getAmount();
 
+	void cancel();
+
 }
 
 // ***

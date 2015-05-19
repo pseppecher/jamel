@@ -302,8 +302,12 @@ public class DataManager implements Sector {
 	public boolean doPhase(String phase) {
 		if (phase.equals("closure")) {
 			updateSeries();
-			balanceSheetMatrix.update();
-			this.dataValidator.CheckConsistency();
+			if (this.balanceSheetMatrix!=null) {
+				this.balanceSheetMatrix.update();
+			}
+			if (this.dataValidator!=null) {
+				this.dataValidator.CheckConsistency();
+			}
 			this.macroDataset.clear();
 		}
 		else {

@@ -192,7 +192,7 @@ public class BasicHousehold implements Household {
 	}
 
 	@Override
-	public void bankrupt() {
+	public void goBankrupt() {
 		throw new RuntimeException("A household cannot be bankrupted.");
 	}
 

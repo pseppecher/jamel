@@ -15,6 +15,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Date;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFileChooser;
@@ -66,6 +67,9 @@ public class Simulator {
 	/** The scenario file. */
 	private static File scenarioFile;
 
+	/** The simulationID. */
+	private static final long simulationID = (new Date()).getTime();
+
 	/** This version of Jamel. */
 	final public static int version = 20150207;
 
@@ -73,7 +77,7 @@ public class Simulator {
 	 * Downloads the latest version of Jamel.
 	 * @return <code>true</code> if the download is successful, <code>false</code> otherwise.
 	 */
-	private static boolean download() { // TODO WORK IN PROGRESS
+	private static boolean downloadLatestVersion() { // TODO WORK IN PROGRESS
 		boolean result;
 		if(Desktop.isDesktopSupported()) {
 			try {
@@ -210,7 +214,7 @@ public class Simulator {
 				final Object[] options = {KEY.DOWNLOAD, KEY.REMIND_ME_LATER};
 				final int n = JOptionPane.showOptionDialog(null, "A new version of Jamel is available.", "New version", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 				if (n==0) {
-					result = download();
+					result = downloadLatestVersion();
 				}
 				else {
 					prefs.putLong(KEY.REMIND_ME_LATER,now);
@@ -236,11 +240,19 @@ public class Simulator {
 	}
 
 	/**
+	 * Returns the simulation ID.
+	 * @return the simulation ID.
+	 */
+	public static long getSimulationID() {
+		return simulationID;
+	}
+
+	/**
 	 * The main method for Jamel.
 	 * @param args unused.
 	 */
 	public static void main(String[] args) {
-		if (updateJamel()) {} else 
+		// if (updateJamel()) {} else 
 		{
 			// Selects a file containing a scenario
 			scenarioFile = selectScenario();

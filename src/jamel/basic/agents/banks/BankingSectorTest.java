@@ -96,7 +96,7 @@ public class BankingSectorTest {
 	 */
 	private static AccountHolder newAccountHolder() {
 		return new AccountHolder(){
-			@Override public void bankrupt() {}
+			@Override public void goBankrupt() {}
 			@Override public Object execute(String instruction, Object... args) {return null;}
 			@Override public long getAssets() {return 0;}
 			@Override public AgentDataset getData() {return null;}

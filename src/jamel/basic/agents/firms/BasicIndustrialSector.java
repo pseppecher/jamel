@@ -162,7 +162,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector {
 		final int min = Integer.parseInt(circuit.getParameter(this.name,KEY.REGENERATION_MIN));
 		final int max = Integer.parseInt(circuit.getParameter(this.name,KEY.REGENERATION_MAX));		
 		final int now = Circuit.getCurrentPeriod().intValue();
-		final int later = now + min + Circuit.getRandom().nextInt(max);
+		final int later = now + min + Circuit.getRandom().nextInt(max-min);
 		Integer creations = this.regeneration.get(later);
 		if (creations!=null){
 			creations++;

@@ -50,7 +50,7 @@ public abstract class AbstractChartManager implements ChartManager {
 	 * @throws SAXException in the case of a general SAX error or warning.
 	 */
 	public AbstractChartManager(File file) throws ParserConfigurationException, SAXException, IOException {
-
+		
 		final NodeList panelNodeList = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).getDocumentElement().getElementsByTagName("panel");
 		this.panels = new JPanel[panelNodeList.getLength()];
 

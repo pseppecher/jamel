@@ -25,6 +25,10 @@ public class BasicHouseholdTest {
 			public long getWage() {
 				return wage;
 			}
+			@Override
+			public Object getEmployerName() {
+				return null;
+			}
 		};
 	}
 

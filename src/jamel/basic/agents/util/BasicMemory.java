@@ -10,13 +10,13 @@ import java.util.TreeMap;
  * A basic implementation of the <code>Memory</code> interface.
  */
 public class BasicMemory implements Memory{
-	
+
 	/** The data memorized. */
 	final private TreeMap<Integer,HashMap<String,Double>> data = new TreeMap<Integer,HashMap<String,Double>>();
-	
+
 	/** The maximum number of period in memory. */
 	final private int lim;
-	
+
 	/**
 	 * Creates an new basic memory.
 	 * @param lim the maximum number of period in memory.
@@ -38,7 +38,7 @@ public class BasicMemory implements Memory{
 			data.pollFirstEntry();
 		}
 	}
-	
+
 	@Override
 	public void add(String key, double value) {
 		if (!this.containsKey(key)) {
@@ -62,7 +62,7 @@ public class BasicMemory implements Memory{
 		}
 		return result;
 	}
-	
+
 	@Override
 	public boolean containsKey(String key) {
 		final boolean result;
@@ -99,18 +99,25 @@ public class BasicMemory implements Memory{
 			result = null;
 		}
 		else {
-			double sum = this.data.get(start).get(key);
-			int n = 1;
-			for(int t = start-1; t>start-lim; t--) {
-				if (data.containsKey(t)) {
-					sum += this.data.get(t).get(key);
-					n++;					
-				}
-				else {
-					break;
-				}
+			if (this.data.get(start).get(key)==null) {
+				result = null;
 			}
-			result = sum/n;
+			else {
+				double sum = this.data.get(start).get(key);
+				int n = 1;
+				for(int t = start-1; t>start-lim; t--) {
+					if (data.containsKey(t)) {
+						if (this.data.get(t).get(key)!=null) {
+							sum += this.data.get(t).get(key);
+							n++;					
+						}
+					}
+					else {
+						break;
+					}
+				}
+				result = sum/n;				
+			}
 		}
 		return result;
 	}

@@ -113,14 +113,12 @@
 		/>
 	</chart>
 	
-	<chart title = "Test Income">
-		<series
-			value = "Industry.sum.grossProfit"
-		/>
-		<series
-			value = "Industry.sum.dividends+Bank.dividends"
-		/>
-	</chart>
+		<!--
+		<chart title="Test Income">
+			<series value="Industry.sum.grossProfit" />
+			<series value="Industry.sum.dividends+Bank.dividends" />
+		</chart>
+		-->
 		
 	<chart title = "Income Distribution">
 		<series
@@ -138,6 +136,19 @@
 			max = "1" 
 		/>
 	</chart>
+
+	<chart title = "Velocity of Money">
+		<series 
+			value = "12*(Industry.sum.wageBill+Industry.sum.grossProfit)/Bank.liabilities" 
+			label = "Velocity of Money" 
+		/>
+		<yAxis 
+			min = "0" 
+			max = "6" 
+		/>
+	</chart>
+
+
 </panel>
 
 <panel title = "Industry">

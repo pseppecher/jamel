@@ -1,5 +1,6 @@
 package jamel.basic.agents.firms;
 
+import jamel.Simulator;
 import jamel.basic.agents.firms.util.BasicFactory;
 import jamel.basic.agents.firms.util.CapitalManager;
 import jamel.basic.agents.firms.util.Factory;
@@ -22,6 +23,8 @@ import jamel.basic.util.Supply;
 import jamel.util.Circuit;
 import jamel.util.Period;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -129,16 +132,6 @@ public class BasicFirm implements Firm {
 		void payWorkers();
 
 		/**
-		 * Creates a new job offer.
-		 */
-		void updateJobOffer();
-
-		/**
-		 * Updates the data about vacancies. 
-		 */
-		void updateVacancies();
-
-		/**
 		 * Updates the workforce according to the current production target.
 		 */
 		void updateWorkforce();
@@ -206,6 +199,9 @@ public class BasicFirm implements Firm {
 
 	@SuppressWarnings("javadoc")
 	public final static String WAGE_MINIMUM = "wage.minimum";
+
+	/** A flag that indicates if the data of the firm is to be exported. */
+	private boolean exportData;
 
 	/** The name. */
 	private final String name;
@@ -304,7 +300,7 @@ public class BasicFirm implements Firm {
 		}
 
 	};
-	
+
 	/** The sector. */
 	protected final IndustrialSector sector;
 
@@ -367,15 +363,17 @@ public class BasicFirm implements Firm {
 		 * Returns the vacancy rate.
 		 * @return the vacancy rate.
 		 */
-		private double getVacancyRate() {
-			final double result;
+		private Double getVacancyRate() {
+			final Double result;
 			if (!memory.checkConsistency("vacancies","jobs")) {
 				throw new RuntimeException("Inconsistent series.");
 			}
-			final double vacancies = memory.getSum("vacancies", Circuit.getCurrentPeriod().intValue()-1,4);
-			final double jobs = memory.getSum("jobs", Circuit.getCurrentPeriod().intValue()-1,4);
-			if (vacancies==0) {
-				result=0;
+			final Double vacancies = memory.getSum("vacancies", Circuit.getCurrentPeriod().intValue()-1,4);
+			final Double jobs = memory.getSum("jobs", Circuit.getCurrentPeriod().intValue()-1,4);
+			if (vacancies==null&&jobs==null) {
+				result = null;
+			} else if (vacancies==0) {
+				result=0.;
 			}
 			else {
 				result=vacancies/jobs;
@@ -383,73 +381,11 @@ public class BasicFirm implements Firm {
 			return result;
 		}
 
-		@Override
-		public void close() {
-			this.jobOffer=null;
-			this.wageBill=0;
-			this.payroll=0;
-			this.vacancies=0;
-		}
-
-		@Override
-		public Double getAverageWage() {
-			return this.workforce.getAverageWage();
-		}
-
-		@Override
-		public JobOffer getJobOffer() {
-			final JobOffer result;
-			if (this.vacancies>0) {
-				result=this.jobOffer;
-			}
-			else {
-				result=null;
-			}
-			return result;
-		}
-
-		@Override
-		public LaborPower[] getLaborPowers() {
-			return this.workforce.getLaborPowers();
-		}
-
-		@Override
-		public long getPayroll() {
-			return this.payroll;
-		}
-
-		@Override
-		public Double getWage() {
-			return this.wage;
-		}
-
-		@Override
-		public long getWageBill() {
-			return this.wageBill;
-		}
-
-		@Override
-		public int getWorkforceSize() {
-			return this.workforce.size();
-		}
-
-		@Override
-		public void layoff() {
-			workforce.layoff();
-		}
-
-		@Override
-		public void payWorkers() {
-			this.wageBill=0;
-			for (JobContract contract: workforce) {
-				contract.payWage(account.newCheque(contract.getWage()));
-				wageBill+=contract.getWage();
-			}
-		}
-
-		@Override
-		public void updateJobOffer() {
+		private void newJobOffer() {
 			memory.put("jobs",vacancies);
+			if (vacancies<0) {
+				throw new RuntimeException("Negative number of vacancies");
+			}
 			if (vacancies==0) {
 				jobOffer = null;
 			}
@@ -538,20 +474,99 @@ public class BasicFirm implements Firm {
 					public long getWage() {
 						return jobWage;
 					}
+
+					@Override
+					public Object getEmployerName() {
+						return BasicFirm.this.getName();
+					}
 				};
 			}
 		}
 
 		@Override
-		public void updateVacancies() {
-			memory.put("vacancies",this.vacancies);			
+		public void close() {
+			memory.put("vacancies",this.vacancies);
+			data.put("vacancies.final",(double) this.vacancies);
+			this.jobOffer=null;
+			this.wageBill=0;
+			this.payroll=0;
+			this.vacancies=0;
 		}
 
-		/**
-		 * Updates the wage.
-		 */
+		@Override
+		public Double getAverageWage() {
+			return this.workforce.getAverageWage();
+		}
+
+		@Override
+		public JobOffer getJobOffer() {
+			final JobOffer result;
+			if (this.vacancies>0) {
+				result=this.jobOffer;
+			}
+			else {
+				result=null;
+			}
+			return result;
+		}
+
+		@Override
+		public LaborPower[] getLaborPowers() {
+			return this.workforce.getLaborPowers();
+		}
+
+		@Override
+		public long getPayroll() {
+			return this.payroll;
+		}
+
+		@Override
+		public Double getWage() {
+			return this.wage;
+		}
+
+		@Override
+		public long getWageBill() {
+			return this.wageBill;
+		}
+
+		@Override
+		public int getWorkforceSize() {
+			return this.workforce.size();
+		}
+
+		@Override
+		public void layoff() {
+			workforce.layoff();
+		}
+
+		@Override
+		public void payWorkers() {
+			this.wageBill=0;
+			for (JobContract contract: workforce) {
+				contract.payWage(account.newCheque(contract.getWage()));
+				wageBill+=contract.getWage();
+			}
+		}
+
+		/*
+		 * TODO 
+		 * 14-02-15
+		 * Revoir la procedure d'ajustement des salaires de BasicFirm.
+		 * L'ajustement est trop lent en cas de forte penurie de main d'oeuvre.
+		 * Proposer une methode avec elargissement croissant de la zone de recherche (procedure explosive ?).
+		 * Comparer le nombre d'emplois vacants avec le nombre total de postes de l'entreprise (et non pas seulement avec le nombre de postes offerts).
+		 */  		
 		@Override
 		public void updateWage() {
+			final Double vacancyRate = getVacancyRate();
+			final Double vacancyRatio;
+			if (vacancyRate!=null) {
+				vacancyRatio = getVacancyRate()/sector.getFloatParameter(NORMAL_VACANCY_RATE);	
+			}
+			else {
+				vacancyRatio = null;
+			}
 			history.add("Current wage: "+this.wage);
 			if (this.wage==null) {
 				this.wage = getRandomWage();
@@ -563,7 +578,6 @@ public class BasicFirm implements Firm {
 			else {
 				final float alpha1 = Circuit.getRandom().nextFloat();
 				final float alpha2 = Circuit.getRandom().nextFloat();
-				final double vacancyRatio = getVacancyRate()/sector.getFloatParameter(NORMAL_VACANCY_RATE);
 				final double newWage;
 				if (vacancyRatio<1-alpha1*alpha2) {
 					newWage=this.wage*(1f-alpha1*sector.getFloatParameter(WAGE_FLEX_DOWN));
@@ -577,6 +591,7 @@ public class BasicFirm implements Firm {
 				this.wage = Math.max(newWage, sector.getFloatParameter(WAGE_MINIMUM));
 			}
 			history.add("New wage: "+this.wage);
+			data.put("vacancies.rate",vacancyRate);
 		}
 
 		@Override
@@ -589,11 +604,18 @@ public class BasicFirm implements Firm {
 					workforce.layoff(workforce.size()-manpowerTarget);
 				}
 				payroll = workforce.getPayroll();
+				vacancies = manpowerTarget-workforce.size();
+				if (vacancies!=0) {
+					throw new RuntimeException("Negative number of vacancies");
+				}
 			}
 			else {
 				vacancies = manpowerTarget-workforce.size();
 				payroll = workforce.getPayroll() + vacancies* (long) ((double) this.wage);
-			}			
+			}
+			BasicFirm.this.data.put("vacancies.initial",(double) vacancies);
+			BasicFirm.this.data.put("workforce.target",(double) manpowerTarget);
+			this.newJobOffer();
 		}
 
 	};
@@ -610,6 +632,21 @@ public class BasicFirm implements Firm {
 		this.account = this.sector.getNewAccount(this);
 		this.factory = getNewFactory();
 		this.pricingManager = getNewPricingManager();
+	}
+
+	/**
+	 * Exports agent data in a csv file.
+	 * @throws IOException in the case of an I/O exception.
+	 */
+	private void exportData() throws IOException {
+		if (this.exportData) {
+			// TODO gerer la localisation du dossier exports, son existence
+			final File outputFile = new File("exports/"+Simulator.getSimulationID()+"-"+this.name+".csv");
+			if (!outputFile.exists()) {
+				this.data.exportHeadersTo(outputFile);
+			}
+			this.data.exportTo(outputFile);
+		}
 	}
 
 	/**
@@ -665,7 +702,7 @@ public class BasicFirm implements Firm {
 					this.salesValue+=cheque.getAmount();
 					this.salesVolume+=demand;
 					final Commodities sales = factory.getCommodities(demand);
-					this.salesValueAtCost += sales.getValue(); 
+					this.salesValueAtCost += sales.getValue();
 					return sales;
 				}
 
@@ -755,9 +792,6 @@ public class BasicFirm implements Firm {
 	protected CapitalManager getNewCapitalManager() {
 		return 	new CapitalManager() {
 
-			/** The dividend. */
-			//protected Long dividend = null;
-
 			/** The owner. */
 			protected Shareholder owner;
 
@@ -824,6 +858,7 @@ public class BasicFirm implements Firm {
 			@Override
 			public void open() {
 				this.updateOwnership();
+				data.put("capital.initial",(double) getCapital());
 			}
 
 			@Override
@@ -871,8 +906,8 @@ public class BasicFirm implements Firm {
 				this.put("wages", workforceManager.getWage());
 				this.put("workforce", (double) factory.getWorkforce());
 				this.put("inventories.inProcess.val", factory.getGoodsInProcessValue());
-				this.put("inventories.fg.vol", (double) factory.getFinishedGoodsVolume());
 				this.put("inventories.fg.val", (double) factory.getFinishedGoodsValue());
+				this.put("inventories.fg.vol", (double) factory.getFinishedGoodsVolume());
 				this.put("inventories.fg.vol.normal", sector.getFloatParameter(INVENTORY_NORMAL_LEVEL)*factory.getMaxUtilAverageProduction());						
 				this.put("production.vol", (double) factory.getProductionVolume());
 				this.put("production.val", (double) factory.getProductionValue());
@@ -885,7 +920,7 @@ public class BasicFirm implements Firm {
 					this.put("sales.vol", supply.getSalesVolume());
 					this.put("sales.val", supply.getSalesValue());
 					this.put("sales.costValue", supply.getSalesValueAtCost());
-					this.put("grossProfit", supply.getGrossProfit()+factory.getInventoryLosses());
+					this.put("grossProfit", supply.getGrossProfit()-factory.getInventoryLosses());
 				} 
 				else {
 					this.put("supply.vol", 0.);
@@ -893,9 +928,8 @@ public class BasicFirm implements Firm {
 					this.put("sales.vol", 0.);
 					this.put("sales.val", 0.);
 					this.put("sales.costValue", 0.);
-					this.put("grossProfit", factory.getInventoryLosses());
+					this.put("grossProfit", -factory.getInventoryLosses());
 				}
-				this.put("interest", (double) account.getInterest());
 				if (bankrupted){
 					this.put("bankruptcies", 1.);
 				}
@@ -903,6 +937,9 @@ public class BasicFirm implements Firm {
 					this.put("bankruptcies", 0.);					
 				}
 				this.put("cash", (double) account.getAmount());
+				this.put("interest", (double) account.getInterest());
+				this.put("canceledDebt", account.getCanceledDebt());
+				this.put("canceledMoney", account.getCanceledMoney());
 				this.put("assets", (double) factory.getValue() + account.getAmount());
 				this.put("liabilities", (double) account.getDebt());
 				this.put("liabilities.target", capitalManager.getLiabilitiesTarget());
@@ -917,7 +954,25 @@ public class BasicFirm implements Firm {
 					this.put("insolvents", 0.);					
 				}
 
+				// BEGIN DEBUG
+
+				//Test 10: failure (Industry.sum.capital - Industry.sum.capital.initial = Industry.sum.grossProfit - Industry.sum.dividends - Industry.sum.interest - Industry.sum.canceledMoney + Industry.sum.canceledDebt)
+
+				/*if (
+						this.get("capital")
+						-this.get("capital.initial") 
+						!= this.get("grossProfit")
+						-this.get("dividends")
+						-this.get("interest")
+						) {
+					
+					throw new RuntimeException("Inconsistency: "+name);
+				}*/
+
+				// END DEBUG
+
 			}
+
 		};
 	}
 
@@ -961,14 +1016,7 @@ public class BasicFirm implements Firm {
 
 			@Override
 			public Double getPrice() {
-				final Double result;
-				if (this.price==null) {
-					result=null;
-				}
-				else {
-					result=new Double(this.price);
-				}
-				return result;
+				return this.price;
 			}
 
 			/**
@@ -1021,16 +1069,16 @@ public class BasicFirm implements Firm {
 	}
 
 	@Override
-	public void bankrupt() {
-		this.bankrupted = true;
-	}
-
-	@Override
 	public void close() {
 		this.capitalManager.close();
-		this.workforceManager.updateVacancies();
 		this.updateData();
 		this.workforceManager.close();
+		try {
+			this.exportData();
+		} catch (IOException e) {
+			e.printStackTrace();
+			throw new RuntimeException("Error while exporting firm data");
+		}
 	}
 
 	/* 
@@ -1067,6 +1115,16 @@ public class BasicFirm implements Firm {
 			result = null;
 		}
 
+		else if ("exportData.start".equals(instruction)) {
+			this.exportData = true;
+			result = null;
+		}
+
+		else if ("exportData.end".equals(instruction)) {
+			this.exportData = false;
+			result = null;
+		}
+
 		else {
 			throw new RuntimeException("Unknown instruction: "+instruction);
 		}
@@ -1099,7 +1157,6 @@ public class BasicFirm implements Firm {
 		return this.workforceManager.getJobOffer();
 	}
 
-
 	@Override
 	public String getName() {
 		return this.name;
@@ -1123,6 +1180,12 @@ public class BasicFirm implements Firm {
 	}
 
 	@Override
+	public void goBankrupt() {
+		this.bankrupted = true;
+		this.factory.bankrupt();
+	}
+
+	@Override
 	public boolean isBankrupted() {
 		return this.bankrupted;
 	}
@@ -1134,7 +1197,6 @@ public class BasicFirm implements Firm {
 		this.history.add("Period: "+Circuit.getCurrentPeriod().intValue());
 		if (this.bankrupted) {
 			this.capitalManager.bankrupt();
-			this.factory.bankrupt();
 			this.workforceManager.layoff();
 		}
 		else {
@@ -1182,9 +1244,7 @@ public class BasicFirm implements Firm {
 		if (account.getAmount() < payroll) {
 			throw new RuntimeException("Production is not financed.") ;
 		}
-
-		this.workforceManager.updateJobOffer();
-
+		
 	}
 
 	@Override
@@ -1196,7 +1256,7 @@ public class BasicFirm implements Firm {
 		factory.process(this.workforceManager.getLaborPowers()) ;
 		this.supply = createSupply();
 	}
-	
+
 }
 
 // ***

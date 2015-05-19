@@ -26,6 +26,18 @@ public interface BankAccount {
 	long getAmount();
 
 	/**
+	 * Returns the amount of debt canceled by the bank for this account for the current period.
+	 * @return the amount of debt canceled by the bank for this account for the current period.
+	 */
+	double getCanceledDebt();
+
+	/**
+	 * Returns the amount of money canceled by the bank for this account for the current period.
+	 * @return the amount of money canceled by the bank for this account for the current period.
+	 */
+	double getCanceledMoney();
+
+	/**
 	 * Returns the total debt for this account.
 	 * @return the total debt.
 	 */

@@ -17,7 +17,7 @@ public class BasicWorkInProgress implements WorkInProgress {
 	protected int capacity;
 
 	/** A flag that indicates either the process is closed or not. */
-	protected boolean closed = false;
+	protected boolean terminated = false;
 
 	/** The date of the last call of the process method. */
 	protected Period lastUse;
@@ -55,8 +55,12 @@ public class BasicWorkInProgress implements WorkInProgress {
 	}
 
 	@Override
-	public void close() {
-		this.closed  = true;
+	public void cancel() {
+		this.terminated  = true;
+		for (int i=0; i<value.length; i++) {
+			value[i]=0;
+			volume[i]=0;			
+		}
 	}
 
 	/* (non-Javadoc)
@@ -121,6 +125,9 @@ public class BasicWorkInProgress implements WorkInProgress {
 
 	@Override
 	public void investment(InvestmentProcess investmentProcess) {
+		if (this.terminated) {
+			throw new IllegalArgumentException("The investissment process is terminated.");
+		}
 		if (investmentProcess.getProductivity()!=this.productivity) {
 			throw new RuntimeException("Not yet implemented.");
 		}
@@ -136,7 +143,7 @@ public class BasicWorkInProgress implements WorkInProgress {
 	 */
 	@Override
 	public Commodities process(LaborPower... laborPowers) {
-		if (this.closed) {
+		if (this.terminated) {
 			throw new RuntimeException("This process is definitively closed.");
 		}
 		if (this.lastUse==null) {
@@ -213,7 +220,7 @@ public class BasicWorkInProgress implements WorkInProgress {
 
 	@Override
 	public void setProductivity(float productivity) {
-		if (this.closed) {
+		if (this.terminated) {
 			throw new RuntimeException("This process is definitively closed.");
 		}
 		this.productivity=productivity;

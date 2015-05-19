@@ -1,0 +1,75 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<!-- Configuration of the chart panels for the Lotka-Volterra scenario -->
+<!-- 13/05/2015 -->
+
+<root>
+
+	<panel title="Main">
+
+		<chart
+			title="Preys Position"
+			options="scatter">
+			<series
+				value="Preys.all.x, Preys.all.y"
+				color="transparentBlue"
+				label="Preys" />
+			<yAxis
+				min="0"
+				max="100" />
+			<xAxis
+				min="0"
+				max="100" />
+		</chart>
+
+		<chart title="Preys Energy">
+			<series
+				value="Preys.mean.energy"
+				label="Mean"
+				color="red" />
+			<series
+				value="Preys.min.energy"
+				label="Min"
+				color="veryLightRed" />
+			<series
+				value="Preys.max.energy"
+				label="Max"
+				color="veryLightRed" />
+		</chart>
+		
+		<chart title="Grass">
+			<series
+				value="Grass.mean.grass"
+				label="Mean"
+				color="green" />
+			<series
+				value="Grass.min.grass"
+				label="Min"
+				color="green" />
+			<series
+				value="Grass.max.grass"
+				label="Max"
+				color="green" />
+		</chart>
+
+		<chart title="Preys Number">
+			<series
+				value="Preys.sum.individual"
+				label="Sum energy"
+				color="red" />
+		</chart>
+
+		<chart title="Preys Energy">
+			<series
+				value="Preys.sum.energy"
+				label="Sum energy"
+				color="red" />
+			<series
+				value="Grass.sum.grass"
+				label="Sum"
+				color="green" />
+		</chart>
+
+	</panel>
+
+</root>

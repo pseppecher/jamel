@@ -1,5 +1,7 @@
 package jamel.basic.data.dataSets;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.Set;
 
 /**
@@ -41,6 +43,10 @@ public interface AgentDataset {
 	 * Updates the data.
 	 */
 	public void update();
+
+	public void exportTo(File outputFile) throws IOException;
+
+	public void exportHeadersTo(File outputFile) throws IOException;
 	
 }
 

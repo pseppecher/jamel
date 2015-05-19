@@ -15,6 +15,12 @@ public interface JobOffer {
 	JobContract apply(Worker applicant);
 
 	/**
+	 * Returns the name of the employer.
+	 * @return the name of the employer.
+	 */
+	Object getEmployerName();
+
+	/**
 	 * Returns the wage.
 	 * @return the wage.
 	 */
