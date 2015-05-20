@@ -1,0 +1,37 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<!-- Provides the description of the macroeconomic balance sheet matrix used 
+	by the data manager. date: 19/05/2015 -->
+
+<matrix>
+
+	<sector key="Households" />
+	<sector key="Industry" />
+	<sector key="Banks" />
+
+	<row key="In Process">
+		<Industry val="Industry.sum.inventories.inProcess.val" />
+	</row>
+
+	<row key="Finished Goods">
+		<Industry val="Industry.sum.inventories.fg.val" />
+	</row>
+
+	<row key="Deposits">
+		<Households val="Households.sum.cash" />
+		<Industry val="Industry.sum.cash" />
+		<Banks val="-Banks.liabilities" />
+	</row>
+
+	<row key="Loans">
+		<Industry val="-Industry.sum.liabilities" />
+		<Banks val="Banks.assets" />
+	</row>
+
+	<row key="Capital">
+		<Households val="Households.sum.capital" />
+		<Industry val="-Industry.sum.capital" />
+		<Banks val="-Banks.capital" />
+	</row>
+
+</matrix>

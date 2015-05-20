@@ -30,7 +30,6 @@ import javax.swing.JScrollPane;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -97,27 +96,14 @@ public class BasicCircuit implements Circuit {
 	}
 
 	/**
-	 * @param settings a XML element with the settings.
-	 * @param timer the timer.
-	 * @param path the path of scenario file.
-	 * @param name the name of the scenario file.
-	 * @return a new basic data manager.
-	 * @throws InitializationException If something goes wrong.
-	 */
-	private static BasicDataManager getNewDataManager(Element settings, Timer timer, String path, String name) throws InitializationException {
-		return new BasicDataManager(settings, timer, path, name);
-	}
-
-	/**
 	 * Returns the events.
-	 * @param params a XML doc with the description of the events.
+	 * @param params a XML element with the description of the events.
 	 * @return a map that contains the events.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	private static Map<Integer,List<Element>> getNewEvents(Document params) throws InitializationException {
+	private static Map<Integer,List<Element>> getNewEvents(Element params) throws InitializationException {
 		final HashMap<Integer,List<Element>> map = new HashMap<Integer,List<Element>>();
-		final Element circuitNode = (Element) params.getDocumentElement().getElementsByTagName("circuit").item(0);
-		final Element eventsNode = (Element) circuitNode.getElementsByTagName("events").item(0);
+		final Element eventsNode = (Element) params.getElementsByTagName("events").item(0);
 		if (eventsNode!=null) {
 			final NodeList eventsList = eventsNode.getChildNodes();
 			for (int i = 0; i<eventsList.getLength(); i++) {
@@ -185,15 +171,14 @@ public class BasicCircuit implements Circuit {
 
 	/**
 	 * Initializes and returns the list of phases of the circuit period.
-	 * @param param a XML doc with the phases description.
+	 * @param param a XML element with the phases description.
 	 * @param sectors a collection (a Map<name,sector>)of sectors.
 	 * @return a list of phases.
 	 * @throws InitializationException If an <code>InitializationException</code> occurs.
 	 */
-	private static LinkedList<Phase> getNewPhases(Map<String, Sector> sectors, Document param) throws InitializationException {
+	private static LinkedList<Phase> getNewPhases(Map<String, Sector> sectors, Element param) throws InitializationException {
 		final LinkedList<Phase> result = new LinkedList<Phase>();
-		final Element circuitNode = (Element) param.getDocumentElement().getElementsByTagName("circuit").item(0);
-		final Element phasesNode = (Element) circuitNode.getElementsByTagName("phases").item(0);
+		final Element phasesNode = (Element) param.getElementsByTagName("phases").item(0);
 		final NodeList phases = phasesNode.getChildNodes();
 		for (int i = 0; i<phases.getLength(); i++) {
 			final Node node = phases.item(i); 
@@ -244,10 +229,9 @@ public class BasicCircuit implements Circuit {
 	 * @return a map <name of the sector, sector>.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	private static LinkedHashMap<String,Sector> getNewSectors(Circuit circuit, Document params) throws InitializationException {
+	private static LinkedHashMap<String,Sector> getNewSectors(Circuit circuit, Element params) throws InitializationException {
 		final LinkedHashMap<String,Sector> result = new LinkedHashMap<String,Sector>();
-		final Element circuitNode = (Element) params.getDocumentElement().getElementsByTagName("circuit").item(0);
-		final Element sectorsNode = (Element) circuitNode.getElementsByTagName("sectors").item(0);
+		final Element sectorsNode = (Element) params.getElementsByTagName("sectors").item(0);
 		final NodeList sectorsList = sectorsNode.getChildNodes();
 		for (int i = 0; i<sectorsList.getLength(); i++) {
 			final Node item = sectorsList.item(i);  
@@ -272,12 +256,12 @@ public class BasicCircuit implements Circuit {
 
 	/**
 	 * Returns a XML element that contains the settings of the circuit.
-	 * @param params a XML document that contains the settings.
+	 * @param params a XML element that contains the settings.
 	 * @return a XML element that contains the settings of the circuit.
 	 */
-	private static Element getSettings(Document params) {
-		final Element circuitNode = (Element) params.getDocumentElement().getElementsByTagName("circuit").item(0);
-		final Element settings = (Element) circuitNode.getElementsByTagName("settings").item(0);
+	private static Element getSettings(Element params) {
+		final Element settings = (Element) params.getElementsByTagName("settings").item(0);
+		// TODO tester la prŽsence de settings
 		return settings;
 	}
 
@@ -285,12 +269,11 @@ public class BasicCircuit implements Circuit {
 	 * Initializes the sectors.
 	 * Must be called only after creating each sector.
 	 * @param sectors the list of the sectors to be initialized.
-	 * @param params a XML document that contains the parameters of each sector.
+	 * @param params a XML element that contains the parameters of each sector.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	private static void initSectors(LinkedHashMap<String, Sector> sectors, Document params) throws InitializationException {
-		final Element circuitElement = (Element) params.getDocumentElement().getElementsByTagName("circuit").item(0);
-		final NodeList nodeList = circuitElement.getElementsByTagName("sectors").item(0).getChildNodes();
+	private static void initSectors(LinkedHashMap<String, Sector> sectors, Element params) throws InitializationException {
+		final NodeList nodeList = params.getElementsByTagName("sectors").item(0).getChildNodes();
 		for(int i=0; i<nodeList.getLength(); i++) {
 			final Node node = nodeList.item(i);
 			if (node.getNodeType()==Node.ELEMENT_NODE) {
@@ -325,14 +308,8 @@ public class BasicCircuit implements Circuit {
 	/** controlPanel */
 	private final ControlPanel controlPanel;
 
-	/** The macroeconomic data manager. */
-	private final BasicDataManager dataManager;
-
 	/** The events. */
 	private final Map<Integer, List<Element>> events;
-
-	/** The GUI. */
-	private final GUI gui;
 
 	/** A flag that indicates if the simulation is paused or not. */
 	private boolean pause;
@@ -352,21 +329,27 @@ public class BasicCircuit implements Circuit {
 	/** The timer. */
 	private final BasicTimer timer;
 
+	/** The macroeconomic data manager. */
+	protected final BasicDataManager dataManager;
+
+	/** The GUI. */
+	protected final GUI gui;
+
 	/**
 	 * Creates a new basic circuit.
-	 * @param params a document with the parameters for the new circuit.
+	 * @param circuitElem a XML element with the parameters for the new circuit.
 	 * @param path the path to the scenario file.
 	 * @param name the name of the scenario file.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	public BasicCircuit(final Document params, String path, String name) throws InitializationException {
+	public BasicCircuit(final Element circuitElem, String path, String name) throws InitializationException {
 		this.timer = new BasicTimer(-1);
-		final Element settings = getSettings(params);
+		final Element settings = getSettings(circuitElem);
 		this.random = getNewRandom(settings);
-		this.sectors = getNewSectors(this, params);
-		initSectors(this.sectors,params);
-		this.phases = getNewPhases(this.sectors, params);
-		this.events = getNewEvents(params);
+		this.sectors = getNewSectors(this, circuitElem);
+		initSectors(this.sectors,circuitElem);
+		this.phases = getNewPhases(this.sectors, circuitElem);
+		this.events = getNewEvents(circuitElem);
 		this.controlPanel = getNewControlPanel();
 		this.gui = getNewGUI(name,this.controlPanel);
 		this.dataManager = getNewDataManager(settings, timer, path, name);
@@ -456,7 +439,7 @@ public class BasicCircuit implements Circuit {
 		for(Sector sector:this.sectors.values()) {
 			this.dataManager.putData(sector.getName(), sector.getDataset());
 		}
-		this.dataManager.updatesSeries();
+		this.dataManager.update();
 	}
 
 	/**
@@ -473,6 +456,18 @@ public class BasicCircuit implements Circuit {
 	 */
 	private void pause(boolean b) {
 		this.pause=b;
+	}
+
+	/**
+	 * @param settings a XML element with the settings.
+	 * @param timer the timer.
+	 * @param path the path of scenario file.
+	 * @param name the name of the scenario file.
+	 * @return a new basic data manager.
+	 * @throws InitializationException If something goes wrong.
+	 */
+	protected BasicDataManager getNewDataManager(Element settings, Timer timer, String path, String name) throws InitializationException {
+		return new BasicDataManager(settings, timer, path, name);
 	}
 
 	@Override

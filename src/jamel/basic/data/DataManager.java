@@ -101,25 +101,25 @@ public class DataManager implements Sector {
 	 * @return the new balance sheet matrix.
 	 */
 	private BalanceSheetMatrix getNewBalanceSheetMatrix() {		
-		BalanceSheetMatrix chartManager;
+		BalanceSheetMatrix balanceSheetMatrix;
 		final String fileName = circuit.getParameter(name,KEY.MATRIX_FILE_CONFIG);
 		if (fileName != null) {
 			final File file = new File(Simulator.getScenarioFile().getParent()+"/"+fileName);
 			try {
-				chartManager = new AbstractBalanceSheetMatrix(file){
+				balanceSheetMatrix = new AbstractBalanceSheetMatrix(file){
 					@Override protected Double getValue(String key) {
 						return macroDataset.get(key);
 					}
 				};
 			} catch (FileNotFoundException e) {
 				e.printStackTrace();
-				chartManager = null;
+				balanceSheetMatrix = null;
 			}
 		}
 		else {
-			chartManager = null;
+			balanceSheetMatrix = null;
 		}
-		return chartManager;
+		return balanceSheetMatrix;
 	}
 
 	/**

@@ -6,13 +6,11 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JPanel;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.data.xy.XYSeries;
@@ -21,7 +19,6 @@ import org.jfree.ui.TextAnchor;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import org.xml.sax.SAXException;
 
 
 /**
@@ -44,16 +41,16 @@ public abstract class AbstractChartManager implements ChartManager {
 	 * @throws InitializationException If something goes wrong.
 	 */
 	public AbstractChartManager(File file) throws InitializationException {
-		NodeList panelNodeList=null;
+		final Element root;
 		try {
-			panelNodeList = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).getDocumentElement().getElementsByTagName("panel");
-		} catch (SAXException e) {
-			throw new InitializationException("Error while creating the ChartManager.", e);
-		} catch (IOException e) {
-			throw new InitializationException("Error while creating the ChartManager.", e);
-		} catch (ParserConfigurationException e) {
-			throw new InitializationException("Error while creating the ChartManager.", e);
+			root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).getDocumentElement();
+		} catch (Exception e) {
+			throw new InitializationException("Something goes wrong while creating the ChartManager.", e);
 		}
+		if (!"charts".equals(root.getNodeName())) {
+			throw new InitializationException("The root node of the scenario file must be named <charts>.");
+		}
+		final NodeList panelNodeList = root.getElementsByTagName("panel");
 		this.panelList = new JPanel[panelNodeList.getLength()];
 		for (int i = 0; i<panelNodeList.getLength(); i++) {
 			// for each panel element:

@@ -1,9 +1,10 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
-<!-- ********************************* Configuration of the chart panels 
-	for the baseline scenario 14/02/2015 ********************************* -->
+<!-- Configuration of the chart panels -->
+<!-- Used by the baseline scenario -->
+<!-- 20/05/2015 -->
 
-<root>
+<charts>
 
 	<panel title="Main">
 
@@ -456,4 +457,4 @@
 
 	</panel>
 
-</root>
+</charts>

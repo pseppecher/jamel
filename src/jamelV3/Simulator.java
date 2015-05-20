@@ -8,7 +8,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -23,7 +22,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 
 /**
  * The main class for Jamel.
@@ -140,38 +138,18 @@ public class Simulator {
 	private static Circuit newCircuit(Document document, String path, String name) throws InitializationException {
 		Circuit circuit = null;
 		final Element root = document.getDocumentElement();
-		final NodeList circuitNodeList = root.getElementsByTagName("circuit");
-		if (circuitNodeList.getLength()>1) {
-			throw new InitializationException("Multiple tags \"circuit\"");
+		if (!root.getNodeName().equals("circuit")) {
+			throw new InitializationException("The root node of the scenario file must be named <circuit>.");
 		}
-		final Element circuitElement = (Element) circuitNodeList.item(0);
-		if (circuitElement==null) {
-			throw new InitializationException("Tag \"circuit\" not found.");
-		}
-		final String circuitType = circuitElement.getAttribute("type");
+		final String circuitType = root.getAttribute("type");
 		if (circuitType=="") {
 			throw new InitializationException("Attribute \"type\" not found for the tag \"circuit\".");				
 		}
 		try {
-			circuit = (Circuit) Class.forName(circuitType,false,ClassLoader.getSystemClassLoader()).getConstructor(Document.class,String.class,String.class).newInstance(document,path,name);
-		} catch (IllegalArgumentException e) {
-			throw new InitializationException("Circuit creation failure.",e.getCause());				
-		} catch (SecurityException e) {
-			throw new InitializationException("Circuit creation failure.",e.getCause());				
-		} catch (InstantiationException e) {
-			throw new InitializationException("Circuit creation failure.",e.getCause());				
-		} catch (IllegalAccessException e) {
-			throw new InitializationException("Circuit creation failure.",e.getCause());				
-		} catch (InvocationTargetException e) {
-			throw new InitializationException("Circuit creation failure.",e.getCause());				
-		} catch (NoSuchMethodException e) {
-			throw new InitializationException("Circuit creation failure.",e.getCause());				
-		} catch (ClassNotFoundException e) {
-			throw new InitializationException("Circuit creation failure.",e.getCause());				
+			circuit = (Circuit) Class.forName(circuitType,false,ClassLoader.getSystemClassLoader()).getConstructor(Element.class,String.class,String.class).newInstance(root,path,name);
+		} catch (Exception e) {
+			throw new InitializationException("Something went wrong while creating the circuit.",e);				
 		}
-		if (circuit==null) {
-			throw new InitializationException("Circuit creation failed for an unknown reason.");				
-		}		
 		return circuit;
 	}
 
@@ -270,13 +248,21 @@ public class Simulator {
 				try {
 					scenario = readXMLFile(file);
 				} catch (InitializationException e1) {
-					throw new RuntimeException("Circuit initialization failure.",e1);
+					e1.printStackTrace();
+					System.exit(0);
+				}
+				if (scenario == null) {
+					System.exit(0);
 				}
 				Circuit circuit = null;
 				try {
 					circuit = newCircuit(scenario, path, name);
 				} catch (InitializationException e2) {
-					throw new RuntimeException("Circuit initialization failure.",e2);
+					e2.printStackTrace();
+					System.exit(0);
+				}
+				if (circuit == null) {
+					System.exit(0);
 				}
 				circuit.run();					
 			}

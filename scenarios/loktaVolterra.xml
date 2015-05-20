@@ -1,0 +1,39 @@
+<!-- Test Jamel (v3) -->
+<!-- 15-05-2015 -->
+
+<circuit type="jamelV3.basic.BasicCircuit">
+
+	<settings
+		randomSeed="1"
+		chartsConfigFile="loktaVolteraConfig/charts.xml" />
+
+	<sectors>
+		<Preys type="jamelV3.loktaVolterra.Preys">
+			<ref>
+				<landSector value="Grass" />
+			</ref>
+			<settings
+				birthEnergy="5"
+				cost="0.1"
+				eatVolume="0.5"
+				move="0.22"
+				reproductionThreshold="15"
+				landWidth="200"
+				landHeight="100" />
+		</Preys>
+		<Grass type="jamelV3.loktaVolterra.Grass">
+			<settings
+				growth="0.01"
+				lim="20"
+				width="200"
+				height="100" />
+			/>
+		</Grass>
+	</sectors>
+
+	<phases>
+		<Grass action="grow" />
+		<Preys action="move" />
+	</phases>
+
+</circuit>

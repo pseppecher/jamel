@@ -143,7 +143,6 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 			firm.open();
 			if (firm.isBankrupted()) {
 				bankrupted.add(firm);
-				System.out.println(firm.getClass().getName());
 				prepareRegeneration();
 			}
 		}

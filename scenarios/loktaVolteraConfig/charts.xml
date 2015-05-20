@@ -3,7 +3,7 @@
 <!-- Configuration of the chart panels for the Lotka-Volterra scenario -->
 <!-- 13/05/2015 -->
 
-<root>
+<charts>
 
 	<panel title="Main">
 
@@ -72,4 +72,4 @@
 
 	</panel>
 
-</root>
+</charts>

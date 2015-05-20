@@ -60,10 +60,7 @@ public class BasicDataManager {
 	}
 
 	/** The chart manager. */
-	private final ChartManager chartManager;
-
-	/** The macro dataset. */
-	private final MacroDataset macroDataset = new BasicMacroDataset();
+	protected final ChartManager chartManager;
 
 	/** Description of the scatter series. */
 	private final Map<String,String[]> scatterSeriesDescription = new LinkedHashMap<String,String[]>();
@@ -76,6 +73,9 @@ public class BasicDataManager {
 
 	/** Description of the time series. */
 	private final List<String> timeSeriesDescription = new LinkedList<String>();
+
+	/** The macro dataset. */
+	protected final MacroDataset macroDataset = new BasicMacroDataset();
 
 	/**
 	 * Creates a new sector for data management.
@@ -155,7 +155,7 @@ public class BasicDataManager {
 	 * Updates series.
 	 * Called at the closure of the period. 
 	 */
-	private void updateSeries() {
+	protected void updateSeries() {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				@Override public void run() {
@@ -236,7 +236,7 @@ public class BasicDataManager {
 	/**
 	 * Updates series and clears the macro dataset.
 	 */
-	public void updatesSeries() {
+	public void update() {
 		updateSeries();
 		this.macroDataset.clear();
 	}
