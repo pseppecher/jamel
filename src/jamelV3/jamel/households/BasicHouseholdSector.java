@@ -35,8 +35,11 @@ import org.w3c.dom.Node;
  */
 public class BasicHouseholdSector implements Sector, HouseholdSector, CapitalistSector {
 
-	/** The key for the type of agents to create*/
-	//private static final String HOUSEHOLDS_TYPE = "agents.type"; DELETE ???
+	/** The <code>dependencies</code> element. */
+	protected static final String DEPENDENCIES = "dependencies";
+
+	/** The type of the agents. */
+	protected String agentType;
 
 	/** 
 	 * The banking sector.
@@ -119,9 +122,8 @@ public class BasicHouseholdSector implements Sector, HouseholdSector, Capitalist
 	@Override
 	public void doEvent(Element event) {
 		if (event.getNodeName().equals("new")) {
-			final String type = event.getAttribute("type");
 			final int size = Integer.parseInt(event.getAttribute("size"));
-			this.households.putAll(this.createHouseholds(type,size));
+			this.households.putAll(this.createHouseholds(this.agentType,size));
 		}
 		else {
 			throw new RuntimeException("Unknown event or not yet implemented: "+event.getNodeName());			
@@ -219,14 +221,24 @@ public class BasicHouseholdSector implements Sector, HouseholdSector, Capitalist
 
 	@Override
 	public void init(Element element) throws InitializationException {
+		
 		// Initialization of the dependencies:
 		if (element==null) {
 			throw new IllegalArgumentException("Element is null");			
 		}
-		final Element refElement = (Element) element.getElementsByTagName("ref").item(0);
-		if (refElement==null) {
-			throw new InitializationException("Element not found: ref");
+		
+		// Initialization of the agent type:
+		final String agentAttribute = element.getAttribute("agent");
+		if ("".equals(agentAttribute)) {
+			throw new InitializationException("Attribute not found: agent");
 		}
+		this.agentType =agentAttribute;		
+		
+		final Element refElement = (Element) element.getElementsByTagName(DEPENDENCIES).item(0);
+		if (refElement==null) {
+			throw new InitializationException("Element not found: "+DEPENDENCIES);
+		}
+		
 		// Looking for the supplier sector.
 		final String key1 = "Suppliers";
 		final Element suppliersElement = (Element) refElement.getElementsByTagName(key1).item(0);

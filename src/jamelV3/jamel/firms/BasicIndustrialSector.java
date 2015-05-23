@@ -57,6 +57,9 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 		public static final String PRODUCTION = "production";
 	}
 
+	/** The <code>dependencies</code> element. */
+	protected static final String DEPENDENCIES = "dependencies";
+
 	/** The type of the agents. */
 	private String agentType = null;
 
@@ -114,16 +117,17 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 
 	/**
 	 * Creates firms.
+	 * @param type the type of firms to create.
 	 * @param lim the number of firms to create.
 	 * @return a list containing the new firms. 
 	 */
-	private List<Firm> createFirms(int lim) {
+	private List<Firm> createFirms(String type, int lim) {
 		final List<Firm> result = new ArrayList<Firm>(lim);
 		try {
 			for(int index=0;index<lim;index++) {
 				this.countFirms++;
 				final String name = "Firm"+this.countFirms;
-				final Firm firm = (Firm) Class.forName(this.agentType,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,IndustrialSector.class).newInstance(name,this);
+				final Firm firm = (Firm) Class.forName(type,false,ClassLoader.getSystemClassLoader()).getConstructor(String.class,IndustrialSector.class).newInstance(name,this);
 				result.add(firm);
 			}
 		} catch (Exception e) {
@@ -131,7 +135,6 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 		}
 		return result;
 	}
-
 
 	/**
 	 * Opens each firm in the sector.
@@ -168,12 +171,12 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 	}
 
 	/**
-	 * 
+	 * Regenerates firms.
 	 */
 	private void regenerate() {
 		final Integer lim = this.regeneration.get(timer.getPeriod().intValue());
 		if (lim != null) {
-			this.firms.putAll(this.createFirms(lim));
+			this.firms.putAll(this.createFirms(this.agentType,lim));
 		}
 	}
 
@@ -181,7 +184,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 	public void doEvent(Element event) {
 		if (event.getNodeName().equals("new")) {
 			final int size = Integer.parseInt(event.getAttribute("size"));
-			this.firms.putAll(this.createFirms(size));
+			this.firms.putAll(this.createFirms(this.agentType,size));
 		}
 		else {
 			throw new RuntimeException("Unknown event or not yet implemented: "+event.getNodeName());			
@@ -358,9 +361,9 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 		this.agentType =agentAttribute;
 		
 		// Initialization of the dependencies:
-		final Element refElement = (Element) element.getElementsByTagName("ref").item(0);
+		final Element refElement = (Element) element.getElementsByTagName(DEPENDENCIES).item(0);
 		if (refElement==null) {
-			throw new InitializationException("Element not found: ref");
+			throw new InitializationException("Element not found: "+DEPENDENCIES);
 		}
 
 		// Looking for the capitalist sector.

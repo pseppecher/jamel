@@ -5,70 +5,55 @@
 
 <charts>
 
-	<panel title="Main">
+	<panel
+		title="Main"
+		rows="1"
+		cols="2">
 
 		<chart
-			title="Preys Position"
+			title="Map"
 			options="scatter">
 			<series
 				value="Preys.all.x, Preys.all.y"
 				color="transparentBlue"
 				label="Preys" />
+			<series
+				value="Predators.all.x, Predators.all.y"
+				color="transparentRed"
+				label="Predators" />
 			<yAxis
 				min="0"
-				max="100" />
+				max="150" />
 			<xAxis
 				min="0"
-				max="100" />
+				max="150" />
 		</chart>
 
-		<chart title="Preys Energy">
-			<series
-				value="Preys.mean.energy"
-				label="Mean"
-				color="red" />
-			<series
-				value="Preys.min.energy"
-				label="Min"
-				color="veryLightRed" />
-			<series
-				value="Preys.max.energy"
-				label="Max"
-				color="veryLightRed" />
-		</chart>
-		
-		<chart title="Grass">
-			<series
-				value="Grass.mean.grass"
-				label="Mean"
-				color="green" />
-			<series
-				value="Grass.min.grass"
-				label="Min"
-				color="green" />
-			<series
-				value="Grass.max.grass"
-				label="Max"
-				color="green" />
-		</chart>
-
-		<chart title="Preys Number">
+		<chart title="Agents">
 			<series
 				value="Preys.sum.individual"
-				label="Sum energy"
+				label="Preys"
+				color="blue" />
+			<series
+				value="Predators.sum.individual"
+				label="Predators"
 				color="red" />
 		</chart>
 
-		<chart title="Preys Energy">
-			<series
-				value="Preys.sum.energy"
-				label="Sum energy"
-				color="red" />
+		<chartB title="Energy">
 			<series
 				value="Grass.sum.grass"
-				label="Sum"
+				label="Grass"
 				color="green" />
-		</chart>
+			<series
+				value="Preys.sum.energy"
+				label="Preys"
+				color="blue" />
+			<series
+				value="Predators.sum.energy"
+				label="Predators"
+				color="red" />
+		</chartB>
 
 	</panel>
 

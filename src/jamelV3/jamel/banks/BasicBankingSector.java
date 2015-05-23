@@ -483,19 +483,22 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	@SuppressWarnings("javadoc")
 	private final static String TERM = "term.normal";
 
+	/** The <code>dependencies</code> element. */
+	protected static final String DEPENDENCIES = "dependencies";
+
 	/** The list of customers accounts. */
 	private final List<Account> accounts = new ArrayList<Account>(1000);
 
 	/** The owner of the bank. */
 	private Shareholder bankOwner = null;
 
+	// TODO: classe à l'utilité douteuse. La supprimer et accéder directement aux paramètres.
+
 	/** 
 	 * The capitalist sector.
 	 * Used to select the initial owner of the bank.
 	 */
 	private CapitalistSector capitalistSector = null;
-
-	// TODO: classe à l'utilité douteuse. La supprimer et accéder directement aux paramètres.
 
 	/** The circuit. */
 	private final Circuit circuit;
@@ -673,6 +676,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		}
 	}
 
+
+
 	/**
 	 * Updates the dataset.
 	 */
@@ -687,8 +692,6 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		this.dataset.put("canceledDeposits", (double) v.get("canceledDeposits"));		
 		this.dataset.put("nImporteQuoi", random.nextDouble());// FOR DEBUGGING TODO REMOVE
 	}
-
-
 
 	@Override
 	public void doEvent(Element event) {
@@ -750,6 +753,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		return account;
 	}
 
+
 	@Override
 	public Phase getPhase(final String name) {
 		Phase result = null;
@@ -798,9 +802,9 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		if (element==null) {
 			throw new IllegalArgumentException("Element is null");			
 		}
-		final Element refElement = (Element) element.getElementsByTagName("ref").item(0);
+		final Element refElement = (Element) element.getElementsByTagName(DEPENDENCIES).item(0);
 		if (refElement==null) {
-			throw new InitializationException("Element not found: ref");
+			throw new InitializationException("Element not found: "+DEPENDENCIES);
 		}
 		final String key1 = "CapitalistSector";
 		final Element capitalistSectorElement = (Element) refElement.getElementsByTagName(key1).item(0);

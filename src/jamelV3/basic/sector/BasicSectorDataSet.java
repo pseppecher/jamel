@@ -54,7 +54,6 @@ public class BasicSectorDataSet implements SectorDataset {
 		return result;
 	}
 
-
 	/**
 	 * Returns the minimum value of the given collection.
 	 * @param values the collection whose minimum value is to be determined.

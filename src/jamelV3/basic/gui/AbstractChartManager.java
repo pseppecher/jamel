@@ -58,7 +58,9 @@ public abstract class AbstractChartManager implements ChartManager {
 				throw new RuntimeException("This node should be a panel node.");					
 			}
 			final Element panelElement = (Element) panelNodeList.item(i);
-			final JPanel panel = new JPanel(new GridLayout(3,3,10,10));
+			final int rows = Integer.parseInt(panelElement.getAttribute("rows"));
+			final int cols = Integer.parseInt(panelElement.getAttribute("cols"));
+			final JPanel panel = new JPanel(new GridLayout(rows,cols,10,10));
 			panelList[i] = panel;
 			panel.setBackground(new Color(0,0,0,0));
 			panel.setName(panelElement.getAttribute("title"));
@@ -86,19 +88,6 @@ public abstract class AbstractChartManager implements ChartManager {
 					else {
 						data = getChartData(seriesList);
 					}
-					/*final JamelChartPanel chartPanel; // TODO CLEAN UP
-					final boolean isScatter = "scatter".equals(chartElement.getAttribute("options")); 
-					final XYSeriesCollection data;
-					if (isScatter) {
-						data = getScatterChartData(series);
-					}
-					else {
-						try {
-							data = getChartData(series);
-						} catch (Exception e) {
-							throw new InitializationException("Something goes wrong while parsing the description of the chart (panel "+panel.getName()+", chart "+j+")",e);
-						}
-					}*/
 					if (data==null) {
 						throw new NullPointerException("Data is null.");
 					}
@@ -107,8 +96,9 @@ public abstract class AbstractChartManager implements ChartManager {
 					panel.add(chartPanel);
 				}
 			}
-			if (chartNodeList.getLength()<9) {
-				for (int j=chartNodeList.getLength(); j<9; j++) {
+			final int nPanel = rows*cols;
+			if (chartNodeList.getLength()<nPanel) {
+				for (int j=chartNodeList.getLength(); j<nPanel; j++) {
 					panel.add(new EmptyPanel());						
 				}
 			}

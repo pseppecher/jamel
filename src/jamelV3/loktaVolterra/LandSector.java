@@ -10,9 +10,21 @@ public interface LandSector {
 	 * @param x the X coordinate.
 	 * @param y the Y coordinate.
 	 * @param volume the quantity of grass to eat.
-	 * @return the effective quantity of grass eated.
+	 * @return the effective quantity of grass eaten.
 	 */
 	double eat(double x, double y, double volume);
+
+	/**
+	 * Returns the land height.
+	 * @return the land height.
+	 */
+	Integer getLandHeight();
+
+	/**
+	 * Returns the land width.
+	 * @return the land width.
+	 */
+	Integer getLandWidth();
 
 }
 

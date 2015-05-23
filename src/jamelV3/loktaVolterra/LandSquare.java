@@ -7,10 +7,6 @@ import jamelV3.basic.agent.AgentDataset;
 @SuppressWarnings("javadoc")
 public class LandSquare implements Agent{
 
-	//private static final double growth = 0.004;
-
-	//private static final double lim = 50;
-
 	private double grass;
 	
 	private final Grass grassSector;

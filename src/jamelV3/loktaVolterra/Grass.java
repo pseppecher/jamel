@@ -3,6 +3,7 @@ package jamelV3.loktaVolterra;
 import java.util.HashMap;
 
 import jamelV3.basic.Circuit;
+import jamelV3.basic.sector.AbstractPhase;
 import jamelV3.basic.sector.BasicSectorDataSet;
 import jamelV3.basic.sector.Phase;
 import jamelV3.basic.sector.Sector;
@@ -18,34 +19,6 @@ import org.w3c.dom.Node;
  */
 public class Grass implements Sector, LandSector {
 	
-	/**
-	 * An abstract phase for this sector.
-	 */
-	abstract private class AbstractPhase implements Phase {
-		
-		/** The name of the phase. */
-		final private String name;
-		
-		/**
-		 * Creates a new phase.
-		 * @param name the phase name.
-		 */
-		private AbstractPhase(String name) {
-			this.name=name;
-		}
-
-		@Override
-		public String getName() {
-			return this.name;
-		}
-		
-		@Override
-		public Sector getSector() {
-			return Grass.this;
-		}
-
-	}
-
 	@SuppressWarnings("javadoc")
 	private class Squares {
 		
@@ -83,7 +56,7 @@ public class Grass implements Sector, LandSector {
 	public static final String lim = "lim";
 
 	/** The height of the grass. */
-	private int height;
+	private Integer height=null;
 
 	/** The name of the sector. */
 	private final String name;
@@ -95,7 +68,7 @@ public class Grass implements Sector, LandSector {
 	private Squares squares = null;
 
 	/** The width of the grass. */
-	private int width;
+	private Integer width=null;
 	
 	/**
 	 * Creates a new sector.
@@ -108,7 +81,6 @@ public class Grass implements Sector, LandSector {
 
 	@Override
 	public void doEvent(Element event) {
-		// TODO Auto-generated method stub
 		throw new RuntimeException("Not yet implemented");
 	}
 
@@ -140,7 +112,7 @@ public class Grass implements Sector, LandSector {
 	public Phase getPhase(final String name) {
 		Phase result = null;
 		if (name.equals("grow")) {
-			result = new AbstractPhase(name){
+			result = new AbstractPhase(name, this){
 				@Override
 				public void run() {
 					for (int x=0;x<width;x++) {
@@ -170,6 +142,16 @@ public class Grass implements Sector, LandSector {
 		this.height=this.params.get("height").intValue();
 		this.squares=new Squares();
 		this.squares.init();
+	}
+
+	@Override
+	public Integer getLandHeight() {
+		return this.height;
+	}
+
+	@Override
+	public Integer getLandWidth() {
+		return this.width;
 	}
 
 }

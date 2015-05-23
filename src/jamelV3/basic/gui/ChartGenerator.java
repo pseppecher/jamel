@@ -167,20 +167,6 @@ public class ChartGenerator {
 	}
 
 	/**
-	 * Creates and returns a new X axis.
-	 * @param label the axis label (<code>null</code> permitted).
-	 * @param isScatter a flag that indicates if the chart is a scatter or not.
-	 * @return a new X axis.
-	 */
-	private static NumberAxis getNewXAxis(String label, boolean isScatter) {
-		NumberAxis result = getTimeAxis(label);
-		if (isScatter) {
-			result = getStandardAxis(label);
-		}
-		return result;
-	}
-
-	/**
 	 * Creates and returns a new plot with the specified dataset, axes and renderer.
 	 * 
 	 * @param dataset  the dataset (<code>null</code> permitted).
@@ -203,6 +189,28 @@ public class ChartGenerator {
 	}
 
 	/**
+	 * Creates and returns a new X axis.
+	 * @param label the axis label (<code>null</code> permitted).
+	 * @param min the lower bound for the axis.
+	 * @param max the upper bound for the axis.
+	 * @param isScatter a flag that indicates if the chart is a scatter or not.
+	 * @return a new X axis.
+	 */
+	private static NumberAxis getNewXAxis(String label, Double min, Double max, boolean isScatter) {
+		NumberAxis axis = getTimeAxis(label);
+		if (isScatter) {
+			axis = getStandardAxis(label);
+		}
+		if (min!=null) {
+			axis.setLowerBound(min);
+		}
+		if (max!=null) {
+			axis.setUpperBound(max);
+		}
+		return axis;
+	}
+
+	/**
 	 * Creates and returns a new Y axis.
 	 * @param label the axis label (<code>null</code> permitted).
 	 * @param min the lower bound for the axis.
@@ -210,7 +218,7 @@ public class ChartGenerator {
 	 * @return a new Y axis.
 	 */
 	private static NumberAxis getNewYAxis(String label, Double min, Double max) {
-		NumberAxis axis = getStandardAxis(label);
+		final NumberAxis axis = getStandardAxis(label);
 		if (min!=null) {
 			axis.setLowerBound(min);
 		}
@@ -313,6 +321,12 @@ public class ChartGenerator {
 	/** The series keys. */
 	final private String[] series;
 
+	/** Max of the x Axis. */
+	private Double xAxisMax = null;
+
+	/** Min of the x Axis. */
+	private Double xAxisMin = null;
+
 	/** Max of the y Axis. */
 	private Double yAxisMax = null;
 
@@ -342,6 +356,11 @@ public class ChartGenerator {
 			this.yAxisMax = parseDouble(yAxis.getAttribute("max"));
 			this.yAxisMin = parseDouble(yAxis.getAttribute("min"));
 		}
+		final Element xAxis = (Element) description.getElementsByTagName("xAxis").item(0);
+		if (xAxis!=null) {
+			this.xAxisMax = parseDouble(xAxis.getAttribute("max"));
+			this.xAxisMin = parseDouble(xAxis.getAttribute("min"));
+		}
 	}
 
 	/**
@@ -352,7 +371,7 @@ public class ChartGenerator {
 	private JFreeChart createChart(XYDataset dataset) {
 		final boolean isScatter = this.options.equals("scatter");
 		final Paint[] colors = ParseColors(this.color);
-		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(null,isScatter), getNewYAxis(null,yAxisMin,yAxisMax), getNewRenderer(dataset,colors ,isScatter));
+		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(null,xAxisMin,xAxisMax,isScatter), getNewYAxis(null,yAxisMin,yAxisMax), getNewRenderer(dataset,colors ,isScatter));
 		plot.setFixedLegendItems(getLegendItemCollection(this.series,colors,this.label,isScatter));		
 		return getNewChart(name,plot);	
 	}

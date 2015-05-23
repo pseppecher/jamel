@@ -6,7 +6,10 @@
 
 <charts>
 
-	<panel title="Main">
+	<panel
+		title="Main"
+		rows="3"
+		cols="3">
 
 		<chart
 			title="Age and Productivity"
@@ -107,7 +110,10 @@
 		</chart>
 	</panel>
 
-	<panel title="Industry">
+	<panel
+		title="Industry"
+		rows="3"
+		cols="3">
 
 		<chart title="Workforce">
 			<series
@@ -231,7 +237,10 @@
 
 	</panel>
 
-	<panel title="Firm1">
+	<panel
+		title="Firm1"
+		rows="3"
+		cols="3">
 
 		<chart
 			title="Wages and Prices"
@@ -315,7 +324,10 @@
 
 	</panel>
 
-	<panel title="Bank">
+	<panel
+		title="Bank"
+		rows="3"
+		cols="3">
 
 		<chart title="Ratios">
 			<series
@@ -376,7 +388,10 @@
 
 	</panel>
 
-	<panel title="Households">
+	<panel
+		title="Households"
+		rows="3"
+		cols="3">
 
 		<chart title="Unemployment">
 			<series

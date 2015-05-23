@@ -3,111 +3,105 @@ package jamelV3.loktaVolterra;
 import java.util.Random;
 
 import jamelV3.basic.agent.BasicAgentDataset;
-import jamelV3.basic.agent.Agent;
 import jamelV3.basic.agent.AgentDataset;
 
-@SuppressWarnings("javadoc")
-class Prey implements Agent {
+/**
+ * Represent a prey.
+ */
+class Prey extends AbstractAgent {
 
+	/** The id. */
 	private static int id=0;
 
-	private boolean alive;
-
-	private double energy = 10;
-
-	private final String name;
-
-	private final Random random;
-
+	/** sector */
 	private Preys sector;
 
-	private double x;
-
-	private final int xMax;
-
-	private double y;
-
-	private final int yMax;
-
+	/**
+	 * Creates a new prey.
+	 * @param sector the sector.
+	 * @param random the random.
+	 */
 	public Prey(Preys sector, Random random) {
-		this.sector = sector;
-		this.name = "Prey-"+id;
+		super("Prey-"+id, sector.getParam(Preys.landWidth).intValue(), sector.getParam(Preys.landHeight).intValue(), random,1);// 1= initial energy should be a parameter
 		id++;
-		this.random = random;
-		this.xMax= this.sector.getParam(Preys.landWidth).intValue();
-		this.yMax= this.sector.getParam(Preys.landHeight).intValue();
+		this.sector = sector;
 		this.x = this.random.nextInt(xMax-1);
 		this.y = this.random.nextInt(yMax-1);
-		this.alive = true;
 	}
 
+	/**
+	 * Creates a new prey.
+	 * @param sector the sector.
+	 * @param random the random.
+	 * @param x the x coordinate.
+	 * @param y the y coordinate.
+	 * @param energy the initial energy.
+	 */
 	public Prey(Preys sector, Random random, double x, double y, double energy) {
-		this.sector = sector;
-		this.name = "Prey-"+id;
+		super("Prey-"+id, sector.getParam(Preys.landWidth).intValue(), sector.getParam(Preys.landHeight).intValue(), random,energy);
 		id++;
-		this.random = random;
-		this.xMax= this.sector.getParam(Preys.landWidth).intValue();
-		this.yMax= this.sector.getParam(Preys.landHeight).intValue();
+		this.sector = sector;
 		this.x = x;
 		this.y = y;
-		this.energy = energy;
-		this.alive = true;
+	}
+
+	/**
+	 * This prey is eaten. 
+	 * @param volume the volume to be eaten.
+	 * @return the resulting energy for the prey.
+	 */
+	public double eat(double volume) {
+		final double result;
+		if (volume<this.energy) {
+			this.energy-=volume;
+			result=volume;
+		}
+		else {
+			result=this.energy;
+			this.energy=0;
+			this.kill();
+			this.sector.remove(this);
+		}
+		return result;
 	}
 
 	@Override
 	public AgentDataset getData() {
-		return new BasicAgentDataset(name) {{
-			this.put("x", x);
+		return new BasicAgentDataset(this.getName()) {{
+			this.put("x",x);
 			this.put("y",y);
 			this.put("energy",energy);
 			this.put("individual",1.);
 		}};
 	}
 
-	@Override
-	public String getName() {
-		return this.name;
+	/**
+	 * Returns the x coordinate.
+	 * @return the x coordinate.
+	 */
+	public double getX() {
+		return x;
 	}
 
+	/**
+	 * Returns the y coordinate.
+	 * @return the y coordinate.
+	 */
+	public double getY() {
+		return y;
+	}
+
+	/**
+	 * Moves.
+	 */
 	public void move() {
-		final double move = this.sector.getParam(Preys.move);
-		if (!alive) {
+		if (!isAlive()) {
 			throw new RuntimeException("Walking dead");
 		}
-		if(this.random.nextBoolean()) {
-			x+=move;
-		}
-		else {
-			x-=move;
-		}
-		if (x>=xMax) {
-			x-=xMax;
-		}
-		else if (x<0) {
-			x+=xMax;
-		}
-		if (x==xMax) {
-			x=0;
-		}
-		if(this.random.nextBoolean()) {
-			y+=move;
-		}
-		else {
-			y-=move;
-		}
-		if (y>=yMax) {
-			y-=yMax;
-		}
-		else if (y<0) {
-			y+=yMax;
-		}
-		if (y==yMax) {
-			y=0;
-		}
-		energy -= this.sector.getParam(Preys.cost);
+		this.move(this.sector.getParam(Preys.move), this.sector.getParam(Preys.cost));
 		energy += this.sector.eatGrass(x,y,sector.getParam(Preys.eatVolume));
 		if (energy<0) {
-			this.alive=false;
+			this.kill();
 			this.sector.remove(this);
 		}
 		if (energy>sector.getParam(Preys.reproductionThreshold)) {

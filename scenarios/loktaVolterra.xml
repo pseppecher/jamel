@@ -1,39 +1,60 @@
 <!-- Test Jamel (v3) -->
+<!-- Lokta Voltera Model -->
 <!-- 15-05-2015 -->
 
 <circuit type="jamelV3.basic.BasicCircuit">
+
+	<comment>
+		A toy model to test the Jamel framework.
+	</comment> 
 
 	<settings
 		randomSeed="1"
 		chartsConfigFile="loktaVolteraConfig/charts.xml" />
 
 	<sectors>
-		<Preys type="jamelV3.loktaVolterra.Preys">
-			<ref>
-				<landSector value="Grass" />
-			</ref>
-			<settings
-				birthEnergy="5"
-				cost="0.1"
-				eatVolume="0.5"
-				move="0.22"
-				reproductionThreshold="15"
-				landWidth="200"
-				landHeight="100" />
-		</Preys>
+
 		<Grass type="jamelV3.loktaVolterra.Grass">
 			<settings
 				growth="0.01"
 				lim="20"
-				width="200"
-				height="100" />
-			/>
+				width="150"
+				height="150" />
 		</Grass>
+
+		<Preys type="jamelV3.loktaVolterra.Preys">
+			<settings
+				spontaneous="0"
+				birthEnergy="5"
+				cost="0.1"
+				eatVolume="0.5"
+				move="0.22"
+				reproductionThreshold="10" />
+			<dependencies>
+				<landSector value="Grass" />
+			</dependencies>
+		</Preys>
+
+		<Predators type="jamelV3.loktaVolterra.Predators">
+			<settings
+				spontaneous="0.0"
+				birthEnergy="25"
+				cost="0.06"
+				eatVolume="0.9"
+				move=".55"
+				reproductionThreshold="50" />
+			<dependencies>
+				<landSector value="Grass" />
+				<preySector value="Preys" />
+			</dependencies>
+		</Predators>
+
 	</sectors>
 
 	<phases>
 		<Grass action="grow" />
 		<Preys action="move" />
+		<Predators action="move" />
 	</phases>
 
 </circuit>

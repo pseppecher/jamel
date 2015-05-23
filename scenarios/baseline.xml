@@ -1,3 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
 <!-- Jamel (v3) -->
 <!-- 18-05-2015 -->
 <!-- Baseline scenario -->
@@ -12,7 +14,9 @@
 
 	<sectors>
 
-		<Households type="jamelV3.jamel.households.BasicHouseholdSector">
+		<Households
+			type="jamelV3.jamel.households.BasicHouseholdSector"
+			agent="jamelV3.jamel.households.BasicHousehold">
 			<settings
 				savings.propensityToSave="0.2"
 				savings.ratioTarget="0.2"
@@ -21,11 +25,11 @@
 				wage.flexibility="0.05"
 				jobs.selection="10"
 				supplies.selection="10" />
-			<ref>
+			<dependencies>
 				<Suppliers value="Industry" />
 				<Employers value="Industry" />
 				<Banks value="Banks" />
-			</ref>
+			</dependencies>
 		</Households>
 
 		<Banks type="jamelV3.jamel.banks.BasicBankingSector">
@@ -38,9 +42,9 @@
 				term.extended="24"
 				accommodating="0"
 				patience="12" />
-			<ref>
+			<dependencies>
 				<CapitalistSector value="Households" />
-			</ref>
+			</dependencies>
 		</Banks>
 
 		<Industry
@@ -67,10 +71,10 @@
 				wage.minimum="0"
 				regenerationLapse.min="12"
 				regenerationLapse.max="24" />
-			<ref>
+			<dependencies>
 				<CapitalistSector value="Households" />
 				<Banks value="Banks" />
-			</ref>
+			</dependencies>
 		</Industry>
 	</sectors>
 
@@ -95,7 +99,6 @@
 		<new
 			period="1"
 			sector="Households"
-			type="jamelV3.jamel.households.BasicHousehold"
 			size="1200" />
 
 		<new
