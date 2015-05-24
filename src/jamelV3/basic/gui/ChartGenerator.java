@@ -167,28 +167,6 @@ public class ChartGenerator {
 	}
 
 	/**
-	 * Creates and returns a new plot with the specified dataset, axes and renderer.
-	 * 
-	 * @param dataset  the dataset (<code>null</code> permitted).
-	 * @param xAxis  the x axis (<code>null</code> permitted).
-	 * @param yAxis  the y axis (<code>null</code> permitted).
-	 * @param renderer  the renderer (<code>null</code> permitted).
-	 * @return a new plot.
-	 */
-	private static XYPlot getNewXYPlot(XYDataset dataset, NumberAxis xAxis, NumberAxis yAxis, XYItemRenderer renderer) {
-		return new XYPlot(dataset, xAxis, yAxis, renderer) {{
-			this.setOrientation(PlotOrientation.VERTICAL);
-			this.setDomainGridlinesVisible(false);
-			this.setDomainMinorGridlinesVisible(false);
-			this.setRangeGridlinesVisible(false);
-			this.setRangeMinorGridlinesVisible(false);
-			this.setRangeCrosshairVisible(false);
-			this.setDomainCrosshairVisible(false);
-			this.setBackgroundPaint(Color.WHITE);
-		}};
-	}
-
-	/**
 	 * Creates and returns a new X axis.
 	 * @param label the axis label (<code>null</code> permitted).
 	 * @param min the lower bound for the axis.
@@ -208,6 +186,28 @@ public class ChartGenerator {
 			axis.setUpperBound(max);
 		}
 		return axis;
+	}
+
+	/**
+	 * Creates and returns a new plot with the specified dataset, axes and renderer.
+	 * 
+	 * @param dataset  the dataset (<code>null</code> permitted).
+	 * @param xAxis  the x axis (<code>null</code> permitted).
+	 * @param yAxis  the y axis (<code>null</code> permitted).
+	 * @param renderer  the renderer (<code>null</code> permitted).
+	 * @return a new plot.
+	 */
+	private static XYPlot getNewXYPlot(XYDataset dataset, NumberAxis xAxis, NumberAxis yAxis, XYItemRenderer renderer) {
+		return new XYPlot(dataset, xAxis, yAxis, renderer) {{
+			this.setOrientation(PlotOrientation.VERTICAL);
+			this.setDomainGridlinesVisible(false);
+			this.setDomainMinorGridlinesVisible(false);
+			this.setRangeGridlinesVisible(false);
+			this.setRangeMinorGridlinesVisible(false);
+			this.setRangeCrosshairVisible(false);
+			this.setDomainCrosshairVisible(false);
+			this.setBackgroundPaint(Color.WHITE);
+		}};
 	}
 
 	/**

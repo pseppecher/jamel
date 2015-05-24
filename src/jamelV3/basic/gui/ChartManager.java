@@ -20,4 +20,12 @@ public interface ChartManager {
 	 */
 	public abstract Component[] getPanelList();
 
+	/**
+	 * Updates the charts.
+	 * Should be called at the end of each period.
+	 */
+	public abstract void update();
+
 }
+
+// ***

@@ -95,7 +95,7 @@ public class SFCDataManager extends BasicDataManager {
 
 	@Override
 	public void update() {
-		this.updateSeries();
+		this.chartManager.update();
 		this.balanceSheetMatrix.update();
 		this.dataValidator.CheckConsistency();
 		this.macroDataset.clear();
