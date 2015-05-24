@@ -34,6 +34,38 @@ import org.w3c.dom.NodeList;
  */
 public class BasicChartManager implements ChartManager {
 
+	/**
+	 * An interface for the objects that requires to be updated at the end of the period.
+	 */
+	private interface Dynamic {
+		
+		/**
+		 * Updates the object.
+		 */
+		public void update();
+
+	}
+
+	/**
+	 * A dynamic XYSeries.
+	 */
+	private abstract class DynamicXYSeries extends XYSeries implements Dynamic {
+
+		/**
+		 * Constructs a new empty series, with the auto-sort flag set as <code>false</code>, and duplicate values allowed.
+		 * @param key the series key (<code>null</code> not permitted).
+		 */
+		public DynamicXYSeries(String key) {
+			super(key,false);
+		}
+
+	}
+	
+	/**
+	 * An interface for dynamic XYZDataset.
+	 */
+	private interface DynamicXYZDataset extends XYZDataset,Dynamic{}
+
 	/** An empty panel.	 */
 	private class EmptyPanel extends JPanel {{this.setBackground(emptyColor);}}
 
@@ -47,7 +79,7 @@ public class BasicChartManager implements ChartManager {
 	private final MacroDataset macroDataset;
 
 	/** A collection of series. */
-	private final Map<String,JamelSeries> series = new LinkedHashMap<String,JamelSeries>();
+	private final Map<String,Dynamic> series = new LinkedHashMap<String,Dynamic>();
 
 	/** The list of the tabbed panes.*/
 	private final JPanel[] tabbedPanes;
@@ -79,7 +111,7 @@ public class BasicChartManager implements ChartManager {
 		for (int i = 0; i<panelNodeList.getLength(); i++) {
 			// for each panel element:
 			if (panelNodeList.item(i).getNodeType() != Node.ELEMENT_NODE) {
-				throw new RuntimeException("This node should be a panel node.");					
+				throw new RuntimeException("This node should be a panel node.");
 			}
 			final Element panelElement = (Element) panelNodeList.item(i);
 			final int rows = Integer.parseInt(panelElement.getAttribute("rows"));
@@ -96,7 +128,7 @@ public class BasicChartManager implements ChartManager {
 					panel.add(new TestPanel());// TODO clean-up !
 				}
 				else if (chartElement.getAttribute("title").equals("Empty")) {
-					panel.add(new EmptyPanel());								
+					panel.add(new EmptyPanel());
 				}
 				else {
 					final NodeList series = chartElement.getElementsByTagName("series");
@@ -111,6 +143,7 @@ public class BasicChartManager implements ChartManager {
 					final XYSeriesCollection data;
 					if (isScatter) {
 						data = getScatterChartData(seriesList);
+						@SuppressWarnings("unused")
 						final XYZDataset xyzDataset = getXYBlockData(chartElement);
 						// TODO WORK IN PROGRESS
 						chartPanel = new JamelChartPanel(ChartGenerator.createChart(chartElement,data),isScatter);
@@ -126,55 +159,10 @@ public class BasicChartManager implements ChartManager {
 			final int nPanel = rows*cols;
 			if (chartNodeList.getLength()<nPanel) {
 				for (int j=chartNodeList.getLength(); j<nPanel; j++) {
-					panel.add(new EmptyPanel());						
+					panel.add(new EmptyPanel());
 				}
 			}
 		}
-	}
-
-	/**
-	 * Creates and returns a new scatter series.
-	 * @param name the name of the series.
-	 * @param xKey the key for x data.
-	 * @param yKey the key for y data.
-	 * @return a new scatter series.
-	 */
-	private XYSeries getNewScatterSeries(String name, final String xKey, final String yKey) {
-		final JamelXYSeries result = new JamelXYSeries(name){
-
-			@SuppressWarnings("unchecked")
-			@Override
-			public void update() {
-				final List<XYDataItem> data = macroDataset.getScatter(xKey,yKey);
-				this.data.clear();
-				if (data!=null) {
-					this.data.addAll(data);
-				}
-				this.fireSeriesChanged();				
-			}
-		};
-		this.series.put(name, result);			
-		return result;
-	}
-
-	/**
-	 * Creates and returns a new series.
-	 * @param name the name of the series.
-	 * @return a new series.
-	 */
-	private XYSeries getNewSeries(final String name) {
-		final JamelXYSeries result = new JamelXYSeries(name) {
-			@Override
-			public void update() {
-				final Double value = macroDataset.get(name);
-				final int period = timer.getPeriod().intValue();
-				if (value!=null) {
-					this.add(period, value);
-				}
-			}
-		};
-		this.series.put(name, result);			
-		return result;
 	}
 
 	/**
@@ -186,75 +174,69 @@ public class BasicChartManager implements ChartManager {
 		final XYSeriesCollection data = new XYSeriesCollection();
 		for (String key:list){
 			final String[] keys = key.split(",",2);
-			final XYSeries series = getScatterSeries(keys[0].trim(),keys[1].trim());
-			if (series!=null) {
-				data.addSeries(series);
+			final String xKey=keys[0].trim();
+			final String yKey=keys[1].trim();
+			final String seriesKey = xKey+"&"+yKey;
+			final DynamicXYSeries scatterSeries;
+			final DynamicXYSeries result1=(DynamicXYSeries) this.series.get(seriesKey);
+			if (result1!=null) {
+				scatterSeries=result1;
 			}
 			else {
-				throw new RuntimeException(keys[0]+","+keys[1]+" XYSeries not found.");
+				scatterSeries = new DynamicXYSeries(seriesKey){
+					@SuppressWarnings("unchecked")
+					@Override
+					public void update() {
+						final List<XYDataItem> data = macroDataset.getScatter(xKey,yKey);
+						this.data.clear();
+						if (data!=null) {
+							this.data.addAll(data);
+						}
+						this.fireSeriesChanged();
+					}
+				};
+				this.series.put(seriesKey, scatterSeries);
 			}
+			data.addSeries(scatterSeries);
 		}
 		return data;
 	}
 
-	/**
-	 * Returns the specified XYSeries.
-	 * @param xKey the key for the X data.
-	 * @param yKey the key for the Y date.
-	 * @return a XYSeries.
-	 */
-	private XYSeries getScatterSeries(String xKey, String yKey) {
-		final XYSeries result;
-		final String key = xKey+"&"+yKey;
-		final XYSeries series=(XYSeries) this.series.get(key);
-		if (series!=null) {
-			result=series;
-		} else {
-			result=getNewScatterSeries(key,xKey,yKey);
-		}
-		return result;
-	}
-
-	/**
-	 * Returns the data for the specified chart.
-	 * @param list an array of strings representing the name of the series.
-	 * @return an XYSeriesCollection.
-	 */
-	private XYSeriesCollection getTimeChartData(String[] list) {
-		final XYSeriesCollection data = new XYSeriesCollection();
-		for (String key:list){
-			final XYSeries series = this.getTimeSeries(key);
-			if (series!=null) {
-				try {
-					data.addSeries(series);
-				} catch (IllegalArgumentException e) {
-					e.printStackTrace();
-					throw new RuntimeException("This dataset already contains a series with the key "+series.getKey());
+/**
+ * Returns the data for the specified chart.
+ * @param list an array of strings representing the name of the series.
+ * @return an XYSeriesCollection.
+ */
+private XYSeriesCollection getTimeChartData(String[] list) {
+	final XYSeriesCollection data = new XYSeriesCollection();
+	for (final String key:list){
+		final DynamicXYSeries timeSeries;
+		final DynamicXYSeries xySeries=(DynamicXYSeries) this.series.get(key);
+		if (xySeries!=null) {
+			timeSeries=xySeries;
+		} 
+		else {
+			timeSeries = new DynamicXYSeries(key) {
+				@Override
+				public void update() {
+					final Double value = macroDataset.get(key);
+					final int period = timer.getPeriod().intValue();
+					if (value!=null) {
+						this.add(period, value);
+					}
 				}
-			}
-			else {
-				throw new RuntimeException(key+" XYSeries not found.");
-			}
+			};
+			this.series.put(key, timeSeries);
 		}
-		return data;
-	}
-
-	/**
-	 * Returns the specified series.
-	 * @param seriesKey the key for the Y data (X data will be time).
-	 * @return a XYSeries.
-	 */
-	private XYSeries getTimeSeries(String seriesKey) {
-		final XYSeries result;
-		final XYSeries series=(XYSeries) this.series.get(seriesKey);
-		if (series!=null) {
-			result=series;
-		} else {
-			result=getNewSeries(seriesKey);
+		try {
+			data.addSeries(timeSeries);
+		} catch (IllegalArgumentException e) {
+			throw new RuntimeException("This dataset already contains a series with the key "+timeSeries.getKey(),e);
 		}
-		return result;
 	}
-
+	return data;
+}
+	
 	/**
 	 * Returns a XYZ dataset.
 	 * @param element a XML element that contains the description of the dataset.
@@ -262,34 +244,29 @@ public class BasicChartManager implements ChartManager {
 	 * @throws InitializationException If something goes wrong.
 	 */
 	private XYZDataset getXYBlockData(Element element) throws InitializationException {
-		final XYZDataset dataset;
+		final DynamicXYZDataset dataset;
 		final Node xyzSeriesNode = element.getElementsByTagName("xyBlockSeries").item(0);
 		if (xyzSeriesNode==null) {
 			dataset=null;
 		}
 		else {
-			if (Node.ELEMENT_NODE==xyzSeriesNode.getNodeType()) {
+			if (Node.ELEMENT_NODE!=xyzSeriesNode.getNodeType()) {
 				throw new InitializationException("This node should be an element.");
 			}
 			final Element xyzSeriesElement = (Element) xyzSeriesNode;
 			final String sector = xyzSeriesElement.getAttribute("sector");
 			final String value = xyzSeriesElement.getAttribute("value");
-			dataset = getXYBlockData(sector,value);
+			final String key = sector+".surf."+value;
+			final DynamicXYZDataset result1=(DynamicXYZDataset) this.series.get(key);
+			if (result1!=null) {
+				dataset=result1;
+			} else {
+				throw new RuntimeException("Not yet implemented");
+				// TODO: implement me !
+				//this.series.put(key, dataset);
+			}
 		}
 		return dataset;
-	}
-
-	/**
-	 * Returns a XYZDataset.
-	 * @param sector the sector.
-	 * @param value the key of the z data.
-	 * @return a XYZDataset.
-	 */
-	@SuppressWarnings("static-method")
-	private XYZDataset getXYBlockData(String sector, String value) {
-		throw new RuntimeException("Not implemented");
-		// TODO: implement me !
-		// return dataManager.getXYBlockData(sector,key);
 	}
 
 	@Override
@@ -313,7 +290,7 @@ public class BasicChartManager implements ChartManager {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				@Override public void run() {
-					for (JamelSeries series:series.values()) {
+					for (Dynamic series:series.values()) {
 						series.update();
 					}
 				}
