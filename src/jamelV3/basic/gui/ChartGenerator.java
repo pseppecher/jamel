@@ -1,5 +1,7 @@
 package jamelV3.basic.gui;
 
+import jamelV3.basic.util.InitializationException;
+
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -16,15 +18,21 @@ import org.jfree.chart.axis.TickUnitSource;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.PaintScale;
+import org.jfree.chart.renderer.xy.XYBlockRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYZDataset;
+import org.jfree.ui.RectangleAnchor;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 
 /**
- * The description of a chart. 
+ * The description of a chart.
+ * FIXME: please refactor this object.
  */
 public class ChartGenerator {
 
@@ -296,14 +304,28 @@ public class ChartGenerator {
 	}
 
 	/**
-	 * Creates and returns a new chart.
+	 * Creates and returns a new scatter chart.
+	 * @param description a XML element that contains the description of the chart.
+	 * @param dataset the dataset.
+	 * @param xyzDataset the xyzDataset.
+	 * @return the new chart.
+	 * @throws InitializationException If something goes wrong.
+	 */
+	public static JFreeChart createScatterChart(Element description, XYDataset dataset, XYZDataset xyzDataset) throws InitializationException {
+		final ChartGenerator chartGenerator = new ChartGenerator(description);
+		return chartGenerator.createScatterChart(dataset,xyzDataset);
+	}	
+
+	/**
+	 * Creates and returns a new time chart.
 	 * @param description a XML element that contains the description of the chart.
 	 * @param dataset the dataset.
 	 * @return the new chart.
+	 * @throws InitializationException If something goes wrong.
 	 */
-	public static JFreeChart createChart(Element description, XYDataset dataset) {
+	public static JFreeChart createTimeChart(Element description, XYDataset dataset) throws InitializationException {
 		final ChartGenerator chartGenerator = new ChartGenerator(description);
-		return chartGenerator.createChart(dataset);
+		return chartGenerator.createTimeChart(dataset);
 	}	
 
 	/** The colors. */
@@ -311,6 +333,9 @@ public class ChartGenerator {
 
 	/** The legend labels. */
 	final private String[] label;
+
+	/** The lower bound of the color scale for the xyBlock. */
+	private String lowerBound;
 
 	/** Chart name */
 	final private String name;
@@ -321,11 +346,17 @@ public class ChartGenerator {
 	/** The series keys. */
 	final private String[] series;
 
+	/** The upper bound of the color scale for the xyBlock. */
+	private String upperBound;
+
 	/** Max of the x Axis. */
 	private Double xAxisMax = null;
 
 	/** Min of the x Axis. */
 	private Double xAxisMin = null;
+
+	/** The key for the color of the xyBlock. */
+	private String xyBlockColor;
 
 	/** Max of the y Axis. */
 	private Double yAxisMax = null;
@@ -336,8 +367,9 @@ public class ChartGenerator {
 	/**
 	 * Creates an new ChartGenerator.
 	 * @param description of the chart from an XML document.
+	 * @throws InitializationException If something goes wrong. 
 	 */
-	private ChartGenerator(Element description) {
+	private ChartGenerator(Element description) throws InitializationException {
 		this.name=description.getAttribute("title");
 		final NodeList seriesList = description.getElementsByTagName("series");
 		final int nbSeries = seriesList.getLength();
@@ -351,6 +383,17 @@ public class ChartGenerator {
 			label[k] = serieXML.getAttribute("label");
 		}
 		this.options = description.getAttribute("options");
+		final NodeList xyBlockSeriesList = description.getElementsByTagName("xyBlockSeries");
+		if(xyBlockSeriesList.getLength()>0) {
+			final Node truc = xyBlockSeriesList.item(0);
+			if (truc.getNodeType()!=Node.ELEMENT_NODE) {
+				throw new InitializationException();
+			}
+			final Element chose = (Element) truc;
+			this.xyBlockColor = chose.getAttribute("color");
+			this.lowerBound = chose.getAttribute("lowerBound");
+			this.upperBound = chose.getAttribute("upperBound");
+		}
 		final Element yAxis = (Element) description.getElementsByTagName("yAxis").item(0);
 		if (yAxis!=null) {
 			this.yAxisMax = parseDouble(yAxis.getAttribute("max"));
@@ -364,11 +407,34 @@ public class ChartGenerator {
 	}
 
 	/**
-	 * Returns a new chart.
+	 * Returns a new scatter chart.
+	 * @param dataset the dataset.
+	 * @param xyzDataset the xyzDataset.
+	 * @return a new chart.
+	 */
+	private JFreeChart createScatterChart(XYDataset dataset, XYZDataset xyzDataset) {
+		final Paint[] colors = ParseColors(this.color);
+		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(null,xAxisMin,xAxisMax,true), getNewYAxis(null,yAxisMin,yAxisMax), getNewRenderer(dataset,colors ,true));
+		if (xyzDataset!=null) {
+			plot.setDataset(1, xyzDataset);
+			final XYBlockRenderer renderer = new XYBlockRenderer();
+			final double upper = Double.parseDouble(this.upperBound);
+			final double lower = Double.parseDouble(this.lowerBound);
+			final PaintScale scale = new BasicPaintScale(JamelColor.getColor(this.xyBlockColor),lower,upper);
+			renderer.setPaintScale(scale);
+			renderer.setBlockAnchor(RectangleAnchor.BOTTOM_LEFT);
+			plot.setRenderer(1, renderer);
+		}
+		plot.setFixedLegendItems(getLegendItemCollection(this.series,colors,this.label,true));		
+		return getNewChart(name,plot);
+	}
+
+	/**
+	 * Returns a new time chart.
 	 * @param dataset the dataset.
 	 * @return a new chart.
 	 */
-	private JFreeChart createChart(XYDataset dataset) {
+	private JFreeChart createTimeChart(XYDataset dataset) {
 		final boolean isScatter = this.options.equals("scatter");
 		final Paint[] colors = ParseColors(this.color);
 		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(null,xAxisMin,xAxisMax,isScatter), getNewYAxis(null,yAxisMin,yAxisMax), getNewRenderer(dataset,colors ,isScatter));

@@ -15,7 +15,9 @@
 			title="Age and Productivity"
 			options="scatter">
 			<series
-				value="Industry.all.age, Industry.all.productivity"
+				sector="Industry"
+				x="age"
+				y="productivity"
 				colors="transparentBlue"
 				legend="Firms" />
 		</chart>
@@ -245,12 +247,15 @@
 		<chart
 			title="Wages and Prices"
 			options="scatter">
-			<series
+			<seriesBak
+				comment="FIXME"
 				value="Industry.agent.Firm1.wages, Industry.agent.Firm1.prices"
 				color="transparentRed"
 				label="Firm1" />
 			<series
-				value="Industry.all.wages, Industry.all.prices"
+				sector="Industry"
+				x="wages"
+				y="prices"
 				color="transparentBlue"
 				label="Other firms" />
 		</chart>

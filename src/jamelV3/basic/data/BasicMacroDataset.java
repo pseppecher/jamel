@@ -11,7 +11,6 @@ import org.jfree.data.xy.XYDataItem;
 /**
  * A basic dataset for macro-economic data.
  */
-@SuppressWarnings("serial")
 public class BasicMacroDataset extends HashMap<String,SectorDataset> implements MacroDataset {
 
 	/** A cache for frequent queries. */
@@ -178,16 +177,11 @@ public class BasicMacroDataset extends HashMap<String,SectorDataset> implements 
 	}
 	
 	@Override
-	public List<XYDataItem> getScatter(String xKey, String yKey) {
+	public List<XYDataItem> getScatter(String sector, String xKey, String yKey) {
 		final List<XYDataItem> result;
-		final String[] wordX = xKey.split("\\.",3); 
-		final String[] wordY = yKey.split("\\.",3);
-		if (!wordX[0].equals(wordY[0])) {
-			throw new RuntimeException("Data Inconstistency: "+xKey+" is not consistent with "+yKey);
-		}
-		final SectorDataset sectorDataset = super.get(wordX[0]);
+		final SectorDataset sectorDataset = super.get(sector);
 		if (sectorDataset!=null) {
-			result = sectorDataset.getScatter(wordX[1],wordX[2],wordY[2]);
+			result = sectorDataset.getScatter("all",xKey,yKey);// TODO "all" should be a parameter
 		}
 		else {
 			result=null;
@@ -198,6 +192,11 @@ public class BasicMacroDataset extends HashMap<String,SectorDataset> implements 
 	@Override
 	public void putData(String sector, SectorDataset sectorDataset) {
 		this.put(sector, sectorDataset);
+	}
+
+	@Override
+	public double[][] getXYZData(String sector, String xKey, String yKey, String zKey) {
+		return super.get(sector).getXYZData(xKey,yKey,zKey);
 	}
 
 }

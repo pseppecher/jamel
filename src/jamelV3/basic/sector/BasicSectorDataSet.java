@@ -81,7 +81,7 @@ public class BasicSectorDataSet implements SectorDataset {
 	/** The index. */
 	private int index = 0;
 
-	/** The size of each field (the number of agents). */
+	/** The size of each field (= the number of agents). */
 	private final int size;
 
 	/**
@@ -255,6 +255,20 @@ public class BasicSectorDataSet implements SectorDataset {
 			}
 		}
 		index++;
+	}
+
+	@Override
+	public double[][] getXYZData(String xKey,String yKey,String zKey) {
+		final double[][] result = new double[size][3];
+		final Double[] x = this.fields.get(xKey); 
+		final Double[] y = this.fields.get(yKey); 
+		final Double[] z = this.fields.get(zKey); 
+		for(int i=0; i<size; i++) {
+			result[i][0]=x[i];
+			result[i][1]=y[i];
+			result[i][2]=z[i];
+		}
+		return result;
 	}
 
 }

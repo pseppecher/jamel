@@ -1,7 +1,6 @@
 package jamelV3.basic.gui;
 
 import jamelV3.basic.data.MacroDataset;
-import jamelV3.basic.gui.tests.TestPanel;
 import jamelV3.basic.util.InitializationException;
 import jamelV3.basic.util.Timer;
 
@@ -35,21 +34,9 @@ import org.w3c.dom.NodeList;
 public class BasicChartManager implements ChartManager {
 
 	/**
-	 * An interface for the objects that requires to be updated at the end of the period.
-	 */
-	private interface Dynamic {
-		
-		/**
-		 * Updates the object.
-		 */
-		public void update();
-
-	}
-
-	/**
 	 * A dynamic XYSeries.
 	 */
-	private abstract class DynamicXYSeries extends XYSeries implements Dynamic {
+	private abstract class DynamicXYSeries extends XYSeries implements DynamicData {
 
 		/**
 		 * Constructs a new empty series, with the auto-sort flag set as <code>false</code>, and duplicate values allowed.
@@ -60,11 +47,6 @@ public class BasicChartManager implements ChartManager {
 		}
 
 	}
-	
-	/**
-	 * An interface for dynamic XYZDataset.
-	 */
-	private interface DynamicXYZDataset extends XYZDataset,Dynamic{}
 
 	/** An empty panel.	 */
 	private class EmptyPanel extends JPanel {{this.setBackground(emptyColor);}}
@@ -79,7 +61,7 @@ public class BasicChartManager implements ChartManager {
 	private final MacroDataset macroDataset;
 
 	/** A collection of series. */
-	private final Map<String,Dynamic> series = new LinkedHashMap<String,Dynamic>();
+	private final Map<String,DynamicData> series = new LinkedHashMap<String,DynamicData>();
 
 	/** The list of the tabbed panes.*/
 	private final JPanel[] tabbedPanes;
@@ -124,34 +106,42 @@ public class BasicChartManager implements ChartManager {
 			for (int j = 0; j<chartNodeList.getLength(); j++) {
 				// for each chart element:				
 				final Element chartElement = (Element) chartNodeList.item(j);
-				if (chartElement.getAttribute("title").equals("Test")) {
-					panel.add(new TestPanel());// TODO clean-up !
-				}
-				else if (chartElement.getAttribute("title").equals("Empty")) {
+				if (chartElement.getAttribute("title").equals("Empty")) {
 					panel.add(new EmptyPanel());
 				}
 				else {
 					final NodeList series = chartElement.getElementsByTagName("series");
 					final int nbSeries = series.getLength();
 					final String[] seriesList = new String[nbSeries];
-					for (int k = 0; k<nbSeries; k++) {
-						final Element serieXML = (Element) series.item(k);
-						seriesList[k]=serieXML.getAttribute("value");
-					}
-					final JamelChartPanel chartPanel;
-					final boolean isScatter = "scatter".equals(chartElement.getAttribute("options")); 
 					final XYSeriesCollection data;
+					final JamelChartPanel chartPanel;
+					final boolean isScatter = "scatter".equals(chartElement.getAttribute("options"));
+					if (isScatter) {
+						data = new XYSeriesCollection();
+						for (int k = 0; k<nbSeries; k++) {
+							final Element seriesElem = (Element) series.item(k);
+							data.addSeries(getScatterSeries(seriesElem));
+						}						
+						final XYZDataset xyzDataset = getXYBlockData(chartElement);
+						chartPanel = new JamelChartPanel(ChartGenerator.createScatterChart(chartElement,data,xyzDataset),true);
+					}
+					else {
+						for (int k = 0; k<nbSeries; k++) {
+							final Element seriesElem = (Element) series.item(k);
+							seriesList[k]=seriesElem.getAttribute("value");
+						}
+						data = getTimeChartData(seriesList);
+						chartPanel = new JamelChartPanel(ChartGenerator.createTimeChart(chartElement,data),false);						
+					}
+
+					/*final boolean isScatter = "scatter".equals(chartElement.getAttribute("options")); 
 					if (isScatter) {
 						data = getScatterChartData(seriesList);
-						@SuppressWarnings("unused")
-						final XYZDataset xyzDataset = getXYBlockData(chartElement);
-						// TODO WORK IN PROGRESS
-						chartPanel = new JamelChartPanel(ChartGenerator.createChart(chartElement,data),isScatter);
 					}
 					else {
 						data = getTimeChartData(seriesList);
-						chartPanel = new JamelChartPanel(ChartGenerator.createChart(chartElement,data),isScatter);
-					}
+						chartPanel = new JamelChartPanel(ChartGenerator.createTimeChart(chartElement,data),false);
+					}*/
 					chartPanels.add(chartPanel);
 					panel.add(chartPanel);
 				}
@@ -166,77 +156,73 @@ public class BasicChartManager implements ChartManager {
 	}
 
 	/**
-	 * Returns the data for a scatter chart.
-	 * @param list the list of description of the series.
-	 * @return the data for a scatter chart.
+	 * Returns the specified scatter series.
+	 * @param description an XLM element that contains the description of the series.
+	 * @return a scatter series.
 	 */
-	private XYSeriesCollection getScatterChartData(String[] list) {
+	private DynamicXYSeries getScatterSeries(Element description) {
+		final String sector=description.getAttribute("sector");
+		final String xKey=description.getAttribute("x");
+		final String yKey=description.getAttribute("y");
+		final String seriesKey = sector+"."+xKey+"."+yKey;
+		final DynamicXYSeries scatterSeries;
+		final DynamicXYSeries result1=(DynamicXYSeries) this.series.get(seriesKey);
+		if (result1!=null) {
+			scatterSeries=result1;
+		}
+		else {
+			scatterSeries = new DynamicXYSeries(seriesKey){
+				@SuppressWarnings("unchecked")
+				@Override
+				public void update() {
+					final List<XYDataItem> newData = macroDataset.getScatter(sector,xKey,yKey);
+					this.data.clear();
+					if (newData!=null) {
+						this.data.addAll(newData);
+					}
+					this.fireSeriesChanged();
+				}
+			};
+			this.series.put(seriesKey, scatterSeries);
+		}
+		return scatterSeries;
+	}
+
+	/**
+	 * Returns the data for the specified chart.
+	 * @param list an array of strings representing the name of the series.
+	 * @return an XYSeriesCollection.
+	 */
+	private XYSeriesCollection getTimeChartData(String[] list) {
 		final XYSeriesCollection data = new XYSeriesCollection();
-		for (String key:list){
-			final String[] keys = key.split(",",2);
-			final String xKey=keys[0].trim();
-			final String yKey=keys[1].trim();
-			final String seriesKey = xKey+"&"+yKey;
-			final DynamicXYSeries scatterSeries;
-			final DynamicXYSeries result1=(DynamicXYSeries) this.series.get(seriesKey);
-			if (result1!=null) {
-				scatterSeries=result1;
-			}
+		for (final String key:list){
+			final DynamicXYSeries timeSeries;
+			final DynamicXYSeries xySeries=(DynamicXYSeries) this.series.get(key);
+			if (xySeries!=null) {
+				timeSeries=xySeries;
+			} 
 			else {
-				scatterSeries = new DynamicXYSeries(seriesKey){
-					@SuppressWarnings("unchecked")
+				timeSeries = new DynamicXYSeries(key) {
 					@Override
 					public void update() {
-						final List<XYDataItem> data = macroDataset.getScatter(xKey,yKey);
-						this.data.clear();
-						if (data!=null) {
-							this.data.addAll(data);
+						final Double value = macroDataset.get(key);
+						final int period = timer.getPeriod().intValue();
+						if (value!=null) {
+							this.add(period, value);
 						}
-						this.fireSeriesChanged();
 					}
 				};
-				this.series.put(seriesKey, scatterSeries);
+				this.series.put(key, timeSeries);
 			}
-			data.addSeries(scatterSeries);
+			try {
+				data.addSeries(timeSeries);
+			} catch (IllegalArgumentException e) {
+				throw new RuntimeException("This dataset already contains a series with the key "+timeSeries.getKey(),e);
+			}
 		}
 		return data;
 	}
 
-/**
- * Returns the data for the specified chart.
- * @param list an array of strings representing the name of the series.
- * @return an XYSeriesCollection.
- */
-private XYSeriesCollection getTimeChartData(String[] list) {
-	final XYSeriesCollection data = new XYSeriesCollection();
-	for (final String key:list){
-		final DynamicXYSeries timeSeries;
-		final DynamicXYSeries xySeries=(DynamicXYSeries) this.series.get(key);
-		if (xySeries!=null) {
-			timeSeries=xySeries;
-		} 
-		else {
-			timeSeries = new DynamicXYSeries(key) {
-				@Override
-				public void update() {
-					final Double value = macroDataset.get(key);
-					final int period = timer.getPeriod().intValue();
-					if (value!=null) {
-						this.add(period, value);
-					}
-				}
-			};
-			this.series.put(key, timeSeries);
-		}
-		try {
-			data.addSeries(timeSeries);
-		} catch (IllegalArgumentException e) {
-			throw new RuntimeException("This dataset already contains a series with the key "+timeSeries.getKey(),e);
-		}
-	}
-	return data;
-}
-	
 	/**
 	 * Returns a XYZ dataset.
 	 * @param element a XML element that contains the description of the dataset.
@@ -244,7 +230,7 @@ private XYSeriesCollection getTimeChartData(String[] list) {
 	 * @throws InitializationException If something goes wrong.
 	 */
 	private XYZDataset getXYBlockData(Element element) throws InitializationException {
-		final DynamicXYZDataset dataset;
+		final BasicXYZDataset dataset;
 		final Node xyzSeriesNode = element.getElementsByTagName("xyBlockSeries").item(0);
 		if (xyzSeriesNode==null) {
 			dataset=null;
@@ -255,15 +241,22 @@ private XYSeriesCollection getTimeChartData(String[] list) {
 			}
 			final Element xyzSeriesElement = (Element) xyzSeriesNode;
 			final String sector = xyzSeriesElement.getAttribute("sector");
-			final String value = xyzSeriesElement.getAttribute("value");
-			final String key = sector+".surf."+value;
-			final DynamicXYZDataset result1=(DynamicXYZDataset) this.series.get(key);
+			final String xKey = xyzSeriesElement.getAttribute("x");
+			final String yKey = xyzSeriesElement.getAttribute("y");
+			final String zKey = xyzSeriesElement.getAttribute("z");
+			final String key = sector+".surf."+xKey+"."+yKey+"."+zKey;
+			final BasicXYZDataset result1=(BasicXYZDataset) this.series.get(key);
 			if (result1!=null) {
 				dataset=result1;
-			} else {
-				throw new RuntimeException("Not yet implemented");
-				// TODO: implement me !
-				//this.series.put(key, dataset);
+			} 
+			else {
+				dataset = new BasicXYZDataset(key){
+					@Override
+					public void update() {
+						this.data = macroDataset.getXYZData(sector,xKey,yKey,zKey);
+					}
+				};
+				this.series.put(key, dataset);
 			}
 		}
 		return dataset;
@@ -290,7 +283,7 @@ private XYSeriesCollection getTimeChartData(String[] list) {
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
 				@Override public void run() {
-					for (Dynamic series:series.values()) {
+					for (DynamicData series:series.values()) {
 						series.update();
 					}
 				}

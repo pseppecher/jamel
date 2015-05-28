@@ -60,7 +60,13 @@ public class RepresentativeAgentDataset implements AgentDataset, SectorDataset{
 	@Override
 	public List<XYDataItem> getScatter(String method, String xKey, String yKey) {
 		// Not used.
-		throw new RuntimeException("Not implemented");
+		throw new RuntimeException("Not implemented.");
+	}
+
+	@Override
+	public double[][] getXYZData(String xKey, String yKey, String zKey) {
+		// Not used.
+		throw new RuntimeException("Not implemented.");
 	}
 
 	@Override
@@ -71,13 +77,13 @@ public class RepresentativeAgentDataset implements AgentDataset, SectorDataset{
 	@Override
 	public void put(AgentDataset agentData) {
 		// Not used.
-		throw new RuntimeException("Not implemented");
+		throw new RuntimeException("Not implemented.");
 	}
 
 	@Override
 	public Double put(String key, Double value) {
 		// Not used.
-		throw new RuntimeException("Not implemented");
+		throw new RuntimeException("Not implemented.");
 	}
 
 }

@@ -25,12 +25,24 @@ public interface MacroDataset {
 	
 	/**
 	 * Returns a list of XYDataItem that contains the specified values for each agent selected.
+	 * @param sector the sector.
 	 * @param xKey the key for x values.
 	 * @param yKey the key for y values.
 	 * @return a list of XYDataItem.
 	 */
-	List<XYDataItem> getScatter(String xKey, String yKey);
+	List<XYDataItem> getScatter(String sector, String xKey, String yKey);
 	
+	/**
+	 * Returns an array of xyz items.
+	 * Each element is an array of length 3 that contains the x, y, z values.
+	 * @param sector  the sector.
+	 * @param xKey  the x key.
+	 * @param yKey  the y key.
+	 * @param zKey  the z key.
+	 * @return an array of xyz items.
+	 */
+	double[][] getXYZData(String sector, String xKey, String yKey, String zKey);
+
 	/**
 	 * Associates the specified SectorDataset with the specified sector in this macro dataset. 
 	 * If the macro dataset previously contained a mapping for the sector, the old SectorDataset is replaced.

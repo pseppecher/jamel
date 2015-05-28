@@ -9,7 +9,7 @@
 	</comment> 
 
 	<settings
-		randomSeed="1"
+		randomSeed="0"
 		chartsConfigFile="loktaVolteraConfig/charts.xml" />
 
 	<sectors>

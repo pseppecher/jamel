@@ -14,13 +14,25 @@
 			title="Map"
 			options="scatter">
 			<series
-				value="Preys.all.x, Preys.all.y"
+				sector="Preys"
+				x="x"
+				y="y"
 				color="transparentBlue"
 				label="Preys" />
 			<series
-				value="Predators.all.x, Predators.all.y"
+				sector="Predators"
+				x="x"
+				y="y"
 				color="transparentRed"
 				label="Predators" />
+			<xyBlockSeries
+				sector="Grass"
+				x="x"
+				y="y"
+				z="grass"
+				color="veryLightGreen"
+				lowerBound="-1"
+				upperBound="99" />
 			<yAxis
 				min="0"
 				max="150" />
@@ -39,21 +51,6 @@
 				label="Predators"
 				color="red" />
 		</chart>
-
-		<chartB title="Energy">
-			<series
-				value="Grass.sum.grass"
-				label="Grass"
-				color="green" />
-			<series
-				value="Preys.sum.energy"
-				label="Preys"
-				color="blue" />
-			<series
-				value="Predators.sum.energy"
-				label="Predators"
-				color="red" />
-		</chartB>
 
 	</panel>
 

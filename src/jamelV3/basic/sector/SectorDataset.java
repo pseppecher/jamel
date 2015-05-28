@@ -20,12 +20,6 @@ public interface SectorDataset {
 	Double get(String key);
 
 	/**
-	 * Stores the specified agent data into this sector dataset.  
-	 * @param data the data to be stored.
-	 */
-	void put(AgentDataset data);
-
-	/**
 	 * Returns a list of XYDataItem that contains the specified values for each agent selected.
 	 * @param method a string that contain the method to select the agents. 
 	 * @param xKey the key for x values.
@@ -33,6 +27,22 @@ public interface SectorDataset {
 	 * @return a list of XYDataItem.
 	 */
 	List<XYDataItem> getScatter(String method, String xKey, String yKey);
+
+	/**
+	 * Returns an array of xyz items.
+	 * Each element is an array of length 3 that contains the x, y, z values.
+	 * @param xKey  the x key.
+	 * @param yKey  the y key.
+	 * @param zKey  the z key.
+	 * @return an array of xyz items.
+	 */
+	double[][] getXYZData(String xKey, String yKey, String zKey);
+
+	/**
+	 * Stores the specified agent data into this sector dataset.  
+	 * @param data the data to be stored.
+	 */
+	void put(AgentDataset data);
 
 }
 
