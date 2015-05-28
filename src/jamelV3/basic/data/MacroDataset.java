@@ -25,12 +25,13 @@ public interface MacroDataset {
 	
 	/**
 	 * Returns a list of XYDataItem that contains the specified values for each agent selected.
-	 * @param sector the sector.
-	 * @param xKey the key for x values.
-	 * @param yKey the key for y values.
+	 * @param sector  the sector.
+	 * @param xKey  the key for x values.
+	 * @param yKey  the key for y values.
+	 * @param select  the method of selection.
 	 * @return a list of XYDataItem.
 	 */
-	List<XYDataItem> getScatter(String sector, String xKey, String yKey);
+	List<XYDataItem> getScatterData(String sector, String xKey, String yKey, String select);
 	
 	/**
 	 * Returns an array of xyz items.

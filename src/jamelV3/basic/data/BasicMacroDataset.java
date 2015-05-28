@@ -177,11 +177,11 @@ public class BasicMacroDataset extends HashMap<String,SectorDataset> implements 
 	}
 	
 	@Override
-	public List<XYDataItem> getScatter(String sector, String xKey, String yKey) {
+	public List<XYDataItem> getScatterData(String sector, String xKey, String yKey, String select) {
 		final List<XYDataItem> result;
 		final SectorDataset sectorDataset = super.get(sector);
 		if (sectorDataset!=null) {
-			result = sectorDataset.getScatter("all",xKey,yKey);// TODO "all" should be a parameter
+			result = sectorDataset.getScatter(xKey,yKey,select);
 		}
 		else {
 			result=null;

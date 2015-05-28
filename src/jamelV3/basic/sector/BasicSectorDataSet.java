@@ -93,25 +93,6 @@ public class BasicSectorDataSet implements SectorDataset {
 		this.fields = new HashMap<String,Double[]>();
 	}
 
-	/**
-	 * Returns the value of the specified field for the specified agent.
-	 * @param name the name of the agent.
-	 * @param key the key of the field.
-	 * @return the value.
-	 */
-	private Double getValue(String name, String key) {
-		final Double result;
-		final Double[] values = this.fields.get(key);
-		final Integer agentID = agents.get(name);
-		if (values != null && agentID != null) {
-			result = values[agents.get(name)];
-		}
-		else {
-			result = null;
-		}
-		return result;
-	}
-
 	@Override
 	public Double get(String key) {
 		Double result = null;
@@ -184,19 +165,19 @@ public class BasicSectorDataSet implements SectorDataset {
 	}
 
 	@Override
-	public List<XYDataItem> getScatter(String method, String xKey, String yKey) {
+	public List<XYDataItem> getScatter(String xKey, String yKey, String select) {
 		final List<XYDataItem> result;
+		final Double[] yValues = this.fields.get(yKey);
+		final Double[] xValues = this.fields.get(xKey);
 
-		if ("all".equals(method)) {
-			final Double[] yValues = this.fields.get(yKey);
-			final Double[] xValues = this.fields.get(xKey);
+		if ("".equals(select)) { // select is empty: all agents are selected.
 			if (xValues!=null && yValues!=null) {
 				result = new ArrayList<XYDataItem>(xValues.length);
 				if (xValues.length!=yValues.length) {
 					throw new RuntimeException("xValue[] and yValue[] must have the same lenght.");
 				}
-				for (int index = 0; index<xValues.length;index++) {
-					final XYDataItem item = new XYDataItem(xValues[index], yValues[index]);
+				for (int i = 0; i<xValues.length;i++) {
+					final XYDataItem item = new XYDataItem(xValues[i], yValues[i]);
 					result.add(item);
 				}
 			}
@@ -205,26 +186,24 @@ public class BasicSectorDataSet implements SectorDataset {
 			}
 		}
 
-		else if ("agent".equals(method)) {
-			final String[] wordX = xKey.split("\\.",2); 
-			final String[] wordY = yKey.split("\\.",2);
-			if (!wordX[0].equals(wordY[0])) {
-				throw new RuntimeException("Data Inconstistency: "+xKey+" is not consistent with "+yKey);
+		else { 
+			// parsing the select method.
+			result = new ArrayList<XYDataItem>(1);
+			final String[] word = select.split("=",2);
+			final String selectKey = word[0];
+			final String selectValue = word[1];
+			if ("name".equals(selectKey)) { 
+				// selecting one agent by its name.
+				final Integer agentID = agents.get(selectValue);
+				if (agentID!=null) {
+					final XYDataItem item = new XYDataItem(xValues[agentID], yValues[agentID]);
+					result.add(item);
+				}
 			}
-			if (agents.containsKey(wordX[0])) {
-				result = new ArrayList<XYDataItem>(1);
-				final XYDataItem item = new XYDataItem(getValue(wordX[0],wordX[1]), getValue(wordX[0],wordY[1]));
-				result.add(item);
-			}
-
 			else {
-				result=null;
+				// other selection method.
+				throw new IllegalArgumentException("Scatterchart series: unexpected selecting method: "+select);
 			}
-		}
-
-		else {
-			result=null;
-			throw new IllegalArgumentException("Unknown method: "+method);
 		}
 
 		return result;

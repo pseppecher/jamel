@@ -58,7 +58,7 @@ public class RepresentativeAgentDataset implements AgentDataset, SectorDataset{
 	}
 
 	@Override
-	public List<XYDataItem> getScatter(String method, String xKey, String yKey) {
+	public List<XYDataItem> getScatter(String xKey, String yKey, String method) {
 		// Not used.
 		throw new RuntimeException("Not implemented.");
 	}

@@ -21,12 +21,12 @@ public interface SectorDataset {
 
 	/**
 	 * Returns a list of XYDataItem that contains the specified values for each agent selected.
-	 * @param method a string that contain the method to select the agents. 
-	 * @param xKey the key for x values.
-	 * @param yKey the key for y values.
+	 * @param xKey  the key for x values.
+	 * @param yKey  the key for y values.
+	 * @param select  the method to select the agents. 
 	 * @return a list of XYDataItem.
 	 */
-	List<XYDataItem> getScatter(String method, String xKey, String yKey);
+	List<XYDataItem> getScatter(String xKey, String yKey, String select);
 
 	/**
 	 * Returns an array of xyz items.

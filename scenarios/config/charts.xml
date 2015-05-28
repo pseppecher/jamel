@@ -247,10 +247,12 @@
 		<chart
 			title="Wages and Prices"
 			options="scatter">
-			<seriesBak
-				comment="FIXME"
-				value="Industry.agent.Firm1.wages, Industry.agent.Firm1.prices"
+			<series
+				sector="Industry"
+				x="wages"
+				y="prices"
 				color="transparentRed"
+				select="name=Firm1"
 				label="Firm1" />
 			<series
 				sector="Industry"

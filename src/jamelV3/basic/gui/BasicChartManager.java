@@ -164,7 +164,8 @@ public class BasicChartManager implements ChartManager {
 		final String sector=description.getAttribute("sector");
 		final String xKey=description.getAttribute("x");
 		final String yKey=description.getAttribute("y");
-		final String seriesKey = sector+"."+xKey+"."+yKey;
+		final String select=description.getAttribute("select");
+		final String seriesKey = sector+"."+xKey+"."+yKey+"."+select;
 		final DynamicXYSeries scatterSeries;
 		final DynamicXYSeries result1=(DynamicXYSeries) this.series.get(seriesKey);
 		if (result1!=null) {
@@ -175,7 +176,7 @@ public class BasicChartManager implements ChartManager {
 				@SuppressWarnings("unchecked")
 				@Override
 				public void update() {
-					final List<XYDataItem> newData = macroDataset.getScatter(sector,xKey,yKey);
+					final List<XYDataItem> newData = macroDataset.getScatterData(sector,xKey,yKey,select);
 					this.data.clear();
 					if (newData!=null) {
 						this.data.addAll(newData);
