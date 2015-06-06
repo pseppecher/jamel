@@ -1,13 +1,13 @@
 package jamelV3.loktaVolterra;
 
-import java.util.HashMap;
-
 import jamelV3.basic.Circuit;
 import jamelV3.basic.sector.AbstractPhase;
 import jamelV3.basic.sector.BasicSectorDataSet;
 import jamelV3.basic.sector.Phase;
 import jamelV3.basic.sector.Sector;
 import jamelV3.basic.sector.SectorDataset;
+import jamelV3.basic.util.BasicParameters;
+import jamelV3.basic.util.JamelParameters;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
@@ -18,12 +18,12 @@ import org.w3c.dom.Node;
  * The Prey sector.
  */
 public class Grass implements Sector, LandSector {
-	
+
 	@SuppressWarnings("javadoc")
 	private class Squares {
-		
+
 		final private LandSquare[][] squares = new LandSquare[width][height]; 
-	
+
 		public SectorDataset collectData() {
 			final SectorDataset sectorDataset = new BasicSectorDataSet(width*height);
 			for (int x=0;x<width;x++) {
@@ -46,7 +46,7 @@ public class Grass implements Sector, LandSector {
 				}
 			}				
 		}
-		
+
 	}
 
 	@SuppressWarnings("javadoc")
@@ -62,14 +62,14 @@ public class Grass implements Sector, LandSector {
 	private final String name;
 
 	/** The parameters of the sector. */
-	private final HashMap<String,Double> params = new HashMap<String,Double>();
+	private final JamelParameters params = new BasicParameters();
 
 	/** The squares. */
 	private Squares squares = null;
 
 	/** The width of the grass. */
 	private Integer width=null;
-	
+
 	/**
 	 * Creates a new sector.
 	 * @param name the name of the sector.
@@ -104,7 +104,7 @@ public class Grass implements Sector, LandSector {
 	 * @param key the key of the parameter to be returned.
 	 * @return the double value of the specified parameter.
 	 */
-	public Double getParam(String key) {
+	public Float getParam(String key) {
 		return this.params.get(key);
 	}
 
@@ -135,7 +135,7 @@ public class Grass implements Sector, LandSector {
 			final Node node = attributes.item(i);
 			if (node.getNodeType()==Node.ATTRIBUTE_NODE) {
 				final Attr attr = (Attr) node;
-				this.params.put(attr.getName(), Double.parseDouble(attr.getValue()));
+				this.params.put(attr.getName(), Float.parseFloat(attr.getValue()));
 			}
 		}
 		this.width=this.params.get("width").intValue();

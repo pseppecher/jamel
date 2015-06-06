@@ -1,6 +1,7 @@
 package jamelV3.basic.sector;
 
 import jamelV3.basic.agent.AgentDataset;
+import jamelV3.basic.gui.XYZItem;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -210,6 +211,18 @@ public class BasicSectorDataSet implements SectorDataset {
 	}
 
 	@Override
+	public List<XYZItem> getXYZData(String xKey,String yKey,String zKey) {
+		final Double[] x = this.fields.get(xKey); 
+		final Double[] y = this.fields.get(yKey); 
+		final Double[] z = this.fields.get(zKey); 
+		final List<XYZItem> result = new ArrayList<XYZItem>(x.length);
+		for(int i=0; i<size; i++) {
+			result.add(new XYZItem(x[i],y[i],z[i]));
+		}
+		return result;
+	}
+
+	@Override
 	public void put(AgentDataset agentDataset) {
 		final String agentName = agentDataset.getName();
 		if (this.agents.containsKey(agentName)) {
@@ -234,20 +247,6 @@ public class BasicSectorDataSet implements SectorDataset {
 			}
 		}
 		index++;
-	}
-
-	@Override
-	public double[][] getXYZData(String xKey,String yKey,String zKey) {
-		final double[][] result = new double[size][3];
-		final Double[] x = this.fields.get(xKey); 
-		final Double[] y = this.fields.get(yKey); 
-		final Double[] z = this.fields.get(zKey); 
-		for(int i=0; i<size; i++) {
-			result[i][0]=x[i];
-			result[i][1]=y[i];
-			result[i][2]=z[i];
-		}
-		return result;
 	}
 
 }

@@ -30,15 +30,16 @@
 				x="x"
 				y="y"
 				z="grass"
-				color="veryLightGreen"
-				lowerBound="-1"
-				upperBound="99" />
+				lowerColor="red"
+				upperColor="green"
+				lowerBound="0"
+				upperBound="30" />
 			<yAxis
 				min="0"
-				max="150" />
+				max="200" />
 			<xAxis
 				min="0"
-				max="150" />
+				max="200" />
 		</chart>
 
 		<chart title="Agents">

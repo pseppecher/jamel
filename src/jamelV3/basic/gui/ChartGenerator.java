@@ -9,12 +9,17 @@ import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Line2D;
 import java.awt.geom.Rectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
+import org.jfree.chart.annotations.XYAnnotation;
+import org.jfree.chart.annotations.XYPointerAnnotation;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.TickUnitSource;
+import org.jfree.chart.block.BlockBorder;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
@@ -22,17 +27,19 @@ import org.jfree.chart.renderer.PaintScale;
 import org.jfree.chart.renderer.xy.XYBlockRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.title.PaintScaleLegend;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYZDataset;
 import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.RectangleEdge;
+import org.jfree.ui.RectangleInsets;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 
 /**
- * The description of a chart.
- * FIXME: please refactor this object.
+ * A chart generator.
  */
 public class ChartGenerator {
 
@@ -41,6 +48,9 @@ public class ChartGenerator {
 
 	/** A transparent color used for chart background. */
 	private static final Color colorTransparent = new Color(0,0,0,0);
+
+	/** The tick unit source. */
+	private static final TickUnitSource IntegerTickUnits = NumberAxis.createIntegerTickUnits();
 
 	/** The font used for legend items. */
 	private static final Font legendItemFont = new Font("Monaco", Font.PLAIN, 10);
@@ -57,11 +67,44 @@ public class ChartGenerator {
 	/** The font used for tick labels. */
 	private static final Font tickLabelFont = new Font("Tahoma", Font.PLAIN, 10);
 
-	/** The tick unit source. */
-	private static final TickUnitSource tickUnitSource = NumberAxis.createIntegerTickUnits();
-
 	/** The font used for chart titles. */
 	private static final Font titleFont = new Font("Tahoma", Font.PLAIN, 14);
+
+	/**
+	 * Returns a list of {@link XYAnnotation}.
+	 * @param element an XML element that contains the description of the annotations.
+	 * @return a list of {@link XYAnnotation}.
+	 * @throws InitializationException If something goes wrong.
+	 */
+	private static List<XYAnnotation> getAnnotations(Element element) throws InitializationException {
+		final List<XYAnnotation> result;
+		final NodeList list = element.getElementsByTagName("annotations");
+		if (list.getLength()>0) {
+			final Node item = list.item(0);
+			if (item.getNodeType()!=Node.ELEMENT_NODE) {
+				throw new InitializationException("Not an element.");
+			}
+			final Element annotations = (Element) item;
+			final NodeList childNodes = annotations.getChildNodes();
+			result=new ArrayList<XYAnnotation>();
+			for (int i=0; i<childNodes.getLength(); i++) {
+				final Node item2 = childNodes.item(i);
+				if (item2.getNodeType()==Node.ELEMENT_NODE) {
+					final Element element2 = (Element) item2;
+					final String label = element2.getNodeName();
+					final float x = Float.parseFloat(element2.getAttribute("x"));
+					final float y = Float.parseFloat(element2.getAttribute("y"));
+					final float angle = Float.parseFloat(element2.getAttribute("angle"));
+					final XYAnnotation annotation = new XYPointerAnnotation(label, x, y, angle);
+					result.add(annotation);
+				}
+			}
+		}
+		else {
+			result=null;
+		}
+		return result;
+	}
 
 	/**
 	 * Returns a LegendItemCollection.
@@ -99,6 +142,32 @@ public class ChartGenerator {
 	}
 
 	/**
+	 * Returns a new Y axis.
+	 * @param elem an XML element with the description of the axis.
+	 * @param source  the tick unit source.
+	 * @return a new Y axis.
+	 */
+	private static NumberAxis getNewAxis(Element elem, TickUnitSource source) {
+		final NumberAxis axis = new NumberAxis(null);
+		axis.setAutoRangeIncludesZero(false);
+		if (source!=null) {
+			axis.setStandardTickUnits(source);
+		}
+		axis.setTickLabelFont(tickLabelFont);			
+		if (elem!=null) {
+			final Double max = parseDouble(elem.getAttribute("max"));
+			if (max!=null) {
+				axis.setUpperBound(max);				
+			}
+			final Double min = parseDouble(elem.getAttribute("min"));
+			if (min!=null) {
+				axis.setLowerBound(min);				
+			}
+		}
+		return axis;
+	}
+
+	/**
 	 * Creates and returns a new chart with the given title and plot.
 	 * 
 	 * @param title  the chart title (<code>null</code> permitted).
@@ -111,6 +180,43 @@ public class ChartGenerator {
 			this.setBackgroundPaint(colorTransparent);
 			this.getLegend().setItemFont(legendItemFont);
 		}};
+	}
+
+	/**
+	 * Returns a new color {@link PaintScale}.
+	 * @param elem  the description of the Paintscale to be returned.
+	 * @return a new color {@link PaintScale}.
+	 */
+	private static PaintScale getNewColorPaintScale(Element elem) {
+		final String lowerColorString = elem.getAttribute("lowerColor");
+		final String upperColorString = elem.getAttribute("upperColor");
+		final Color upperColor;
+		final Color lowerColor;
+		if ("".equals(lowerColorString) || "".equals(upperColorString)) {
+			// L'une des deux couleurs n'est pas définie.
+			throw new IllegalArgumentException("A color is missing");
+		}
+		upperColor=JamelColor.getColor(upperColorString);
+		lowerColor=JamelColor.getColor(lowerColorString);
+		final double upperBound = Double.parseDouble(elem.getAttribute("upperBound"));
+		final double lowerBound = Double.parseDouble(elem.getAttribute("lowerBound"));
+		return new ColorPaintScale(lowerBound,upperBound,lowerColor,upperColor);
+	}
+
+	/**
+	 * Returns a new {@link PaintScaleLegend} for the specified paint scale.
+	 * @param scale  the paint scale.
+	 * @return a new {@link PaintScaleLegend}.
+	 */
+	private static PaintScaleLegend getNewPaintScaleLegend(PaintScale scale) {
+		final NumberAxis scaleAxis=new NumberAxis();
+		scaleAxis.setRange(scale.getLowerBound(),scale.getUpperBound());
+		final PaintScaleLegend psl=new PaintScaleLegend(scale,scaleAxis);
+		psl.setMargin(new RectangleInsets(10,10,10,10));
+		psl.setPosition(RectangleEdge.BOTTOM);
+		psl.setAxisOffset(5.0);
+		psl.setFrame(new BlockBorder(Color.GRAY));
+		return psl;
 	}
 
 	/**
@@ -175,28 +281,6 @@ public class ChartGenerator {
 	}
 
 	/**
-	 * Creates and returns a new X axis.
-	 * @param label the axis label (<code>null</code> permitted).
-	 * @param min the lower bound for the axis.
-	 * @param max the upper bound for the axis.
-	 * @param isScatter a flag that indicates if the chart is a scatter or not.
-	 * @return a new X axis.
-	 */
-	private static NumberAxis getNewXAxis(String label, Double min, Double max, boolean isScatter) {
-		NumberAxis axis = getTimeAxis(label);
-		if (isScatter) {
-			axis = getStandardAxis(label);
-		}
-		if (min!=null) {
-			axis.setLowerBound(min);
-		}
-		if (max!=null) {
-			axis.setUpperBound(max);
-		}
-		return axis;
-	}
-
-	/**
 	 * Creates and returns a new plot with the specified dataset, axes and renderer.
 	 * 
 	 * @param dataset  the dataset (<code>null</code> permitted).
@@ -219,56 +303,11 @@ public class ChartGenerator {
 	}
 
 	/**
-	 * Creates and returns a new Y axis.
-	 * @param label the axis label (<code>null</code> permitted).
-	 * @param min the lower bound for the axis.
-	 * @param max the upper bound for the axis.
-	 * @return a new Y axis.
-	 */
-	private static NumberAxis getNewYAxis(String label, Double min, Double max) {
-		final NumberAxis axis = getStandardAxis(label);
-		if (min!=null) {
-			axis.setLowerBound(min);
-		}
-		if (max!=null) {
-			axis.setUpperBound(max);
-		}
-		return axis;
-	}
-
-	/**
-	 * Constructs a number axis, using default values where necessary.
-	 *
-	 * @param label  the axis label (<code>null</code> permitted).
-	 * @return a number axis.
-	 */
-	private static NumberAxis getStandardAxis(String label) {
-		return new NumberAxis(label){{
-			this.setAutoRangeIncludesZero(false);
-			this.setTickLabelFont(tickLabelFont);			
-		}};		
-	}
-
-	/**
-	 * Constructs a number axis, for time axis usage.
-	 *
-	 * @param label  the axis label (<code>null</code> permitted).
-	 * @return a number axis.
-	 */
-	private static NumberAxis getTimeAxis(String label) {
-		return new NumberAxis(label) {{
-			this.setAutoRangeIncludesZero(true);
-			this.setStandardTickUnits(tickUnitSource);	
-			this.setTickLabelFont(tickLabelFont);
-		}};
-	}
-
-	/**
 	 * Returns an array of Paint initialized to the colors represented by the specified strings.
 	 * @param color an array of String representing the colors to be returned
 	 * @return an array of Paint.
 	 */
-	private static Paint[] ParseColors(String ... color) {
+	private static Paint[] parseColors(String ... color) {
 		final Paint[] result = new Paint[color.length];
 		final DefaultDrawingSupplier drawingSupplier = new DefaultDrawingSupplier();
 		for(int i=0; i<color.length; i++) {
@@ -312,9 +351,70 @@ public class ChartGenerator {
 	 * @throws InitializationException If something goes wrong.
 	 */
 	public static JFreeChart createScatterChart(Element description, XYDataset dataset, XYZDataset xyzDataset) throws InitializationException {
-		final ChartGenerator chartGenerator = new ChartGenerator(description);
-		return chartGenerator.createScatterChart(dataset,xyzDataset);
-	}	
+		final String name=description.getAttribute("title");
+		final NodeList seriesList = description.getElementsByTagName("series");
+		final int nbSeries = seriesList.getLength();
+		final String[] series = new String[nbSeries];
+		final String[] color = new String[nbSeries];
+		final String[] label = new String[nbSeries];
+		for (int k = 0; k<nbSeries; k++) {
+			final Element serieXML = (Element) seriesList.item(k);
+			series[k] = serieXML.getAttribute("value");
+			color[k] = serieXML.getAttribute("color");
+			label[k] = serieXML.getAttribute("label");
+		}
+		final NumberAxis xAxis = getNewAxis((Element) description.getElementsByTagName("xAxis").item(0),null);
+		final NumberAxis yAxis = getNewAxis((Element) description.getElementsByTagName("yAxis").item(0),null);
+		final Paint[] colors = parseColors(color);
+
+		final XYPlot plot = getNewXYPlot(dataset, xAxis, yAxis, getNewRenderer(dataset,colors ,true));
+
+		final List<XYAnnotation> annotations = getAnnotations(description);
+		if (annotations!=null) {
+			for (XYAnnotation annotation:annotations) {
+				plot.addAnnotation(annotation);			
+			}
+		}
+
+		final PaintScaleLegend psl;
+		if (xyzDataset!=null) {
+			plot.setDataset(1, xyzDataset);
+			final XYBlockRenderer renderer = new XYBlockRenderer();
+			final NodeList xyBlockSeriesList = description.getElementsByTagName("xyBlockSeries");
+
+			final Node node = xyBlockSeriesList.item(0);
+			if (node.getNodeType()!=Node.ELEMENT_NODE) {
+				throw new InitializationException();
+			}
+			final Element elem = (Element) node;
+			final PaintScale scale = getNewColorPaintScale(elem);			
+			renderer.setPaintScale(scale);
+
+			final String blockHeight =  elem.getAttribute("blockHeight");
+			final String blockWidth =  elem.getAttribute("blockWidth");
+			if (!"".equals(blockHeight)) {
+				renderer.setBlockHeight(Double.parseDouble(blockHeight));				
+			}
+			if (!"".equals(blockWidth)) {
+				renderer.setBlockWidth(Double.parseDouble(blockWidth));				
+			}
+			
+			renderer.setBlockAnchor(RectangleAnchor.BOTTOM_LEFT);
+			plot.setRenderer(1, renderer);
+			psl = getNewPaintScaleLegend(scale);
+		}
+		else {
+			psl=null;
+		}
+		plot.setFixedLegendItems(getLegendItemCollection(series,colors,label,true));
+
+		final JFreeChart result = getNewChart(name,plot);
+		if (psl!=null) {
+			result.addSubtitle(psl);
+		}
+		return result;
+
+	}
 
 	/**
 	 * Creates and returns a new time chart.
@@ -323,122 +423,24 @@ public class ChartGenerator {
 	 * @return the new chart.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	public static JFreeChart createTimeChart(Element description, XYDataset dataset) throws InitializationException {
-		final ChartGenerator chartGenerator = new ChartGenerator(description);
-		return chartGenerator.createTimeChart(dataset);
-	}	
-
-	/** The colors. */
-	final private String[] color;
-
-	/** The legend labels. */
-	final private String[] label;
-
-	/** The lower bound of the color scale for the xyBlock. */
-	private String lowerBound;
-
-	/** Chart name */
-	final private String name;
-
-	/** The options. */
-	final private String options;
-
-	/** The series keys. */
-	final private String[] series;
-
-	/** The upper bound of the color scale for the xyBlock. */
-	private String upperBound;
-
-	/** Max of the x Axis. */
-	private Double xAxisMax = null;
-
-	/** Min of the x Axis. */
-	private Double xAxisMin = null;
-
-	/** The key for the color of the xyBlock. */
-	private String xyBlockColor;
-
-	/** Max of the y Axis. */
-	private Double yAxisMax = null;
-
-	/** Min of the yAxis. */
-	private Double yAxisMin = null;
-
-	/**
-	 * Creates an new ChartGenerator.
-	 * @param description of the chart from an XML document.
-	 * @throws InitializationException If something goes wrong. 
-	 */
-	private ChartGenerator(Element description) throws InitializationException {
-		this.name=description.getAttribute("title");
+	public static JFreeChart createTimeChart(final Element description, final XYDataset dataset) throws InitializationException {
+		final String name=description.getAttribute("title");
 		final NodeList seriesList = description.getElementsByTagName("series");
 		final int nbSeries = seriesList.getLength();
-		this.series = new String[nbSeries];
-		this.color = new String[nbSeries];
-		this.label = new String[nbSeries];
+		final String[] series = new String[nbSeries];
+		final String[] color = new String[nbSeries];
+		final String[] label = new String[nbSeries];
 		for (int k = 0; k<nbSeries; k++) {
 			final Element serieXML = (Element) seriesList.item(k);
 			series[k] = serieXML.getAttribute("value");
 			color[k] = serieXML.getAttribute("color");
 			label[k] = serieXML.getAttribute("label");
 		}
-		this.options = description.getAttribute("options");
-		final NodeList xyBlockSeriesList = description.getElementsByTagName("xyBlockSeries");
-		if(xyBlockSeriesList.getLength()>0) {
-			final Node truc = xyBlockSeriesList.item(0);
-			if (truc.getNodeType()!=Node.ELEMENT_NODE) {
-				throw new InitializationException();
-			}
-			final Element chose = (Element) truc;
-			this.xyBlockColor = chose.getAttribute("color");
-			this.lowerBound = chose.getAttribute("lowerBound");
-			this.upperBound = chose.getAttribute("upperBound");
-		}
-		final Element yAxis = (Element) description.getElementsByTagName("yAxis").item(0);
-		if (yAxis!=null) {
-			this.yAxisMax = parseDouble(yAxis.getAttribute("max"));
-			this.yAxisMin = parseDouble(yAxis.getAttribute("min"));
-		}
-		final Element xAxis = (Element) description.getElementsByTagName("xAxis").item(0);
-		if (xAxis!=null) {
-			this.xAxisMax = parseDouble(xAxis.getAttribute("max"));
-			this.xAxisMin = parseDouble(xAxis.getAttribute("min"));
-		}
-	}
-
-	/**
-	 * Returns a new scatter chart.
-	 * @param dataset the dataset.
-	 * @param xyzDataset the xyzDataset.
-	 * @return a new chart.
-	 */
-	private JFreeChart createScatterChart(XYDataset dataset, XYZDataset xyzDataset) {
-		final Paint[] colors = ParseColors(this.color);
-		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(null,xAxisMin,xAxisMax,true), getNewYAxis(null,yAxisMin,yAxisMax), getNewRenderer(dataset,colors ,true));
-		if (xyzDataset!=null) {
-			plot.setDataset(1, xyzDataset);
-			final XYBlockRenderer renderer = new XYBlockRenderer();
-			final double upper = Double.parseDouble(this.upperBound);
-			final double lower = Double.parseDouble(this.lowerBound);
-			final PaintScale scale = new BasicPaintScale(JamelColor.getColor(this.xyBlockColor),lower,upper);
-			renderer.setPaintScale(scale);
-			renderer.setBlockAnchor(RectangleAnchor.BOTTOM_LEFT);
-			plot.setRenderer(1, renderer);
-		}
-		plot.setFixedLegendItems(getLegendItemCollection(this.series,colors,this.label,true));		
-		return getNewChart(name,plot);
-	}
-
-	/**
-	 * Returns a new time chart.
-	 * @param dataset the dataset.
-	 * @return a new chart.
-	 */
-	private JFreeChart createTimeChart(XYDataset dataset) {
-		final boolean isScatter = this.options.equals("scatter");
-		final Paint[] colors = ParseColors(this.color);
-		final XYPlot plot = getNewXYPlot(dataset, getNewXAxis(null,xAxisMin,xAxisMax,isScatter), getNewYAxis(null,yAxisMin,yAxisMax), getNewRenderer(dataset,colors ,isScatter));
-		plot.setFixedLegendItems(getLegendItemCollection(this.series,colors,this.label,isScatter));		
+		final NumberAxis xAxis = getNewAxis((Element) description.getElementsByTagName("xAxis").item(0),IntegerTickUnits);
+		final NumberAxis yAxis = getNewAxis((Element) description.getElementsByTagName("yAxis").item(0),null);
+		final Paint[] colors = parseColors(color);
+		final XYPlot plot = getNewXYPlot(dataset, xAxis, yAxis, getNewRenderer(dataset,colors,false));
+		plot.setFixedLegendItems(getLegendItemCollection(series,colors,label,false));		
 		return getNewChart(name,plot);	
 	}
 

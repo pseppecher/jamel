@@ -96,13 +96,15 @@
 
 	<events>
 
+		<pause period="0" />
+
 		<new
-			period="1"
+			period="0"
 			sector="Households"
 			size="1200" />
 
 		<new
-			period="1"
+			period="0"
 			sector="Industry"
 			size="100" />
 

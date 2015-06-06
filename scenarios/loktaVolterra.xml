@@ -18,8 +18,8 @@
 			<settings
 				growth="0.01"
 				lim="20"
-				width="150"
-				height="150" />
+				width="200"
+				height="200" />
 		</Grass>
 
 		<Preys type="jamelV3.loktaVolterra.Preys">

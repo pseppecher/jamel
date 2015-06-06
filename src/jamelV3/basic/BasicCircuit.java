@@ -35,7 +35,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * A basic class of the Circuit.
+ * A basic class of the {@link Circuit}.
  */
 public class BasicCircuit implements Circuit {
 
@@ -215,7 +215,7 @@ public class BasicCircuit implements Circuit {
 		}
 		try {
 			final int seed = Integer.parseInt(randomSeed);
-			result = new Random() {{this.setSeed(seed);}};
+			result = new Random(seed);
 		} catch (NumberFormatException e) {
 			throw new InitializationException("Something went wrong while parsing the tag \"randomSeed\".",e);			
 		}
@@ -266,6 +266,23 @@ public class BasicCircuit implements Circuit {
 	}
 
 	/**
+	 * Returns the length of time to sleep in milliseconds.
+	 * @param settings  an XML element that contains the circuit settings.
+	 * @return the length of time to sleep in milliseconds.
+	 */
+	private static Integer getSleep(Element settings) {
+		Integer result;
+		final String sleep = settings.getAttribute("sleep");
+		if ("".equals(sleep)) {
+			result=null;
+		}
+		else {
+			result = Integer.parseInt(sleep);
+		}
+		return result;
+	}
+
+	/**
 	 * Initializes the sectors.
 	 * Must be called only after creating each sector.
 	 * @param sectors the list of the sectors to be initialized.
@@ -305,6 +322,21 @@ public class BasicCircuit implements Circuit {
 		return string;
 	}
 
+	/**
+	 * Causes this thread to sleep (temporarily cease execution) for the specified number of milliseconds.
+	 * Useful to slow down the simulation.
+	 * @param millis  the length of time to sleep in milliseconds.
+	 */
+	private static void sleep(Integer millis) {
+		if (millis!=null) {
+			try {
+				Thread.sleep(millis);
+			} catch (InterruptedException e) {
+				e.printStackTrace();			
+			}			
+		}
+	}
+
 	/** controlPanel */
 	private final ControlPanel controlPanel;
 
@@ -326,6 +358,9 @@ public class BasicCircuit implements Circuit {
 	/** The sectors of the circuit. */
 	private final LinkedHashMap<String,Sector> sectors;
 
+	/** The length of time to sleep in milliseconds. */
+	final private Integer sleep;
+
 	/** The timer. */
 	private final BasicTimer timer;
 
@@ -343,9 +378,10 @@ public class BasicCircuit implements Circuit {
 	 * @throws InitializationException If something goes wrong.
 	 */
 	public BasicCircuit(final Element circuitElem, String path, String name) throws InitializationException {
-		this.timer = new BasicTimer(-1);
+		this.timer = new BasicTimer(0);
 		final Element settings = getSettings(circuitElem);
 		this.random = getNewRandom(settings);
+		this.sleep = getSleep(settings);
 		this.sectors = getNewSectors(this, circuitElem);
 		initSectors(this.sectors,circuitElem);
 		this.phases = getNewPhases(this.sectors, circuitElem);
@@ -428,18 +464,33 @@ public class BasicCircuit implements Circuit {
 	}
 
 	/**
+	 * Pause.
+	 */
+	private void doPause() {
+		while (this.pause) {
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e) {
+				e.printStackTrace();			
+			}
+		}
+	}
+
+	/**
 	 * Executes a period of the circuit.
 	 */
 	private void doPeriod() {
-		timer.next();
-		this.doEvents();
-		for(Phase phase:phases) {
-			phase.run();
-		}
 		for(Sector sector:this.sectors.values()) {
 			this.dataManager.putData(sector.getName(), sector.getDataset());
 		}
 		this.dataManager.update();
+		this.doEvents();
+		this.doPause();
+		timer.next();
+		for(Phase phase:phases) {
+			phase.run();
+		}
+		sleep(this.sleep);
 	}
 
 	/**
@@ -506,16 +557,7 @@ public class BasicCircuit implements Circuit {
 	@Override
 	public void run() {
 		while (this.run) {
-			if (!this.pause){
-				this.doPeriod();
-			}
-			else {
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}				
-			}
+			this.doPeriod();
 		}
 		// Ciao bye bye.
 	}

@@ -1,5 +1,7 @@
 package jamelV3.basic.gui;
 
+import java.util.List;
+
 import org.jfree.data.DomainOrder;
 import org.jfree.data.general.DatasetChangeListener;
 import org.jfree.data.general.DatasetGroup;
@@ -22,7 +24,7 @@ public abstract class BasicXYZDataset implements DynamicData,XYZDataset {
 	 * the second containing the y-value 
 	 * and the third containing the z-values.
 	 */
-	protected double[][] data = new double[0][0];
+	protected List<XYZItem> data = null;// new ArrayList<XYZItem>();
 	
 	/**
 	 * Creates a new BasicXYZDataset.
@@ -49,7 +51,14 @@ public abstract class BasicXYZDataset implements DynamicData,XYZDataset {
 
 	@Override
 	public int getItemCount(int series) {
-		return this.data.length;
+		final int result;
+		if (this.data==null) {
+			result=0;
+		}
+		else {
+			result=this.data.size();
+		}
+		return result;
 	}
 
 	@Override
@@ -79,7 +88,7 @@ public abstract class BasicXYZDataset implements DynamicData,XYZDataset {
 		if (series!=0) {
 			throw new IllegalArgumentException("bad series value: "+series);
 		}
-		return this.data[item][0];
+		return this.data.get(item).getXValue();
 	}
 
 	@Override
@@ -92,7 +101,7 @@ public abstract class BasicXYZDataset implements DynamicData,XYZDataset {
 		if (series!=0) {
 			throw new IllegalArgumentException("bad series value: "+series);
 		}
-		return this.data[item][1];
+		return this.data.get(item).getYValue();
 	}
 
 	@Override
@@ -105,7 +114,7 @@ public abstract class BasicXYZDataset implements DynamicData,XYZDataset {
 		if (series!=0) {
 			throw new IllegalArgumentException("bad series value: "+series);
 		}
-		return this.data[item][2];
+		return this.data.get(item).getZValue();
 	}
 
 	@SuppressWarnings("rawtypes")

@@ -1,0 +1,123 @@
+<!-- Test Jamel (v3) -->
+<!-- Nelder-Mead simplex on Goldstein-Price landscape. -->
+<!-- 06-06-2015 -->
+
+<circuit type="jamelV3.basic.BasicCircuit">
+
+	<comment>
+		A scenario for testing the simplex algorithm of Nelder-Mead
+		on the Goldstein-Price artificial landscape.
+	</comment>
+
+	<settings
+		randomSeed="0"
+		sleep="100"
+		chartsConfigFile="charts.xml" />
+
+	<sectors>
+
+		Definition of the artificial landscape.
+
+		<Landscape type="jamelV3.optimization.artificialLandscapes.GoldsteinPrice">
+			<settings
+				top="2.5"
+				bottom="-2.5"
+				left="-2.5"
+				right="2.5"
+				blockWidth="0.025"
+				blockHeight="0.025" />
+		</Landscape>
+		
+		Definition of several simplexes with different initial positions.
+
+		<Simplex0 type="jamelV3.optimization.nelderMead.Simplex">
+			<vertex
+				x="-2.1"
+				y="-2.1" />
+			<vertex
+				x="-2.1"
+				y="-2.2" />
+			<vertex
+				x="-2.0"
+				y="-2.1" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Simplex0>
+
+		<Simplex1 type="jamelV3.optimization.nelderMead.Simplex">
+			<vertex
+				x="-1.1"
+				y="-2.1" />
+			<vertex
+				x="-1.1"
+				y="-2.2" />
+			<vertex
+				x="-1.0"
+				y="-2.1" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Simplex1>
+
+		<Simplex2 type="jamelV3.optimization.nelderMead.Simplex">
+			<vertex
+				x="-0.1"
+				y="-2.1" />
+			<vertex
+				x="-0.1"
+				y="-2.2" />
+			<vertex
+				x="-0.0"
+				y="-2.1" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Simplex2>
+
+		<Simplex3 type="jamelV3.optimization.nelderMead.Simplex">
+			<vertex
+				x="0.9"
+				y="-2.1" />
+			<vertex
+				x="0.9"
+				y="-2.2" />
+			<vertex
+				x="1"
+				y="-2.1" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Simplex3>
+
+		<Simplex4 type="jamelV3.optimization.nelderMead.Simplex">
+			<vertex
+				x="1.9"
+				y="-2.1" />
+			<vertex
+				x="1.9"
+				y="-2.2" />
+			<vertex
+				x="2"
+				y="-2.1" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Simplex4>
+
+	</sectors>
+
+	<phases>
+		<Simplex0 action="move" />
+		<Simplex1 action="move" />
+		<Simplex2 action="move" />
+		<Simplex3 action="move" />
+		<Simplex4 action="move" />
+	</phases>
+
+	<events>
+		<pause period="0" />
+		<pause period="100" />
+	</events>
+
+</circuit>

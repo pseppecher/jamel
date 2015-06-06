@@ -1,5 +1,6 @@
 package jamelV3.basic.data;
 
+import jamelV3.basic.gui.XYZItem;
 import jamelV3.basic.sector.SectorDataset;
 
 import java.util.List;
@@ -34,15 +35,14 @@ public interface MacroDataset {
 	List<XYDataItem> getScatterData(String sector, String xKey, String yKey, String select);
 	
 	/**
-	 * Returns an array of xyz items.
-	 * Each element is an array of length 3 that contains the x, y, z values.
+	 * Returns a list of xyz items.
 	 * @param sector  the sector.
 	 * @param xKey  the x key.
 	 * @param yKey  the y key.
 	 * @param zKey  the z key.
 	 * @return an array of xyz items.
 	 */
-	double[][] getXYZData(String sector, String xKey, String yKey, String zKey);
+	List<XYZItem> getXYZData(String sector, String xKey, String yKey, String zKey);
 
 	/**
 	 * Associates the specified SectorDataset with the specified sector in this macro dataset. 

@@ -414,6 +414,11 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 			this.put("liabilities", 0);
 			this.put("assets", 0);
 			this.put("capital", 0);			
+			this.put("bankruptcies",0);
+			this.put("interest",0);
+			this.put("canceledDebts",0);
+			this.put("canceledDeposits",0);
+			this.put("dividends",0);
 		}
 
 		@Override
@@ -531,7 +536,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		this.circuit=circuit;
 		this.random=circuit.getRandom();
 		this.timer=circuit.getTimer();
-		//this.p.update();
+		this.dataset = new BasicAgentDataset(this.name);
+		this.updateDataset();
 	}
 
 	/**
@@ -647,7 +653,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		final long requiredCapital = (long)(v.get("assets")*params.get(CAPITAL_RATIO));
 		final long excedentCapital = Math.max(0, v.get("capital")-requiredCapital);
 		final long dividend = (long) (excedentCapital*params.get(CAPITAL_PROP_TO_DISTRIBUTE));
-		dataset.put("dividends", (double) dividend);
+		v.put("dividends", dividend);
 		if (dividend!=0) {
 			if (BasicBankingSector.this.bankOwner==null) {
 				newOwner();
@@ -683,6 +689,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	 */
 	private void updateDataset() {
 		this.dataset.put("doubtfulDebt", (double) getDoubtfulDebt());
+		this.dataset.put("dividends", (double) v.get("dividends"));
 		this.dataset.put("capital", (double) v.get("capital"));
 		this.dataset.put("liabilities", (double) v.get("liabilities"));
 		this.dataset.put("assets", (double) v.get("assets"));

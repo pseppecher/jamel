@@ -68,6 +68,7 @@ public class BasicHousehold implements Household {
 			return (new Long(offer2.getWage()).compareTo(offer1.getWage()));
 		}
 	};
+	
 	/** 
 	 * The supply comparator.<p>
 	 * To compare supplies according to their price.

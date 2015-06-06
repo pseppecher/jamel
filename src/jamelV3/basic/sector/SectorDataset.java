@@ -1,6 +1,7 @@
 package jamelV3.basic.sector;
 
 import jamelV3.basic.agent.AgentDataset;
+import jamelV3.basic.gui.XYZItem;
 
 import java.util.List;
 
@@ -36,7 +37,7 @@ public interface SectorDataset {
 	 * @param zKey  the z key.
 	 * @return an array of xyz items.
 	 */
-	double[][] getXYZData(String xKey, String yKey, String zKey);
+	List<XYZItem> getXYZData(String xKey, String yKey, String zKey);
 
 	/**
 	 * Stores the specified agent data into this sector dataset.  

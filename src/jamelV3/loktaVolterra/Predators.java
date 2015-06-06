@@ -7,11 +7,11 @@ import jamelV3.basic.sector.BasicAgentSet;
 import jamelV3.basic.sector.Phase;
 import jamelV3.basic.sector.Sector;
 import jamelV3.basic.sector.SectorDataset;
+import jamelV3.basic.util.BasicParameters;
 import jamelV3.basic.util.InitializationException;
+import jamelV3.basic.util.JamelParameters;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 import org.w3c.dom.Attr;
@@ -61,7 +61,7 @@ public class Predators implements Sector {
 	private final String name;
 
 	/** The parameters of the sector. */
-	private final Map<String,Float> params = new HashMap<String,Float>();
+	private final JamelParameters params = new BasicParameters();
 
 	/** The random. */
 	private final Random random;
