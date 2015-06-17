@@ -1,7 +1,6 @@
 package jamelV3.jamel.util;
 
 import jamelV3.basic.agent.AgentDataset;
-import jamelV3.basic.gui.XYZItem;
 import jamelV3.basic.sector.SectorDataset;
 
 import java.io.File;
@@ -65,7 +64,7 @@ public class RepresentativeAgentDataset implements AgentDataset, SectorDataset{
 	}
 
 	@Override
-	public List<XYZItem> getXYZData(String xKey, String yKey, String zKey) {
+	public double[][] getXYZData(String xKey, String yKey, String zKey) {
 		// Not used.
 		throw new RuntimeException("Not implemented.");
 	}

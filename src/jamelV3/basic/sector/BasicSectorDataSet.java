@@ -1,11 +1,11 @@
 package jamelV3.basic.sector;
 
 import jamelV3.basic.agent.AgentDataset;
-import jamelV3.basic.gui.XYZItem;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.jfree.data.xy.XYDataItem;
 
@@ -193,12 +193,13 @@ public class BasicSectorDataSet implements SectorDataset {
 			final String[] word = select.split("=",2);
 			final String selectKey = word[0];
 			final String selectValue = word[1];
-			if ("name".equals(selectKey)) { 
-				// selecting one agent by its name.
-				final Integer agentID = agents.get(selectValue);
-				if (agentID!=null) {
-					final XYDataItem item = new XYDataItem(xValues[agentID], yValues[agentID]);
-					result.add(item);
+			if ("name".equals(selectKey)) {
+				for (Entry<String,Integer> entry: agents.entrySet()) {
+					if (entry.getKey().matches(selectValue)) {
+						final int agentID = entry.getValue();
+						final XYDataItem item = new XYDataItem(xValues[agentID], yValues[agentID]);
+						result.add(item);
+					}					
 				}
 			}
 			else {
@@ -211,13 +212,15 @@ public class BasicSectorDataSet implements SectorDataset {
 	}
 
 	@Override
-	public List<XYZItem> getXYZData(String xKey,String yKey,String zKey) {
+	public double[][] getXYZData(String xKey,String yKey,String zKey) {
 		final Double[] x = this.fields.get(xKey); 
 		final Double[] y = this.fields.get(yKey); 
 		final Double[] z = this.fields.get(zKey); 
-		final List<XYZItem> result = new ArrayList<XYZItem>(x.length);
+		final double[][] result = new double[3][x.length];
 		for(int i=0; i<size; i++) {
-			result.add(new XYZItem(x[i],y[i],z[i]));
+			result[0][i]=x[i];
+			result[1][i]=y[i];
+			result[2][i]=z[i]; // What if z[i] is null ? -> FIXME
 		}
 		return result;
 	}

@@ -1,0 +1,75 @@
+<!-- Test Jamel (v3) -->
+<!-- Genetic Algorithm on Rosenbrock landscape. -->
+<!-- 07-06-2015 -->
+
+<circuit type="jamelV3.basic.BasicCircuit">
+
+	<comment>
+		A scenario for testing a genetic algorithm
+		on the Rosenbrock artificial landscape.
+	</comment>
+
+	<settings
+		randomSeed="0"
+		sleep="100"
+		chartsConfigFile="charts.xml" />
+
+	<sectors>
+
+		<Landscape type="jamelV3.varia.optimization.artificialLandscapes.Rosenbrock">
+			<settings
+				top="3"
+				bottom="-3"
+				left="-3"
+				right="3"
+				blockWidth="0.05"
+				blockHeight="0.05" />
+		</Landscape>
+
+		<Algo0
+			type="jamelV3.varia.optimization.genetic.BasicGA"
+			agentType="jamelV3.varia.optimization.genetic.BasicIndividual">
+			<settings
+				nAgents="100"
+				top="-2"
+				bottom="-3"
+				left="-3"
+				right="-2"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo0>
+
+		<Algo1
+			type="jamelV3.varia.optimization.genetic.BasicGA"
+			agentType="jamelV3.varia.optimization.genetic.SatisficingIndividual">
+			<settings
+				nAgents="100"
+				top="-2"
+				bottom="-3"
+				left="-3"
+				right="-2"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo1>
+
+	</sectors>
+
+	<phases>
+		<Algo0 action="tournament" />
+		<Algo1 action="tournament" />
+		<Algo0 action="adaptation" />
+		<Algo1 action="adaptation" />
+	</phases>
+
+	<events>
+		<pause period="0" />
+		<pause period="100" />
+	</events>
+
+</circuit>

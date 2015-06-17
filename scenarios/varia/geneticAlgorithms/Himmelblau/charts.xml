@@ -1,0 +1,94 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<!-- Configuration of the chart panels for the GoldsteinPrice scenario -->
+<!-- 06/06/2015 -->
+
+<charts>
+
+	<panel
+		title="Main"
+		rows="1"
+		cols="2">
+
+		<chart
+			title="Map"
+			options="scatter">
+			<series
+				sector="Algo0"
+				x="x"
+				y="y"
+				color="red"
+				label="Algo 0" />
+			<series
+				sector="Algo1"
+				x="x"
+				y="y"
+				color="blue"
+				label="Algo 1" />
+			<series
+				sector="Algo2"
+				x="x"
+				y="y"
+				color="green"
+				label="Algo 2" />
+			<xyBlockSeries
+				sector="Landscape"
+				x="x"
+				y="y"
+				z="z"
+				blockWidth="0.1"
+				blockHeight="0.1">
+				<scale
+					type="colorScale"
+					lowerBound="0"
+					upperBound="500"
+					lowerColor="red"
+					upperColor="blue" />
+			</xyBlockSeries>
+			<annotations>
+				<Minimum
+					x="3"
+					y="2"
+					angle="45" />
+				<Minimum
+					x="-2.805118"
+					y="3.131312"
+					angle="45" />
+				<Minimum
+					x="-3.779310"
+					y="-3.283186"
+					angle="45" />
+				<Minimum
+					x="3.584428"
+					y="-1.848126"
+					angle="45" />
+			</annotations>
+			<yAxis
+				min="-6"
+				max="6" />
+			<xAxis
+				min="-6"
+				max="6" />
+		</chart>
+
+		<chart title="Fitness">
+			<series
+				value="Algo0.mean.fitness"
+				color="red"
+				label="Algo 0" />
+			<series
+				value="Algo1.mean.fitness"
+				color="blue"
+				label="Algo 1" />
+			<series
+				value="Algo2.mean.fitness"
+				color="green"
+				label="Algo 2" />
+			<yAxis
+				min="0"
+				max="40000" />
+		</chart>
+
+	</panel>
+
+</charts>

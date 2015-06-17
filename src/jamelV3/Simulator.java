@@ -179,14 +179,18 @@ public class Simulator {
 		final JFileChooser fc = new JFileChooser() {{
 			this.setFileFilter(new FileNameExtensionFilter("XML files", "xml"));}
 		};
-		final File dir = new File(path);
+		File dir = new File(path);
+		if (!dir.exists()) {
+			dir=new File(KEY.SCENARIO_DEFAULT_PATHNAME);
+		}
 		final File file;
 		fc.setDialogTitle("Open Scenario");
 		fc.setCurrentDirectory(dir);
 		final int returnVal = fc.showOpenDialog(null);
 		if (returnVal==JFileChooser.APPROVE_OPTION) {
 			file = fc.getSelectedFile();
-			prefs.put(KEY.SCENARIO_PATHNAME_PREF, file.getPath());
+			final File parent = file.getParentFile();
+			prefs.put(KEY.SCENARIO_PATHNAME_PREF, parent.getPath());
 		}
 		else {
 			file=null;

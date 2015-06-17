@@ -1,0 +1,92 @@
+<!-- Test Jamel (v3) -->
+<!-- Genetic Algorithm on Beale's landscape. -->
+<!-- 07-06-2015 -->
+
+<circuit type="jamelV3.basic.BasicCircuit">
+
+	<comment>
+		A scenario for testing a genetic algorithm
+		on the Beale artificial landscape.
+	</comment>
+
+	<settings
+		randomSeed="0"
+		chartsConfigFile="charts.xml" />
+
+	<sectors>
+
+		<Landscape type="jamelV3.varia.optimization.artificialLandscapes.GoldsteinPrice">
+			<settings
+				top="2.5"
+				bottom="-2.5"
+				left="-2.5"
+				right="2.5"
+				blockWidth="0.025"
+				blockHeight="0.025" />
+		</Landscape>
+		
+		<Algo0
+			type="jamelV3.varia.optimization.genetic.BasicGA"
+			agentType="jamelV3.varia.optimization.genetic.BasicIndividual">
+			<settings
+				nAgents="100"
+				top="-2"
+				bottom="-2.5"
+				left="-2.5"
+				right="-2"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo0>
+
+		<Algo1
+			type="jamelV3.varia.optimization.genetic.BasicGA"
+			agentType="jamelV3.varia.optimization.genetic.SatisficingIndividual">
+			<settings
+				nAgents="100"
+				top="-2"
+				bottom="-2.5"
+				left="-2.5"
+				right="-2"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo1>
+
+		<Algo2
+			type="jamelV3.varia.optimization.genetic.BasicGA"
+			agentType="jamelV3.varia.optimization.genetic.PyramidingIndiv">
+			<settings
+				nAgents="100"
+				top="-2"
+				bottom="-2.5"
+				left="-2.5"
+				right="-2"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo2>
+
+	</sectors>
+
+	<phases>
+		<Algo0 action="tournament" />
+		<Algo1 action="tournament" />
+		<Algo2 action="tournament" />
+		<Algo0 action="adaptation" />
+		<Algo1 action="adaptation" />
+		<Algo2 action="adaptation" />
+	</phases>
+
+	<events>
+		<pause period="0" />
+		<pause period="300" />
+	</events>
+
+</circuit>

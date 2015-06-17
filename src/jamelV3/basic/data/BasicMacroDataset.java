@@ -1,6 +1,5 @@
 package jamelV3.basic.data;
 
-import jamelV3.basic.gui.XYZItem;
 import jamelV3.basic.sector.SectorDataset;
 
 import java.util.HashMap;
@@ -191,8 +190,8 @@ public class BasicMacroDataset extends HashMap<String,SectorDataset> implements 
 	}
 	
 	@Override
-	public List<XYZItem> getXYZData(String sector, String xKey, String yKey, String zKey) {
-		final List<XYZItem> result;
+	public double[][] getXYZData(String sector, String xKey, String yKey, String zKey) {
+		final double[][] result;
 		final SectorDataset sectorDataset = super.get(sector);
 		if (sectorDataset==null) {
 			result=null;

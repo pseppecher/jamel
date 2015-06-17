@@ -23,6 +23,7 @@ import org.jfree.chart.block.BlockBorder;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.LookupPaintScale;
 import org.jfree.chart.renderer.PaintScale;
 import org.jfree.chart.renderer.xy.XYBlockRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
@@ -184,23 +185,46 @@ public class ChartGenerator {
 
 	/**
 	 * Returns a new color {@link PaintScale}.
-	 * @param elem  the description of the Paintscale to be returned.
+	 * @param elem  an XML element that contains the description of the Paintscale to be returned.
 	 * @return a new color {@link PaintScale}.
+	 * @throws InitializationException If something goes wrong.
 	 */
-	private static PaintScale getNewColorPaintScale(Element elem) {
-		final String lowerColorString = elem.getAttribute("lowerColor");
-		final String upperColorString = elem.getAttribute("upperColor");
-		final Color upperColor;
-		final Color lowerColor;
-		if ("".equals(lowerColorString) || "".equals(upperColorString)) {
-			// L'une des deux couleurs n'est pas définie.
-			throw new IllegalArgumentException("A color is missing");
+	private static PaintScale getNewColorPaintScale(Element elem) throws InitializationException {
+		PaintScale result = null;
+		final NodeList list = elem.getChildNodes();
+		for (int i=0; i<list.getLength(); i++) {
+			final Node truc = list.item(i);
+			if (truc.getNodeName().equals("scale")) {
+				final Element scaleElem = ((Element) truc); 
+				final String type = scaleElem.getAttribute("type");
+				if ("lookupScale".equals(type)) {
+					final LookupPaintScale lookupPaintScale = new LookupPaintScale(1,3,Color.red);
+					lookupPaintScale.add(1, Color.WHITE);
+					lookupPaintScale.add(2, Color.BLACK);
+					result = lookupPaintScale;
+				}
+				else if ("colorScale".equals(type)) {
+					final String lowerColorString = scaleElem.getAttribute("lowerColor");
+					final String upperColorString = scaleElem.getAttribute("upperColor");
+					final Color upperColor;
+					final Color lowerColor;
+					if ("".equals(lowerColorString) || "".equals(upperColorString)) {
+						// L'une des deux couleurs n'est pas définie.
+						throw new IllegalArgumentException("A color is missing");
+					}
+					upperColor=JamelColor.getColor(upperColorString);
+					lowerColor=JamelColor.getColor(lowerColorString);
+					final double upperBound = Double.parseDouble(scaleElem.getAttribute("upperBound"));
+					final double lowerBound = Double.parseDouble(scaleElem.getAttribute("lowerBound"));
+					result = new ColorPaintScale(lowerBound,upperBound,lowerColor,upperColor);
+				}
+				else {
+					throw new InitializationException("Unexpected PaintScale type: "+type);
+				}				
+				break;
+			}
 		}
-		upperColor=JamelColor.getColor(upperColorString);
-		lowerColor=JamelColor.getColor(lowerColorString);
-		final double upperBound = Double.parseDouble(elem.getAttribute("upperBound"));
-		final double lowerBound = Double.parseDouble(elem.getAttribute("lowerBound"));
-		return new ColorPaintScale(lowerBound,upperBound,lowerColor,upperColor);
+		return result;
 	}
 
 	/**
@@ -387,7 +411,10 @@ public class ChartGenerator {
 				throw new InitializationException();
 			}
 			final Element elem = (Element) node;
-			final PaintScale scale = getNewColorPaintScale(elem);			
+			final PaintScale scale = getNewColorPaintScale(elem);
+			if (scale==null) {
+				throw new InitializationException("The scale is null");
+			}
 			renderer.setPaintScale(scale);
 
 			final String blockHeight =  elem.getAttribute("blockHeight");
@@ -401,19 +428,29 @@ public class ChartGenerator {
 			
 			renderer.setBlockAnchor(RectangleAnchor.BOTTOM_LEFT);
 			plot.setRenderer(1, renderer);
-			psl = getNewPaintScaleLegend(scale);
+
+			final String showScale =  elem.getAttribute("showScale");
+			if (!"false".equals(showScale)) {
+				psl = getNewPaintScaleLegend(scale);
+			}
+			else {
+				psl = null;				
+			}
 		}
 		else {
 			psl=null;
 		}
 		plot.setFixedLegendItems(getLegendItemCollection(series,colors,label,true));
+		final String background=description.getAttribute("background");
+		if (!"".equals(background)) {
+			plot.setBackgroundPaint(JamelColor.getColor(background));
+		}
 
 		final JFreeChart result = getNewChart(name,plot);
 		if (psl!=null) {
 			result.addSubtitle(psl);
 		}
 		return result;
-
 	}
 
 	/**

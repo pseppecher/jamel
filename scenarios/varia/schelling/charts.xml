@@ -1,0 +1,50 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<charts>
+
+	<meta
+		content="Configuration of the chart panels for the Schelling scenario"
+		date="15-06-2015" />
+
+	<panel
+		title="Main"
+		rows="1"
+		cols="2">
+
+		<chart
+			title="Map"
+			options="scatter"
+			background="lightGray">
+			<xyBlockSeries
+				sector="Schelling"
+				x="x"
+				y="y"
+				z="color"
+				showScale="false">
+				<scale
+					type="lookupScale"
+					lowerBound="1"
+					upperBound="3"
+					defaultColor="red">
+					<entry
+						value="1"
+						color="white" />
+					<entry
+						value="2"
+						color="black" />
+				</scale>
+			</xyBlockSeries>
+			<yAxis
+				min="-5"
+				max="405" />
+			<xAxis
+				min="-5"
+				max="405" />
+		</chart>
+
+		<chart title="Empty">
+		</chart>
+
+	</panel>
+
+</charts>

@@ -242,10 +242,10 @@ public class BasicDataManager {
 				dataset=result1;
 			} 
 			else {
-				dataset = new BasicXYZDataset(key){
+				dataset = new BasicXYZDataset(){
 					@Override
 					public void update() {
-						this.data = macroDataset.getXYZData(sector,xKey,yKey,zKey);
+						this.addSeries(0, macroDataset.getXYZData(sector,xKey,yKey,zKey));
 					}
 				};
 				this.dynamicData.put(key, dataset);

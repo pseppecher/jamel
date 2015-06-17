@@ -1,7 +1,6 @@
 package jamelV3.basic.sector;
 
 import jamelV3.basic.agent.AgentDataset;
-import jamelV3.basic.gui.XYZItem;
 
 import java.util.List;
 
@@ -30,14 +29,13 @@ public interface SectorDataset {
 	List<XYDataItem> getScatter(String xKey, String yKey, String select);
 
 	/**
-	 * Returns an array of xyz items.
-	 * Each element is an array of length 3 that contains the x, y, z values.
+	 * Returns the xyz data (an array with length 3, containing three arrays of equal length, the first containing the x-values, the second containing the y-values and the third containing the z-values).
 	 * @param xKey  the x key.
 	 * @param yKey  the y key.
 	 * @param zKey  the z key.
-	 * @return an array of xyz items.
+	 * @return the xyz data.
 	 */
-	List<XYZItem> getXYZData(String xKey, String yKey, String zKey);
+	double[][] getXYZData(String xKey, String yKey, String zKey);
 
 	/**
 	 * Stores the specified agent data into this sector dataset.  

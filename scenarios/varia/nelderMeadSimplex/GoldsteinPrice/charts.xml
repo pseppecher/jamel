@@ -1,0 +1,102 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<!-- Configuration of the chart panels for the Beale scenario -->
+<!-- 06/06/2015 -->
+
+<charts>
+
+	<panel
+		title="Main"
+		rows="1"
+		cols="2">
+
+		<chart
+			title="Map"
+			options="scatter">
+			<series
+				sector="Simplex0"
+				x="x"
+				y="y"
+				color="red"
+				label="Simplex 0" />
+			<series
+				sector="Simplex1"
+				x="x"
+				y="y"
+				color="blue"
+				label="Simplex 1" />
+			<series
+				sector="Simplex2"
+				x="x"
+				y="y"
+				color="green"
+				label="Simplex 2" />
+			<series
+				sector="Simplex3"
+				x="x"
+				y="y"
+				color="orange"
+				label="Simplex 3" />
+			<series
+				sector="Simplex4"
+				x="x"
+				y="y"
+				color="cyan"
+				label="Simplex 4" />
+			<xyBlockSeries
+				sector="Landscape"
+				x="x"
+				y="y"
+				z="z"
+				blockWidth="0.025"
+				blockHeight="0.025">
+				<scale
+					type="colorScale"
+					lowerBound="3"
+					upperBound="10000"
+					lowerColor="red"
+					upperColor="blue" />
+			</xyBlockSeries>
+			<annotations>
+				<Minimum
+					x="0"
+					y="-1"
+					angle="45" />
+			</annotations>
+			<yAxis
+				min="-2.5"
+				max="2.5" />
+			<xAxis
+				min="-2.5"
+				max="2.5" />
+		</chart>
+
+		<chart title="Fitness">
+			<series
+				value="Simplex0.mean.fitness"
+				color="red"
+				label="Simplex 0" />
+			<series
+				value="Simplex1.mean.fitness"
+				color="blue"
+				label="Simplex 1" />
+			<series
+				value="Simplex2.mean.fitness"
+				color="green"
+				label="Simplex 2" />
+			<series
+				value="Simplex3.mean.fitness"
+				color="orange"
+				label="Simplex 3" />
+			<series
+				value="Simplex4.mean.fitness"
+				color="cyan"
+				label="Simplex 4" />
+			<yAxis
+				min="0"
+				max="40000" />
+		</chart>
+
+	</panel>
+
+</charts>

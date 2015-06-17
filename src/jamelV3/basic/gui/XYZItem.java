@@ -49,5 +49,12 @@ public class XYZItem {
 	public double getZValue() {
 		return this.z;
 	}
+	
+	@Override
+	public String toString() {
+		return "["+x+","+y+","+z+"]";
+	}
 
 }
+
+// ***

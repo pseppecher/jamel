@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<circuit type="jamelV3.basic.BasicCircuit">
+
+	<meta
+		title="Spatial segregation"
+		date="13-06-2015"
+		content="The spatial segregation model of Schelling" />
+
+	<comment>
+		A toy model to test the Jamel framework.
+	</comment>
+
+	<settings
+		randomSeed="0"
+		sleep="100"
+		chartsConfigFile="charts.xml" />
+
+	<sectors>
+
+		<Schelling type="jamelV3.varia.schelling.Schelling">
+			<settings
+				width="400"
+				height="400"
+				vacancies="100"
+				tolerance="5" />
+		</Schelling>
+
+	</sectors>
+
+	<phases>
+		<Schelling action="move" />
+	</phases>
+
+	<events>
+		<pause period="0" />
+		<pause period="50" />
+	</events>
+
+</circuit>
