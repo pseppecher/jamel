@@ -168,7 +168,6 @@ public class BasicHousehold implements Household {
 		this.data.put("dividend", variables.get("dividend").doubleValue());
 		final long capital = assetPortfolio.getNetValue();
 		this.data.put("capital", (double) capital);				
-		this.data.put("capital_variation", (double) (capital-variables.get("asset portfolio initial value").longValue()));				
 		this.data.put("agents", 1.);		
 	}
 
@@ -436,7 +435,6 @@ public class BasicHousehold implements Household {
 		this.variables.put("dividend", 0l);
 		this.variables.put("worked", 0);
 		this.variables.put("wage", 0l);
-		this.variables.put("asset portfolio initial value",this.assetPortfolio.getNetValue());	
 		this.data = new BasicAgentDataset(this.name);
 	}
 

@@ -54,6 +54,12 @@ public interface Circuit {
 	 */
 	public abstract void run();
 
+	/**
+	 * Displays a warning message.
+	 * @param message the warning message. 
+	 */
+	public abstract void warning(String message);
+
 }
 
 // ***

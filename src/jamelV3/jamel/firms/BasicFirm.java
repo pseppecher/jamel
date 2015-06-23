@@ -694,25 +694,27 @@ public class BasicFirm implements Firm {
 	 */
 	protected CapitalManager getNewCapitalManager() {
 		return 	new CapitalManager() {
-
+	
+			private long dividend;
+			private long initialCapital;
 			/** The owner. */
 			protected Shareholder owner;
-
+	
 			@Override
 			public void bankrupt() {
 				owner.removeAsset(BasicFirm.this);				
 			}
-
+	
 			@Override
 			public void close() {
-				// Does nothing.
+				isConsistent();
 			}
-
+	
 			@Override
 			public long getCapital() {
 				return factory.getValue() + account.getAmount() - account.getDebt();
 			}
-
+	
 			@Override
 			public double getLiabilitiesExcess() {
 				final double result;
@@ -720,14 +722,36 @@ public class BasicFirm implements Firm {
 				result = Math.max(0, excess);
 				return result;
 			}
-
+	
 			@Override
 			public double getLiabilitiesTarget() {
 				final long assets = account.getAmount()+factory.getValue();
 				final long capitalTarget = (long) ((assets)*sector.getFloatParameter(CAPITAL_TARGET));
 				return assets-capitalTarget;
 			}
-
+	
+			@Override
+			public boolean isConsistent() {
+				final boolean isConsistent;
+				final double grossProfit;
+				final double inventoryLosses = factory.getInventoryLosses();
+				if (supply!=null) {
+					grossProfit = supply.getGrossProfit();			
+				}
+				else {
+					grossProfit = 0;				
+				}
+				final double interest = account.getInterest();
+				final double bankruptcy = account.getCanceledMoney()-account.getCanceledDebt();
+				final long capital = this.getCapital();
+				isConsistent = (capital == this.initialCapital + grossProfit - (inventoryLosses + this.dividend + interest + bankruptcy));  
+				if (!isConsistent){
+					System.out.println("capital = "+ capital);
+					System.out.println("expected = "+ (this.initialCapital + grossProfit - (inventoryLosses + this.dividend + interest + bankruptcy)));
+					throw new RuntimeException("Inconsistency");}
+				return isConsistent;
+			}
+	
 			@Override
 			public boolean isSatisfacing() {
 				final long cash = account.getAmount();
@@ -736,7 +760,7 @@ public class BasicFirm implements Firm {
 				final long capitalTarget = (long) ((assets)*sector.getFloatParameter(CAPITAL_TARGET));
 				return (capital>=capitalTarget);
 			}
-
+	
 			@Override
 			public long newDividend() {
 				final long dividend;
@@ -757,20 +781,24 @@ public class BasicFirm implements Firm {
 				}
 				return dividend;
 			}
-
+	
 			@Override
 			public void open() {
 				this.updateOwnership();
-				data.put("capital.initial",(double) getCapital());
+				this.initialCapital=this.getCapital();
+				this.dividend=0;
+				isConsistent();
 			}
-
+	
 			@Override
 			public void payDividend() {
+				isConsistent();
+				// TODO: hou la la ! revoir ces appels ˆ history
 				BasicFirm.this.history.add("cash: "+ account.getAmount());
 				BasicFirm.this.history.add("assets: "+ (factory.getValue() + account.getAmount()));
 				BasicFirm.this.history.add("liabilities: "+ account.getDebt());
 				BasicFirm.this.history.add("capital: "+ getCapital());
-				final long dividend = newDividend();
+				dividend = newDividend();
 				memory.put(MEM_DIVIDEND, dividend);
 				if (dividend>0) {
 					this.owner.receiveDividend( BasicFirm.this.account.newCheque(dividend), BasicFirm.this) ;
@@ -781,8 +809,9 @@ public class BasicFirm implements Firm {
 					BasicFirm.this.history.add("capital: "+ (factory.getValue() + account.getAmount() - account.getDebt()));
 				}
 				BasicFirm.this.data.put("debt2target.ratio", (account.getDebt())/capitalManager.getLiabilitiesTarget());
+				isConsistent();
 			}
-
+	
 			@Override
 			public void updateOwnership() {
 				if (this.owner==null){
@@ -826,6 +855,9 @@ public class BasicFirm implements Firm {
 			/** The price. */
 			private Double price;
 
+			/** The sales ratio observed the last period. */
+			private Double salesRatio = null;
+
 			/**
 			 * Returns a new price chosen at random in the given interval.
 			 * @param lowPrice  the lower price
@@ -863,9 +895,9 @@ public class BasicFirm implements Firm {
 				if (this.price==null) {
 					this.setUnitCostPrice();
 				}
-				if (this.price!=null && supply!=null) {
+				if (this.price!=null && salesRatio!=null) {
 					final float priceFlexibility = sector.getFloatParameter(PRICE_FLEXIBILITY);
-					if ((supply.getSalesRatio()==1)) {
+					if ((salesRatio==1)) {
 						this.lowPrice = this.price;
 						if (inventoryRatio<1) {
 							this.price = getNewPrice(this.lowPrice,this.highPrice);
@@ -879,6 +911,16 @@ public class BasicFirm implements Firm {
 						}					
 						this.lowPrice =  this.lowPrice*(1f-priceFlexibility);
 					}
+				}
+			}
+
+			@Override
+			public void close() {
+				if (supply!=null) {
+					this.salesRatio  = supply.getSalesRatio();
+				}
+				else {
+					this.salesRatio = null;
 				}
 			}
 
@@ -928,8 +970,8 @@ public class BasicFirm implements Firm {
 		}
 		this.data.put("cash", (double) account.getAmount());
 		this.data.put("interest", (double) account.getInterest());
-		this.data.put("canceledDebt", account.getCanceledDebt());
-		this.data.put("canceledMoney", account.getCanceledMoney());
+		this.data.put("canceledDebts", account.getCanceledDebt());
+		this.data.put("canceledDeposits", account.getCanceledMoney());
 		this.data.put("assets", (double) factory.getValue() + account.getAmount());
 		this.data.put("liabilities", (double) account.getDebt());
 		this.data.put("liabilities.target", capitalManager.getLiabilitiesTarget());
@@ -948,19 +990,20 @@ public class BasicFirm implements Firm {
 
 	@Override
 	public void close() {
+		this.pricingManager.close();
 		this.capitalManager.close();
 		this.updateData();
 		this.workforceManager.close();
+		this.supply=null;
 		try {
 			this.exportData();
 		} catch (IOException e) {
-			e.printStackTrace();
-			throw new RuntimeException("Error while exporting firm data");
+			throw new RuntimeException("Error while exporting firm data",e);
 		}
 	}
 
 	@SuppressWarnings("javadoc")
-	public Object execute(String instruction, Object... args) {
+	public Object execute(String instruction) {
 		// TODO hou la la ! revenir ici sans faute
 
 		final Object result;
@@ -986,11 +1029,6 @@ public class BasicFirm implements Firm {
 			result = null;
 		}
 
-		else if ("productivityShock".equals(instruction)) {
-			this.factory.setProductivity((Float) args[0]);
-			result = null;
-		}
-
 		else if ("exportData.start".equals(instruction)) {
 			this.exportData = true;
 			result = null;
@@ -1006,11 +1044,6 @@ public class BasicFirm implements Firm {
 		}
 
 		return result;
-	}
-
-	@Override
-	public Object get(String string) {
-		return null;
 	}
 
 	@Override

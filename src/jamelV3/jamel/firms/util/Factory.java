@@ -104,12 +104,6 @@ public interface Factory {
 	void process(LaborPower... laborPowers);
 
 	/**
-	 * Sets the productivity of the factory.
-	 * @param productivity the productivity to set.
-	 */
-	void setProductivity(float productivity);
-
-	/**
 	 * Receives an investment process. A new machine is then created.
 	 * @param investmentProcess the 
 	 */

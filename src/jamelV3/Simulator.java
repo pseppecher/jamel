@@ -63,7 +63,7 @@ public class Simulator {
 	private static final long simulationID = (new Date()).getTime();
 
 	/** This version of Jamel. */
-	final public static int version = 20150515;
+	final public static int version = 20150623;
 
 	/**
 	 * Downloads the latest version of Jamel.

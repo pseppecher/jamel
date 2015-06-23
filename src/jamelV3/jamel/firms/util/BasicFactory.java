@@ -191,18 +191,6 @@ public class BasicFactory implements Factory {
 		throw new RuntimeException("Not yet implemented");
 	}
 
-	/**
-	 * Sets the productivity.
-	 * @param productivity the productivity to set.
-	 */
-	@Override
-	public void setProductivity(float productivity) {
-		if (this.closed) {
-			throw new RuntimeException("This factory is definitively closed.");
-		}
-		this.workInProgress.setProductivity(productivity);
-	}
-
 }
 
 // ***

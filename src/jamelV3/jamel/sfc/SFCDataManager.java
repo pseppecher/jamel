@@ -5,7 +5,10 @@ import java.io.File;
 
 import org.w3c.dom.Element;
 
+import jamelV3.basic.Circuit;
 import jamelV3.basic.data.BasicDataManager;
+import jamelV3.basic.data.DynamicMacroDataset;
+import jamelV3.basic.data.MacroDataset;
 import jamelV3.basic.util.InitializationException;
 import jamelV3.basic.util.Timer;
 
@@ -17,23 +20,28 @@ public class SFCDataManager extends BasicDataManager {
 	/** The balance sheet matrix. */
 	final private BalanceSheetMatrix balanceSheetMatrix;
 	
+	/** The circuit. */
+	private final Circuit circuit;
+
 	/** The data validator. */
 	final private DataValidator dataValidator;
 
 	/**
 	 * Creates a new data manager.
+	 * @param circuit the circuit.
 	 * @param settings the settings.
 	 * @param timer the timer.
 	 * @param path the path to the scenario file.
 	 * @param name the name of the scenario file.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	public SFCDataManager(Element settings, Timer timer, String path, String name) throws InitializationException {
+	public SFCDataManager(Circuit circuit, Element settings, Timer timer, String path, String name) throws InitializationException {
 		super(settings,timer,path,name);
+		this.circuit = circuit;
 		this.balanceSheetMatrix = getNewBalanceSheetMatrix(settings,timer,path);
 		this.dataValidator = this.getNewDataValidator(settings, timer, path);
 	}
-
+	
 	/**
 	 * Creates and returns a new balance sheet matrix.
 	 * @param settings the settings.
@@ -80,6 +88,15 @@ public class SFCDataManager extends BasicDataManager {
 		return result;
 	}
 
+	/**
+	 * Creates and returns a new {@link MacroDataset}. 
+	 * @return a new {@link MacroDataset}.
+	 */
+	@Override
+	protected MacroDataset getNewMacroDataset() {
+		return new DynamicMacroDataset(timer);
+	}
+
 	@Override
 	public Component[] getPanelList() {
 		final Component[] chartPanels = this.chartManager.getPanelList();
@@ -97,7 +114,11 @@ public class SFCDataManager extends BasicDataManager {
 	public void update() {
 		this.updateSeries();
 		this.balanceSheetMatrix.update();
-		this.dataValidator.CheckConsistency();
+		final boolean isConsistent = this.dataValidator.checkConsistency();
+		if (!isConsistent) {
+			this.dataValidator.getName();
+			circuit.warning("Inconsistency (check the validation panel for more details)");// TODO rectifier le nom du panel
+		}
 		this.macroDataset.clear();
 	}
 

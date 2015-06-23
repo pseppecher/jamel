@@ -29,6 +29,7 @@ import org.w3c.dom.Attr;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
  * A basic household sector.
@@ -124,6 +125,19 @@ public class BasicHouseholdSector implements Sector, HouseholdSector, Capitalist
 		if (event.getNodeName().equals("new")) {
 			final int size = Integer.parseInt(event.getAttribute("size"));
 			this.households.putAll(this.createHouseholds(this.agentType,size));
+		}
+		else if (event.getNodeName().equals("shock")) {
+			final NodeList nodes = event.getChildNodes();
+			for (int i=0; i<nodes.getLength(); i++) {
+				if (nodes.item(i).getNodeType()==Node.ELEMENT_NODE) {
+					final Element elem = (Element) nodes.item(i);
+					if (elem.getNodeName().equals("param")) {
+						final String key = elem.getAttribute("key");
+						final float val = Float.parseFloat(elem.getAttribute("value"));
+						this.parameters.put(key, val);
+					}
+				}
+			}
 		}
 		else {
 			throw new RuntimeException("Unknown event or not yet implemented: "+event.getNodeName());			

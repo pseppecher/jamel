@@ -10,12 +10,15 @@ import jamelV3.basic.util.InitializationException;
 import jamelV3.basic.util.Period;
 import jamelV3.basic.util.Timer;
 
+import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -23,10 +26,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.SwingConstants;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
@@ -44,54 +51,103 @@ public class BasicCircuit implements Circuit {
 	 */
 	public class ControlPanel extends JPanel {
 
+		/** The context class loader. */
+		private final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
 		/** The pause button. */
 		private final JButton pauseButton = new JButton("Pause") {{
-			this.setToolTipText("Pause Simulation") ;
+			final URL url = cl.getResource("resources/suspend_co.gif");
+			if (url!=null) {
+				this.setIcon(new ImageIcon(url));
+				this.setText("");
+			}
+			this.setToolTipText("Pause "+name) ;
 			this.setEnabled(false);			
 		}};
 
 		/** The play button. */
 		private final JButton playButton = new JButton("Run") {{
-			this.setToolTipText("Pause Simulation") ;
+			final URL url = cl.getResource("resources/resume_co.gif");
+			if (url!=null) {
+				this.setIcon(new ImageIcon(url));
+				this.setText("");
+			}
+			this.setToolTipText("Run "+name) ;
 			this.setEnabled(false);
 		}};
 
-		{
-			this.pauseButton.addActionListener(new ActionListener() { 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					BasicCircuit.this.pause(true);
-					repaint();
-				} 
-			}) ;
-			this.playButton.addActionListener(new ActionListener() { 
-				@Override
-				public void actionPerformed(ActionEvent e) { 
-					BasicCircuit.this.pause(false);
-					repaint();
-				} 
-			}) ;
-			this.playButton.setToolTipText("Run Simulation") ;
-			this.playButton.setEnabled(false);
-			this.add(pauseButton);
-			this.add(playButton);
-			this.add(timer.getCounter());
-		}
+		/** The warning icon. */
+		private final Icon warningIcon;
+		
+		/** The message panel. */
+		private final JPanel messagePanel = new JPanel();
 
-		/**
-		 * Updates the pause/run buttons.
-		 */
-		@Override
-		public void repaint() {
-			final boolean b = BasicCircuit.this.isPaused();
-			if (pauseButton!=null) {
-				pauseButton.setEnabled(!b) ;
-				pauseButton.setSelected(b) ;
-				playButton.setEnabled(b) ;
-				playButton.setSelected(!b) ;
+			{
+				this.pauseButton.addActionListener(new ActionListener() { 
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						BasicCircuit.this.pause(true);
+						repaint();
+					} 
+				}) ;
+				this.playButton.addActionListener(new ActionListener() { 
+					@Override
+					public void actionPerformed(ActionEvent e) { 
+						BasicCircuit.this.pause(false);
+						repaint();
+					} 
+				}) ;
+				this.playButton.setEnabled(false);
+				this.setLayout(new GridLayout(0,3));
+				final JPanel left = new JPanel();
+				final JPanel central = new JPanel();
+				messagePanel.setLayout(new BorderLayout());
+				central.add(playButton);
+				central.add(pauseButton);
+				central.add(timer.getCounter());
+				final URL warningImage = cl.getResource("resources/warning.gif");
+				if (warningImage!=null) {
+					warningIcon = new ImageIcon(warningImage);
+				}
+				else {
+					warningIcon = null;
+				}
+				this.add(left);
+				this.add(central);
+				this.add(messagePanel);
 			}
-			super.repaint();
-		}
+
+			/**
+			 * Updates the pause/run buttons.
+			 */
+			@Override
+			public void repaint() {
+				final boolean b = BasicCircuit.this.isPaused();
+				if (pauseButton!=null) {
+					pauseButton.setEnabled(!b) ;
+					pauseButton.setSelected(b) ;
+					playButton.setEnabled(b) ;
+					playButton.setSelected(!b) ;
+				}
+				super.repaint();
+			}
+
+			/**
+			 * Displays a warning message.
+			 * @param message the message to display.
+			 */
+			public void warning(String message) {
+				final JLabel label;
+				if (warningIcon!=null) {
+					label = new JLabel(warningIcon,SwingConstants.CENTER); 
+				}
+				else {
+					label = new JLabel("Warning",SwingConstants.CENTER); 					
+				}
+				
+				label.setToolTipText(message);
+				this.messagePanel.add(label,BorderLayout.WEST);
+			}
 
 	}
 
@@ -370,6 +426,9 @@ public class BasicCircuit implements Circuit {
 	/** The GUI. */
 	protected final GUI gui;
 
+	/** The name of the scenario. */
+	final private String name;
+
 	/**
 	 * Creates a new basic circuit.
 	 * @param circuitElem a XML element with the parameters for the new circuit.
@@ -378,6 +437,7 @@ public class BasicCircuit implements Circuit {
 	 * @throws InitializationException If something goes wrong.
 	 */
 	public BasicCircuit(final Element circuitElem, String path, String name) throws InitializationException {
+		this.name=name;
 		this.timer = new BasicTimer(0);
 		final Element settings = getSettings(circuitElem);
 		this.random = getNewRandom(settings);
@@ -400,6 +460,10 @@ public class BasicCircuit implements Circuit {
 		final List<Element> eventList = this.events.get(this.timer.getPeriod().intValue());
 		if (eventList!=null) {
 			for(Element event:eventList) {
+				final String markerMessage = event.getAttribute("marker");
+				if (!"".equals(markerMessage)) {
+					this.dataManager.addMarker(markerMessage);
+				}
 				final String sectorName = event.getAttribute("sector");
 				if ("".equals(sectorName)) {
 					this.doEvents(event);
@@ -410,46 +474,6 @@ public class BasicCircuit implements Circuit {
 				}
 			}
 		}
-		/*final String event = this.jamelParameters.get("Circuit.events."+timer.getPeriod().intValue());
-		if (event!=null) {
-			final String[] events = JamelParameters.split(event,",");
-			for(final String string:events) {
-
-				if (string.equals("pause")) {
-					System.out.println("Duration: "+((new Date()).getTime()-start.getTime())/1000+" s.");
-					this.pause=true;
-					for(Sector sector:sectors.values()) {
-						sector.pause();
-					}
-				}
-
-				else if (string.startsWith("change.")) {
-					final String[] truc1 = JamelParameters.split(string.substring(7),"=");
-					final String[] truc2 = truc1[0].split("\\.", 2);
-					this.jamelParameters.put(truc1[0], truc1[1]);
-					final Sector sector = this.sectors.get(truc2[0]);
-					if (sector!=null) {
-						sector.forward("change in parameters");					
-					}
-					else {
-						throw new RuntimeException("Sector not found: "+truc2[0]);
-					}
-				}
-
-				else {
-					final String[] truc1 = JamelParameters.split(string,"=");
-					final String[] truc2 = truc1[0].split("\\.", 2);
-					final Sector sector = this.sectors.get(truc2[0]);
-					if (sector!=null) {
-						sector.forward(truc2[1],truc1[1]);
-					}
-					else {
-						throw new RuntimeException("Error while parsing the event <"+event+">: Sector not found <"+truc2[0]+">.");
-					}
-				}
-			}
-		}
-		 */
 	}
 
 	/**
@@ -560,6 +584,11 @@ public class BasicCircuit implements Circuit {
 			this.doPeriod();
 		}
 		// Ciao bye bye.
+	}
+
+	@Override
+	public void warning(String message) {
+		this.controlPanel.warning(message);
 	}
 
 }

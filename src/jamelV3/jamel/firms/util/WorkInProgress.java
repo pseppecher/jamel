@@ -70,12 +70,6 @@ public interface WorkInProgress {
 	 */
 	public abstract Commodities process(LaborPower... laborPowers);
 
-	/**
-	 * Sets the productivity.
-	 * @param productivity the productivity to set.
-	 */
-	public abstract void setProductivity(float productivity);
-
 }
 
 // ***

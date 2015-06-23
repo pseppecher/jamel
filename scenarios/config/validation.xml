@@ -1,54 +1,66 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
-<!-- Baseline validation tests -->
-<!-- 20/05/2015 -->
+<validation
 
-<validation>
-
-	<test
-		val1="Households.sum.employed"
-		val2="Industry.sum.workforce" />
-	<test
-		val1="Households.sum.agents"
-		val2="Households.sum.employed+Households.sum.unemployed" />
-	<test
-		val1="Households.sum.wages"
-		val2="Industry.sum.wageBill" />
+	title="Consistency"
+	date="21-06-2015"
+	content="Baseline validation tests"
+	start="1">
 
 	<test
-		val1="Households.sum.capital"
-		val2="Industry.sum.capital+Banks.capital" />
+		val1="Households_t.sum.employed"
+		val2="Industry_t.sum.workforce" />
 	<test
-		val1="Households.sum.dividend"
-		val2="Industry.sum.dividends+Banks.dividends" />
+		val1="Households_t.sum.agents"
+		val2="Households_t.sum.employed + Households_t.sum.unemployed" />
+	<test
+		val1="Households_t.sum.wages"
+		val2="Industry_t.sum.wageBill" />
 
 	<test
-		val1="Industry.sum.grossProfit"
-		val2="Households.sum.dividend + Households.sum.capital_variation" />
+		val1="Households_t.sum.capital"
+		val2="Industry_t.sum.capital+Banks_t.capital" />
 	<test
-		val1="Industry.sum.grossProfit"
-		val2="Industry.sum.dividends + Industry.sum.interest + Industry.sum.capital - Industry.sum.capital.initial + Banks.canceledDeposits - Banks.canceledDebts" />
-	<test
-		val1="Industry.sum.capital - Industry.sum.capital.initial"
-		val2="Industry.sum.grossProfit - Industry.sum.dividends - Industry.sum.interest - Banks.canceledDeposits + Banks.canceledDebts" />
+		val1="Households_t.sum.dividend"
+		val2="Industry_t.sum.dividends+Banks_t.dividends" />
 
 	<test
-		val1="Industry.sum.sales.vol"
-		val2="Households.sum.consumption.vol" />
+		val1="Households_t.sum.capital - Households_t-1.sum.capital"
+		val2="Industry_t.sum.capital - Industry_t-1.sum.capital + Banks_t.capital - Banks_t-1.capital" />
 	<test
-		val1="Industry.sum.sales.val"
-		val2="Households.sum.consumption.val" />
+		val1="Industry_t.sum.grossProfit"
+		val2="Households_t.sum.dividend + Households_t.sum.capital - Households_t-1.sum.capital" />
 	<test
-		val1="Industry.sum.inventories.fg.val+Industry.sum.inventories.inProcess.val"
-		val2="Households.sum.cash+Households.sum.capital" />
+		val1="Industry_t.sum.grossProfit"
+		val2="Industry_t.sum.dividends + Industry_t.sum.interest + Industry_t.sum.capital - Industry_t-1.sum.capital + Industry_t.sum.canceledDeposits - Industry_t.sum.canceledDebts" />
 	<test
-		val1="Industry.sum.interest"
-		val2="Banks.interest" />
+		val1="Industry_t.sum.capital - Industry_t-1.sum.capital"
+		val2="Industry_t.sum.grossProfit - Industry_t.sum.dividends - Industry_t.sum.interest - Industry_t.sum.canceledDeposits + Industry_t.sum.canceledDebts" />
+
 	<test
-		val1="Industry.sum.bankruptcies"
-		val2="Banks.bankruptcies" />
+		val1="Industry_t.sum.sales.vol"
+		val2="Households_t.sum.consumption.vol" />
 	<test
-		val1="Industry.sum.insolvents"
+		val1="Industry_t.sum.sales.val"
+		val2="Households_t.sum.consumption.val" />
+	<test
+		val1="Industry_t.sum.inventories.fg.val + Industry_t.sum.inventories.inProcess.val"
+		val2="Households_t.sum.cash + Households_t.sum.capital" />
+	<test
+		val1="Industry_t.sum.interest"
+		val2="Banks_t.interest" />
+
+	<test
+		val1="Industry_t.sum.canceledDeposits"
+		val2="Banks_t.canceledDeposits" />
+	<test
+		val1="Industry_t.sum.canceledDebts"
+		val2="Banks_t.canceledDebts" />
+	<test
+		val1="Industry_t.sum.bankruptcies"
+		val2="Banks_t.bankruptcies" />
+	<test
+		val1="Industry_t.sum.insolvents"
 		val2="0" />
 
 </validation>

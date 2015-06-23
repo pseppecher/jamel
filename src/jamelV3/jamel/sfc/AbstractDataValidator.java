@@ -19,6 +19,7 @@ import org.w3c.dom.NodeList;
 
 /**
  * An abstract data validator.
+ * TODO: create a Test object to encapsulate conditions and results ?
  */
 public abstract class AbstractDataValidator implements DataValidator {
 
@@ -38,8 +39,14 @@ public abstract class AbstractDataValidator implements DataValidator {
 	/** The style for the text panel. */
 	final private static String textPanelStyle = "<STYLE TYPE=\"text/css\"> body {font-family:sans-serif; font-size:12pt} div.ok {color:green} div.failure {color:red}</STYLE>";
 
+	/** A string that describes the content of the panel. */
+	private String content = "Data Consistency Validation";
+
 	/** A string buffer to store test failure declarations. */
 	final private StringBuffer failures = new StringBuffer("<br>"+rc);
+
+	/** The name of the data validator.*/
+	private String name;
 
 	/** A text panel to display the result of the tests. */
 	final private JEditorPane resultPanel = new JEditorPane(){
@@ -51,6 +58,9 @@ public abstract class AbstractDataValidator implements DataValidator {
 
 	/** An array to store the result of each test. */
 	final private Boolean[] results;
+
+	/** When the tests starts. */
+	private int start = 0;
 
 	/** A scroll panel to display the result panel */
 	final private Component testPanel = new JScrollPane(resultPanel) {{setName("Tests");}};
@@ -66,6 +76,7 @@ public abstract class AbstractDataValidator implements DataValidator {
 	 * @param file the XML file that contains the description of the tests.
 	 * @param timer the timer.
 	 * @throws InitializationException If something goes wrong.
+	 * TODO: devrait recevoir l'Žlement root et non un fichier.
 	 */
 	public AbstractDataValidator(File file, Timer timer) throws InitializationException {
 		this.timer=timer;
@@ -76,6 +87,18 @@ public abstract class AbstractDataValidator implements DataValidator {
 			final Element root = document.getDocumentElement();
 			if (!"validation".equals(root.getNodeName())) {
 				throw new ParserConfigurationException("The root node of the scenario file must be named <validation>.");
+			}
+			this.name = root.getAttribute("title");
+			if (!"".equals(name)) {
+				this.testPanel.setName(name);				
+			}
+			final String content = root.getAttribute("content");
+			if (!"".equals(content)) {
+				this.content=content;
+			}
+			final String start = root.getAttribute("start");
+			if (!"".equals(start)) {
+				this.start =Integer.parseInt(start);
 			}
 			final NodeList testNodeList = root.getElementsByTagName(KEY.TEST);
 			this.tests = new String[testNodeList.getLength()][];
@@ -100,16 +123,20 @@ public abstract class AbstractDataValidator implements DataValidator {
 	 */
 	private String getTestResults() {
 		final StringBuffer content = new StringBuffer(textPanelStyle);
-		content.append("<H3>Data Consistency Validation</H3>"+rc);
-		for (int i=0; i<tests.length; i++) {
-			final String result;
-			if (results[i]) {
-				result="ok";
+		if (this.content !=null) {
+			content.append("<H3>"+this.content+"</H3>"+rc);			
+		}
+		if (timer.getPeriod().intValue()>start) {
+			for (int i=0; i<tests.length; i++) {
+				final String result;
+				if (results[i]) {
+					result="ok";
+				}
+				else {
+					result="failure";
+				}
+				content.append("<div class='"+result+"'>Test "+i+ ": "+result+" ("+tests[i][0]+" = "+tests[i][1]+")</div>"+rc);
 			}
-			else {
-				result="failure";
-			}
-			content.append("<div class='"+result+"'>Test "+i+ ": "+result+" ("+tests[i][0]+" = "+tests[i][1]+")</div>"+rc);
 		}
 		content.append(failures);
 		return content.toString();
@@ -129,27 +156,35 @@ public abstract class AbstractDataValidator implements DataValidator {
 		});				
 	}
 
-	@Override public boolean CheckConsistency() {
+	@Override public boolean checkConsistency() {
 		boolean success = true;
-		for(int i=0; i<tests.length; i++) {
-			final Double a = getValue(tests[i][0]);
-			final Double b = getValue(tests[i][1]);
-			if ((a!=null && !a.equals(b)) || (a==null && b!=null)) {
-				success=false;
-				failures.append("Period "+timer.getPeriod().intValue()+", test "+i+": failure ("+a+", "+b+")<br>"+rc);
-				results[i]=false;
+		if (timer.getPeriod().intValue()>start) {
+			for(int i=0; i<tests.length; i++) {
+				final Double a = getValue(tests[i][0]);
+				final Double b = getValue(tests[i][1]);
+				if ((a!=null && !a.equals(b)) || (a==null && b!=null)) {
+					success=false;
+					failures.append("Period "+timer.getPeriod().intValue()+", test "+i+": failure ("+a+", "+b+")<br>"+rc);
+					results[i]=false;
+				}
 			}
-		}
-		if (!success) {
-			this.updateResultPanel();
+			if (timer.getPeriod().intValue()>start || !success) {
+				this.updateResultPanel();
+			}
 		}
 		return success;
 	}
 
-	@Override public Component getPanel() {
-		return testPanel;
+	@Override 
+	public String getName() {
+		return this.name;
 	}
 
+	@Override 
+	public Component getPanel() {
+		return testPanel;
+	}
+	
 	/**
 	 * Returns the specified value of the simulation data.  
 	 * @param string the key of the value to return.

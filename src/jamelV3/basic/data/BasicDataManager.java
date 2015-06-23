@@ -82,17 +82,17 @@ public class BasicDataManager {
 	/** Register of the dynamic data used by the GUI. */
 	private final Map<String,DynamicData> dynamicData = new LinkedHashMap<String,DynamicData>();
 
-	/** The timer. */
-	final private Timer timer;
-
 	/** The chart manager. */
 	protected final ChartManager chartManager;
 
 	/** The macro dataset. */
-	protected final MacroDataset macroDataset = new BasicMacroDataset();
+	protected final MacroDataset macroDataset;
+
+	/** The timer. */
+	final protected Timer timer;
 
 	/**
-	 * Creates a new sector for data management.
+	 * Creates a new basic data manager.
 	 * @param settings a XML element with the settings.
 	 * @param timer the timer.
 	 * @param path the path to the scenario file.
@@ -100,8 +100,20 @@ public class BasicDataManager {
 	 * @throws InitializationException If something goes wrong.
 	 */
 	public BasicDataManager(Element settings, Timer timer, String path, String name) throws InitializationException {
+		if (timer==null) {
+			throw new IllegalArgumentException("Timer is null.");
+		}
 		this.timer = timer;
 		this.chartManager = getNewChartManager(this, settings, path);
+		this.macroDataset = getNewMacroDataset();
+	}
+
+	/**
+	 * Creates and returns a new {@link MacroDataset}. 
+	 * @return a new {@link MacroDataset}.
+	 */
+	protected MacroDataset getNewMacroDataset() {
+		return new BasicMacroDataset();
 	}
 
 	/**

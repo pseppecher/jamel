@@ -95,7 +95,6 @@ public BasicChartManager(Element root, BasicDataManager dataManager) throws Init
 		final ValueMarker marker = new ValueMarker(period) ;
 		marker.setLabel(label);
 		marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);
-		marker.setOutlinePaint(Color.WHITE);
 		for (JamelChartPanel panel:this.chartPanels) {
 			panel.addMarker(marker);
 		}

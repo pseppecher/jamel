@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- Jamel (v3) -->
-<!-- 18-05-2015 -->
-<!-- Baseline scenario -->
-
 <circuit type="jamelV3.jamel.sfc.SFCCircuit">
+
+	<meta
+		date="17-05-2015"
+		title="Baseline scenario"/>
+		
+	<comment>
+		The baseline scenario of the Jamel model.
+	</comment>		
 
 	<settings
 		randomSeed="0"

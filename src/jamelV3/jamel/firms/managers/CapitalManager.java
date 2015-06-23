@@ -34,10 +34,22 @@ public interface CapitalManager {
 	double getLiabilitiesTarget();
 
 	/**
+	 * Returns <code>true</code> if the firm accounting is consistent, <code>false</code> otherwise.
+	 * @return <code>true</code> if the firm accounting is consistent, <code>false</code> otherwise.
+	 */
+	boolean isConsistent();
+
+	/**
 	 * Returns <code>true</code> if the current level of capital is <i>satisfacing</i>. 
 	 * @return <code>true</code> if the current level of capital is <i>satisfacing</i>.
 	 */
 	boolean isSatisfacing();
+
+	/**
+	 * Determines and returns the amount that will be paid as dividend for the current period.
+	 * @return the amount of the dividend for the current period.
+	 */
+	long newDividend();
 
 	/**
 	 * Opens the capital manager at the beginning of the period.
@@ -48,12 +60,6 @@ public interface CapitalManager {
 	 * Determines and pays the dividend to the owner of the firm.
 	 */
 	void payDividend();
-
-	/**
-	 * Determines and returns the amount that will be paid as dividend for the current period.
-	 * @return the amount of the dividend for the current period.
-	 */
-	long newDividend();
 
 	/**
 	 * Updates the ownership of the firm.

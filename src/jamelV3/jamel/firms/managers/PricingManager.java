@@ -16,4 +16,10 @@ public interface PricingManager {
 	 */
 	void updatePrice();
 
+	/**
+	 * Closes the manager.<p>
+	 * Updates internal variables at the end of the period. 
+	 */
+	void close();
+
 }

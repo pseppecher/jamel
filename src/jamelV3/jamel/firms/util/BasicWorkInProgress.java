@@ -222,14 +222,6 @@ public class BasicWorkInProgress implements WorkInProgress {
 		}};
 	}
 
-	@Override
-	public void setProductivity(float productivity) {
-		if (this.terminated) {
-			throw new RuntimeException("This process is definitively closed.");
-		}
-		this.productivity=productivity;
-	}
-
 }
 
 // ***

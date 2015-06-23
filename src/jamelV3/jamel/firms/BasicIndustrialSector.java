@@ -7,7 +7,9 @@ import jamelV3.basic.sector.BasicAgentSet;
 import jamelV3.basic.sector.Phase;
 import jamelV3.basic.sector.Sector;
 import jamelV3.basic.sector.SectorDataset;
+import jamelV3.basic.util.BasicParameters;
 import jamelV3.basic.util.InitializationException;
+import jamelV3.basic.util.JamelParameters;
 import jamelV3.basic.util.Timer;
 import jamelV3.jamel.roles.Shareholder;
 import jamelV3.jamel.sectors.BankingSector;
@@ -91,7 +93,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 	protected final AgentSet<Firm> firms;
 
 	/** The parameters of the household sector. */
-	protected final Map<String,Float> parameters = new HashMap<String,Float>();
+	protected final JamelParameters parameters = new BasicParameters();
 
 	/**
 	 * Creates a new banking sector.
@@ -185,6 +187,11 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 		if (event.getNodeName().equals("new")) {
 			final int size = Integer.parseInt(event.getAttribute("size"));
 			this.firms.putAll(this.createFirms(this.agentType,size));
+		}
+		else if(event.getNodeName().equals("shock")) {
+			final String key = event.getAttribute("parameter");
+			final float value = Float.parseFloat(event.getAttribute("value"));
+			this.parameters.put(key, value);
 		}
 		else {
 			throw new RuntimeException("Unknown event or not yet implemented: "+event.getNodeName());			

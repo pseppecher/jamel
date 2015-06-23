@@ -17,13 +17,6 @@ public interface Firm extends Agent, AccountHolder, Corporation, Supplier {
 	void close();
 
 	/**
-	 * Returns something.
-	 * @param string the key for the thing to return.
-	 * @return something.
-	 */
-	Object get(String string);
-
-	/**
 	 * Returns the job offer (if any) of the firm.
 	 * @return the job offer.
 	 */
