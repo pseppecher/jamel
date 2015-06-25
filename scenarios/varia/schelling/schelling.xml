@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<circuit type="jamelV3.basic.BasicCircuit">
+<circuit type="jamel.basic.BasicCircuit">
 
 	<meta
 		title="Spatial segregation"
@@ -18,7 +18,7 @@
 
 	<sectors>
 
-		<Schelling type="jamelV3.varia.schelling.Schelling">
+		<Schelling type="jamel.varia.schelling.Schelling">
 			<settings
 				width="400"
 				height="400"

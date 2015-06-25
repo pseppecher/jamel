@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<circuit type="jamelV3.jamel.sfc.SFCCircuit">
-
-	<meta
-		date="17-05-2015"
-		title="Baseline scenario"/>
-		
-	<comment>
-		The baseline scenario of the Jamel model.
-	</comment>		
+<circuit
+	type="jamel.jamel.sfc.SFCCircuit"
+	date="25-06-2015"
+	title="Baseline scenario"
+	content="The baseline scenario of the Jamel model.">
 
 	<settings
 		randomSeed="0"
@@ -19,8 +15,8 @@
 	<sectors>
 
 		<Households
-			type="jamelV3.jamel.households.BasicHouseholdSector"
-			agent="jamelV3.jamel.households.BasicHousehold">
+			type="jamel.jamel.households.BasicHouseholdSector"
+			agent="jamel.jamel.households.BasicHousehold">
 			<settings
 				savings.propensityToSave="0.2"
 				savings.ratioTarget="0.2"
@@ -36,7 +32,7 @@
 			</dependencies>
 		</Households>
 
-		<Banks type="jamelV3.jamel.banks.BasicBankingSector">
+		<Banks type="jamel.jamel.banks.BasicBankingSector">
 			<settings
 				rate.normal="0.004"
 				rate.penalty="0.008"
@@ -52,8 +48,8 @@
 		</Banks>
 
 		<Industry
-			type="jamelV3.jamel.firms.BasicIndustrialSector"
-			agent="jamelV3.jamel.firms.BasicFirm">
+			type="jamel.jamel.firms.BasicIndustrialSector"
+			agent="jamel.jamel.firms.BasicFirm">
 			<settings
 				capital.propensityToDistribute="1"
 				capital.target="0.2"
@@ -105,7 +101,7 @@
 		<new
 			period="0"
 			sector="Households"
-			size="1200" />
+			size="900" />
 
 		<new
 			period="0"

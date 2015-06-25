@@ -1,24 +1,16 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
 <charts
-	content="Baseline configuration of the chart panels."
-	date="20-06-2015">
+	date="25-06-2015"
+	content="Configuration of the chart panels for the baseline scenario.">
 
 	<panel
 		title="Main"
 		rows="3"
 		cols="3">
 
-		<chart
-			title="Age and Productivity"
-			options="scatter">
-			<series
-				sector="Industry_t"
-				x="age"
-				y="productivity"
-				colors="transparentBlue"
-				legend="Firms" />
-		</chart>
+		<!-- chart title="Age and Productivity" options="scatter"> <series sector="Industry_t" 
+			x="age" y="productivity" color="transparentBlue" legend="Firms" /> </chart -->
 
 		<chart title="Prices">
 			<series
@@ -101,9 +93,6 @@
 				label="Doubtful Debt" />
 		</chart>
 
-		<!-- <chart title="Test Income"> <series value="Industry_t.sum.grossProfit" 
-			/> <series value="Industry_t.sum.dividends+Banks_t.dividends" /> </chart> -->
-
 		<chart title="Income Distribution">
 			<series
 				value="Households_t.sum.wages/(Households_t.sum.wages+Households_t.sum.dividend)"
@@ -117,6 +106,23 @@
 				min="0"
 				max="1" />
 		</chart>
+
+		<chart
+			title="Phillips curve"
+			options="time scatter">
+			<series
+				x="Households_t.sum.unemployed/Households_t.sum.agents"
+				y="(Industry_t.mean.prices-Industry_t-12.mean.prices)/Industry_t.mean.prices"
+				color="transparentRed"
+				label="x=unemployment, y=inflation" />
+			<xAxis
+				min="0"
+				max="0.6" />
+			<yAxis
+				min="-0.1"
+				max="0.2" />
+		</chart>
+
 	</panel>
 
 	<panel

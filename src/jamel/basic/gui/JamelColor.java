@@ -19,11 +19,17 @@ public enum JamelColor {
 	/** cyan */
 	cyan(Color.cyan),
 
+	/** dark gray */
+	darkGray(Color.darkGray),
+	
 	/** gray */
 	gray(Color.gray),
 
 	/** green */
 	green(Color.green),
+
+	/** light gray */
+	lightGray(Color.lightGray),
 
 	/** magenta */
 	magenta(Color.magenta),
@@ -36,6 +42,9 @@ public enum JamelColor {
 
 	/** transparent blue */
 	transparentBlue(new Color(0x80, 0x80, 0xFF, 100)),
+
+	/** transparent green */
+	transparentGreen(new Color(0x80, 0xFF, 0x80, 100)),
 
 	/** transparent red */
 	transparentRed(new Color(0xFF, 0x80, 0x80, 100)),
@@ -61,7 +70,11 @@ public enum JamelColor {
 	 * @return a color.
 	 */
 	public static Color getColor(String name) {
-		return valueOf(name).color;
+		try {
+			return valueOf(name).color;
+		} catch (IllegalArgumentException e) {
+			throw new IllegalArgumentException(name+" (unknown color)", e);
+		}
 	}
 
 	/**
@@ -93,14 +106,5 @@ public enum JamelColor {
 	private JamelColor(Color color){
 		this.color=color;
 	}
-
-	/**
-	 * Returns the color.
-	 * @return the color.
-	 */
-	@SuppressWarnings("unused")
-	private Color get() {
-		return this.color;
-	}
-
+	
 }

@@ -1,9 +1,10 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
-<!-- Provides the description of the macroeconomic balance sheet matrix used 
-	by the data manager. date: 19/05/2015 -->
-
-<matrix>
+<matrix
+	shortTitle = "Balance sheet"
+	title="Balance sheet matrix"
+	date="25-06-2015"
+	content="Configuration of the macroeconomic balance sheet matrix.">
 
 	<sector key="Households" />
 	<sector key="Industry" />

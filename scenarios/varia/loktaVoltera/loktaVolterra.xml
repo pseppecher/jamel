@@ -2,7 +2,7 @@
 <!-- Lokta Voltera Model -->
 <!-- 15-05-2015 -->
 
-<circuit type="jamelV3.basic.BasicCircuit">
+<circuit type="jamel.basic.BasicCircuit">
 
 	<comment>
 		A toy model to test the Jamel framework.
@@ -14,7 +14,7 @@
 
 	<sectors>
 
-		<Grass type="jamelV3.varia.loktaVolterra.Grass">
+		<Grass type="jamel.varia.loktaVolterra.Grass">
 			<settings
 				growth="0.01"
 				lim="20"
@@ -22,7 +22,7 @@
 				height="150" />
 		</Grass>
 
-		<Preys type="jamelV3.varia.loktaVolterra.Preys">
+		<Preys type="jamel.varia.loktaVolterra.Preys">
 			<settings
 				spontaneous="0"
 				birthEnergy="5"
@@ -35,7 +35,7 @@
 			</dependencies>
 		</Preys>
 
-		<Predators type="jamelV3.varia.loktaVolterra.Predators">
+		<Predators type="jamel.varia.loktaVolterra.Predators">
 			<settings
 				spontaneous="0.0"
 				birthEnergy="25"

@@ -2,7 +2,7 @@
 <!-- Genetic Algorithm on Himmelblau landscape. -->
 <!-- 08-06-2015 -->
 
-<circuit type="jamelV3.basic.BasicCircuit">
+<circuit type="jamel.basic.BasicCircuit">
 
 	<comment>
 		A scenario for testing a genetic algorithm
@@ -16,7 +16,7 @@
 
 	<sectors>
 
-		<Landscape type="jamelV3.varia.optimization.artificialLandscapes.Himmelblau">
+		<Landscape type="jamel.varia.optimization.artificialLandscapes.Himmelblau">
 			<settings
 				top="6"
 				bottom="-6"
@@ -27,8 +27,8 @@
 		</Landscape>
 		
 		<Algo0
-			type="jamelV3.varia.optimization.genetic.BasicGA"
-			agentType="jamelV3.varia.optimization.genetic.BasicIndividual">
+			type="jamel.varia.optimization.genetic.BasicGA"
+			agentType="jamel.varia.optimization.genetic.BasicIndividual">
 			<settings
 				nAgents="100"
 				top="-1"
@@ -43,8 +43,8 @@
 		</Algo0>
 
 		<Algo1
-			type="jamelV3.varia.optimization.genetic.BasicGA"
-			agentType="jamelV3.varia.optimization.genetic.SatisficingIndividual">
+			type="jamel.varia.optimization.genetic.BasicGA"
+			agentType="jamel.varia.optimization.genetic.SatisficingIndividual">
 			<settings
 				nAgents="100"
 				top="-1"
@@ -59,8 +59,8 @@
 		</Algo1>
 
 		<Algo2
-			type="jamelV3.varia.optimization.genetic.BasicGA"
-			agentType="jamelV3.varia.optimization.genetic.PyramidingIndiv">
+			type="jamel.varia.optimization.genetic.BasicGA"
+			agentType="jamel.varia.optimization.genetic.PyramidingIndiv">
 			<settings
 				nAgents="100"
 				top="-1"

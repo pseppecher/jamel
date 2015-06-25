@@ -1,4 +1,5 @@
 /**
- * Jamel, version 2, may 2015 (backup).
+ * Jamel (Java Agent-based MacroEconomic Laboratory).<p>
+ * Version 3 (beta), June 2015.
  */
 package jamel;
