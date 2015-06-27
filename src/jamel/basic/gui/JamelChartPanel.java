@@ -14,8 +14,8 @@ public class JamelChartPanel extends ChartPanel {
 	/** background */
 	private static final Color background = new Color(229,229,229);
 
-	/** A flag that indicates if the chart is a scatter chart or not. */
-	private final boolean isScatter;
+	/** A flag that indicates if the chart is a time chart or not. */
+	private final boolean isTimeChart;
 
 	/**
 	 * Constructs a panel that displays the specified chart.
@@ -24,7 +24,7 @@ public class JamelChartPanel extends ChartPanel {
 	 */
 	public JamelChartPanel(JFreeChart chart, boolean isScatter) {
 		super(chart);
-		this.isScatter = isScatter;
+		this.isTimeChart = isScatter;
 		this.setBackground(background);
 	}
 	
@@ -33,7 +33,7 @@ public class JamelChartPanel extends ChartPanel {
 	 * @param marker the marker to be added.
 	 */
 	public void addMarker(ValueMarker marker) {
-		if (!isScatter) {
+		if (isTimeChart) {
 			this.getChart().getXYPlot().addDomainMarker(marker);
 		}
 	}

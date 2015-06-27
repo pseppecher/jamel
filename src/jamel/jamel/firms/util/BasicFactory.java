@@ -1,5 +1,7 @@
 package jamel.jamel.firms.util;
 
+import jamel.basic.agent.AgentDataset;
+import jamel.basic.agent.BasicAgentDataset;
 import jamel.basic.util.Timer;
 import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.LaborPower;
@@ -9,20 +11,20 @@ import jamel.jamel.widgets.LaborPower;
  */
 public class BasicFactory implements Factory {
 
+	/** The factory dataset. */
+	private AgentDataset dataset;
+
 	/** A flag that indicates either the factory is closed or not. */
 	protected boolean closed = false;
 
 	/** The inventory stock of finished goods. */
 	protected final Commodities finishedGoods= new BasicCommodities();
-
+	
 	/** The value of inventory losses (when the firm goes bankrupt). */
 	protected long inventoryLosses=0;
-	
+
 	/** The value of finished goods produced in the last production process. */
 	protected long productionValue;
-
-	/** The volume of finished goods produced in the last production process. */
-	protected long productionVolume;
 	
 	/** The number of labor powers put in the last production process. */
 	protected int workforce;
@@ -91,6 +93,13 @@ public class BasicFactory implements Factory {
 	}
 
 	@Override
+	public void close() {
+		this.dataset.put("inventories.inProcess.val", (double) this.workInProgress.getValue());
+		this.dataset.put("inventories.fg.val", (double) this.finishedGoods.getValue());
+		this.dataset.put("inventories.fg.vol", (double) this.finishedGoods.getVolume());
+	}
+
+	@Override
 	public float getCapacity() {
 		return this.workInProgress.getCapacity();
 	}
@@ -101,6 +110,11 @@ public class BasicFactory implements Factory {
 			throw new RuntimeException("This factory is definitively closed.");
 		}
 		return this.finishedGoods.detach(demand);
+	}
+
+	@Override
+	public AgentDataset getData() {
+		return this.dataset;
 	}
 
 	@Override
@@ -129,25 +143,6 @@ public class BasicFactory implements Factory {
 	}
 
 	@Override
-	public long getProductionValue() {
-		return this.productionValue;
-	}
-
-	@Override
-	public long getProductionVolume() {
-		return this.productionVolume;
-	}
-
-	/**
-	 * Returns the productivity.
-	 * @return the productivity.
-	 */
-	@Override
-	public double getProductivity() {
-		return this.workInProgress.getProductivity();
-	}
-
-	@Override
 	public double getUnitCost() {
 		return this.finishedGoods.getUnitCost();
 	}
@@ -158,13 +153,13 @@ public class BasicFactory implements Factory {
 	}
 
 	@Override
-	public int getWorkforce(){
-		return this.workforce;
+	public void investment(InvestmentProcess investmentProcess) {
+		this.workInProgress.investment(investmentProcess);
 	}
 
 	@Override
-	public void investment(InvestmentProcess investmentProcess) {
-		this.workInProgress.investment(investmentProcess);
+	public void open() {
+		this.dataset=new BasicAgentDataset("Factory");
 	}
 
 	@Override
@@ -172,18 +167,24 @@ public class BasicFactory implements Factory {
 		if (this.closed) {
 			throw new RuntimeException("This factory is definitively closed.");
 		}
+		long productionVolume;
 		if (laborPowers.length>0) {
 			this.workforce=laborPowers.length;
 			final Commodities product = this.workInProgress.process(laborPowers);
-			this.productionVolume = product.getVolume();
+			productionVolume = product.getVolume();
 			this.productionValue = product.getValue();
 			this.finishedGoods.put(product);
 		}
 		else {
 			this.workforce=0;
-			this.productionVolume=0;
+			productionVolume=0;
 			this.productionValue=0;
 		}
+		this.dataset.put("workforce", (double) this.workforce);
+		this.dataset.put("production.vol", (double) productionVolume);
+		this.dataset.put("production.val", (double) this.productionValue);
+		this.dataset.put("productivity", (double) this.workInProgress.getProductivity());
+		this.dataset.put("capacity", (double) this.workInProgress.getCapacity());
 	}
 
 	@Override

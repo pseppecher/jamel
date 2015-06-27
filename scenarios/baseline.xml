@@ -108,6 +108,7 @@
 			sector="Industry"
 			size="100" />
 
+		<pause period="120" />
 		<pause period="600" />
 
 	</events>

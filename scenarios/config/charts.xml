@@ -342,6 +342,17 @@
 				max="1" />
 		</chart>
 
+		<chart title="Workforce">
+			<series
+				value="Industry_t.agent.Firm1.workforce"
+				color="red"
+				label="workforce" />
+			<series
+				value="Industry_t.agent.Firm1.workforce.target"
+				color="blue"
+				label="target" />
+		</chart>
+
 	</panel>
 
 	<panel

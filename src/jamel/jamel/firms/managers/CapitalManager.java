@@ -1,5 +1,7 @@
 package jamel.jamel.firms.managers;
 
+import jamel.basic.agent.AgentDataset;
+
 /**
  * The capital manager.
  */
@@ -16,22 +18,10 @@ public interface CapitalManager {
 	void close();
 
 	/**
-	 * Returns the amount of the capital of the firm (at book value).
-	 * @return the amount of the capital of the firm (at book value).
+	 * Returns the dataset of the manager.
+	 * @return the dataset of the manager.
 	 */
-	long getCapital();
-
-	/**
-	 * Returns the amount of debt exceeding the firm target. 
-	 * @return the amount of debt exceeding the firm target.
-	 */
-	double getLiabilitiesExcess();
-
-	/**
-	 * Returns the target value of the liabilities.
-	 * @return the target value of the liabilities.
-	 */
-	double getLiabilitiesTarget();
+	AgentDataset getData();
 
 	/**
 	 * Returns <code>true</code> if the firm accounting is consistent, <code>false</code> otherwise.

@@ -1,5 +1,6 @@
 package jamel.jamel.firms.managers;
 
+import jamel.basic.agent.AgentDataset;
 import jamel.jamel.widgets.JobOffer;
 import jamel.jamel.widgets.LaborPower;
 
@@ -7,17 +8,17 @@ import jamel.jamel.widgets.LaborPower;
  * The workforce manager.
  */
 public interface WorkforceManager {
-
+	
 	/**
 	 * Closes the manager.
 	 */
 	void close();
 
 	/**
-	 * Returns the average wage paid of the current workforce.
-	 * @return the average wage paid of the current workforce.
+	 * Returns the dataset of the manager.
+	 * @return the dataset of the manager.
 	 */
-	Double getAverageWage();
+	AgentDataset getData();
 
 	/**
 	 * Returns the job offer.
@@ -38,27 +39,14 @@ public interface WorkforceManager {
 	long getPayroll();
 
 	/**
-	 * Returns the wage.
-	 * @return the wage.
-	 */
-	Double getWage();
-
-	/**
-	 * Returns the wageBill of the period.
-	 * @return the wageBill of the period.
-	 */
-	long getWageBill();
-
-	/**
-	 * Returns the size of the workforce (the number of employees)
-	 * @return the size of the workforce (the number of employees)
-	 */
-	int getWorkforceSize();
-
-	/**
 	 * Layoffs all the workforce.
 	 */
 	void layoff();
+
+	/**
+	 * Opens the manager.
+	 */
+	void open();
 
 	/**
 	 * Pays the workers.

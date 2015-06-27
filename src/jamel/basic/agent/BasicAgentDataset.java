@@ -23,15 +23,15 @@ public class BasicAgentDataset extends TreeMap<String,Double> implements AgentDa
 	}
 
 	@Override
-	public Double get(String key) {
-		return super.get(key);
+	public void exportHeadersTo(File outputFile) throws IOException {
+		final FileWriter writer = new FileWriter(outputFile,true);
+		for (String key:this.keySet()) {
+			writer.write(key+",");
+		}	
+		writer.write(System.getProperty("line.separator"));
+		writer.close();
 	}
 	
-	@Override
-	public String getName() {
-		return name;
-	}
-
 	@Override
 	public void exportTo(File outputFile) throws IOException {
 		final FileWriter writer = new FileWriter(outputFile,true);
@@ -43,13 +43,20 @@ public class BasicAgentDataset extends TreeMap<String,Double> implements AgentDa
 	}
 
 	@Override
-	public void exportHeadersTo(File outputFile) throws IOException {
-		final FileWriter writer = new FileWriter(outputFile,true);
-		for (String key:this.keySet()) {
-			writer.write(key+",");
-		}	
-		writer.write(System.getProperty("line.separator"));
-		writer.close();
+	public Double get(String key) {
+		return super.get(key);
+	}
+
+	@Override
+	public String getName() {
+		return name;
+	}
+
+	@Override
+	public void putAll(AgentDataset data) {
+		for(String key:data.keySet()) {
+			this.put(key, data.get(key));
+		}
 	}
 
 }

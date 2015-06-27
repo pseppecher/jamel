@@ -1,5 +1,6 @@
 package jamel.jamel.firms.util;
 
+import jamel.basic.agent.AgentDataset;
 import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.LaborPower;
 
@@ -14,6 +15,11 @@ public interface Factory {
 	void bankrupt();
 
 	/**
+	 * Closes the factory.
+	 */
+	void close();
+
+	/**
 	 * Returns the capacity of the factory, ie its maximum number of workers. 
 	 * @return the capacity.
 	 */
@@ -25,6 +31,12 @@ public interface Factory {
 	 * @return the demanded commodities.
 	 */
 	Commodities getCommodities(long demand);
+
+	/**
+	 * Returns the dataset of the factory.
+	 * @return the dataset of the factory.
+	 */
+	AgentDataset getData();
 
 	/**
 	 * Returns the value of finished goods.
@@ -57,24 +69,6 @@ public interface Factory {
 	double getMaxUtilAverageProduction();
 
 	/**
-	 * Return the value of finished goods produced by the last production process.
-	 * @return the value of product.
-	 */
-	long getProductionValue();
-
-	/**
-	 * Return the volume of finished goods produced by the last production process.
-	 * @return the volume of product.
-	 */
-	long getProductionVolume();
-
-	/**
-	 * Returns the productivity.
-	 * @return the productivity.
-	 */
-	double getProductivity();
-
-	/**
 	 * Returns the unit cost of the finished goods in the inventory.
 	 * The unit cost is "The cost incurred by a company to produce, store and sell one unit of a particular product."
 	 * @see <a href="http://www.investopedia.com/terms/u/unitcost.asp">www.investopedia.com/terms/u/unitcost.asp</a>
@@ -92,22 +86,21 @@ public interface Factory {
 	long getValue();
 
 	/**
-	 * Returns the number of labor powers put in the last production process.
-	 * @return an int.
+	 * Receives an investment process. A new machine is then created.
+	 * @param investmentProcess the 
 	 */
-	int getWorkforce();
+	void investment(InvestmentProcess investmentProcess);
+
+	/**
+	 * Opens the factory.
+	 */
+	void open();
 
 	/**
 	 * Produces new goods by the expense of the given units of labor power.
 	 * @param laborPowers the labor powers.
 	 */
 	void process(LaborPower... laborPowers);
-
-	/**
-	 * Receives an investment process. A new machine is then created.
-	 * @param investmentProcess the 
-	 */
-	void investment(InvestmentProcess investmentProcess);
 
 	/**
 	 * Scraps the machines under the specified productivity threshold.

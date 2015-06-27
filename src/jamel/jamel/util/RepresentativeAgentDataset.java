@@ -53,6 +53,12 @@ public class RepresentativeAgentDataset implements AgentDataset, SectorDataset{
 	}
 
 	@Override
+	public Double[] getArray(String key) {
+		// Not used.
+		throw new RuntimeException("Not implemented.");
+	}
+
+	@Override
 	public String getName() {
 		return this.data.getName();
 	}
@@ -82,6 +88,12 @@ public class RepresentativeAgentDataset implements AgentDataset, SectorDataset{
 
 	@Override
 	public Double put(String key, Double value) {
+		// Not used.
+		throw new RuntimeException("Not implemented.");
+	}
+
+	@Override
+	public void putAll(AgentDataset data) {
 		// Not used.
 		throw new RuntimeException("Not implemented.");
 	}

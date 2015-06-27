@@ -53,6 +53,13 @@ public interface AgentDataset {
 	 */
 	public Double put(String key, Double value);
 
+	/**
+	 * Copies all of the data from the specified dataset to this dataset. 
+	 * These data replace any data that this dataset had for any of the keys currently in the specified dataset.
+	 * @param dataset data to be stored in this dataset.
+	 */
+	public void putAll(AgentDataset dataset);
+
 }
 
 // ***

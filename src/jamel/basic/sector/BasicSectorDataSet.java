@@ -166,6 +166,11 @@ public class BasicSectorDataSet implements SectorDataset {
 	}
 
 	@Override
+	public Double[] getArray(String key) {
+		return this.fields.get(key);
+	}
+
+	@Override
 	public List<XYDataItem> getScatter(String xKey, String yKey, String select) {
 		final List<XYDataItem> result;
 		final Double[] yValues = this.fields.get(yKey);

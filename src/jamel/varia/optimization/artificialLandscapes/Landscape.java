@@ -58,6 +58,12 @@ public abstract class Landscape implements Sector {
 			}
 
 			@Override
+			public Double[] getArray(String string) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
 			public List<XYDataItem> getScatter(String xKey, String yKey,
 					String select) {
 				// Not used.

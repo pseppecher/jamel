@@ -56,6 +56,13 @@ public class BasicCircuit implements Circuit {
 
 		/** The pause button. */
 		private final JButton pauseButton = new JButton("Pause") {{
+			this.addActionListener(new ActionListener() { 
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					BasicCircuit.this.pause(true);
+					ControlPanel.this.repaint();
+				} 
+			}) ;
 			final URL url = cl.getResource("resources/suspend_co.gif");
 			if (url!=null) {
 				this.setIcon(new ImageIcon(url));
@@ -67,6 +74,13 @@ public class BasicCircuit implements Circuit {
 
 		/** The play button. */
 		private final JButton playButton = new JButton("Run") {{
+			this.addActionListener(new ActionListener() { 
+				@Override
+				public void actionPerformed(ActionEvent e) { 
+					BasicCircuit.this.pause(false);
+					ControlPanel.this.repaint();
+				} 
+			}) ;
 			final URL url = cl.getResource("resources/resume_co.gif");
 			if (url!=null) {
 				this.setIcon(new ImageIcon(url));
@@ -83,21 +97,6 @@ public class BasicCircuit implements Circuit {
 		private final JPanel messagePanel = new JPanel();
 
 			{
-				this.pauseButton.addActionListener(new ActionListener() { 
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						BasicCircuit.this.pause(true);
-						repaint();
-					} 
-				}) ;
-				this.playButton.addActionListener(new ActionListener() { 
-					@Override
-					public void actionPerformed(ActionEvent e) { 
-						BasicCircuit.this.pause(false);
-						repaint();
-					} 
-				}) ;
-				this.playButton.setEnabled(false);
 				this.setLayout(new GridLayout(0,3));
 				final JPanel left = new JPanel();
 				final JPanel central = new JPanel();
@@ -125,9 +124,9 @@ public class BasicCircuit implements Circuit {
 				final boolean b = BasicCircuit.this.isPaused();
 				if (pauseButton!=null) {
 					pauseButton.setEnabled(!b) ;
-					pauseButton.setSelected(b) ;
+					pauseButton.setSelected(false) ;
 					playButton.setEnabled(b) ;
-					playButton.setSelected(!b) ;
+					playButton.setSelected(false) ;
 				}
 				super.repaint();
 			}
@@ -509,13 +508,13 @@ public class BasicCircuit implements Circuit {
 			this.dataManager.putData(sector.getName(), sector.getDataset());
 		}
 		this.dataManager.update();
+		sleep(this.sleep);
 		this.doEvents();
 		this.doPause();
 		timer.next();
 		for(Phase phase:phases) {
 			phase.run();
 		}
-		sleep(this.sleep);
 	}
 
 	/**

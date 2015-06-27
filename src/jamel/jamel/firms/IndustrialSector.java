@@ -9,22 +9,23 @@ import java.util.Random;
 
 /**
  * Represents the industrial sector.
+ * The sector must be populated with agents implementing the {@link Firm} interface.
  */
 public interface IndustrialSector {
 	
 	/**
-	 * Returns the float value of the specified parameter.  
-	 * @param key the key of the parameter.
-	 * @return a Float.
-	 */
-	float getFloatParameter(String key);
-
-	/**
-	 * Returns a new bank account for the specified firm.
+	 * Returns a new {@link BankAccount} for the specified {@link Firm}.
 	 * @param firm the holder of the new account.
-	 * @return a new bank account.
+	 * @return a new {@link BankAccount}.
 	 */
 	BankAccount getNewAccount(Firm firm);
+
+	/**
+	 * Returns the float value of the specified parameter.  
+	 * @param key the key of the parameter.
+	 * @return  the float value of the specified parameter.
+	 */
+	float getParam(String key);
 
 	/**
 	 * Returns the random.
@@ -33,12 +34,18 @@ public interface IndustrialSector {
 	Random getRandom();
 
 	/**
+	 * Returns a wage selected at random between the wages recorded at the previous period.
+	 * @return a wage selected at random between the wages recorded at the previous period.
+	 */
+	Double getRandomWage();
+	
+	/**
 	 * Returns a simple random sample of firms. 
-	 * @param size the of the sample. 
-	 * @return a sample of firms.
+	 * @param size the size of the sample. 
+	 * @return a list of firms.
 	 */
 	List<Firm> getSimpleRandomSample(int size);
-	
+
 	/**
 	 * Returns the ID of the simulation.
 	 * @return the ID of the simulation.
@@ -46,21 +53,21 @@ public interface IndustrialSector {
 	long getSimulationID();
 
 	/**
-	 * Returns the timer.
-	 * @return the timer.
+	 * Returns the {@link Timer} of the sector.
+	 * @return the {@link Timer} of the sector.
 	 */
 	Timer getTimer();
 
 	/**
 	 * Returns an agent selected at random in the collection of agents that can be a capital owner.
-	 * @return a capital owner.
+	 * @return a {@link Shareholder}.
 	 */
 	Shareholder selectCapitalOwner();
 
 	/**
 	 * Returns a sample of agents selected at random in the collection of agents that can be a capital owner.
 	 * @param n the number of capital owners to select.
-	 * @return an list of capital owners.
+	 * @return an list of {@link Shareholder}.
 	 */
 	List<Shareholder> selectCapitalOwner(int n);
 

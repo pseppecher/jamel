@@ -95,6 +95,9 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 	/** The parameters of the household sector. */
 	protected final JamelParameters parameters = new BasicParameters();
 
+	/** The sector dataset (collected at the end of the previous period). */
+	private SectorDataset dataset;
+
 	/**
 	 * Creates a new banking sector.
 	 * @param name the name of the sector.
@@ -115,6 +118,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 		for (final Firm firm:firms.getList()) {
 			firm.close();
 		}
+		this.dataset = this.firms.collectData();
 	}
 
 	/**
@@ -200,11 +204,11 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 
 	@Override
 	public SectorDataset getDataset() {
-		return this.firms.collectData();
+		return this.dataset;
 	}
 
 	@Override
-	public float getFloatParameter(String key) {
+	public float getParam(String key) {
 		return this.parameters.get(key);
 	}
 
@@ -383,6 +387,31 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 	@Override
 	public List<Shareholder> selectCapitalOwner(int n) {
 		return this.capitalists.selectRandomCapitalOwners(n);
+	}
+
+	@Override
+	public Double getRandomWage() {
+		final Double result;
+		if (this.dataset==null) {
+			result=null;
+		}
+		else {
+			final Double[] values = this.dataset.getArray("wages");
+			if (values!=null) {
+				final int length = values.length;
+				if (length>0) {
+					final int rand = random.nextInt(values.length);
+					result = values[rand];
+				}
+				else {
+					result = null;
+				}
+			}
+			else {
+				result=null;
+			}
+		}
+		return result;
 	}
 
 }

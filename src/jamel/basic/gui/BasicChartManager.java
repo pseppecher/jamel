@@ -71,11 +71,11 @@ public BasicChartManager(Element root, BasicDataManager dataManager) throws Init
 					if ("scatter".equals(chartElement.getAttribute("options"))) {
 						final XYSeriesCollection data = dataManager.getScatterChartData(series);
 						final XYZDataset xyzDataset = dataManager.getXYBlockData(chartElement);
-						chartPanel = new JamelChartPanel(ChartGenerator.createScatterChart(chartElement,data,xyzDataset),true);
+						chartPanel = new JamelChartPanel(ChartGenerator.createScatterChart(chartElement,data,xyzDataset),false);
 					}
 					else if ("time scatter".equals(chartElement.getAttribute("options"))) {
 						final XYSeriesCollection data = dataManager.getTimeScatterChartData(series);
-						chartPanel = new JamelChartPanel(ChartGenerator.createTimeScatterChart(chartElement,data),false);						
+						chartPanel = new JamelChartPanel(ChartGenerator.createTimeScatterChart(chartElement,data),true);						
 					}
 					else {
 						final XYSeriesCollection data = dataManager.getTimeChartData(series);

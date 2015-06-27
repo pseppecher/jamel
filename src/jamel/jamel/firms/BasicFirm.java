@@ -28,7 +28,6 @@ import jamel.jamel.widgets.Supply;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 
 /**
@@ -122,8 +121,7 @@ public class BasicFirm implements Firm {
 
 	/** The history of the firm. */
 	protected final LinkedList<String> history = new LinkedList<String>() {
-		/** serialVersionUID */
-		private static final long serialVersionUID = 1L;
+
 		@Override
 		public boolean add(String string) {
 			final boolean result;
@@ -162,7 +160,7 @@ public class BasicFirm implements Firm {
 		@Override
 		public float getTarget() {
 			if (this.utilizationRateTargeted==null) {
-				this.utilizationRateTargeted=sector.getFloatParameter(UTILIZATION_RATE_INITIAL_VALUE);
+				this.utilizationRateTargeted=sector.getParam(UTILIZATION_RATE_INITIAL_VALUE);
 			}
 			return this.utilizationRateTargeted;
 		}
@@ -170,13 +168,13 @@ public class BasicFirm implements Firm {
 		@Override
 		public void updateCapacityUtilizationTarget() {
 			if (this.utilizationRateTargeted==null) {
-				this.utilizationRateTargeted=sector.getFloatParameter(UTILIZATION_RATE_INITIAL_VALUE);
+				this.utilizationRateTargeted=sector.getParam(UTILIZATION_RATE_INITIAL_VALUE);
 			}
 			else {
 				final double inventoryRatio = getInventoryRatio();
 				final float alpha1 = random.nextFloat();
 				final float alpha2 = random.nextFloat();
-				final float delta = (alpha1*sector.getFloatParameter(UTILIZATION_RATE_FLEXIBILITY));
+				final float delta = (alpha1*sector.getParam(UTILIZATION_RATE_FLEXIBILITY));
 				if (inventoryRatio<1-alpha1*alpha2) { // Low level
 					this.utilizationRateTargeted += delta;
 					if (this.utilizationRateTargeted>1) {
@@ -209,54 +207,26 @@ public class BasicFirm implements Firm {
 	/** The employer behavior. */
 	protected final WorkforceManager workforceManager = new WorkforceManager() {
 
+		private AgentDataset dataset = null; 
+
 		/** jobOffer */
-		private JobOffer jobOffer;
+		private JobOffer jobOffer = null;
+
+		/** The manpower target. */
+		private Integer manpowerTarget = null;
 
 		/** The payroll (= the anticipated wage bill) */
-		private long payroll;
+		private Long payroll = null;
 
-		private int vacancies;
+		private Integer vacancies = null;
+
+		private Integer vacancies_initial = null;
 
 		/** The wage. */
-		private Double wage;
-
-		/** The wage bill */
-		private long wageBill;
+		private Double wage = null;
 
 		/** The workforce. */
 		private final Workforce workforce = new Workforce();
-
-		/**
-		 * Returns the average wage from a random sample of 3 firms.
-		 * @return the average wage from a random sample of 3 firms.
-		 * @since 23-11-2014
-		 */
-		private Double getRandomWage() {
-			final Double result;
-			final List<Firm> sample = sector.getSimpleRandomSample(3);
-			if (!sample.isEmpty()) {
-				double sum=0;
-				int count=0;
-				for (Firm firm: sample) {
-					final Double wage1 = firm.getWage();
-					if (wage1!=null) {
-						sum += wage1;
-						count ++;
-					}
-				}
-				if (count!=0) {
-					result = sum/count;					
-				}
-				else {
-					result=null;
-				}
-			}
-			else {
-				result = null;
-			}
-			history.add("Random wage: "+result);
-			return result;
-		}
 
 		/**
 		 * Returns the vacancy rate.
@@ -311,8 +281,8 @@ public class BasicFirm implements Firm {
 
 							{
 								final int term;
-								final float min = sector.getFloatParameter(LABOUR_CONTRACT_MIN);
-								final float max = sector.getFloatParameter(LABOUR_CONTRACT_MAX);
+								final float min = sector.getParam(LABOUR_CONTRACT_MIN);
+								final float max = sector.getParam(LABOUR_CONTRACT_MAX);
 								if (max==min) {
 									term = (int) min ; 
 								}
@@ -385,16 +355,12 @@ public class BasicFirm implements Firm {
 		@Override
 		public void close() {
 			memory.put("vacancies",this.vacancies);
-			data.put("vacancies.final",(double) this.vacancies);
-			this.jobOffer=null;
-			this.wageBill=0;
-			this.payroll=0;
-			this.vacancies=0;
+			this.dataset.put("vacancies.final",(double) this.vacancies);
 		}
 
 		@Override
-		public Double getAverageWage() {
-			return this.workforce.getAverageWage();
+		public AgentDataset getData() {
+			return this.dataset;
 		}
 
 		@Override
@@ -420,32 +386,28 @@ public class BasicFirm implements Firm {
 		}
 
 		@Override
-		public Double getWage() {
-			return this.wage;
-		}
-
-		@Override
-		public long getWageBill() {
-			return this.wageBill;
-		}
-
-		@Override
-		public int getWorkforceSize() {
-			return this.workforce.size();
-		}
-
-		@Override
 		public void layoff() {
 			workforce.layoff();
 		}
 
 		@Override
+		public void open() {
+			this.jobOffer=null;
+			this.manpowerTarget=null;
+			this.payroll=null;
+			this.vacancies=null;
+			this.vacancies_initial=null;
+			this.dataset = new BasicAgentDataset("Workforce Manager");
+		}
+
+		@Override
 		public void payWorkers() {
-			this.wageBill=0;
+			double wageBill=0l;
 			for (JobContract contract: workforce) {
 				contract.payWage(account.newCheque(contract.getWage()));
 				wageBill+=contract.getWage();
 			}
+			this.dataset.put("wageBill", wageBill);			
 		}
 
 		/*
@@ -461,16 +423,16 @@ public class BasicFirm implements Firm {
 			final Double vacancyRate = getVacancyRate();
 			final Double vacancyRatio;
 			if (vacancyRate!=null) {
-				vacancyRatio = getVacancyRate()/sector.getFloatParameter(NORMAL_VACANCY_RATE);	
+				vacancyRatio = getVacancyRate()/sector.getParam(NORMAL_VACANCY_RATE);	
 			}
 			else {
 				vacancyRatio = null;
 			}
 			history.add("Current wage: "+this.wage);
 			if (this.wage==null) {
-				this.wage = getRandomWage();
+				this.wage = sector.getRandomWage();
 				if (this.wage==null) {
-					this.wage = (double) sector.getFloatParameter(WAGE_INITIAL_VALUE);
+					this.wage = (double) sector.getParam(WAGE_INITIAL_VALUE);
 					history.add("Update wage: using default value.");
 				}
 			}
@@ -479,41 +441,43 @@ public class BasicFirm implements Firm {
 				final float alpha2 = random.nextFloat();
 				final double newWage;
 				if (vacancyRatio<1-alpha1*alpha2) {
-					newWage=this.wage*(1f-alpha1*sector.getFloatParameter(WAGE_FLEX_DOWN));
+					newWage=this.wage*(1f-alpha1*sector.getParam(WAGE_FLEX_DOWN));
 				}
 				else if (vacancyRatio>1+alpha1*alpha2) {
-					newWage=this.wage*( 1f+alpha1*sector.getFloatParameter(WAGE_FLEX_UP));
+					newWage=this.wage*( 1f+alpha1*sector.getParam(WAGE_FLEX_UP));
 				}
 				else {
 					newWage=this.wage;
 				}
-				this.wage = Math.max(newWage, sector.getFloatParameter(WAGE_MINIMUM));
+				this.wage = Math.max(newWage, sector.getParam(WAGE_MINIMUM));
 			}
 			history.add("New wage: "+this.wage);
-			data.put("vacancies.rate",vacancyRate);
+			this.dataset.put("vacancies.rate",vacancyRate);
+			this.dataset.put("wages", wage);
 		}
 
 		@Override
 		public void updateWorkforce() {
 			workforce.cleanUp();
-			final int manpowerTarget = Math.round(factory.getCapacity()*productionManager.getTarget());
+			manpowerTarget  = Math.round(factory.getCapacity()*productionManager.getTarget());
 			if (manpowerTarget<=workforce.size()) {
-				vacancies = manpowerTarget-workforce.size();
+				vacancies_initial = manpowerTarget-workforce.size();
 				if (manpowerTarget<workforce.size()) {
 					workforce.layoff(workforce.size()-manpowerTarget);
 				}
 				payroll = workforce.getPayroll();
-				vacancies = manpowerTarget-workforce.size();
-				if (vacancies!=0) {
-					throw new RuntimeException("Negative number of vacancies");
+				vacancies_initial = manpowerTarget-workforce.size();
+				if (vacancies_initial!=0) {
+					throw new RuntimeException("Inconsistency");
 				}
 			}
 			else {
-				vacancies = manpowerTarget-workforce.size();
-				payroll = workforce.getPayroll() + vacancies* (long) ((double) this.wage);
+				vacancies_initial = manpowerTarget-workforce.size();
+				payroll = workforce.getPayroll() + vacancies_initial* (long) ((double) this.wage);
 			}
-			BasicFirm.this.data.put("vacancies.initial",(double) vacancies);
-			BasicFirm.this.data.put("workforce.target",(double) manpowerTarget);
+			this.dataset.put("vacancies.initial",(double) vacancies_initial);
+			this.dataset.put("workforce.target",(double) manpowerTarget);
+			this.vacancies=this.vacancies_initial;
 			this.newJobOffer();
 		}
 
@@ -559,102 +523,116 @@ public class BasicFirm implements Firm {
 	protected Supply createSupply() {
 		final Supply supply;
 		final Period validPeriod = timer.getPeriod();
-		final long initialSize = Math.min((long) (sector.getFloatParameter(PROPENSITY2SELL)*factory.getFinishedGoodsVolume()), (long) (sector.getFloatParameter(SELLING_CAPACITY)*factory.getMaxUtilAverageProduction()));
-		if (initialSize==0) {
-			supply = null;
+		final long initialSize = Math.min((long) (sector.getParam(PROPENSITY2SELL)*factory.getFinishedGoodsVolume()), (long) (sector.getParam(SELLING_CAPACITY)*factory.getMaxUtilAverageProduction()));
+
+		if (pricingManager.getPrice()==null) {
+			pricingManager.updatePrice();
+		}
+		final Double price = pricingManager.getPrice();
+		
+		final long initialValue;
+		
+		if (initialSize>0) {
+			initialValue=(long) (price*initialSize);
 		}
 		else {
-			if (pricingManager.getPrice()==null) {
-				pricingManager.updatePrice();
-			}
-			final double price = pricingManager.getPrice();
-			supply = new Supply() {
-
-				private long salesValue=0;
-
-				private long salesValueAtCost=0;
-
-				private long salesVolume=0;
-
-				private long volume=initialSize;
-
-				@Override
-				public Commodities buy(long demand,Cheque cheque) {
-					if (!validPeriod.isPresent()) {
-						throw new AnachronismException("Bad period.");
-					}
-					if (demand>this.volume) {
-						throw new IllegalArgumentException("Demand cannot exceed supply.");
-					}
-					if ((long)(this.getPrice()*demand)!=cheque.getAmount()) {
-						throw new IllegalArgumentException("Cheque amount : expected <"+(long) (demand*this.getPrice())+"> but was <"+cheque.getAmount()+">");
-					}
-					account.deposit(cheque);
-					this.volume-=demand;
-					this.salesValue+=cheque.getAmount();
-					this.salesVolume+=demand;
-					final Commodities sales = factory.getCommodities(demand);
-					this.salesValueAtCost += sales.getValue();
-					return sales;
-				}
-
-				@Override
-				public double getGrossProfit() {
-					return this.salesValue-this.salesValueAtCost;
-				}
-
-				@Override
-				public long getInitialVolume() {
-					return initialSize;
-				}
-
-				@Override
-				public double getPrice() {
-					return price;
-				}
-
-				@Override
-				public long getPrice(long volume) {
-					return (long) (price*volume);
-				}
-
-				@Override
-				public double getSalesRatio() {
-					return ((double) this.salesVolume)/initialSize;
-				}
-
-				@Override
-				public double getSalesValue() {
-					return this.salesValue;
-				}
-
-				@Override
-				public double getSalesValueAtCost() {
-					return this.salesValueAtCost;
-				}
-
-				@Override
-				public double getSalesVolume() {
-					return this.salesVolume;
-				}
-
-				@Override
-				public Supplier getSupplier() {
-					return BasicFirm.this;
-				}
-
-				@Override
-				public long getVolume() {
-					return this.volume;
-				}
-
-				@Override
-				public String toString() {
-					return "Supply by "+name+": price <"+price+">, volume <"+volume+">"; 
-				}
-
-			};
+			initialValue=0;
 		}
+		
+		supply = new Supply() {
+
+			private AgentDataset dataset = new BasicAgentDataset("Supply");
+
+			private long grossProfit = 0;
+
+			private long salesValue=0;
+
+			private long salesValueAtCost=0;
+			
+			private long salesVolume=0;
+
+			private long volume=initialSize; 
+
+			@Override
+			public Commodities buy(long demand,Cheque cheque) {
+				if (!validPeriod.isPresent()) {
+					throw new AnachronismException("Bad period.");
+				}
+				if (demand>this.volume) {
+					throw new IllegalArgumentException("Demand cannot exceed supply.");
+				}
+				if ((long)(this.getPrice()*demand)!=cheque.getAmount()) {
+					throw new IllegalArgumentException("Cheque amount : expected <"+(long) (demand*this.getPrice())+"> but was <"+cheque.getAmount()+">");
+				}
+				account.deposit(cheque);
+				this.volume-=demand;
+				this.salesValue+=cheque.getAmount();
+				this.salesVolume+=demand;
+				final Commodities sales = factory.getCommodities(demand);
+				this.salesValueAtCost += sales.getValue();
+				this.grossProfit  = this.salesValue-this.salesValueAtCost;
+				return sales;
+			}
+
+			@Override
+			public void close() {
+				this.dataset.put("supply.vol", (double) initialSize);
+				this.dataset.put("supply.val", (double) initialValue);
+				this.dataset.put("sales.vol", (double) salesVolume);
+				this.dataset.put("sales.val", (double) salesValue);
+				this.dataset.put("sales.costValue", (double) salesValueAtCost);
+				this.dataset.put("grossProfit", getGrossProfit()-factory.getInventoryLosses());// TODO: A revoir		
+			}
+
+			@Override
+			public AgentDataset getData() {
+				return this.dataset;
+			}
+
+			@Override
+			public double getGrossProfit() {
+				return this.grossProfit;
+			}
+
+			@Override
+			public double getPrice() {
+				return price;
+			}
+
+			@Override
+			public long getPrice(long volume) {
+				return (long) (price*volume);
+			}
+
+			@Override
+			public double getSalesRatio() {
+				// TODO: a revoir. Est-ce ici qu'il faut calculer a ?
+				final double result;
+				if (initialSize>0) {
+					result = ((double) this.salesVolume)/initialSize; 
+				}
+				else {
+					result=0;
+				}
+				return result;
+			}
+
+			@Override
+			public Supplier getSupplier() {
+				return BasicFirm.this;
+			}
+
+			@Override
+			public long getVolume() {
+				return this.volume;
+			}
+
+			@Override
+			public String toString() {
+				return "Supply by "+name+": price <"+price+">, volume <"+volume+">"; 
+			}
+
+		};
 		return supply;
 	}
 
@@ -674,7 +652,7 @@ public class BasicFirm implements Firm {
 	 * @return the inventory ratio.
 	 */
 	protected double getInventoryRatio() {
-		return this.factory.getFinishedGoodsVolume()/(sector.getFloatParameter(INVENTORY_NORMAL_LEVEL)*this.factory.getMaxUtilAverageProduction());
+		return this.factory.getFinishedGoodsVolume()/(sector.getParam(INVENTORY_NORMAL_LEVEL)*this.factory.getMaxUtilAverageProduction());
 	}
 
 	/**
@@ -684,6 +662,8 @@ public class BasicFirm implements Firm {
 	protected CapitalManager getNewCapitalManager() {
 		return 	new CapitalManager() {
 
+			private AgentDataset dataset;
+
 			/** The dividend paid. */
 			private long dividend;
 
@@ -691,7 +671,32 @@ public class BasicFirm implements Firm {
 			private long initialCapital;
 
 			/** The owner. */
-			protected Shareholder owner;
+			private Shareholder owner;
+
+			private long getCapital() {
+				return factory.getValue() + account.getAmount() - account.getDebt();
+			}
+
+			/**
+			 * Returns the amount of debt exceeding the firm target. 
+			 * @return the amount of debt exceeding the firm target.
+			 */
+			private double getLiabilitiesExcess() {
+				final double result;
+				final double excess = account.getDebt()-getLiabilitiesTarget();
+				result = Math.max(0, excess);
+				return result;
+			}
+
+			/**
+			 * Returns the target value of the liabilities.
+			 * @return the target value of the liabilities.
+			 */
+			private double getLiabilitiesTarget() {
+				final long assets = account.getAmount()+factory.getValue();
+				final long capitalTarget = (long) ((assets)*sector.getParam(CAPITAL_TARGET));
+				return assets-capitalTarget;
+			}
 
 			@Override
 			public void bankrupt() {
@@ -700,27 +705,41 @@ public class BasicFirm implements Firm {
 
 			@Override
 			public void close() {
+
 				isConsistent();
+
+				final long cash = account.getAmount();
+				final long factoryValue = factory.getValue();
+				final long assets = factoryValue+cash;
+				final long liabilities = account.getDebt();
+				final long capital = assets-liabilities;
+				final boolean insolvent = (timer.getPeriod().intValue()-creation > 12 && capital<0);  // TODO: 12 should be a parameter
+
+				this.dataset.put("cash", (double) cash);
+				this.dataset.put("assets", (double) assets);
+				this.dataset.put("liabilities", (double) liabilities);
+				this.dataset.put("capital", (double) capital);
+
+				this.dataset.put("dividends", (double) this.dividend);
+				this.dataset.put("interest", (double) account.getInterest());
+
+				this.dataset.put("liabilities.target", getLiabilitiesTarget());
+				this.dataset.put("liabilities.excess", getLiabilitiesExcess());
+
+				this.dataset.put("canceledDebts", account.getCanceledDebt());
+				this.dataset.put("canceledDeposits", account.getCanceledMoney());
+
+				if (insolvent){
+					this.dataset.put("insolvents", 1.);
+				}
+				else {
+					this.dataset.put("insolvents", 0.);					
+				}
 			}
 
 			@Override
-			public long getCapital() {
-				return factory.getValue() + account.getAmount() - account.getDebt();
-			}
-
-			@Override
-			public double getLiabilitiesExcess() {
-				final double result;
-				final double excess = account.getDebt()-getLiabilitiesTarget();
-				result = Math.max(0, excess);
-				return result;
-			}
-
-			@Override
-			public double getLiabilitiesTarget() {
-				final long assets = account.getAmount()+factory.getValue();
-				final long capitalTarget = (long) ((assets)*sector.getFloatParameter(CAPITAL_TARGET));
-				return assets-capitalTarget;
+			public AgentDataset getData() {
+				return this.dataset;
 			}
 
 			@Override
@@ -729,10 +748,10 @@ public class BasicFirm implements Firm {
 				final double grossProfit;
 				final double inventoryLosses = factory.getInventoryLosses();
 				if (supply!=null) {
-					grossProfit = supply.getGrossProfit();			
+					grossProfit = supply.getGrossProfit();								
 				}
 				else {
-					grossProfit = 0;				
+					grossProfit = 0;					
 				}
 				final double interest = account.getInterest();
 				final double bankruptcy = account.getCanceledMoney()-account.getCanceledDebt();
@@ -752,7 +771,7 @@ public class BasicFirm implements Firm {
 				final long cash = account.getAmount();
 				final long assets = cash+factory.getValue();
 				final long capital = getCapital();
-				final long capitalTarget = (long) ((assets)*sector.getFloatParameter(CAPITAL_TARGET));
+				final long capitalTarget = (long) ((assets)*sector.getParam(CAPITAL_TARGET));
 				if (capital<=0) {
 					dividend=0l;
 				}
@@ -761,14 +780,15 @@ public class BasicFirm implements Firm {
 						dividend=0l;
 					}
 					else {
-						dividend = Math.min((long) ((capital-capitalTarget)*sector.getFloatParameter(CAPITAL_PROPENSITY2DISTRIBUTE)),cash);
+						dividend = Math.min((long) ((capital-capitalTarget)*sector.getParam(CAPITAL_PROPENSITY2DISTRIBUTE)),cash);
 					}
 				}
 				return dividend;
 			}
 
 			@Override
-			public void open() {
+			public void open() {		
+				this.dataset = new BasicAgentDataset("Capital Manager");
 				this.updateOwnership();
 				this.initialCapital=this.getCapital();
 				this.dividend=0;
@@ -793,7 +813,7 @@ public class BasicFirm implements Firm {
 					BasicFirm.this.history.add("liabilities: "+ account.getDebt());
 					BasicFirm.this.history.add("capital: "+ (factory.getValue() + account.getAmount() - account.getDebt()));
 				}
-				BasicFirm.this.data.put("debt2target.ratio", (account.getDebt())/capitalManager.getLiabilitiesTarget());
+				BasicFirm.this.data.put("debt2target.ratio", (account.getDebt())/getLiabilitiesTarget());
 				isConsistent();
 			}
 
@@ -821,7 +841,7 @@ public class BasicFirm implements Firm {
 	 * @return a new factory.
 	 */
 	protected Factory getNewFactory() {
-		return new BasicFactory((int) sector.getFloatParameter(PRODUCTION_TIME), (int) sector.getFloatParameter(PRODUCTION_CAPACITY), sector.getFloatParameter(PRODUCTIVITY), timer);
+		return new BasicFactory((int) sector.getParam(PRODUCTION_TIME), (int) sector.getParam(PRODUCTION_CAPACITY), sector.getParam(PRODUCTIVITY), timer);
 	}
 
 	/**
@@ -830,6 +850,8 @@ public class BasicFirm implements Firm {
 	 */
 	protected PricingManager getNewPricingManager() {
 		return new PricingManager() {
+
+			private AgentDataset dataset;
 
 			/** The higher price. */
 			private Double highPrice = null;
@@ -856,14 +878,28 @@ public class BasicFirm implements Firm {
 				return lowPrice+random.nextFloat()*(highPrice-lowPrice);
 			}
 
+			/**
+			 * Sets the price equal to the unit cost.
+			 */
+			private void setUnitCostPrice() {
+				final double unitCost = factory.getUnitCost();
+				if (!Double.isNaN(unitCost)) {
+					final float priceFlexibility = sector.getParam(PRICE_FLEXIBILITY);
+					this.price = unitCost;
+					this.highPrice = (1f+priceFlexibility)*this.price;
+					this.lowPrice = (1f-priceFlexibility)*this.price;
+				}
+			}
+
 			@Override
 			public void close() {
-				if (supply!=null) {
-					this.salesRatio  = supply.getSalesRatio();
-				}
-				else {
-					this.salesRatio = null;
-				}
+				this.salesRatio  = supply.getSalesRatio();
+				// TODO: revoir la relation entre pricing manager et supply.
+			}
+
+			@Override
+			public AgentDataset getData() {
+				return this.dataset;
 			}
 
 			@Override
@@ -871,17 +907,9 @@ public class BasicFirm implements Firm {
 				return this.price;
 			}
 
-			/**
-			 * Sets the price equal to the unit cost.
-			 */
-			public void setUnitCostPrice() {
-				final double unitCost = factory.getUnitCost();
-				if (!Double.isNaN(unitCost)) {
-					final float priceFlexibility = sector.getFloatParameter(PRICE_FLEXIBILITY);
-					this.price = unitCost;
-					this.highPrice = (1f+priceFlexibility)*this.price;
-					this.lowPrice = (1f-priceFlexibility)*this.price;
-				}
+			@Override
+			public void open() {
+				this.dataset = new BasicAgentDataset("Pricing Manager");
 			}
 
 			@Override
@@ -891,7 +919,7 @@ public class BasicFirm implements Firm {
 					this.setUnitCostPrice();
 				}
 				if (this.price!=null && salesRatio!=null) {
-					final float priceFlexibility = sector.getFloatParameter(PRICE_FLEXIBILITY);
+					final float priceFlexibility = sector.getParam(PRICE_FLEXIBILITY);
 					if ((salesRatio==1)) {
 						this.lowPrice = this.price;
 						if (inventoryRatio<1) {
@@ -907,6 +935,7 @@ public class BasicFirm implements Firm {
 						this.lowPrice =  this.lowPrice*(1f-priceFlexibility);
 					}
 				}
+				this.dataset.put("prices", this.price);
 			}
 
 
@@ -917,69 +946,38 @@ public class BasicFirm implements Firm {
 	 * Updates the data.
 	 */
 	protected void updateData() {
+
 		this.data.put("firms", 1.);
 		this.data.put("age", (double) getAge());
-		this.data.put("prices", pricingManager.getPrice());
-		this.data.put("wages", workforceManager.getWage());
-		this.data.put("workforce", (double) factory.getWorkforce());
-		this.data.put("inventories.inProcess.val", factory.getGoodsInProcessValue());
-		this.data.put("inventories.fg.val", (double) factory.getFinishedGoodsValue());
-		this.data.put("inventories.fg.vol", (double) factory.getFinishedGoodsVolume());
-		this.data.put("inventories.fg.vol.normal", sector.getFloatParameter(INVENTORY_NORMAL_LEVEL)*factory.getMaxUtilAverageProduction());						
-		this.data.put("production.vol", (double) factory.getProductionVolume());
-		this.data.put("production.val", (double) factory.getProductionValue());
-		this.data.put("productivity", factory.getProductivity());
-		this.data.put("wageBill", (double) workforceManager.getWageBill());
-		this.data.put("dividends", (double) memory.get(MEM_DIVIDEND).longValue());
-		if (supply!=null) {
-			this.data.put("supply.vol",(double) supply.getInitialVolume());
-			this.data.put("supply.val",(double) supply.getPrice(supply.getInitialVolume()));
-			this.data.put("sales.vol", supply.getSalesVolume());
-			this.data.put("sales.val", supply.getSalesValue());
-			this.data.put("sales.costValue", supply.getSalesValueAtCost());
-			this.data.put("grossProfit", supply.getGrossProfit()-factory.getInventoryLosses());
-		} 
-		else {
-			this.data.put("supply.vol", 0.);
-			this.data.put("supply.val", 0.);
-			this.data.put("sales.vol", 0.);
-			this.data.put("sales.val", 0.);
-			this.data.put("sales.costValue", 0.);
-			this.data.put("grossProfit", -factory.getInventoryLosses());
-		}
+
+		this.data.putAll(this.workforceManager.getData());
+		this.data.putAll(this.pricingManager.getData());
+		this.data.putAll(this.factory.getData());
+		this.data.putAll(this.capitalManager.getData());
+		this.data.putAll(this.supply.getData());
+
+		this.data.put("inventories.fg.vol.normal", sector.getParam(INVENTORY_NORMAL_LEVEL)*factory.getMaxUtilAverageProduction());						
+
 		if (bankrupted){
 			this.data.put("bankruptcies", 1.);
 		}
 		else {
 			this.data.put("bankruptcies", 0.);					
 		}
-		this.data.put("cash", (double) account.getAmount());
-		this.data.put("interest", (double) account.getInterest());
-		this.data.put("canceledDebts", account.getCanceledDebt());
-		this.data.put("canceledDeposits", account.getCanceledMoney());
-		this.data.put("assets", (double) factory.getValue() + account.getAmount());
-		this.data.put("liabilities", (double) account.getDebt());
-		this.data.put("liabilities.target", capitalManager.getLiabilitiesTarget());
-		this.data.put("liabilities.excess", capitalManager.getLiabilitiesExcess());
-		this.data.put("capital", (double) factory.getValue() + account.getAmount() - account.getDebt());
-		this.data.put("capacity", (double) factory.getCapacity());
-		if (timer.getPeriod().intValue()-creation > 12 // 12 should be a parameter 
-				&& factory.getValue() + account.getAmount() < account.getDebt()){
-			this.data.put("insolvents", 1.);
-		}
-		else {
-			this.data.put("insolvents", 0.);					
-		}
 
 	}
 
 	@Override
 	public void close() {
+
 		this.pricingManager.close();
 		this.capitalManager.close();
-		this.updateData();
 		this.workforceManager.close();
-		this.supply=null;
+		this.factory.close();
+		this.supply.close();
+
+		this.updateData();
+
 		try {
 			this.exportData();
 		} catch (IOException e) {
@@ -1015,18 +1013,13 @@ public class BasicFirm implements Firm {
 	@Override
 	public Supply getSupply() {
 		final Supply result;
-		if (this.supply!=null && this.supply.getVolume()>0){
+		if (this.supply.getVolume()>0){
 			result=this.supply;
 		}
 		else {
 			result=null;
 		}
 		return result;
-	}
-
-	@Override
-	public Double getWage() {
-		return this.workforceManager.getWage();
 	}
 
 	@Override
@@ -1045,12 +1038,16 @@ public class BasicFirm implements Firm {
 		this.data=getNewDataset();
 		this.history.add("");
 		this.history.add("Period: "+timer.getPeriod().intValue());
+		this.supply=null;
 		if (this.bankrupted) {
 			this.capitalManager.bankrupt();
 			this.workforceManager.layoff();
 		}
 		else {
+			this.factory.open();
+			this.pricingManager.open();
 			this.capitalManager.open();
+			this.workforceManager.open();
 		}
 	}
 

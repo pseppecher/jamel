@@ -20,6 +20,13 @@ public interface SectorDataset {
 	Double get(String key);
 
 	/**
+	 * Returns an array of values for the specified key.
+	 * @param key the key.
+	 * @return an array of values for the specified key.
+	 */
+	Double[] getArray(String key);
+
+	/**
 	 * Returns a list of XYDataItem that contains the specified values for each agent selected.
 	 * @param xKey  the key for x values.
 	 * @param yKey  the key for y values.

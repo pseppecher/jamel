@@ -1,5 +1,6 @@
 package jamel.jamel.widgets;
 
+import jamel.basic.agent.AgentDataset;
 import jamel.jamel.roles.Supplier;
 
 /**
@@ -16,16 +17,21 @@ public interface Supply {
 	Commodities buy(long volume, Cheque cheque);
 
 	/**
+	 * Closes this supply.
+	 */
+	void close();
+
+	/**
+	 * Returns the dataset of this supply.
+	 * @return an {@link AgentDataset}.
+	 */
+	AgentDataset getData();
+
+	/**
 	 * Returns the gross profit realized.
 	 * @return the gross profit.
 	 */
 	double getGrossProfit();
-
-	/**
-	 * Returns the initial volume of the supply.
-	 * @return the initial volume.
-	 */
-	long getInitialVolume();
 
 	/**
 	 * Returns the unit price of the supply.
@@ -45,24 +51,6 @@ public interface Supply {
 	 * @return the ratio (sales/initial supply).
 	 */
 	double getSalesRatio();
-
-	/**
-	 * Returns the value of the sales (at market price).
-	 * @return the value of the sales.
-	 */
-	double getSalesValue();
-
-	/**
-	 * Returns the value of the sales (at production cost).
-	 * @return the value of the sales.
-	 */
-	double getSalesValueAtCost();
-
-	/**
-	 * Returns the volume of the sales.
-	 * @return the volume of the sales.
-	 */
-	double getSalesVolume();
 
 	/**
 	 * Returns the supplier.
