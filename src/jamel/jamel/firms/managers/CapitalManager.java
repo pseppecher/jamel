@@ -18,6 +18,12 @@ public interface CapitalManager {
 	void close();
 
 	/**
+	 * Returns the capital of the firm.
+	 * @return the capital of the firm.
+	 */
+	long getCapital();
+
+	/**
 	 * Returns the dataset of the manager.
 	 * @return the dataset of the manager.
 	 */
@@ -28,6 +34,12 @@ public interface CapitalManager {
 	 * @return <code>true</code> if the firm accounting is consistent, <code>false</code> otherwise.
 	 */
 	boolean isConsistent();
+
+	/**
+	 * Returns <code>true</code> if the firm is solvent, <code>false</code> otherwise.
+	 * @return <code>true</code> if the firm is solvent, <code>false</code> otherwise.
+	 */
+	boolean isSolvent();
 
 	/**
 	 * Determines and returns the amount that will be paid as dividend for the current period.

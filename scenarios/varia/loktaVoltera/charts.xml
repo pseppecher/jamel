@@ -1,18 +1,14 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
-<!-- Configuration of the chart panels for the Lotka-Volterra scenario -->
-<!-- 13/05/2015 -->
+<charts
+	content="Configuration of the chart panels for the Lotka-Volterra scenario"
+	date="10/07/2015">
 
-<charts>
-
-	<panel
-		title="Main"
-		rows="1"
-		cols="2">
+	<panel title="Main">
 
 		<chart
 			title="Map"
-			options="scatter">
+			type="scatter chart">
 			<series
 				sector="Preys"
 				x="x"
@@ -25,7 +21,7 @@
 				y="y"
 				color="transparentRed"
 				label="Predators" />
-			<xyBlockSeries
+			<series xyBlockSeries="true"
 				sector="Grass"
 				x="x"
 				y="y"
@@ -36,7 +32,7 @@
 					upperBound="30"
 					lowerColor="red"
 					upperColor="green" />
-			</xyBlockSeries>
+			</series>
 			<yAxis
 				min="0"
 				max="150" />
@@ -45,16 +41,46 @@
 				max="150" />
 		</chart>
 
-		<chart title="Agents">
-			<series
-				value="Preys.sum.individual"
-				label="Preys"
-				color="blue" />
-			<series
-				value="Predators.sum.individual"
-				label="Predators"
-				color="red" />
+		<chart type="time chart">
+			<subplot>
+				<series
+					value="sum(Preys,individual,t)"
+					color="blue" />
+				<series
+					value="sum(Predators,individual,t)"
+					color="red" />
+				<yAxis label="Agents" />
+			</subplot>
+
+			<subplot>
+				<series
+					value="sum(Grass,grass,t)"
+					color="green" />
+				<series
+					value="sum(Preys,energy,t)"
+					color="blue" />
+				<series
+					value="sum(Predators,energy,t)"
+					color="red" />
+				<yAxis label="Energy" />
+			</subplot>
+
+			<legend>
+				<item
+					tooltip="sum(Grass,grass,t)"
+					label="Grass"
+					color="green" />
+				<item
+					tooltip="sum(Preys,energy,t)"
+					label="Preys"
+					color="blue" />
+				<item
+					tooltip="sum(Predators,energy,t)"
+					label="Predators"
+					color="red" />
+			</legend>
 		</chart>
+
 
 	</panel>
 

@@ -1,13 +1,10 @@
-<!-- Test Jamel (v3) -->
-<!-- Genetic Algorithm on Beale's landscape. -->
-<!-- 07-06-2015 -->
+<?xml version="1.0" encoding="UTF-8"?>
 
-<circuit type="jamel.basic.BasicCircuit">
-
-	<comment>
-		A scenario for testing a genetic algorithm
-		on the Beale artificial landscape.
-	</comment>
+<circuit
+	type="jamel.basic.BasicCircuit"
+	title="GA - Goldstein-Price artificial landscape"
+	date="03-07-2015"
+	content="Testing genetic algorithms on the Goldstein-Price artificial landscape">
 
 	<settings
 		randomSeed="0"

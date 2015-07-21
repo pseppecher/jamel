@@ -1,5 +1,8 @@
 package jamel.jamel.sfc;
 
+import jamel.basic.data.Expression;
+import jamel.basic.data.ExpressionFactory;
+import jamel.basic.data.MacroDatabase;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.Timer;
 
@@ -18,10 +21,11 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 /**
- * An abstract data validator.
- * TODO: create a Test object to encapsulate conditions and results ?
+ * A basic data validator.
+ * TODO: create a Test object to encapsulate conditions and results.
+ * TODO: clean-up, refactor, comment, validate !
  */
-public abstract class AbstractDataValidator implements DataValidator {
+public class BasicDataValidator implements DataValidator {
 
 	/**
 	 * A convenient static class to store String constants. 
@@ -66,7 +70,7 @@ public abstract class AbstractDataValidator implements DataValidator {
 	final private Component testPanel = new JScrollPane(resultPanel) {{setName("Tests");}};
 
 	/** An array to store, for each test, the two values to compare. */
-	final private String[][] tests;
+	final private Expression[][] tests;
 
 	/** The timer. */
 	private final Timer timer;
@@ -75,10 +79,11 @@ public abstract class AbstractDataValidator implements DataValidator {
 	 * Creates a new data validator.
 	 * @param file the XML file that contains the description of the tests.
 	 * @param timer the timer.
+	 * @param macroDatabase the dataset. 
 	 * @throws InitializationException If something goes wrong.
 	 * TODO: devrait recevoir l'Žlement root et non un fichier.
 	 */
-	public AbstractDataValidator(File file, Timer timer) throws InitializationException {
+	public BasicDataValidator(File file, Timer timer, MacroDatabase macroDatabase) throws InitializationException {
 		this.timer=timer;
 		final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		try {
@@ -101,18 +106,20 @@ public abstract class AbstractDataValidator implements DataValidator {
 				this.start =Integer.parseInt(start);
 			}
 			final NodeList testNodeList = root.getElementsByTagName(KEY.TEST);
-			this.tests = new String[testNodeList.getLength()][];
+			this.tests = new Expression[testNodeList.getLength()][];
 			this.results = new Boolean[tests.length];
 			for (int i = 0; i<testNodeList.getLength(); i++) {
-				final String[] item = new String[2];
-				item[0]= ((Element) testNodeList.item(i)).getAttribute(KEY.VAL1);
-				item[1]= ((Element) testNodeList.item(i)).getAttribute(KEY.VAL2);
+				final Expression[] item = new Expression[2];
+				final String a = ((Element) testNodeList.item(i)).getAttribute(KEY.VAL1);
+				final String b = ((Element) testNodeList.item(i)).getAttribute(KEY.VAL2);
+				item[0]= ExpressionFactory.newExpression(a, macroDatabase);
+				item[1]= ExpressionFactory.newExpression(b, macroDatabase);
 				this.tests[i]=item;
 				this.results[i] = true;
 			}
 		}
 		catch (final Exception e) {
-			throw new InitializationException("Something went wrong with the file "+file,e);
+			throw new InitializationException("Something went wrong while parsing the file: "+file,e);
 		}
 		updateResultPanel();
 	}
@@ -135,7 +142,7 @@ public abstract class AbstractDataValidator implements DataValidator {
 				else {
 					result="failure";
 				}
-				content.append("<div class='"+result+"'>Test "+i+ ": "+result+" ("+tests[i][0]+" = "+tests[i][1]+")</div>"+rc);
+				content.append("<div class='"+result+"'>Test "+i+ ": "+result+" ("+tests[i][0].toString()+" = "+tests[i][1].toString()+")</div>"+rc);
 			}
 		}
 		content.append(failures);
@@ -160,8 +167,8 @@ public abstract class AbstractDataValidator implements DataValidator {
 		boolean success = true;
 		if (timer.getPeriod().intValue()>start) {
 			for(int i=0; i<tests.length; i++) {
-				final Double a = getValue(tests[i][0]);
-				final Double b = getValue(tests[i][1]);
+				final Double a = tests[i][0].value();
+				final Double b = tests[i][1].value();
 				if ((a!=null && !a.equals(b)) || (a==null && b!=null)) {
 					success=false;
 					failures.append("Period "+timer.getPeriod().intValue()+", test "+i+": failure ("+a+", "+b+")<br>"+rc);
@@ -185,13 +192,6 @@ public abstract class AbstractDataValidator implements DataValidator {
 		return testPanel;
 	}
 	
-	/**
-	 * Returns the specified value of the simulation data.  
-	 * @param string the key of the value to return.
-	 * @return the specified value.
-	 */
-	public abstract Double getValue(String string);
-
 }
 
 // ***

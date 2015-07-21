@@ -87,7 +87,7 @@
 
 	<events>
 		<pause period="0" />
-		<pause period="300" />
+		<pause period="200" />
 	</events>
 
 </circuit>

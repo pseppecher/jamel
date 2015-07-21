@@ -1,13 +1,10 @@
-<!-- Test Jamel (v3) -->
-<!-- Genetic Algorithm on Himmelblau landscape. -->
-<!-- 08-06-2015 -->
+<?xml version="1.0" encoding="UTF-8"?>
 
-<circuit type="jamel.basic.BasicCircuit">
-
-	<comment>
-		A scenario for testing a genetic algorithm
-		on the Himmelblau artificial landscape.
-	</comment>
+<circuit
+	title="GA - Himmelblau artificial landscape"
+	type="jamel.basic.BasicCircuit"
+	content="Testing genetic algorithms on the Himmelblau artificial landscape"
+	date="10-07-2015">
 
 	<settings
 		randomSeed="0"
@@ -25,7 +22,7 @@
 				blockWidth="0.1"
 				blockHeight="0.1" />
 		</Landscape>
-		
+
 		<Algo0
 			type="jamel.varia.optimization.genetic.BasicGA"
 			agentType="jamel.varia.optimization.genetic.BasicIndividual">
@@ -87,7 +84,7 @@
 
 	<events>
 		<pause period="0" />
-		<pause period="300" />
+		<pause period="200" />
 	</events>
 
 </circuit>

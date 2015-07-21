@@ -14,12 +14,6 @@ public interface BalanceSheetMatrix {
 	Component getPanel();
 
 	/**
-	 * Returns a html representation of the balance sheet matrix.
-	 * @return a html representation of the balance sheet matrix.
-	 */
-	String toHtml();
-
-	/**
 	 * Updates the representation of the balance sheet matrix.
 	 */
 	void update();

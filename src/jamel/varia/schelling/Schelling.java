@@ -4,7 +4,7 @@ import jamel.basic.Circuit;
 import jamel.basic.agent.AgentDataset;
 import jamel.basic.agent.BasicAgentDataset;
 import jamel.basic.sector.AbstractPhase;
-import jamel.basic.sector.BasicSectorDataSet;
+import jamel.basic.sector.BasicSectorDatabase;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
 import jamel.basic.sector.SectorDataset;
@@ -75,6 +75,9 @@ public class Schelling implements Sector {
 	/** The width. */
 	private int width=200;
 
+	/** The number of spontaneous moves by turn. */
+	private int spontaneous;
+
 	/**
 	 * Creates a new sector.
 	 * @param name the name of the sector.
@@ -126,10 +129,12 @@ public class Schelling implements Sector {
 		final Point free = getVacancy();
 		if (free!=null) {
 			final int color = land[x][y];
-			land[x][y]=0;
-			land[free.x][free.y]=color;
-			this.vacancies.remove(free);
-			this.vacancies.add(new Point(x,y));
+			if (color!=0) {
+				land[x][y]=0;
+				land[free.x][free.y]=color;
+				this.vacancies.remove(free);
+				this.vacancies.add(new Point(x,y));				
+			}
 		}
 	}
 	
@@ -161,27 +166,31 @@ public class Schelling implements Sector {
 
 	@Override
 	public SectorDataset getDataset() {
-		final SectorDataset sectorDataset = new BasicSectorDataSet(this.nAgent);
+		final SectorDataset sectorDataset = new BasicSectorDatabase();
 		int white = 0;
 		int black = 0;
 		for (int x=0;x<width;x++) {
 			for (int y=0;y<height;y++) {
 				final int color = land[x][y]; 
+				final int nColor; 
 				if(color!=0) {
 					final String agentName;
 					if (color==1) {
 						agentName="White"+white;
 						white++;
+						nColor=2;
 					}
 					else {
 						agentName="Black"+black;
 						black++;
+						nColor=1;
 					}
 					final AgentDataset agentData = new BasicAgentDataset(agentName);
 					agentData.put("x", (double) x);
 					agentData.put("y", (double) y);
 					agentData.put("color", (double) color);
-					sectorDataset.put(agentData);					
+					agentData.put("heterogeneity", (double) this.neighborhood(x, y, nColor)/4);
+					sectorDataset.putIndividualData(agentData);					
 				}
 			}
 		}
@@ -219,7 +228,17 @@ public class Schelling implements Sector {
 							}
 						}
 					}
-					
+
+					// Reintroduce some heterogeneity.
+					for(int i=0; i<spontaneous; i++) {
+						final int x=random.nextInt(width);
+						final int y=random.nextInt(height);
+						final int color = land[x][y];
+						if (color>0) {
+							dissatisfied.add(new Point(x,y));							
+						}
+					}
+
 					Collections.shuffle(dissatisfied,random);
 					for(Point point:dissatisfied) {
 						move(point.x,point.y);					
@@ -252,6 +271,7 @@ public class Schelling implements Sector {
 		this.tolerance=params.get("tolerance").intValue();
 		this.height=params.get("height").intValue();
 		this.width=params.get("width").intValue();
+		this.spontaneous=params.get("spontaneous").intValue();
 		final int free=params.get("vacancies").intValue();
 		this.land=new int[height][width];
 		this.vacancies = new ArrayList<Point>(free);
@@ -261,13 +281,27 @@ public class Schelling implements Sector {
 				vacancies.add(new Point(x,y));
 			}
 		}
-		for (int i=0;i<nAgent/2;i++) {
+
+		int black = nAgent/2;
+		int white = nAgent/2;
+		int color;
+		for (int i=0;i<nAgent;i++) {
+			
 			final Point freeLoc = getVacancy();
-			land[freeLoc.x][freeLoc.y]=1;
+			
+			int rnd = random.nextInt(white+black);
+			if (rnd>black) {
+				color = 2;
+				white--;
+			}
+			else {
+				color=1;
+				black--;
+			}
+			
+			land[freeLoc.x][freeLoc.y]=color;
 			vacancies.remove(freeLoc);
-			final Point freeLoc2 = getVacancy();
-			land[freeLoc2.x][freeLoc2.y]=2;
-			vacancies.remove(freeLoc2);
+			
 		}
 		
 	}

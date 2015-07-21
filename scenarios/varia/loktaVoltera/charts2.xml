@@ -1,0 +1,80 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<charts
+	content="Configuration of the chart panels for the Lotka-Volterra scenario"
+	date="21/07/2015">
+
+	<panel title="Main">
+		<col>
+			<chart
+				title="Map"
+				type="scatter chart">
+				<series
+					sector="Preys"
+					x="x"
+					y="y"
+					color="transparentBlue"
+					label="Preys" />
+				<series
+					sector="Predators"
+					x="x"
+					y="y"
+					color="transparentRed"
+					label="Predators" />
+				<series
+					xyBlockSeries="true"
+					sector="Grass"
+					x="x"
+					y="y"
+					z="grass">
+					<scale
+						type="colorScale"
+						lowerBound="0"
+						upperBound="30"
+						lowerColor="red"
+						upperColor="green" />
+				</series>
+				<yAxis
+					min="0"
+					max="100" />
+				<xAxis
+					min="0"
+					max="300" />
+				<legend />
+			</chart>
+
+			<line>
+				<chart type="time chart">
+					<series
+						value="sum(Preys,individual,t)"
+						label="Preys"
+						color="blue" />
+					<series
+						value="sum(Predators,individual,t)"
+						label="Predators"
+						color="red" />
+					<yAxis label="Agents" />
+				</chart>
+
+				<chart type="time chart">
+					<series
+						value="sum(Grass,grass,t)"
+						label="Grass"
+						color="green" />
+					<series
+						value="sum(Preys,energy,t)"
+						label="Preys"
+						color="blue" />
+					<series
+						value="sum(Predators,energy,t)"
+						label="Predators"
+						color="red" />
+					<yAxis label="Energy" />
+				</chart>
+
+			</line>
+		</col>
+
+	</panel>
+
+</charts>

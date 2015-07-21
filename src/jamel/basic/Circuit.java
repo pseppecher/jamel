@@ -56,9 +56,10 @@ public interface Circuit {
 
 	/**
 	 * Displays a warning message.
-	 * @param message the warning message. 
+	 * @param message the warning message to display. 
+	 * @param toolTipText the tool tip text.
 	 */
-	public abstract void warning(String message);
+	public abstract void warning(String message,String toolTipText);
 
 }
 

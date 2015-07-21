@@ -1,8 +1,8 @@
 package jamel.jamel.banks;
 
 import jamel.basic.Circuit;
-import jamel.basic.agent.BasicAgentDataset;
 import jamel.basic.sector.AbstractPhase;
+import jamel.basic.sector.BasicSectorDatabase;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
 import jamel.basic.sector.SectorDataset;
@@ -16,7 +16,6 @@ import jamel.jamel.sectors.BankingSector;
 import jamel.jamel.sectors.CapitalistSector;
 import jamel.jamel.util.BasicMemory;
 import jamel.jamel.util.Memory;
-import jamel.jamel.util.RepresentativeAgentDataset;
 import jamel.jamel.widgets.BankAccount;
 import jamel.jamel.widgets.Cheque;
 
@@ -177,7 +176,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		 * @return a boolean.
 		 */
 		private boolean isSolvent() {
-			return this.accountHolder.getAssets()>this.debt;
+			return this.accountHolder.isSolvent();
 		}
 
 		/**
@@ -507,7 +506,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	private final Circuit circuit;
 
 	/** The data. */
-	private BasicAgentDataset dataset;
+	private SectorDataset dataset;
 
 	/** The sector name. */
 	private final String name;
@@ -534,7 +533,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		this.circuit=circuit;
 		this.random=circuit.getRandom();
 		this.timer=circuit.getTimer();
-		this.dataset = new BasicAgentDataset(this.name);
+		this.dataset = new BasicSectorDatabase();
 		this.updateDataset();
 	}
 
@@ -634,7 +633,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		if (this.bankOwner==null) {
 			newOwner();
 		}
-		this.dataset = new BasicAgentDataset(this.name);
+		this.dataset = new BasicSectorDatabase();
 		this.v.put("bankruptcies",0);
 		this.v.put("interest",0);
 		this.v.put("canceledDebts",0);
@@ -686,15 +685,15 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	 * Updates the dataset.
 	 */
 	private void updateDataset() {
-		this.dataset.put("doubtfulDebt", (double) getDoubtfulDebt());
-		this.dataset.put("dividends", (double) v.get("dividends"));
-		this.dataset.put("capital", (double) v.get("capital"));
-		this.dataset.put("liabilities", (double) v.get("liabilities"));
-		this.dataset.put("assets", (double) v.get("assets"));
-		this.dataset.put("bankruptcies", (double) v.get("bankruptcies"));
-		this.dataset.put("interest", (double) v.get("interest"));
-		this.dataset.put("canceledDebts", (double) v.get("canceledDebts"));
-		this.dataset.put("canceledDeposits", (double) v.get("canceledDeposits"));		
+		this.dataset.putSectorialData("doubtfulDebt", (double) getDoubtfulDebt());
+		this.dataset.putSectorialData("dividends", (double) v.get("dividends"));
+		this.dataset.putSectorialData("capital", (double) v.get("capital"));
+		this.dataset.putSectorialData("liabilities", (double) v.get("liabilities"));
+		this.dataset.putSectorialData("assets", (double) v.get("assets"));
+		this.dataset.putSectorialData("bankruptcies", (double) v.get("bankruptcies"));
+		this.dataset.putSectorialData("interest", (double) v.get("interest"));
+		this.dataset.putSectorialData("canceledDebts", (double) v.get("canceledDebts"));
+		this.dataset.putSectorialData("canceledDeposits", (double) v.get("canceledDeposits"));		
 	}
 
 	@Override
@@ -709,7 +708,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 
 	@Override
 	public SectorDataset getDataset() {
-		return new RepresentativeAgentDataset(this.dataset);
+		return this.dataset;
 	}
 
 	@Override

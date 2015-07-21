@@ -1,25 +1,23 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
-<charts>
+<charts
+	content="Configuration of the chart panels for the Schelling scenario"
+	date="21-07-2015">
 
-	<meta
-		content="Configuration of the chart panels for the Schelling scenario"
-		date="15-06-2015" />
-
-	<panel
-		title="Main"
-		rows="1"
-		cols="2">
+	<panel title="Main">
 
 		<chart
 			title="Map"
-			options="scatter"
+			type="scatter chart"
 			background="lightGray">
-			<xyBlockSeries
+			<series
 				sector="Schelling"
 				x="x"
 				y="y"
 				z="color"
+				xyBlockSeries="true"
+				blockWidth="0.6"
+				blockHeight="0.6"
 				showScale="false">
 				<scale
 					type="lookupScale"
@@ -33,16 +31,25 @@
 						value="2"
 						color="black" />
 				</scale>
-			</xyBlockSeries>
+			</series>
 			<yAxis
 				min="-5"
-				max="405" />
+				max="105" />
 			<xAxis
 				min="-5"
-				max="405" />
+				max="105" />
 		</chart>
 
-		<chart title="Empty">
+		<chart
+			title="Heterogeneity"
+			type="time chart">
+			<series
+				value="mean(Schelling,heterogeneity,t)"
+				color="red"
+				label="Heterogeneity" />
+			<yAxis
+				min="0"
+				max="1" />
 		</chart>
 
 	</panel>

@@ -8,12 +8,6 @@ import jamel.basic.agent.Agent;
 public interface AccountHolder extends Agent {
 
 	/**
-	 * Returns the total amount of assets owned by this agent.
-	 * @return the total amount of assets owned by this agent.
-	 */
-	long getAssets();
-	
-	/**
 	 * Notifies the account holder of its bankruptcy.
 	 */
 	void goBankrupt();
@@ -23,6 +17,12 @@ public interface AccountHolder extends Agent {
 	 * @return <code>true</code> if the agent is bankrupted, <code>false</code> otherwise.
 	 */
 	boolean isBankrupted();
+
+	/**
+	 * Returns <code>true</code> if the agent is solvent, <code>false</code> otherwise.
+	 * @return <code>true</code> if the agent is solvent, <code>false</code> otherwise.
+	 */
+	boolean isSolvent();
 
 }
 

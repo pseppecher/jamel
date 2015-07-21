@@ -1,13 +1,10 @@
-<!-- Test Jamel (v3) -->
-<!-- Nelder-Mead simplex on Beale's landscape. -->
-<!-- 06-06-2015 -->
+<?xml version="1.0" encoding="UTF-8"?>
 
-<circuit type="jamel.basic.BasicCircuit">
-
-	<comment>
-		A scenario for testing the simplex algorithm of Nelder-Mead
-		on the Beale artificial landscape.
-	</comment>
+<circuit
+	type="jamel.basic.BasicCircuit"
+	title="Nelder-Mead - Beale artificial landscape"
+	date="10-07-2015"
+	content="Testing the simplex algorithm of Nelder-Mead on the Beale artificial landscape">
 
 	<settings
 		randomSeed="0"

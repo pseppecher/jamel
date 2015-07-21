@@ -63,13 +63,13 @@ public class Simulator {
 	private static final long simulationID = (new Date()).getTime();
 
 	/** This version of Jamel. */
-	final public static int version = 20150625;
+	final public static int version = 20150721;
 
 	/**
 	 * Downloads the latest version of Jamel.
 	 * @return <code>true</code> if the download is successful, <code>false</code> otherwise.
 	 */
-	private static boolean downloadLatestVersion() { // TODO WORK IN PROGRESS
+	private static boolean downloadLatestVersion() {
 		boolean result;
 		if(Desktop.isDesktopSupported()) {
 			try {
@@ -202,7 +202,6 @@ public class Simulator {
 	 * Looks for the latest version of Jamel.
 	 * @return <code>true</code> if a new version is available and the user chooses to download it, <code>false</code> otherwise.
 	 */
-	@SuppressWarnings("unused")
 	private static boolean updateVersion() {
 		final boolean result;
 		if (isOutOfDate()) {
@@ -242,7 +241,7 @@ public class Simulator {
 	 * @param args unused.
 	 */
 	public static void main(String[] args) {
-		// if (updateJamel()) {} else 
+		if (updateVersion()) {} else 
 		{
 			final File file = selectScenario();
 			if (file!=null) {

@@ -1,0 +1,651 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<charts
+	title="Baseline Charts"
+	date="16-07-2015"
+	content="Configuration of the chart panels for the baseline scenario.">
+
+	<panel title="Main">
+
+		<col>
+
+			<chart
+				title="Prices"
+				type="time chart">
+				<series
+					value="mean(Industry,prices,t)"
+					color="red"
+					label="Mean" />
+				<series
+					value="max(Industry,prices,t)"
+					color="veryLightRed"
+					label="Max" />
+				<series
+					value="min(Industry,prices,t)"
+					color="veryLightRed"
+					label="Min" />
+			</chart>
+
+			<chart
+				title="Goods Market"
+				type="time chart">
+				<series
+					value="sum(Industry, production.vol,t)"
+					color="red"
+					label="Production" />
+				<series
+					value="sum(Households,consumption.vol,t)"
+					color="blue"
+					label="Consumption" />
+				<!-- series value="sum(Industry, production.vol, t-11>t) : 12" color="pink" 
+					label="test" / -->
+			</chart>
+
+			<chart
+				title="Inventories"
+				type="time chart">
+				<series
+					value="sum(Industry,inventories.fg.vol,t)"
+					color="green"
+					label="Volume" />
+				<series
+					value="sum(Industry,inventories.fg.vol.normal,t)"
+					color="orange"
+					label="Target" />
+			</chart>
+
+		</col>
+
+		<col>
+
+			<chart
+				title="Wages"
+				type="time chart">
+				<series
+					value="mean(Industry,wages,t)"
+					color="blue"
+					label="Mean" />
+				<series
+					value="max(Industry,wages,t)"
+					color="veryLightBlue"
+					label="Max" />
+				<series
+					value="min(Industry,wages,t)"
+					color="veryLightBlue"
+					label="Min" />
+			</chart>
+
+			<chart
+				title="Unemployment and Inflation"
+				type="time chart">
+				<series
+					value="sum(Households, unemployed,t):sum(Households, agents,t)"
+					color="blue"
+					label="Unemployment" />
+				<series
+					value="sum(Industry, sales.val,t)*sum(Industry,sales.vol,t-12):(sum(Industry, sales.vol,t)*sum(Industry, sales.val,t-12))-1"
+					color="green"
+					label="Inflation2" />
+				<yAxis
+					min="-0.1"
+					max="0.5" />
+			</chart>
+
+			<chart
+				title="Bank Ratios"
+				type="time chart">
+				<series
+					value="val(Banks, capital,t):val(Banks, liabilities,t)"
+					color="green"
+					label="Capital" />
+				<series
+					value="val(Banks, doubtfulDebt,t):val(Banks, liabilities,t)"
+					color="red"
+					label="Doubtful Debt" />
+			</chart>
+
+		</col>
+
+
+
+		<col>
+
+			<chart
+				title="Income Distribution"
+				type="time chart">
+				<series
+					value="sum(Households, wages,t) : (sum(Households, wages,t) + sum(Households, dividend,t) )"
+					color="blue"
+					label="Wages" />
+				<series
+					value="sum(Households, dividend,t) : (sum(Households, wages,t) + sum(Households, dividend,t) )"
+					color="red"
+					label="Dividends" />
+				<yAxis
+					min="0"
+					max="1" />
+			</chart>
+
+			<chart
+				title="Phillips curve"
+				type="time scatter chart">
+				<series
+					x="sum(Households, unemployed, t) : sum(Households, agents,t)"
+					y="sum(Industry, sales.val,t)*sum(Industry, sales.vol,t-12) : (sum(Industry, sales.vol,t) *sum(Industry, sales.val, t-12))-1"
+					color="transparentRed"
+					label="x=unemployment, y=inflation" />
+				<xAxis
+					min="0"
+					max="0.6" />
+				<yAxis
+					min="-0.1"
+					max="0.2" />
+			</chart>
+			<chart />
+			<!--  chart
+				title="Test"
+				type="time chart">
+				<series
+					value="sum(Households,agents,t,or(unemployed=0,unemployed=1))"
+					color="red"
+					label="series 1" />
+				<series
+					value="sum(Households,agents,t,unemployed=0)+sum(Households,agents,t,unemployed=1)"
+					color="blue"
+					label="series 2" />
+			</chart-->
+
+		</col>
+	</panel>
+
+	<panel title="Industry">
+
+		<col>
+
+			<chart
+				title="Workforce"
+				type="time chart">
+				<series
+					value="sum(Industry, workforce, t)"
+					color="blue"
+					label="Workforce" />
+				<series
+					value="sum(Industry, capacity, t)"
+					color="orange"
+					label="Capacity" />
+			</chart>
+
+			<chart
+				title="Capacity Utilization"
+				type="time chart">
+				<series
+					value="sum(Industry, workforce, t) : sum(Industry, capacity, t)"
+					color="blue"
+					label="Capacity utilization" />
+			</chart>
+
+			<chart
+				title="Markup"
+				type="time chart">
+				<series
+					value="sum(Industry, grossProfit, t) : sum(Industry, sales.costValue, t)"
+					color="blue"
+					label="Mean" />
+				<yAxis min="0" />
+			</chart>
+
+		</col>
+
+		<col>
+
+			<chart
+				title="Gross Margin Ratio"
+				type="time chart">
+				<series
+					value="sum(Industry, grossProfit, t) : sum(Industry, sales.val, t)"
+					color="blue"
+					label="Mean" />
+			</chart>
+
+			<chart
+				title="Wages"
+				type="time chart">
+				<series
+					value="mean(Industry,wages, t)"
+					color="blue"
+					label="Mean" />
+				<series
+					value="max(Industry,wages, t)"
+					color="veryLightBlue"
+					label="Max" />
+				<series
+					value="min(Industry,wages, t)"
+					color="veryLightBlue"
+					label="Min" />
+			</chart>
+
+			<chart
+				title="Inventories"
+				type="time chart">
+				<series
+					value="sum(Industry, inventories.fg.vol, t)"
+					color="green"
+					label="Volume" />
+				<series
+					value="sum(Industry, inventories.fg.vol.normal, t)"
+					color="orange"
+					label="Target" />
+			</chart>
+
+		</col>
+
+		<col>
+
+			<chart
+				title="Production"
+				type="time chart">
+				<series
+					value="sum(Industry, production.vol, t)"
+					color="red"
+					label="Production" />
+				<series
+					value="sum(Households, consumption.vol, t)"
+					color="blue"
+					label="Consumption" />
+			</chart>
+
+			<chart
+				title="Prices"
+				type="time chart">
+				<series
+					value="sum(Industry, supply.val, t) : sum(Industry, supply.vol, t)"
+					label="Average Price (Supply)" />
+				<series
+					value="sum(Industry, sales.val, t) : sum(Industry, sales.vol, t)"
+					label="Average Price (Sales)" />
+				<series
+					value="sum(Industry, inventories.fg.val, t) : sum(Industry, inventories.fg.vol, t)"
+					label="Average Cost (Inventories)" />
+			</chart>
+
+			<chart
+				title="Balance sheet"
+				type="time chart">
+				<series
+					value="sum(Industry, assets, t)"
+					color="blue"
+					label="Assets" />
+				<series
+					value="sum(Industry, liabilities, t)"
+					color="red"
+					label="Liabilities" />
+				<series
+					value="sum(Industry, capital, t)"
+					color="green"
+					label="Capital" />
+			</chart>
+
+		</col>
+
+		<col>
+
+			<chart
+				title="Financial Ratio"
+				type="time chart">
+				<series
+					value="sum(Industry, liabilities, t) : sum(Industry, assets, t)"
+					color="blue"
+					label="Liabilities" />
+				<series
+					value="sum(Industry, liabilities.target, t) : sum(Industry, assets, t)"
+					color="orange"
+					label="Target" />
+			</chart>
+
+			<chart
+				title="Other Ratios"
+				type="time chart">
+				<series
+					value="sum(Industry, cash, t) : sum(Industry, wageBill, t)"
+					label="Cash to Wages Ratio" />
+				<series
+					value="(sum(Industry, inventories.fg.val, t)+sum(Industry, inventories.inProcess.val, t)) : sum(Industry, wageBill, t)"
+					label="Circulating Capital to Wages Ratio" />
+				<series
+					value="sum(Industry, production.val, t) : sum(Industry, wageBill, t)"
+					label="Production Value to Wages Ratio" />
+			</chart>
+
+			<chart />
+
+		</col>
+
+	</panel>
+
+	<panel title="Firm 1">
+
+		<col>
+
+			<chart
+				title="Wages and Prices"
+				type="scatter chart">
+				<series
+					sector="Industry"
+					x="wages"
+					y="prices"
+					color="transparentRed"
+					select="name=Firm1"
+					label="Firm1" />
+				<series
+					sector="Industry"
+					x="wages"
+					y="prices"
+					color="transparentBlue"
+					select="name!=Firm1"
+					label="Other firms" />
+			</chart>
+
+			<chart
+				title="Price"
+				type="time chart">
+				<series
+					value="agentValue(Industry,prices,t,Firm1)"
+					color="red"
+					label="Firm1" />
+				<series
+					value="mean(Industry,prices,t)"
+					color="blue"
+					label="Mean" />
+				<series
+					value="max(Industry,prices,t)"
+					color="veryLightBlue"
+					label="Max" />
+				<series
+					value="min(Industry,prices,t)"
+					color="veryLightBlue"
+					label="Min" />
+			</chart>
+
+			<chart
+				title="Wage"
+				type="time chart">
+				<series
+					value="agentValue(Industry,wages,t,Firm1)"
+					color="red"
+					label="Firm1" />
+				<series
+					value="mean(Industry,wages,t)"
+					color="blue"
+					label="Mean" />
+				<series
+					value="max(Industry,wages,t)"
+					color="veryLightBlue"
+					label="Max" />
+				<series
+					value="min(Industry,wages,t)"
+					color="veryLightBlue"
+					label="Min" />
+			</chart>
+
+		</col>
+
+		<col>
+			<chart
+				title="Inventories"
+				type="time chart">
+				<series
+					value="agentValue(Industry,inventories.fg.vol,t,Firm1)"
+					color="red"
+					label="Firm1" />
+				<series
+					value="mean(Industry,inventories.fg.vol.normal,t)"
+					color="orange"
+					label="Target" />
+				<series
+					value="mean(Industry,inventories.fg.vol,t)"
+					color="blue"
+					label="Mean" />
+			</chart>
+			<chart
+				title="Capacity Utilization"
+				type="time chart">
+				<series
+					value="agentValue(Industry,workforce,t,Firm1) : agentValue(Industry,capacity,t,Firm1)"
+					color="red"
+					label="Firm1" />
+				<series
+					value="sum(Industry, workforce, t) : sum(Industry, capacity,t)"
+					color="blue"
+					label="Average" />
+				<yAxis
+					min="0"
+					max="1" />
+			</chart>
+			<chart
+				title="Workforce"
+				type="time chart">
+				<series
+					value="agentValue(Industry,workforce,t,Firm1)"
+					color="red"
+					label="workforce" />
+				<series
+					value="agentValue(Industry,workforce.target,t,Firm1)"
+					color="blue"
+					label="target" />
+			</chart>
+		</col>
+
+		<col />
+
+	</panel>
+
+	<panel title="Bank">
+
+		<col>
+			<chart
+				title="Ratios"
+				type="time chart">
+				<series
+					value="val(Banks, capital, t) : val(Banks, liabilities, t)"
+					color="green"
+					label="Capital" />
+				<series
+					value="val(Banks, doubtfulDebt, t) : val(Banks, liabilities, t)"
+					color="red"
+					label="Doubtful Debt" />
+			</chart>
+
+			<chart
+				title="Dividends"
+				type="time chart">
+				<series
+					value="val(Banks, dividends, t)"
+					color="blue"
+					label="Dividends" />
+			</chart>
+
+			<chart
+				title="Balance sheet"
+				type="time chart">
+				<series
+					value="val(Banks, assets, t)"
+					color="blue"
+					label="Assets" />
+				<series
+					value="val(Banks, liabilities, t)"
+					color="red"
+					label="Liabilities" />
+				<series
+					value="val(Banks, capital, t)"
+					color="green"
+					label="Capital" />
+			</chart>
+
+		</col>
+
+		<col>
+
+			<chart
+				title="Deposits"
+				type="time chart">
+				<series
+					value="sum(Industry, cash, t)"
+					label="Firms" />
+				<series
+					value="sum(Households, cash, t)"
+					label="Households" />
+			</chart>
+
+			<chart
+				title="Velocity of Money"
+				type="time chart">
+				<!-- TODO: Remplacer ce *12 par la somme sur l'année -->
+				<series
+					value="12*(sum(Industry, wageBill, t)+sum(Industry, grossProfit, t) - sum(Industry, inventories.losses.val, t)) : val(Banks, liabilities, t)"
+					label="Velocity of Money" />
+				<yAxis
+					min="0"
+					max="6" />
+			</chart>
+
+			<chart
+				title="Bankruptcies"
+				type="time chart">
+				<series
+					value="val(Banks, bankruptcies, t)"
+					label="Bankruptcies" />
+			</chart>
+
+		</col>
+
+		<col />
+
+	</panel>
+
+	<panel title="Households">
+
+		<col>
+
+			<chart
+				title="Unemployment"
+				type="time chart">
+				<series
+					value="sum(Households, unemployed, t) : sum(Households, agents, t)"
+					label="Unemployment" />
+				<yAxis
+					min="0"
+					max="1" />
+			</chart>
+
+			<chart
+				title="Wealth"
+				type="time chart">
+				<series
+					value="sum(Households, cash, t)"
+					label="Households Cash" />
+				<series
+					value="sum(Households,  capital, t)"
+					label="Households Capital" />
+			</chart>
+
+			<chart
+				title="Wages"
+				type="time chart">
+				<series
+					value="sum(Households,  wages, t) : sum(Households, employed, t)"
+					label="Average" />
+			</chart>
+
+		</col>
+
+		<col>
+
+			<chart
+				title="Consumption (Value)"
+				type="time chart">
+				<series
+					value="sum(Households,  consumption.budget, t)"
+					label="Consumption Budget" />
+				<series
+					value="sum(Households,  consumption.val, t)"
+					label="Consumption Value" />
+			</chart>
+
+			<chart
+				title="Consumption (Volume)"
+				type="time chart">
+				<series
+					value="sum(Households,  consumption.vol, t)"
+					label="Consumption (Volume)" />
+			</chart>
+
+			<chart
+				title="Income"
+				type="time chart">
+				<series
+					value="sum(Households,  wages, t)"
+					label="Wages" />
+				<series
+					value="sum(Industry, grossProfit, t)-sum(Industry, inventories.losses.val, t)"
+					label="Profits" />
+			</chart>
+
+		</col>
+
+		<col>
+
+			<chart
+				title="Savings"
+				type="time chart">
+				<series
+					value="(sum(Households, cash, t)+ sum(Households, capital, t)) : (sum(Households, wages, t)+sum(Industry, grossProfit, t)-sum(Industry, inventories.losses.val, t))"
+					label="Savings" />
+			</chart>
+
+			<chart
+				title="Income Distribution"
+				type="time chart">
+				<series
+					value="sum(Households,  wages, t) : (sum(Households, wages, t)+sum(Households, dividend, t))"
+					color="blue"
+					label="Wages" />
+				<series
+					value="sum(Households,  dividend, t) : (sum(Households, wages, t)+sum(Households, dividend, t))"
+					color="red"
+					label="Dividends" />
+				<yAxis
+					min="0"
+					max="1" />
+			</chart>
+
+			<chart
+				title="Dividends"
+				type="time chart">
+				<series
+					value="val(Banks, dividends, t)"
+					label="Bank dividends" />
+				<series
+					value="sum(Industry, dividends, t)"
+					label="Industry dividends" />
+			</chart>
+
+		</col>
+
+		<col>
+			<chart
+				title="Dividends and capital"
+				type="scatter chart">
+				<series
+					sector="Households"
+					x="capital"
+					y="dividend"
+					color="transparentRed"
+					label="Households (x=capital, y=dividends)" />
+			</chart>
+			<chart />
+			<chart />
+		</col>
+
+	</panel>
+
+</charts>

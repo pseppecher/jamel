@@ -1,5 +1,8 @@
 package jamel.jamel.sfc;
 
+import jamel.basic.data.Expression;
+import jamel.basic.data.ExpressionFactory;
+import jamel.basic.data.MacroDatabase;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.Timer;
 
@@ -21,9 +24,9 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * An abstract macroeconomic balance sheet matrix.
+ * A basic macroeconomic balance sheet matrix.
  */
-public abstract class AbstractBalanceSheetMatrix implements BalanceSheetMatrix {
+public class BasicBalanceSheetMatrix implements BalanceSheetMatrix {
 
 	/**
 	 * A convenient class to store String constants.
@@ -57,7 +60,7 @@ public abstract class AbstractBalanceSheetMatrix implements BalanceSheetMatrix {
 	private  String[] sectors;
 
 	/** A map that associate a key ("Sector.Row") with the definition of an aggregate data. */
-	private final HashMap<String,String> sfcMap = new HashMap<String,String>();
+	private final HashMap<String,Expression> sfcMap = new HashMap<String,Expression>();
 
 	/** The short title of the matrix. */
 	private String shortTitle;
@@ -72,9 +75,10 @@ public abstract class AbstractBalanceSheetMatrix implements BalanceSheetMatrix {
 	 * Creates a new balance sheet matrix.
 	 * @param file an XML file that contains the balance sheet configuration.
 	 * @param timer the timer.
+	 * @param macroDatabase the macroeconomic database.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	public AbstractBalanceSheetMatrix(final File file, final Timer timer) throws InitializationException  {
+	public BasicBalanceSheetMatrix(final File file, final Timer timer, final MacroDatabase macroDatabase) throws InitializationException  {
 		this.timer = timer;
 		final DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 		try {
@@ -102,7 +106,8 @@ public abstract class AbstractBalanceSheetMatrix implements BalanceSheetMatrix {
 						final Element item = (Element) childs.item(j);
 						final String value = item.getAttribute("val");
 						final String sector = item.getTagName();
-						sfcMap.put(sector+"."+this.rows[i], value);
+						final Expression expression = ExpressionFactory.newExpression(value, macroDatabase);
+						sfcMap.put(sector+"."+this.rows[i], expression);
 					}
 				}
 			}
@@ -145,17 +150,17 @@ public abstract class AbstractBalanceSheetMatrix implements BalanceSheetMatrix {
 			table.append("<TR><TH>" + row);
 			double sum = 0l;
 			for(String sector:sectors) {
-				final String key = this.sfcMap.get(sector+"."+row);
+				final Expression exp = this.sfcMap.get(sector+"."+row);
 				table.append("<TD align=right>");						
-				if (key!=null) {
-					final Double value = getValue(key);
+				if (exp!=null) {
+					final Double value = exp.value();
 					if (value !=null) {
 						table.append(nf.format(value));
 						sum+=value;
 						sumSector.put(sector, sumSector.get(sector)+value);
 					}
 					else {
-						table.append(key+" not found");							
+						table.append("null");							
 					}
 				}
 			}
@@ -173,13 +178,6 @@ public abstract class AbstractBalanceSheetMatrix implements BalanceSheetMatrix {
 		table.append("</TABLE>");
 		return table.toString();
 	}
-
-	/**
-	 * Returns the value for this key.
-	 * @param key the key of the value to return.
-	 * @return the value for this key.
-	 */
-	protected abstract Double getValue(String key);
 
 	@Override
 	public Component getPanel() {

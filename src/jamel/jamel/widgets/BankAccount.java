@@ -8,7 +8,7 @@ import jamel.jamel.roles.AccountHolder;
 public interface BankAccount {
 	
 	/**
-	 * Deposits the cheque.
+	 * Deposits the cheque on this account.
 	 * @param cheque the cheque to be deposited.
 	 */
 	void deposit(Cheque cheque);
@@ -56,13 +56,13 @@ public interface BankAccount {
 	boolean isOpen();
 
 	/**
-	 * Lends the given amount.
-	 * @param principal the amount of the loan.
+	 * Creates a new loan. The principal of the new loan is credited to this account.
+	 * @param principal the amount of the new loan.
 	 */
 	void lend(long principal);
 
 	/**
-	 * Returns a new cheque from this account.
+	 * Creates and returns a new cheque from this account.
 	 * @param amount the amount of money to pay.
 	 * @return a new cheque.
 	 */

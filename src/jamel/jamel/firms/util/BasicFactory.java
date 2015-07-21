@@ -97,6 +97,7 @@ public class BasicFactory implements Factory {
 		this.dataset.put("inventories.inProcess.val", (double) this.workInProgress.getValue());
 		this.dataset.put("inventories.fg.val", (double) this.finishedGoods.getValue());
 		this.dataset.put("inventories.fg.vol", (double) this.finishedGoods.getVolume());
+		this.dataset.put("inventories.losses.val", (double) inventoryLosses);
 	}
 
 	@Override

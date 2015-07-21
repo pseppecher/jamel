@@ -2,7 +2,7 @@ package jamel.varia.loktaVolterra;
 
 import jamel.basic.Circuit;
 import jamel.basic.sector.AbstractPhase;
-import jamel.basic.sector.BasicSectorDataSet;
+import jamel.basic.sector.BasicSectorDatabase;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
 import jamel.basic.sector.SectorDataset;
@@ -61,10 +61,10 @@ public class Grass implements Sector, LandSector {
 
 	@Override
 	public SectorDataset getDataset() {
-		final SectorDataset sectorDataset = new BasicSectorDataSet(width*height);
+		final SectorDataset sectorDataset = new BasicSectorDatabase();
 		for (int x=0;x<width;x++) {
 			for (int y=0;y<height;y++) {
-				sectorDataset.put(squares[x][y].getData());						
+				sectorDataset.putIndividualData(squares[x][y].getData());						
 			}
 		}
 		return sectorDataset;	

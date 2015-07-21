@@ -1,0 +1,38 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<matrix
+	shortTitle = "Balance sheet"
+	title="Balance sheet matrix"
+	date="16-07-2015"
+	content="Configuration of the macroeconomic balance sheet matrix.">
+
+	<sector key="Households" />
+	<sector key="Industry" />
+	<sector key="Banks" />
+
+	<row key="In Process">
+		<Industry val="sum(Industry,inventories.inProcess.val,t)" />
+	</row>
+
+	<row key="Finished Goods">
+		<Industry val="sum(Industry,inventories.fg.val,t)" />
+	</row>
+
+	<row key="Deposits">
+		<Households val="sum(Households,cash,t)" />
+		<Industry val="sum(Industry,cash,t)" />
+		<Banks val="-val(Banks,liabilities,t)" />
+	</row>
+
+	<row key="Loans">
+		<Industry val="-sum(Industry,liabilities,t)" />
+		<Banks val="val(Banks,assets,t)" />
+	</row>
+
+	<row key="Capital">
+		<Households val="sum(Households,capital,t)" />
+		<Industry val="-sum(Industry,capital,t)" />
+		<Banks val="-val(Banks,capital,t)" />
+	</row>
+
+</matrix>

@@ -15,26 +15,26 @@ public interface WorkforceManager {
 	void close();
 
 	/**
-	 * Returns the dataset of the manager.
-	 * @return the dataset of the manager.
+	 * Returns the dataset of this manager.
+	 * @return an {@link AgentDataset}.
 	 */
 	AgentDataset getData();
 
 	/**
-	 * Returns the job offer.
-	 * @return the job offer.
+	 * Returns the current {@linkplain JobOffer}.
+	 * @return a {@link JobOffer}.
 	 */
 	JobOffer getJobOffer();
 
 	/**
 	 * Returns an array containing all of the labor powers of the workforce. 
-	 * @return an array of labor powers.
+	 * @return an array of {@linkplain LaborPower}.
 	 */
 	LaborPower[] getLaborPowers();
 
 	/**
 	 * Returns the payroll (= the future wage bill).
-	 * @return the payroll (= the future wage bill).
+	 * @return a long that represents the payroll.
 	 */
 	long getPayroll();
 
@@ -49,7 +49,7 @@ public interface WorkforceManager {
 	void open();
 
 	/**
-	 * Pays the workers.
+	 * Pays the workers in the workforce.
 	 */
 	void payWorkers();
 

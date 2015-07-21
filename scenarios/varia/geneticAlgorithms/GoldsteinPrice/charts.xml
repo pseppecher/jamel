@@ -1,18 +1,14 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
-<!-- Configuration of the chart panels for the GoldsteinPrice scenario -->
-<!-- 06/06/2015 -->
+<charts
+	content="Configuration of the chart panels for the Goldstein-Price scenario"
+	date="16-07-2015">
 
-<charts>
-
-	<panel
-		title="Main"
-		rows="1"
-		cols="2">
+	<panel title="Main">
 
 		<chart
-			title="Map"
-			options="scatter">
+			title="Landscape"
+			type="scatter chart">
 			<series
 				sector="Algo0"
 				x="x"
@@ -31,7 +27,8 @@
 				y="y"
 				color="green"
 				label="Algo 2" />
-			<xyBlockSeries
+			<series
+				xyBlockSeries="true"
 				sector="Landscape"
 				x="x"
 				y="y"
@@ -44,7 +41,7 @@
 					upperBound="10003"
 					lowerColor="red"
 					upperColor="blue" />
-			</xyBlockSeries>
+			</series>
 			<annotations>
 				<Minimum
 					x="0"
@@ -59,22 +56,41 @@
 				max="2.5" />
 		</chart>
 
-		<chart title="Fitness">
+		<chart
+			title="Fitness"
+			type="time chart">
+
 			<series
-				value="Algo0.mean.fitness"
+				value="mean(Algo0,fitness,t)"
 				color="red"
 				label="Algo 0" />
 			<series
-				value="Algo1.mean.fitness"
+				value="mean(Algo1,fitness,t)"
 				color="blue"
 				label="Algo 1" />
 			<series
-				value="Algo2.mean.fitness"
+				value="mean(Algo2,fitness,t)"
 				color="green"
 				label="Algo 2" />
-			<yAxis
-				min="0"
-				max="40000" />
+
+			<subplot>
+				<yAxis
+					min="100000"
+					max="10000000" />
+			</subplot>
+
+			<subplot>
+				<yAxis
+					min="1000"
+					max="100000" />
+			</subplot>
+
+			<subplot>
+				<yAxis
+					min="0"
+					max="1000" />
+			</subplot>
+
 		</chart>
 
 	</panel>

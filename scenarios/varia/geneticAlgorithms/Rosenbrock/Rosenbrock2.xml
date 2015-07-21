@@ -28,8 +28,8 @@
 			agentType="jamel.varia.optimization.genetic.BasicIndividual">
 			<settings
 				nAgents="100"
-				top="-2"
-				bottom="-3"
+				top="3"
+				bottom="2"
 				left="-3"
 				right="-2"
 				curiosity="5"
@@ -44,8 +44,8 @@
 			agentType="jamel.varia.optimization.genetic.SatisficingIndividual">
 			<settings
 				nAgents="100"
-				top="-2"
-				bottom="-3"
+				top="3"
+				bottom="2"
 				left="-3"
 				right="-2"
 				curiosity="5"
@@ -60,8 +60,8 @@
 			agentType="jamel.varia.optimization.genetic.PyramidingIndiv">
 			<settings
 				nAgents="100"
-				top="-2"
-				bottom="-3"
+				top="3"
+				bottom="2"
 				left="-3"
 				right="-2"
 				curiosity="5"

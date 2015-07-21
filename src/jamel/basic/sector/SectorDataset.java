@@ -8,23 +8,49 @@ import org.jfree.data.xy.XYDataItem;
 
 
 /**
- * A dataset for the sector data.
+ * A database for the sector level.
  */
 public interface SectorDataset {
 
 	/**
-	 * Returns the value.
-	 * @param key the key whose associated value is to be returned.
+	 * Returns the specified value for the specified agent.
+	 * @param dataKey the name of field.
+	 * @param agentName the name of the agent.
 	 * @return the value.
 	 */
-	Double get(String key);
+	Double getAgentValue(String dataKey, String agentName);
 
 	/**
 	 * Returns an array of values for the specified key.
 	 * @param key the key.
+	 * @param select how to select the values.
 	 * @return an array of values for the specified key.
 	 */
-	Double[] getArray(String key);
+	Double[] getField(String key, String select);
+
+	/**
+	 * Returns the max of the specified field in a selection of individual datasets.
+	 * @param data the name of the field.
+	 * @param select specifies how to select the individual datasets. 
+	 * @return the max of the specified field in a selection of individual datasets.
+	 */
+	Double getMax(String data, String select);
+
+	/**
+	 * Returns the mean of the specified field in a selection of individual datasets.
+	 * @param data the name of the field.
+	 * @param select specifies how to select the individual datasets. 
+	 * @return the mean of the specified field in a selection of individual datasets.
+	 */
+	Double getMean(String data, String select);
+
+	/**
+	 * Returns the min of the specified field in a selection of individual datasets.
+	 * @param data the name of the field.
+	 * @param select specifies how to select the individual datasets. 
+	 * @return the min of the specified field in a selection of individual datasets.
+	 */
+	Double getMin(String data, String select);
 
 	/**
 	 * Returns a list of XYDataItem that contains the specified values for each agent selected.
@@ -34,6 +60,22 @@ public interface SectorDataset {
 	 * @return a list of XYDataItem.
 	 */
 	List<XYDataItem> getScatter(String xKey, String yKey, String select);
+
+	/**
+	 * Returns the specified sectorial value.<p>
+	 * Hendrik: The reason why I need this is that there are certain data that are sector-specific that can only be computed at the sector level (and not at the agent level). For example the calculation of GDP and real GDP. These require computations that are not simply the sum over the data of all agents in the sector (or something similar), but something more complicated as, for example, the credit market is excluded in those operations. Another example would be the number of firms that are created per time period.<p>
+	 * @param key the key whose associated value is to be returned.
+	 * @return the specified value.
+	 */
+	Double getSectorialValue(String key);
+
+	/**
+	 * Returns the sum of the specified field in a selection of individual datasets.
+	 * @param data the name of the field.
+	 * @param select specifies how to select the individual datasets. 
+	 * @return the sum of the specified field in a selection of individual datasets.
+	 */
+	Double getSum(String data, String select);
 
 	/**
 	 * Returns the xyz data (an array with length 3, containing three arrays of equal length, the first containing the x-values, the second containing the y-values and the third containing the z-values).
@@ -48,7 +90,16 @@ public interface SectorDataset {
 	 * Stores the specified agent data into this sector dataset.  
 	 * @param data the data to be stored.
 	 */
-	void put(AgentDataset data);
+	void putIndividualData(AgentDataset data);
+
+	/**
+	 * Stores the specified sector value into this dataset.  
+	 * Hendrik: The reason why I need this is that there are certain data that are sector-specific that can only be computed at the sector level (and not at the agent level). For example the calculation of GDP and real GDP. These require computations that are not simply the sum over the data of all agents in the sector (or something similar), but something more complicated as, for example, the credit market is excluded in those operations. Another example would be the number of firms that are created per time period. 
+
+	 * @param key the key for the value to be added.
+	 * @param value the value to be added.
+	 */
+	void putSectorialData(String key, Double value);
 
 }
 

@@ -7,8 +7,6 @@ import org.w3c.dom.Element;
 
 import jamel.basic.Circuit;
 import jamel.basic.data.BasicDataManager;
-import jamel.basic.data.DynamicMacroDataset;
-import jamel.basic.data.MacroDataset;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.Timer;
 
@@ -57,11 +55,7 @@ public class SFCDataManager extends BasicDataManager {
 			throw new InitializationException("Missing attribute: sfcMatrixConfigFile");
 		}
 		final File file = new File(path+"/"+fileName);
-		balanceSheetMatrix = new AbstractBalanceSheetMatrix(file,timer){
-			@Override protected Double getValue(String key) {
-				return macroDataset.get(key);
-			}
-		};
+		balanceSheetMatrix = new BasicBalanceSheetMatrix(file,timer,macroDatabase);
 		return balanceSheetMatrix;
 	}
 
@@ -80,21 +74,8 @@ public class SFCDataManager extends BasicDataManager {
 			throw new InitializationException("Missing attribute: validationConfigFile");
 		}
 		final File file = new File(path+"/"+fileName);
-		result = new AbstractDataValidator(file,timer){
-			@Override public Double getValue(String key) {
-				return SFCDataManager.this.macroDataset.get(key);
-			}
-		};
+		result = new BasicDataValidator(file,timer,this.macroDatabase);
 		return result;
-	}
-
-	/**
-	 * Creates and returns a new {@link MacroDataset}. 
-	 * @return a new {@link MacroDataset}.
-	 */
-	@Override
-	protected MacroDataset getNewMacroDataset() {
-		return new DynamicMacroDataset(timer);
 	}
 
 	@Override
@@ -117,9 +98,8 @@ public class SFCDataManager extends BasicDataManager {
 		final boolean isConsistent = this.dataValidator.checkConsistency();
 		if (!isConsistent) {
 			final String name = this.dataValidator.getName();
-			circuit.warning("Inconsistency (check the "+name+" tab for more details)");
+			circuit.warning("Inconsistency","Please check the "+name+" tab for more details");
 		}
-		this.macroDataset.clear();
 	}
 
 }

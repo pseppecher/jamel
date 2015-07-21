@@ -1,0 +1,71 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<validation
+
+	title="Tests"
+	date="16-07-2015"
+	content="Baseline validation tests"
+	start="1">
+
+	<test
+		val1="sum(Households,employed,t)"
+		val2="sum(Industry,workforce,t)" />
+	<test
+		val1="sum(Households,agents,t)"
+		val2="sum(Households,employed,t) + sum(Households,unemployed,t)" />
+	<test
+		val1="sum(Households,wages,t)"
+		val2="sum(Industry,wageBill,t)" />
+
+	<test
+		val1="sum(Households,capital,t)"
+		val2="sum(Industry,capital,t) + val(Banks,capital,t)" />
+
+	<test
+		val1="sum(Households,dividend,t)"
+		val2="sum(Industry,dividends,t) + val(Banks,dividends,t)" />
+
+	<test1
+		val1="sum(Households,capital,t) - sum(Households,capital,t-1)"
+		val2="sum(Industry,capital,t) - sum(Industry,capital,t-1) + val(banks,capital,t) - val(banks,capital,t-1)" />
+
+	<test
+		val1="sum(Industry,grossProfit,t) - sum(Industry,inventories.losses.val,t)"
+		val2="sum(Households,dividend,t) + sum(Households,capital,t) - sum(Households,capital,t-1)" />
+		
+	<test
+		val1="sum(Industry,grossProfit,t)"
+		val2="sum(Industry,dividends,t) + sum(Industry,interest,t) + sum(Industry,inventories.losses.val,t) + sum(Industry,canceledDeposits,t) + sum(Industry,capital,t) - sum(Industry,capital,t-1) - sum(Industry,canceledDebts,t)" />
+
+	<test
+		val1="sum(Industry,capital,t) - sum(Industry,capital,t-1)"
+		val2="sum(Industry,grossProfit,t) - sum(Industry,dividends,t) - sum(Industry,interest,t) - sum(Industry,inventories.losses.val,t) - sum(Industry,canceledDeposits,t) + sum(Industry,canceledDebts,t)"
+		comment="L'augmentation du capital des entreprises doit être égale au profit brut, moins les dividendes, les intérêts, les pertes d'inventaire, les dépôts annulés, plus les dettes annulées." />
+
+	<test
+		val1="sum(Industry,sales.vol,t)"
+		val2="sum(Households,consumption.vol,t)" />
+	<test
+		val1="sum(Industry,sales.val,t)"
+		val2="sum(Households,consumption.val,t)" />
+	<test
+		val1="sum(Industry,inventories.fg.val,t) + sum(Industry,inventories.inProcess.val,t)"
+		val2="sum(Households,cash,t) + sum(Households,capital,t)" />
+	<test
+		val1="sum(Industry,interest,t)"
+		val2="val(Banks,interest,t)" />
+
+	<test
+		val1="sum(Industry,canceledDeposits,t)"
+		val2="val(Banks,canceledDeposits,t)" />
+	<test
+		val1="sum(Industry,canceledDebts,t)"
+		val2="val(Banks,canceledDebts,t)" />
+	<test
+		val1="sum(Industry,bankruptcies,t)"
+		val2="val(Banks,bankruptcies,t)" />
+	<test
+		val1="sum(Industry,insolvents,t)"
+		val2="0" />
+
+</validation>

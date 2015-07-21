@@ -1,13 +1,10 @@
-<!-- Test Jamel (v3) -->
-<!-- Nelder-Mead simplex on Himmelblau landscape. -->
-<!-- 05-06-2015 -->
+<?xml version="1.0" encoding="UTF-8"?>
 
-<circuit type="jamel.basic.BasicCircuit">
-
-	<comment>
-		A scenario for testing the simplex algorithm of Nelder-Mead 
-		on the Himmelblau artificial landscape.
-	</comment>
+<circuit
+	title="Nelder-Mead - Himmelblau artificial landscape"
+	type="jamel.basic.BasicCircuit"
+	content="Testing the simplex algorithm of Nelder-Mead on the Himmelblau artificial landscape"
+	date="10-07-2015">
 
 	<settings
 		randomSeed="0"

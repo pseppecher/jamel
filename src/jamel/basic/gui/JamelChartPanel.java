@@ -12,7 +12,7 @@ import org.jfree.chart.plot.ValueMarker;
 public class JamelChartPanel extends ChartPanel {
 
 	/** background */
-	private static final Color background = new Color(229,229,229);
+	private static final Color background = new Color(230,230,230);
 
 	/** A flag that indicates if the chart is a time chart or not. */
 	private final boolean isTimeChart;

@@ -265,11 +265,6 @@ public class BasicHousehold implements Household {
 	}
 
 	@Override
-	public long getAssets() {
-		return this.assetPortfolio.getNetValue()+this.account.getAmount();
-	}
-
-	@Override
 	public AgentDataset getData() {
 		return this.data;
 	}
@@ -360,6 +355,11 @@ public class BasicHousehold implements Household {
 	@Override
 	public boolean isBankrupted() {
 		return false;
+	}
+
+	@Override
+	public boolean isSolvent() {
+		throw new RuntimeException("Not implemented");
 	}
 
 	@Override

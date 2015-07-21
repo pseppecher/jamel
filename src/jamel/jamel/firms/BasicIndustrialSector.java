@@ -62,7 +62,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 	/** The <code>dependencies</code> element. */
 	protected static final String DEPENDENCIES = "dependencies";
 
-	/** The type of the agents. */
+	/** The type of the firms populating this sector. */
 	private String agentType = null;
 
 	/** The banking sector. */
@@ -71,13 +71,13 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 	/** The capitalist sector. */
 	private CapitalistSector capitalists;
 
-	/** The circuit. */
+	/** The macroeconomic circuit. */
 	private final Circuit circuit;
 
 	/** To count the number of firms created since the start of the simulation. */
 	private int countFirms;
 
-	/** The sector name. */
+	/** The name of this sector. */
 	private final String name;
 
 	/** The random. */
@@ -92,7 +92,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 	/** The collection of firms. */
 	protected final AgentSet<Firm> firms;
 
-	/** The parameters of the household sector. */
+	/** The parameters of this sector. */
 	protected final JamelParameters parameters = new BasicParameters();
 
 	/** The sector dataset (collected at the end of the previous period). */
@@ -109,6 +109,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 		this.timer=this.circuit.getTimer();
 		this.random=this.circuit.getRandom();
 		this.firms=new BasicAgentSet<Firm>(this.random);
+		this.dataset=this.firms.collectData();
 	}
 
 	/**
@@ -396,7 +397,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector, Supplier
 			result=null;
 		}
 		else {
-			final Double[] values = this.dataset.getArray("wages");
+			final Double[] values = this.dataset.getField("wages","");
 			if (values!=null) {
 				final int length = values.length;
 				if (length>0) {

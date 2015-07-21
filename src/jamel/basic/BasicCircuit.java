@@ -34,6 +34,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 
@@ -92,61 +93,69 @@ public class BasicCircuit implements Circuit {
 
 		/** The warning icon. */
 		private final Icon warningIcon;
-		
+
 		/** The message panel. */
 		private final JPanel messagePanel = new JPanel();
 
-			{
-				this.setLayout(new GridLayout(0,3));
-				final JPanel left = new JPanel();
-				final JPanel central = new JPanel();
-				messagePanel.setLayout(new BorderLayout());
-				central.add(playButton);
-				central.add(pauseButton);
-				central.add(timer.getCounter());
-				final URL warningImage = cl.getResource("resources/warning.gif");
-				if (warningImage!=null) {
-					warningIcon = new ImageIcon(warningImage);
-				}
-				else {
-					warningIcon = null;
-				}
-				this.add(left);
-				this.add(central);
-				this.add(messagePanel);
+		{
+			this.setLayout(new GridLayout(0,3));
+			final JPanel left = new JPanel();
+			final JPanel central = new JPanel();
+			messagePanel.setLayout(new BorderLayout());
+			central.add(playButton);
+			central.add(pauseButton);
+			central.add(timer.getCounter());
+			final URL warningImage = cl.getResource("resources/warning.gif");
+			if (warningImage!=null) {
+				warningIcon = new ImageIcon(warningImage);
 			}
+			else {
+				warningIcon = null;
+			}
+			this.add(left);
+			this.add(central);
+			this.add(messagePanel);
+		}
 
-			/**
-			 * Updates the pause/run buttons.
-			 */
-			@Override
-			public void repaint() {
-				final boolean b = BasicCircuit.this.isPaused();
-				if (pauseButton!=null) {
-					pauseButton.setEnabled(!b) ;
-					pauseButton.setSelected(false) ;
-					playButton.setEnabled(b) ;
-					playButton.setSelected(false) ;
-				}
-				super.repaint();
+		/**
+		 * Updates the pause/run buttons.
+		 */
+		@Override
+		public void repaint() {
+			final boolean b = BasicCircuit.this.isPaused();
+			if (pauseButton!=null) {
+				pauseButton.setEnabled(!b) ;
+				pauseButton.setSelected(false) ;
+				playButton.setEnabled(b) ;
+				playButton.setSelected(false) ;
 			}
+			super.repaint();
+		}
 
-			/**
-			 * Displays a warning message.
-			 * @param message the message to display.
-			 */
-			public void warning(String message) {
-				final JLabel label;
-				if (warningIcon!=null) {
-					label = new JLabel(warningIcon,SwingConstants.CENTER); 
-				}
-				else {
-					label = new JLabel("Warning",SwingConstants.CENTER); 					
-				}
-				
-				label.setToolTipText(message);
-				this.messagePanel.add(label,BorderLayout.WEST);
+		/**
+		 * Displays a warning message.
+		 * @param message the message to display.
+		 * @param toolTipText the string to display in a tool tip.
+		 */
+		public void warning(String message, String toolTipText) {
+			final JLabel label;
+			if (warningIcon!=null) {
+				label = new JLabel(message, warningIcon,SwingConstants.CENTER); 
 			}
+			else {
+				label = new JLabel("Warning",SwingConstants.CENTER); 					
+			}
+			label.setToolTipText(toolTipText);
+			SwingUtilities.invokeLater(new Runnable() {
+				@Override
+				public void run() {
+					messagePanel.removeAll();
+					messagePanel.add(label,BorderLayout.WEST);
+					messagePanel.validate();
+				}
+			});			
+
+		}
 
 	}
 
@@ -587,8 +596,8 @@ public class BasicCircuit implements Circuit {
 	}
 
 	@Override
-	public void warning(String message) {
-		this.controlPanel.warning(message);
+	public void warning(String message, String toolTipText) {
+		this.controlPanel.warning(message,toolTipText);
 	}
 
 }

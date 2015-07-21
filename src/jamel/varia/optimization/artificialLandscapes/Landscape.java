@@ -22,7 +22,7 @@ import org.w3c.dom.Node;
  * An artificial landscape useful to evaluate optimization algorithms.
  */
 public abstract class Landscape implements Sector {
-	
+
 	/** The map. */
 	private double[][] map;
 
@@ -52,13 +52,31 @@ public abstract class Landscape implements Sector {
 		return new SectorDataset(){
 
 			@Override
-			public Double get(String key) {
+			public Double getAgentValue(String string1, String string2) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
 			}
 
 			@Override
-			public Double[] getArray(String string) {
+			public Double[] getField(String string1, String string2) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
+			public Double getMax(String data, String select) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
+			public Double getMean(String data, String select) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
+			public Double getMin(String data, String select) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
 			}
@@ -66,6 +84,18 @@ public abstract class Landscape implements Sector {
 			@Override
 			public List<XYDataItem> getScatter(String xKey, String yKey,
 					String select) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
+			public Double getSectorialValue(String dataKey) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
+			public Double getSum(String data, String select) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
 			}
@@ -83,10 +113,18 @@ public abstract class Landscape implements Sector {
 			}
 
 			@Override
-			public void put(AgentDataset data) {
+			public void putIndividualData(AgentDataset data) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
-			}};
+			}
+
+			@Override
+			public void putSectorialData(String string, Double d) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+		};
 	}
 
 	@Override

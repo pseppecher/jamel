@@ -8,7 +8,7 @@
 
 	<settings
 		randomSeed="0"
-		chartsConfigFile="charts.xml" />
+		chartsConfigFile="charts2.xml" />
 
 	<sectors>
 
@@ -16,8 +16,8 @@
 			<settings
 				growth="0.01"
 				lim="20"
-				width="150"
-				height="150" />
+				width="300"
+				height="100" />
 		</Grass>
 
 		<Preys type="jamel.varia.loktaVolterra.Preys">

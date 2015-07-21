@@ -15,7 +15,7 @@ import java.util.TreeMap;
  * @param <A> the type of agents in the set.
  */
 public class BasicAgentSet<A extends Agent> implements AgentSet<A> {
-	
+
 	/** The arrayList. */
 	private final ArrayList<A> arrayList = new ArrayList<A>();
 
@@ -32,12 +32,12 @@ public class BasicAgentSet<A extends Agent> implements AgentSet<A> {
 	public BasicAgentSet(Random random) {
 		this.random = random;
 	}
-	
+
 	@Override
 	public SectorDataset collectData() {
-		final SectorDataset sectorDataset = new BasicSectorDataSet(arrayList.size());
+		final SectorDataset sectorDataset = new BasicSectorDatabase();
 		for (final Agent agent:arrayList) {
-			sectorDataset.put(agent.getData());
+			sectorDataset.putIndividualData(agent.getData());
 		}
 		return sectorDataset;	
 	}

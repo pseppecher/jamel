@@ -1,18 +1,15 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
-<!-- Configuration of the chart panels for the Beale scenario -->
-<!-- 06/06/2015 -->
-
-<charts>
+<charts
+	content="Configuration of the chart panels for the Beale scenario"
+	date="21-07-2015">
 
 	<panel
-		title="Main"
-		rows="1"
-		cols="2">
+		title="Main">
 
 		<chart
-			title="Map"
-			options="scatter">
+			title="Landscape"
+			type="scatter chart">
 			<series
 				sector="Simplex0"
 				x="x"
@@ -43,7 +40,7 @@
 				y="y"
 				color="cyan"
 				label="Simplex 4" />
-			<xyBlockSeries
+			<series xyBlockSeries="true"
 				sector="Landscape"
 				x="x"
 				y="y"
@@ -56,7 +53,7 @@
 					upperBound="500"
 					lowerColor="red"
 					upperColor="blue" />
-			</xyBlockSeries>
+			</series>
 
 			<annotations>
 				<Minimum
@@ -72,30 +69,31 @@
 				max="5" />
 		</chart>
 
-		<chart title="Fitness">
+		<chart title="Fitness" type ="time chart">
 			<series
-				value="Simplex0.mean.fitness"
+				value="mean(Simplex0,fitness,t)"
 				color="red"
 				label="Simplex 0" />
 			<series
-				value="Simplex1.mean.fitness"
+				value="mean(Simplex1,fitness,t)"
 				color="blue"
 				label="Simplex 1" />
 			<series
-				value="Simplex2.mean.fitness"
+				value="mean(Simplex2,fitness,t)"
 				color="green"
 				label="Simplex 2" />
 			<series
-				value="Simplex3.mean.fitness"
+				value="mean(Simplex3,fitness,t)"
 				color="orange"
 				label="Simplex 3" />
 			<series
-				value="Simplex4.mean.fitness"
+				value="mean(Simplex4,fitness,t)"
 				color="cyan"
 				label="Simplex 4" />
 			<yAxis
 				min="0"
-				max="50" />
+				max="100"
+				logarithmic="true"/>
 		</chart>
 
 	</panel>

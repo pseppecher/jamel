@@ -19,14 +19,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
-import org.jfree.data.xy.XYSeriesCollection;
 import org.jfree.data.xy.XYZDataset;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 /**
- * A basic data manager with a ChartManager and a GUI.
+ * A basic data manager with a ChartManager and a GUI.<p>
+ * TODO: est-il vraiment nécessaire de placer ChartManager et GUI à ce niveau ? 
+ * Ces composants seraient mieux placés au niveau du circuit.
  */
 public class BasicDataManager {
 
@@ -86,7 +85,7 @@ public class BasicDataManager {
 	protected final ChartManager chartManager;
 
 	/** The macro dataset. */
-	protected final MacroDataset macroDataset;
+	protected final MacroDatabase macroDatabase;
 
 	/** The timer. */
 	final protected Timer timer;
@@ -104,16 +103,16 @@ public class BasicDataManager {
 			throw new IllegalArgumentException("Timer is null.");
 		}
 		this.timer = timer;
+		this.macroDatabase = getNewMacroDataset();
 		this.chartManager = getNewChartManager(this, settings, path);
-		this.macroDataset = getNewMacroDataset();
 	}
 
 	/**
-	 * Creates and returns a new {@link MacroDataset}. 
-	 * @return a new {@link MacroDataset}.
+	 * Creates and returns a new {@link MacroDatabase}. 
+	 * @return a new {@link MacroDatabase}.
 	 */
-	protected MacroDataset getNewMacroDataset() {
-		return new BasicMacroDataset();
+	protected MacroDatabase getNewMacroDataset() {
+		return new BasicMacroDatabase(timer);
 	}
 
 	/**
@@ -150,170 +149,146 @@ public class BasicDataManager {
 	}
 
 	/**
-	 * Returns the specified scatter series.
-	 * @param series a node list that contains the description of the series to be returned.
-	 * @return a scatter series.
+	 * Returns an {@link XYSeries}. Each point in the series represents the values of the observed variables for one agent in the selected population. 
+	 * @param sector the sector of the population.
+	 * @param xKey the key for the X variable.
+	 * @param yKey the key for the Y variable.
+	 * @param t definition of the lag.
+	 * @param select the method of selection of the population. If <code>select</code> is empty, all agents within the specified sector are selected.
+	 * @return an {@link XYSeries}.
 	 */
-	public XYSeriesCollection getScatterChartData(NodeList series) {
-		final XYSeriesCollection data = new XYSeriesCollection();
-		final int nbSeries = series.getLength();
-		for (int k = 0; k<nbSeries; k++) {
-			final Element description = (Element) series.item(k);
-			final String sector=description.getAttribute("sector");
-			final String xKey=description.getAttribute("x");
-			final String yKey=description.getAttribute("y");
-			final String select=description.getAttribute("select");
-			final String seriesKey = sector+"."+xKey+"."+yKey+"."+select;
-			final DynamicXYSeries scatterSeries;
-			final DynamicXYSeries result1=(DynamicXYSeries) this.dynamicData.get(seriesKey);
-			if (result1!=null) {
-				scatterSeries=result1;
-			}
-			else {
-				scatterSeries = new DynamicXYSeries(seriesKey){
-					@SuppressWarnings("unchecked")
-					@Override
-					public void update() {
-						final List<XYDataItem> newData = macroDataset.getScatterData(sector,xKey,yKey,select);
-						this.data.clear();
-						if (newData!=null) {
-							this.data.addAll(newData);
-						}
-						this.fireSeriesChanged();
-					}
-				};
-				this.dynamicData.put(seriesKey, scatterSeries);
-			}
-			data.addSeries(scatterSeries);
-		}
-		return data;
-	}
-
-	/**
-	 * Returns the specified time series.
-	 * @param series a node list that contains the description of the series.
-	 * @return an XYSeriesCollection.
-	 */
-	public XYSeriesCollection getTimeChartData(NodeList series) {
-		final XYSeriesCollection result = new XYSeriesCollection();
-		final int nbSeries = series.getLength();
-		for (int k = 0; k<nbSeries; k++) {
-			final Element seriesElem = (Element) series.item(k);
-			final String key=seriesElem.getAttribute("value");
-			final DynamicXYSeries timeSeries;
-			final DynamicXYSeries xySeries=(DynamicXYSeries) this.dynamicData.get(key);
-			if (xySeries!=null) {
-				timeSeries=xySeries;
-			} 
-			else {
-				timeSeries = new DynamicXYSeries(key) {
-					@Override
-					public void update() {
-						final Double value = macroDataset.get(key);
-						final int period = timer.getPeriod().intValue();
-						if (value!=null) {
-							this.add(period, value);
-						}
-					}
-				};
-				this.dynamicData.put(key, timeSeries);
-			}
-			try {
-				result.addSeries(timeSeries);
-			} catch (IllegalArgumentException e) {
-				throw new RuntimeException("This dataset already contains a series with the key "+timeSeries.getKey(),e);
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * Returns the specified time scatter series
-	 * @param series a node list that contains the description of the series.
-	 * @return an XYSeriesCollection.
-	 */
-	public XYSeriesCollection getTimeScatterChartData(NodeList series) {
-		final XYSeriesCollection result = new XYSeriesCollection();
-		final int nbSeries = series.getLength();
-		for (int k = 0; k<nbSeries; k++) {
-			final Element seriesElem = (Element) series.item(k);
-			final String x=seriesElem.getAttribute("x");
-			final String y=seriesElem.getAttribute("y");
-			final String key = x+" && "+y;
-			final DynamicXYSeries timeScatterSeries;
-			final DynamicXYSeries xySeries=(DynamicXYSeries) this.dynamicData.get(key);
-			if (xySeries!=null) {
-				timeScatterSeries=xySeries;
-			} 
-			else {
-				timeScatterSeries = new DynamicXYSeries(key) {
-					@Override
-					public void update() {
-						final Double xValue = macroDataset.get(x);
-						final Double yValue = macroDataset.get(y);
-						if (xValue!=null && yValue!=null) {
-							this.add(xValue, yValue);
-						}
-					}
-				};
-				this.dynamicData.put(key, timeScatterSeries);
-			}
-			try {
-				result.addSeries(timeScatterSeries);
-			} catch (IllegalArgumentException e) {
-				throw new RuntimeException("Something went wrong while adding this series: "+timeScatterSeries.getKey(),e);
-			}
-		}
-		return result;
-	}
-
-	/**
-	 * Returns an XYZ dataset.
-	 * @param element an XML element that contains the description of the dataset.
-	 * @return an XYZ dataset.
-	 * @throws InitializationException If something goes wrong.
-	 */
-	public XYZDataset getXYBlockData(Element element) throws InitializationException {
-		final BasicXYZDataset dataset;
-		final Node xyzSeriesNode = element.getElementsByTagName("xyBlockSeries").item(0);
-		if (xyzSeriesNode==null) {
-			dataset=null;
+	public XYSeries getScatterSeries(final String sector, final String xKey, final String yKey, String t, final String select) {
+		final String seriesKey = sector+"."+t+"."+xKey+"."+yKey+"."+select;
+		final DynamicXYSeries scatterSeries;
+		final DynamicXYSeries result1=(DynamicXYSeries) this.dynamicData.get(seriesKey);
+		if (result1!=null) {
+			scatterSeries=result1;
 		}
 		else {
-			if (Node.ELEMENT_NODE!=xyzSeriesNode.getNodeType()) {
-				throw new InitializationException("This node should be an element.");
+			final Integer lag;
+			if (t.equals("t")) {
+				lag=0;
 			}
-			final Element xyzSeriesElement = (Element) xyzSeriesNode;
-			final String sector = xyzSeriesElement.getAttribute("sector");
-			final String xKey = xyzSeriesElement.getAttribute("x");
-			final String yKey = xyzSeriesElement.getAttribute("y");
-			final String zKey = xyzSeriesElement.getAttribute("z");
-			final String key = sector+".surf."+xKey+"."+yKey+"."+zKey;
-			final BasicXYZDataset result1=(BasicXYZDataset) this.dynamicData.get(key);
-			if (result1!=null) {
-				dataset=result1;
-			} 
+			else if (t.startsWith("t-")) {
+				lag=Integer.getInteger(t.substring(2, t.length()));
+			}
 			else {
-				dataset = new BasicXYZDataset(){
-					@Override
-					public void update() {
-						this.addSeries(0, macroDataset.getXYZData(sector,xKey,yKey,zKey));
-					}
-				};
-				this.dynamicData.put(key, dataset);
+				lag=null;
+				throw new RuntimeException("Error while creating scatter series.");
 			}
+			scatterSeries = new DynamicXYSeries(seriesKey){
+				@SuppressWarnings("unchecked")
+				@Override
+				public void update() {
+					final int t = timer.getPeriod().intValue()-lag;
+					final List<XYDataItem> newData = macroDatabase.getScatterData(sector,xKey,yKey,t,select);
+					this.data.clear();
+					if (newData!=null) {
+						this.data.addAll(newData);
+					}
+					this.fireSeriesChanged();
+				}
+			};
+			this.dynamicData.put(seriesKey, scatterSeries);
+		}
+		return scatterSeries;
+	}
+
+	/**
+	 * Returns an {@link XYSeries}. Each point in the series represents the values of the observed variables at different successive periods.
+	 * @param x the key for the X values.
+	 * @param y the key for the Y values. 
+	 * @return an {@link XYSeries}.
+	 */
+	public XYSeries getTimeScatterSeries(final String x, final String y) {
+		final String key = x+" && "+y;
+		final DynamicXYSeries timeScatterSeries;
+		final DynamicXYSeries xySeries=(DynamicXYSeries) this.dynamicData.get(key);
+		if (xySeries==null) {
+			final Expression expressionX = ExpressionFactory.newExpression(x, macroDatabase);
+			final Expression expressionY = ExpressionFactory.newExpression(y, macroDatabase);
+			timeScatterSeries = new DynamicXYSeries(key) {
+				@Override
+				public void update() {
+					final Double xValue = expressionX.value();
+					final Double yValue = expressionY.value();
+					if (xValue!=null && yValue!=null) {
+						this.add(xValue, yValue);
+					}
+				}
+			};
+			this.dynamicData.put(key, timeScatterSeries);
+		} 
+		else {
+			timeScatterSeries=xySeries;
+		}
+		return timeScatterSeries;
+	}
+
+	/**
+	 * Returns an {@link XYSeries}. For each data point in the series, X represents the time and Y the observed variable.
+	 * @param seriesKey the key for the variable to be observed.
+	 * @return an {@link XYSeries}.
+	 */
+	public XYSeries getTimeSeries(final String seriesKey) {
+		final DynamicXYSeries timeSeries;
+		final DynamicXYSeries xySeries=(DynamicXYSeries) this.dynamicData.get(seriesKey);
+		if (xySeries!=null) {
+			timeSeries=xySeries;
+		} 
+		else {
+			final Expression expression = ExpressionFactory.newExpression(seriesKey, macroDatabase);
+			timeSeries = new DynamicXYSeries(seriesKey) {
+				@Override
+				public void update() {
+					final Double value = expression.value();
+					final int period = timer.getPeriod().intValue();
+					if (value!=null) {
+						this.add(period, value);
+					}
+				}
+			};
+			this.dynamicData.put(seriesKey, timeSeries);
+		}
+		return timeSeries;
+	}
+
+	/**
+	 * Returns an {@link XYZDataset}. Used to represents artificial landscapes.
+	 * @param sector the sector.
+	 * @param xKey the key for the X values.
+	 * @param yKey the key for the Y values. 
+	 * @param zKey the key for the Z values.
+	 * @return an {@link XYZDataset}.
+	 */
+	public XYZDataset getXYBlockData(final String sector, final String xKey, final String yKey, final String zKey) {
+		final BasicXYZDataset dataset;
+		final String key = sector+".surf."+xKey+"."+yKey+"."+zKey;
+		final BasicXYZDataset cache=(BasicXYZDataset) this.dynamicData.get(key);
+		if (cache!=null) {
+			dataset=cache;
+		}
+		else {
+			dataset = new BasicXYZDataset(){
+				@Override
+				public void update() {
+					final int t = timer.getPeriod().intValue();
+					final double[][] data = macroDatabase.getXYZData(sector,xKey,yKey,zKey,t);
+					this.addSeries(key, data);
+				}
+			};
+			this.dynamicData.put(key, dataset);
 		}
 		return dataset;
 	}
-	
+
 	/**
 	 * Puts the specified sector dataset into the macroeconomic dataset.
 	 * @param sectorName the name of the sector.
 	 * @param sectorDataset the dataset.
 	 */
 	public void putData(String sectorName, SectorDataset sectorDataset) {
-		// TODO vérifier que les données ne sont pas déjà présentes ?
-		this.macroDataset.putData(sectorName, sectorDataset);
+		this.macroDatabase.putData(sectorName, sectorDataset);
 	}
 
 	/**
@@ -321,9 +296,7 @@ public class BasicDataManager {
 	 */
 	public void update() {
 		this.updateSeries();
-		this.macroDataset.clear();
 	}
-	
 
 }
 

@@ -73,7 +73,7 @@ public enum JamelColor {
 		try {
 			return valueOf(name).color;
 		} catch (IllegalArgumentException e) {
-			throw new IllegalArgumentException(name+" (unknown color)", e);
+			return null;
 		}
 	}
 
