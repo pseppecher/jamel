@@ -1,7 +1,7 @@
 package jamel.varia.optimization.genetic;
 
-import jamel.basic.agent.AgentDataset;
-import jamel.basic.agent.BasicAgentDataset;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
 
 import java.util.Comparator;
 import java.util.Random;

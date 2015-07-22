@@ -1,6 +1,7 @@
 package jamel.basic.sector;
 
 import jamel.basic.agent.Agent;
+import jamel.basic.data.SectorDataset;
 
 import java.util.List;
 

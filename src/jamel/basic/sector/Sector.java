@@ -1,5 +1,6 @@
 package jamel.basic.sector;
 
+import jamel.basic.data.SectorDataset;
 import jamel.basic.util.InitializationException;
 
 import org.w3c.dom.Element;

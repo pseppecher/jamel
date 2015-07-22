@@ -2,6 +2,8 @@ package jamel.basic;
 
 import jamel.Simulator;
 import jamel.basic.data.BasicDataManager;
+import jamel.basic.gui.BasicChartManager;
+import jamel.basic.gui.ChartManager;
 import jamel.basic.gui.GUI;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
@@ -16,6 +18,7 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
@@ -37,6 +40,7 @@ import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -54,6 +58,9 @@ public class BasicCircuit implements Circuit {
 
 		/** The context class loader. */
 		private final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+
+		/** The message panel. */
+		private final JPanel messagePanel = new JPanel();
 
 		/** The pause button. */
 		private final JButton pauseButton = new JButton("Pause") {{
@@ -93,9 +100,6 @@ public class BasicCircuit implements Circuit {
 
 		/** The warning icon. */
 		private final Icon warningIcon;
-
-		/** The message panel. */
-		private final JPanel messagePanel = new JPanel();
 
 		{
 			this.setLayout(new GridLayout(0,3));
@@ -157,6 +161,40 @@ public class BasicCircuit implements Circuit {
 
 		}
 
+	}
+
+	/**
+	 * Initializes and returns a new chart manager.
+	 * @param dataManager the parent data manager.
+	 * @param settings a XML element with the settings.
+	 * @param path the path of the scenario file.
+	 * @return a new chart manager.
+	 * @throws InitializationException If something goes wrong.
+	 */
+	private static ChartManager getNewChartManager(final BasicDataManager dataManager, Element settings, String path) throws InitializationException {
+		ChartManager chartManager = null;
+		final String fileName = settings.getAttribute("chartsConfigFile");
+		if (fileName != null) {
+			final File file = new File(path+"/"+fileName);
+			final Element root;
+			try {
+				root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).getDocumentElement();
+			} catch (Exception e) {
+				throw new InitializationException("Something goes wrong while creating the ChartManager.", e);
+			}
+			if (!"charts".equals(root.getNodeName())) {
+				throw new InitializationException("The root node of the scenario file must be named <charts>.");
+			}			
+			try {
+				chartManager = new BasicChartManager(root,dataManager);
+			} catch (Exception e) {
+				throw new InitializationException("Something goes wrong while parsing this file: "+file.getAbsolutePath(),e);
+			}
+		}
+		else {
+			chartManager = null;
+		}
+		return chartManager;
 	}
 
 	/**
@@ -323,7 +361,7 @@ public class BasicCircuit implements Circuit {
 	 * @param params a XML element that contains the settings.
 	 * @return a XML element that contains the settings of the circuit.
 	 */
-	private static Element getSettings(Element params) {
+	protected static Element getSettings(Element params) {
 		final Element settings = (Element) params.getElementsByTagName("settings").item(0);
 		// TODO tester la présence de settings
 		return settings;
@@ -401,11 +439,17 @@ public class BasicCircuit implements Circuit {
 		}
 	}
 
+	/** The chart manager. */
+	private ChartManager chartManager;
+
 	/** controlPanel */
 	private final ControlPanel controlPanel;
 
 	/** The events. */
 	private final Map<Integer, List<Element>> events;
+
+	/** The name of the scenario. */
+	final private String name;
 
 	/** A flag that indicates if the simulation is paused or not. */
 	private boolean pause;
@@ -426,16 +470,13 @@ public class BasicCircuit implements Circuit {
 	final private Integer sleep;
 
 	/** The timer. */
-	private final BasicTimer timer;
+	protected final BasicTimer timer;
 
 	/** The macroeconomic data manager. */
 	protected final BasicDataManager dataManager;
 
-	/** The GUI. */
+	/** The graphical user interface. */
 	protected final GUI gui;
-
-	/** The name of the scenario. */
-	final private String name;
 
 	/**
 	 * Creates a new basic circuit.
@@ -456,9 +497,10 @@ public class BasicCircuit implements Circuit {
 		this.phases = getNewPhases(this.sectors, elem);
 		this.events = getNewEvents(elem);
 		this.controlPanel = getNewControlPanel();
-		this.gui = getNewGUI(title + " ("+name+")",this.controlPanel);
 		this.dataManager = getNewDataManager(settings, timer, path, name);
-		this.gui.addPanel(this.dataManager.getPanelList());
+		this.chartManager = getNewChartManager(this.dataManager, settings, path);
+		this.gui = getNewGUI(title + " ("+name+")",this.controlPanel);
+		this.gui.addPanel(this.chartManager.getPanelList());
 		this.gui.addPanel(getNewInfoPanel());
 	}
 
@@ -471,7 +513,7 @@ public class BasicCircuit implements Circuit {
 			for(Element event:eventList) {
 				final String markerMessage = event.getAttribute("marker");
 				if (!"".equals(markerMessage)) {
-					this.dataManager.addMarker(markerMessage);
+					this.chartManager.addMarker(markerMessage,this.timer.getPeriod().intValue());
 				}
 				final String sectorName = event.getAttribute("sector");
 				if ("".equals(sectorName)) {
@@ -513,10 +555,7 @@ public class BasicCircuit implements Circuit {
 	 * Executes a period of the circuit.
 	 */
 	private void doPeriod() {
-		for(Sector sector:this.sectors.values()) {
-			this.dataManager.putData(sector.getName(), sector.getDataset());
-		}
-		this.dataManager.update();
+		this.updateData();
 		sleep(this.sleep);
 		this.doEvents();
 		this.doPause();
@@ -524,6 +563,16 @@ public class BasicCircuit implements Circuit {
 		for(Phase phase:phases) {
 			phase.run();
 		}
+	}
+
+	/**
+	 * Updates data at the beginning of the period.
+	 */
+	protected void updateData() {
+		for(Sector sector:this.sectors.values()) {
+			this.dataManager.putData(sector.getName(), sector.getDataset());
+		}
+		this.dataManager.update();
 	}
 
 	/**

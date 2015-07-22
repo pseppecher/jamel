@@ -1,12 +1,12 @@
 package jamel.varia.loktaVolterra;
 
 import jamel.basic.Circuit;
+import jamel.basic.data.SectorDataset;
 import jamel.basic.sector.AbstractPhase;
 import jamel.basic.sector.AgentSet;
 import jamel.basic.sector.BasicAgentSet;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
-import jamel.basic.sector.SectorDataset;
 import jamel.basic.util.BasicParameters;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.JamelParameters;

@@ -1,6 +1,4 @@
-package jamel.basic.sector;
-
-import jamel.basic.agent.AgentDataset;
+package jamel.basic.data;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -12,7 +10,7 @@ import org.jfree.data.xy.XYDataItem;
 /**
  * A basic implementation of the {@link SectorDataset} interface.
  */
-public class BasicSectorDatabase implements SectorDataset {
+public class BasicSectorDataset implements SectorDataset {
 
 	@SuppressWarnings("javadoc")
 	private static final int MAX = 2;
@@ -226,7 +224,7 @@ public class BasicSectorDatabase implements SectorDataset {
 	/** A collection that maps agent names to agent dataset. */
 	private final Map<String,AgentDataset> agentsData = new HashMap<String,AgentDataset>();
 
-	/** A map that stores data so future requests for that data can be served faster. */
+	/** A map that stores data so future requests can be served faster. */
 	private final Map<String,Double> cache = new HashMap<String,Double>();
 
 	/** 

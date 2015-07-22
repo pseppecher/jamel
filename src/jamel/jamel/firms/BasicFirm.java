@@ -1,7 +1,7 @@
 package jamel.jamel.firms;
 
-import jamel.basic.agent.AgentDataset;
-import jamel.basic.agent.BasicAgentDataset;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Period;
 import jamel.jamel.firms.managers.CapitalManager;
 import jamel.jamel.firms.managers.PricingManager;

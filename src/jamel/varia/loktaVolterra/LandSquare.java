@@ -1,8 +1,8 @@
 package jamel.varia.loktaVolterra;
 
 import jamel.basic.agent.Agent;
-import jamel.basic.agent.AgentDataset;
-import jamel.basic.agent.BasicAgentDataset;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
 
 @SuppressWarnings("javadoc")
 public class LandSquare implements Agent{

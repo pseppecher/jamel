@@ -2,8 +2,8 @@ package jamel.varia.loktaVolterra;
 
 import java.util.Random;
 
-import jamel.basic.agent.AgentDataset;
-import jamel.basic.agent.BasicAgentDataset;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
 
 /**
  * Represent a prey.

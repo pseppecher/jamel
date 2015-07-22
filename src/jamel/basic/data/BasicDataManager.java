@@ -1,21 +1,15 @@
 package jamel.basic.data;
 
-import jamel.basic.gui.BasicChartManager;
 import jamel.basic.gui.BasicXYZDataset;
-import jamel.basic.gui.ChartManager;
 import jamel.basic.gui.DynamicData;
-import jamel.basic.sector.SectorDataset;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.Timer;
 
-import java.awt.Component;
-import java.io.File;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.swing.SwingUtilities;
-import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
@@ -23,9 +17,7 @@ import org.jfree.data.xy.XYZDataset;
 import org.w3c.dom.Element;
 
 /**
- * A basic data manager with a ChartManager and a GUI.<p>
- * TODO: est-il vraiment nécessaire de placer ChartManager et GUI à ce niveau ? 
- * Ces composants seraient mieux placés au niveau du circuit.
+ * A basic data manager.
  */
 public class BasicDataManager {
 
@@ -44,45 +36,11 @@ public class BasicDataManager {
 
 	}
 
-	/**
-	 * Initializes and returns a new chart manager.
-	 * @param dataManager the parent data manager.
-	 * @param settings a XML element with the settings.
-	 * @param path the path of the scenario file.
-	 * @return a new chart manager.
-	 * @throws InitializationException If something goes wrong.
+	/** 
+	 * The collection of the dynamic data used by the GUI.
+	 * These data are updated at each end of period by the call of {@link BasicDataManager#updateSeries()} 
 	 */
-	private static ChartManager getNewChartManager(final BasicDataManager dataManager, Element settings, String path) throws InitializationException {
-		ChartManager chartManager = null;
-		final String fileName = settings.getAttribute("chartsConfigFile");
-		if (fileName != null) {
-			final File file = new File(path+"/"+fileName);
-			final Element root;
-			try {
-				root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).getDocumentElement();
-			} catch (Exception e) {
-				throw new InitializationException("Something goes wrong while creating the ChartManager.", e);
-			}
-			if (!"charts".equals(root.getNodeName())) {
-				throw new InitializationException("The root node of the scenario file must be named <charts>.");
-			}			
-			try {
-				chartManager = new BasicChartManager(root,dataManager);
-			} catch (Exception e) {
-				throw new InitializationException("Something goes wrong while parsing this file: "+file.getAbsolutePath(),e);
-			}
-		}
-		else {
-			chartManager = null;
-		}
-		return chartManager;
-	}
-
-	/** Register of the dynamic data used by the GUI. */
 	private final Map<String,DynamicData> dynamicData = new LinkedHashMap<String,DynamicData>();
-
-	/** The chart manager. */
-	protected final ChartManager chartManager;
 
 	/** The macro dataset. */
 	protected final MacroDatabase macroDatabase;
@@ -104,7 +62,7 @@ public class BasicDataManager {
 		}
 		this.timer = timer;
 		this.macroDatabase = getNewMacroDataset();
-		this.chartManager = getNewChartManager(this, settings, path);
+		//this.chartManager = getNewChartManager(this, settings, path);
 	}
 
 	/**
@@ -133,19 +91,11 @@ public class BasicDataManager {
 	}
 
 	/**
-	 * Add a marker to all time charts.
-	 * @param label the label of the marker.
+	 * Returns the macroeconomic database.
+	 * @return the macroeconomic database.
 	 */
-	public void addMarker(String label) {
-		this.chartManager.addMarker(label,timer.getPeriod().intValue());
-	}
-
-	/**
-	 * Returns the list of panel of the chart manager.
-	 * @return the list of panel of the chart manager.
-	 */
-	public Component[] getPanelList() {
-		return this.chartManager.getPanelList();
+	public MacroDatabase getMacroDatabase() {
+		return this.macroDatabase;
 	}
 
 	/**

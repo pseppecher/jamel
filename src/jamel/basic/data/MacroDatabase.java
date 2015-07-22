@@ -4,8 +4,6 @@ import java.util.List;
 
 import org.jfree.data.xy.XYDataItem;
 
-import jamel.basic.sector.SectorDataset;
-
 /**
  * A macroeconomic dataset.
  * This dataset provides individual and aggregate data.

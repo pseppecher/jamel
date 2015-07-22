@@ -1,6 +1,6 @@
 package jamel.jamel.widgets;
 
-import jamel.basic.agent.AgentDataset;
+import jamel.basic.data.AgentDataset;
 import jamel.jamel.roles.Supplier;
 
 /**

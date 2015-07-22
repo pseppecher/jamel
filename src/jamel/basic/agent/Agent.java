@@ -1,5 +1,7 @@
 package jamel.basic.agent;
 
+import jamel.basic.data.AgentDataset;
+
 
 /**
  * Represents an agent.

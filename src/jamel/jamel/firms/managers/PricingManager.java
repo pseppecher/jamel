@@ -1,6 +1,6 @@
 package jamel.jamel.firms.managers;
 
-import jamel.basic.agent.AgentDataset;
+import jamel.basic.data.AgentDataset;
 
 /**
  * The pricing manager.

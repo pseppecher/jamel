@@ -1,9 +1,9 @@
 package jamel.basic.data;
 
-import jamel.basic.sector.SectorDataset;
 import jamel.basic.util.Timer;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,10 +32,19 @@ public class BasicMacroDatabase implements MacroDatabase {
 	@SuppressWarnings("javadoc")
 	private static final String VAL = "val";
 
-	/** The cache. FIXME: Ce cache n'est jamais vidé ! */
-	private final Map<String,Double> cache = new HashMap<String,Double>();
+	/** A map that stores data so future requests can be served faster. */
+	private final Map<String,Double> cache = new LinkedHashMap<String,Double>(1000) {
 
-	/** The macro dataset.*/
+		private static final int MAX_ENTRIES = 1000;
+
+		@Override
+		protected boolean removeEldestEntry(Map.Entry<String,Double> eldest) {
+			return size() > MAX_ENTRIES;
+		}
+
+	};
+
+	/** The macroeconomic dataset.*/
 	final private Map<Integer,Map<String,SectorDataset>> macroDataset = new HashMap<Integer,Map<String,SectorDataset>>();
 
 	/** The timer. */

@@ -1,6 +1,6 @@
 package jamel.jamel.firms.managers;
 
-import jamel.basic.agent.AgentDataset;
+import jamel.basic.data.AgentDataset;
 import jamel.jamel.widgets.JobOffer;
 import jamel.jamel.widgets.LaborPower;
 

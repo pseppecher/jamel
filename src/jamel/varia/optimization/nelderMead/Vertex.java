@@ -1,8 +1,8 @@
 package jamel.varia.optimization.nelderMead;
 
 import jamel.basic.agent.Agent;
-import jamel.basic.agent.AgentDataset;
-import jamel.basic.agent.BasicAgentDataset;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
 
 /**
  * Represents one vertex of a {@link Simplex}.

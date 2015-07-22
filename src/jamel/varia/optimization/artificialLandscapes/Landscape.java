@@ -1,11 +1,11 @@
 package jamel.varia.optimization.artificialLandscapes;
 
 import jamel.basic.Circuit;
-import jamel.basic.agent.AgentDataset;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.SectorDataset;
 import jamel.basic.gui.XYZItem;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
-import jamel.basic.sector.SectorDataset;
 import jamel.basic.util.BasicParameters;
 import jamel.basic.util.JamelParameters;
 

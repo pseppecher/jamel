@@ -56,10 +56,27 @@ public class GUI {
 		}
 
 		/**
+		 * Adds a component at the specified tab index. 
+		 * @param component the component to be added.
+		 * @param index the position to insert this new tab.
+		 */
+		private void addPanel(Component component, int index) {
+			this.tabbedPane.add(component, index);
+		}
+
+		/**
 		 * Updates the control panel.
 		 */
 		private void pause() {
 			this.controlPanel.repaint();
+		}
+
+		/**
+		 * Gets the number of components in the tabbed panel.
+		 * @return  the number of components in the tabbed panel.
+		 */
+		public int getTabCount() {
+			return this.tabbedPane.getComponentCount();
 		}
 
 	}
@@ -90,10 +107,27 @@ public class GUI {
 	}
 
 	/**
+	 * Adds a component at the specified tab index.
+	 * @param panel  the component to be added.
+	 * @param index  the position to insert this new tab.
+	 */
+	public void addPanel(final Component panel, final int index) {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				window.addPanel(panel,index);
+			}
+		});			
+	}
+
+	/**
 	 * Adds the specified components to the tabbed pane of the window.
 	 * @param panels the components to be added.
 	 */
 	public void addPanel(final Component[] panels) {
+		if (panels == null) {
+			throw new RuntimeException("Panels is null");
+		}
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
@@ -102,6 +136,14 @@ public class GUI {
 				}
 			}
 		});			
+	}
+
+	/**
+	 * Gets the number of components in the tabbed panel.
+	 * @return the number of components in the tabbed panel.
+	 */
+	public int getTabCount() {
+		return this.window.getTabCount() ;
 	}
 
 	/**

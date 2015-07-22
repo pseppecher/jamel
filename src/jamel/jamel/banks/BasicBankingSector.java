@@ -1,11 +1,11 @@
 package jamel.jamel.banks;
 
 import jamel.basic.Circuit;
+import jamel.basic.data.BasicSectorDataset;
+import jamel.basic.data.SectorDataset;
 import jamel.basic.sector.AbstractPhase;
-import jamel.basic.sector.BasicSectorDatabase;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
-import jamel.basic.sector.SectorDataset;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.Period;
 import jamel.basic.util.Timer;
@@ -533,7 +533,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		this.circuit=circuit;
 		this.random=circuit.getRandom();
 		this.timer=circuit.getTimer();
-		this.dataset = new BasicSectorDatabase();
+		this.dataset = new BasicSectorDataset();
 		this.updateDataset();
 	}
 
@@ -633,7 +633,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		if (this.bankOwner==null) {
 			newOwner();
 		}
-		this.dataset = new BasicSectorDatabase();
+		this.dataset = new BasicSectorDataset();
 		this.v.put("bankruptcies",0);
 		this.v.put("interest",0);
 		this.v.put("canceledDebts",0);

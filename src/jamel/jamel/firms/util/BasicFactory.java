@@ -1,7 +1,7 @@
 package jamel.jamel.firms.util;
 
-import jamel.basic.agent.AgentDataset;
-import jamel.basic.agent.BasicAgentDataset;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Timer;
 import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.LaborPower;

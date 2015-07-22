@@ -1,7 +1,7 @@
 package jamel.jamel.households;
 
-import jamel.basic.agent.AgentDataset;
-import jamel.basic.agent.BasicAgentDataset;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Timer;
 import jamel.jamel.sectors.HouseholdSector;
 import jamel.jamel.util.AnachronismException;

@@ -1,13 +1,13 @@
 package jamel.varia.schelling;
 
 import jamel.basic.Circuit;
-import jamel.basic.agent.AgentDataset;
-import jamel.basic.agent.BasicAgentDataset;
+import jamel.basic.data.AgentDataset;
+import jamel.basic.data.BasicAgentDataset;
+import jamel.basic.data.BasicSectorDataset;
+import jamel.basic.data.SectorDataset;
 import jamel.basic.sector.AbstractPhase;
-import jamel.basic.sector.BasicSectorDatabase;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
-import jamel.basic.sector.SectorDataset;
 import jamel.basic.util.BasicParameters;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.JamelParameters;
@@ -166,7 +166,7 @@ public class Schelling implements Sector {
 
 	@Override
 	public SectorDataset getDataset() {
-		final SectorDataset sectorDataset = new BasicSectorDatabase();
+		final SectorDataset sectorDataset = new BasicSectorDataset();
 		int white = 0;
 		int black = 0;
 		for (int x=0;x<width;x++) {

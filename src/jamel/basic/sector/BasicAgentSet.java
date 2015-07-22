@@ -1,6 +1,8 @@
 package jamel.basic.sector;
 
 import jamel.basic.agent.Agent;
+import jamel.basic.data.BasicSectorDataset;
+import jamel.basic.data.SectorDataset;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,7 +37,7 @@ public class BasicAgentSet<A extends Agent> implements AgentSet<A> {
 
 	@Override
 	public SectorDataset collectData() {
-		final SectorDataset sectorDataset = new BasicSectorDatabase();
+		final SectorDataset sectorDataset = new BasicSectorDataset();
 		for (final Agent agent:arrayList) {
 			sectorDataset.putIndividualData(agent.getData());
 		}
