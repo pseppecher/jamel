@@ -1,9 +1,10 @@
 package jamel.basic.util;
 
 import java.awt.Component;
+import java.util.LinkedList;
+import java.util.List;
 
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 
 /**
  * A basic timer. 
@@ -88,7 +89,6 @@ public class BasicTimer implements Timer {
 	}
 
 	/** A time counter for the GUI. */
-	@SuppressWarnings("serial")
 	private final JTextField counter = new JTextField (5) {{
 		this.setHorizontalAlignment(RIGHT);
 		this.setEditable(false);
@@ -97,12 +97,20 @@ public class BasicTimer implements Timer {
 	/** The current period. */
 	private Period current;
 
+	/** The list of listeners. */
+	private final List<TimeListener> listeners = new LinkedList<TimeListener>();
+
 	/**
 	 * Creates a new timer.
 	 * @param t the value of the initial period.
 	 */
 	public BasicTimer(int t) {
 		current = new BasicPeriod(t);
+	}
+
+	@Override
+	public void addListener(TimeListener listener) {
+		this.listeners.add(listener);
 	}
 
 	/**
@@ -122,12 +130,9 @@ public class BasicTimer implements Timer {
 	 */
 	public void next() {
 		this.current=this.current.getNext();
-		SwingUtilities.invokeLater(new Runnable() {
-			@Override
-			public void run() {
-				counter.setText(""+current.intValue());
-			}
-		});
+		for(TimeListener listener:listeners) {
+			listener.setTime(this.current.intValue());
+		}
 	}
 
 }

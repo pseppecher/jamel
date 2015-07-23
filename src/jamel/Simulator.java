@@ -202,6 +202,7 @@ public class Simulator {
 	 * Looks for the latest version of Jamel.
 	 * @return <code>true</code> if a new version is available and the user chooses to download it, <code>false</code> otherwise.
 	 */
+	@SuppressWarnings("unused")
 	private static boolean updateVersion() {
 		final boolean result;
 		if (isOutOfDate()) {
@@ -241,7 +242,7 @@ public class Simulator {
 	 * @param args unused.
 	 */
 	public static void main(String[] args) {
-		if (updateVersion()) {} else 
+		//if (updateVersion()) {} else 
 		{
 			final File file = selectScenario();
 			if (file!=null) {

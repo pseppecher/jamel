@@ -4,6 +4,7 @@ import jamel.Simulator;
 import jamel.basic.data.BasicDataManager;
 import jamel.basic.gui.BasicChartManager;
 import jamel.basic.gui.ChartManager;
+import jamel.basic.gui.ControlPanel;
 import jamel.basic.gui.GUI;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
@@ -12,16 +13,11 @@ import jamel.basic.util.InitializationException;
 import jamel.basic.util.Period;
 import jamel.basic.util.Timer;
 
-import java.awt.BorderLayout;
 import java.awt.Component;
-import java.awt.GridLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -29,15 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import javax.swing.Icon;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
 import javax.swing.JEditorPane;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.SwingConstants;
-import javax.swing.SwingUtilities;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -50,118 +39,6 @@ import org.w3c.dom.NodeList;
  * A basic class of the {@link Circuit}.
  */
 public class BasicCircuit implements Circuit {
-
-	/**
-	 * The control panel.
-	 */
-	public class ControlPanel extends JPanel {
-
-		/** The context class loader. */
-		private final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-
-		/** The message panel. */
-		private final JPanel messagePanel = new JPanel();
-
-		/** The pause button. */
-		private final JButton pauseButton = new JButton("Pause") {{
-			this.addActionListener(new ActionListener() { 
-				@Override
-				public void actionPerformed(ActionEvent e) {
-					BasicCircuit.this.pause(true);
-					ControlPanel.this.repaint();
-				} 
-			}) ;
-			final URL url = cl.getResource("resources/suspend_co.gif");
-			if (url!=null) {
-				this.setIcon(new ImageIcon(url));
-				this.setText("");
-			}
-			this.setToolTipText("Pause "+name) ;
-			this.setEnabled(false);			
-		}};
-
-		/** The play button. */
-		private final JButton playButton = new JButton("Run") {{
-			this.addActionListener(new ActionListener() { 
-				@Override
-				public void actionPerformed(ActionEvent e) { 
-					BasicCircuit.this.pause(false);
-					ControlPanel.this.repaint();
-				} 
-			}) ;
-			final URL url = cl.getResource("resources/resume_co.gif");
-			if (url!=null) {
-				this.setIcon(new ImageIcon(url));
-				this.setText("");
-			}
-			this.setToolTipText("Run "+name) ;
-			this.setEnabled(false);
-		}};
-
-		/** The warning icon. */
-		private final Icon warningIcon;
-
-		{
-			this.setLayout(new GridLayout(0,3));
-			final JPanel left = new JPanel();
-			final JPanel central = new JPanel();
-			messagePanel.setLayout(new BorderLayout());
-			central.add(playButton);
-			central.add(pauseButton);
-			central.add(timer.getCounter());
-			final URL warningImage = cl.getResource("resources/warning.gif");
-			if (warningImage!=null) {
-				warningIcon = new ImageIcon(warningImage);
-			}
-			else {
-				warningIcon = null;
-			}
-			this.add(left);
-			this.add(central);
-			this.add(messagePanel);
-		}
-
-		/**
-		 * Updates the pause/run buttons.
-		 */
-		@Override
-		public void repaint() {
-			final boolean b = BasicCircuit.this.isPaused();
-			if (pauseButton!=null) {
-				pauseButton.setEnabled(!b) ;
-				pauseButton.setSelected(false) ;
-				playButton.setEnabled(b) ;
-				playButton.setSelected(false) ;
-			}
-			super.repaint();
-		}
-
-		/**
-		 * Displays a warning message.
-		 * @param message the message to display.
-		 * @param toolTipText the string to display in a tool tip.
-		 */
-		public void warning(String message, String toolTipText) {
-			final JLabel label;
-			if (warningIcon!=null) {
-				label = new JLabel(message, warningIcon,SwingConstants.CENTER); 
-			}
-			else {
-				label = new JLabel("Warning",SwingConstants.CENTER); 					
-			}
-			label.setToolTipText(toolTipText);
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					messagePanel.removeAll();
-					messagePanel.add(label,BorderLayout.WEST);
-					messagePanel.validate();
-				}
-			});			
-
-		}
-
-	}
 
 	/**
 	 * Initializes and returns a new chart manager.
@@ -357,17 +234,6 @@ public class BasicCircuit implements Circuit {
 	}
 
 	/**
-	 * Returns a XML element that contains the settings of the circuit.
-	 * @param params a XML element that contains the settings.
-	 * @return a XML element that contains the settings of the circuit.
-	 */
-	protected static Element getSettings(Element params) {
-		final Element settings = (Element) params.getElementsByTagName("settings").item(0);
-		// TODO tester la présence de settings
-		return settings;
-	}
-
-	/**
 	 * Returns the length of time to sleep in milliseconds.
 	 * @param settings  an XML element that contains the circuit settings.
 	 * @return the length of time to sleep in milliseconds.
@@ -387,11 +253,11 @@ public class BasicCircuit implements Circuit {
 	/**
 	 * Initializes the sectors.
 	 * Must be called only after creating each sector.
-	 * @param sectors the list of the sectors to be initialized.
+	 * @param sectors the sectors to be initialized.
 	 * @param params a XML element that contains the parameters of each sector.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	private static void initSectors(LinkedHashMap<String, Sector> sectors, Element params) throws InitializationException {
+	private static void initSectors(Map<String, Sector> sectors, Element params) throws InitializationException {
 		final NodeList nodeList = params.getElementsByTagName("sectors").item(0).getChildNodes();
 		for(int i=0; i<nodeList.getLength(); i++) {
 			final Node node = nodeList.item(i);
@@ -439,6 +305,17 @@ public class BasicCircuit implements Circuit {
 		}
 	}
 
+	/**
+	 * Returns a XML element that contains the settings of the circuit.
+	 * @param params a XML element that contains the settings.
+	 * @return a XML element that contains the settings of the circuit.
+	 */
+	protected static Element getSettings(Element params) {
+		final Element settings = (Element) params.getElementsByTagName("settings").item(0);
+		// TODO tester la présence de settings
+		return settings;
+	}
+
 	/** The chart manager. */
 	private ChartManager chartManager;
 
@@ -455,7 +332,7 @@ public class BasicCircuit implements Circuit {
 	private boolean pause;
 
 	/** The phases of the circuit. */
-	private final LinkedList<Phase> phases;
+	private final List<Phase> phases;
 
 	/** The random. */
 	private final Random random;
@@ -464,19 +341,19 @@ public class BasicCircuit implements Circuit {
 	private boolean run = true;
 
 	/** The sectors of the circuit. */
-	private final LinkedHashMap<String,Sector> sectors;
+	private final Map<String,Sector> sectors;
 
 	/** The length of time to sleep in milliseconds. */
 	final private Integer sleep;
-
-	/** The timer. */
-	protected final BasicTimer timer;
 
 	/** The macroeconomic data manager. */
 	protected final BasicDataManager dataManager;
 
 	/** The graphical user interface. */
 	protected final GUI gui;
+
+	/** The timer. */
+	protected final BasicTimer timer;
 
 	/**
 	 * Creates a new basic circuit.
@@ -566,29 +443,11 @@ public class BasicCircuit implements Circuit {
 	}
 
 	/**
-	 * Updates data at the beginning of the period.
-	 */
-	protected void updateData() {
-		for(Sector sector:this.sectors.values()) {
-			this.dataManager.putData(sector.getName(), sector.getDataset());
-		}
-		this.dataManager.update();
-	}
-
-	/**
 	 * Creates and returns the control panel.
 	 * @return the control panel.
 	 */
 	private ControlPanel getNewControlPanel() {
-		return new ControlPanel();
-	}
-
-	/**
-	 * Sets the simulation paused or not.
-	 * @param b a boolean.
-	 */
-	private void pause(boolean b) {
-		this.pause=b;
+		return new ControlPanel(this);
 	}
 
 	/**
@@ -603,9 +462,24 @@ public class BasicCircuit implements Circuit {
 		return new BasicDataManager(settings, timer, path, name);
 	}
 
+	/**
+	 * Updates data at the beginning of the period.
+	 */
+	protected void updateData() {
+		for(Sector sector:this.sectors.values()) {
+			this.dataManager.putData(sector.getName(), sector.getDataset());
+		}
+		this.dataManager.update();
+	}
+
 	@Override
 	public Period getCurrentPeriod() {
 		return this.timer.getPeriod();
+	}
+
+	@Override
+	public String getName() {
+		return this.name;
 	}
 
 	@Override
@@ -631,6 +505,11 @@ public class BasicCircuit implements Circuit {
 	@Override
 	public boolean isPaused() {
 		return pause;
+	}
+
+	@Override
+	public void pause(boolean b) {
+		this.pause=b;
 	}
 
 	/**

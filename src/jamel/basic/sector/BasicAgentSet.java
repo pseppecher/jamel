@@ -21,7 +21,7 @@ public class BasicAgentSet<A extends Agent> implements AgentSet<A> {
 	/** The arrayList. */
 	private final ArrayList<A> arrayList = new ArrayList<A>();
 
-	/** The hashMap. */
+	/** The map. */
 	private final Map<String,A> map = new TreeMap<String,A>();
 
 	/** The random. */
@@ -36,12 +36,23 @@ public class BasicAgentSet<A extends Agent> implements AgentSet<A> {
 	}
 
 	@Override
+	public void clear() {
+		this.arrayList.clear();
+		this.map.clear();
+	}
+
+	@Override
 	public SectorDataset collectData() {
 		final SectorDataset sectorDataset = new BasicSectorDataset();
 		for (final Agent agent:arrayList) {
 			sectorDataset.putIndividualData(agent.getData());
 		}
 		return sectorDataset;	
+	}
+
+	@Override
+	public boolean contains(A agent) {
+		return false;
 	}
 
 	@Override

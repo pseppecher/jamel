@@ -1,4 +1,4 @@
 /**
- * CLasses for the firms. 
+ * Classes for the firms. 
  */
 package jamel.jamel.firms;

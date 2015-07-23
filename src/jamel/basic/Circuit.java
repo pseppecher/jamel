@@ -15,13 +15,13 @@ public interface Circuit {
 	 * Returns the current period.
 	 * @return the current period.
 	 */
-	public abstract Period getCurrentPeriod();
+	Period getCurrentPeriod();
 
 	/**
 	 * Returns the random.
 	 * @return the random.
 	 */
-	public abstract Random getRandom();
+	Random getRandom();
 
 	/**
 	 * Returns the specified sector.
@@ -29,37 +29,51 @@ public interface Circuit {
 	 * @param name the name of the sector to be returned.
 	 * @return the specified sector.
 	 */
-	public abstract Sector getSector(String name);
+	Sector getSector(String name);
 
 	/**
 	 * Returns the simulation ID.
 	 * @return the simulation ID.
 	 */
-	public abstract long getSimulationID();
+	long getSimulationID();
 
 	/**
 	 * Returns the timer.
 	 * @return the timer.
 	 */
-	public abstract Timer getTimer();
+	Timer getTimer();
 
 	/**
 	 * Returns <code>true</code> if the circuit is paused, <code>false</code> otherwise. 
 	 * @return a boolean.
 	 */
-	public abstract boolean isPaused();
+	boolean isPaused();
+
+	/**
+	 * Changes the state of the simulation.
+	 * @param b a boolean. 
+	 * If <code>true</code>, the simulation will be paused. 
+	 * If <code>false</code>, the simulation will run.
+	 */
+	void pause(boolean b);
 
 	/**
 	 * Runs the simulation.
 	 */
-	public abstract void run();
+	void run();
 
 	/**
 	 * Displays a warning message.
 	 * @param message the warning message to display. 
 	 * @param toolTipText the tool tip text.
 	 */
-	public abstract void warning(String message,String toolTipText);
+	void warning(String message,String toolTipText);
+
+	/**
+	 * Returns the name of the simulation.
+	 * @return the name of the simulation.
+	 */
+	String getName();
 
 }
 

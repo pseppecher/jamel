@@ -12,11 +12,23 @@ import java.util.List;
 public interface AgentSet<A extends Agent> {
 
 	/**
+	 * Removes all elements from the <code>AgentSet</code>.
+	 */
+	void clear();
+
+	/**
 	 * Collects and returns the data from the agents in this set.
 	 * @return an object that contains the data of each agent in this set.
 	 */
 	SectorDataset collectData();
-
+	
+	/**
+	 * Returns <code>true</code> if this set contains the specified agent.
+	 * @param agent the agent to be tested.
+	 * @return <code>true</code> if this set contains the specified agent.
+	 */
+	boolean contains(A agent);
+	
 	/**
 	 * Returns <code>true</code> if this set contains an agent for the specified key.
 	 * @param key key whose presence in this set is to be tested.
