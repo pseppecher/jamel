@@ -32,8 +32,9 @@ public interface Sector {
 	 * Returns the specified phase.
 	 * @param name the name of the phase.
 	 * @return a phase.
+	 * @throws InitializationException If something goes wrong. 
 	 */
-	Phase getPhase(String name);
+	Phase getPhase(String name) throws InitializationException;
 
 	/**
 	 * Initializes the sector.

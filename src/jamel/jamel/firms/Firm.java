@@ -1,6 +1,7 @@
 package jamel.jamel.firms;
 
 import jamel.basic.agent.Agent;
+import jamel.jamel.firms.capital.StockCertificate;
 import jamel.jamel.roles.AccountHolder;
 import jamel.jamel.roles.Corporation;
 import jamel.jamel.roles.Supplier;
@@ -12,18 +13,49 @@ import jamel.jamel.widgets.JobOffer;
 public interface Firm extends Agent, AccountHolder, Corporation, Supplier {
 
 	/**
+	 * Clears the ownership of the firm.
+	 * <p>
+	 * Each share is cancelled.
+	 */
+	void clearOwnership();
+
+	/**
 	 * Closes the firm at the end of the period.
 	 */
 	void close();
 
 	/**
 	 * Returns the job offer (if any) of the firm.
+	 * 
 	 * @return the job offer.
 	 */
 	JobOffer getJobOffer();
 
 	/**
-	 * Opens the firm at the beginning of the period. 
+	 * Issues the specified number of new shares.
+	 * 
+	 * @param n
+	 *            the number of new shares to be issued.
+	 * @return a {@link StockCertificate} that encapsulates the new shares.
+	 */
+	StockCertificate getNewShares(Integer n);
+
+	/**
+	 * Returns the total value of the assets of this firm.
+	 * 
+	 * @return the total value of the assets of this firm.
+	 */
+	long getValueOfAssets();
+
+	/**
+	 * Returns the total value of the liabilities of this firm.
+	 * 
+	 * @return the total value of the liabilities of this firm.
+	 */
+	long getValueOfLiabilities();
+
+	/**
+	 * Opens the firm at the beginning of the period.
 	 */
 	void open();
 
@@ -44,4 +76,4 @@ public interface Firm extends Agent, AccountHolder, Corporation, Supplier {
 
 }
 
-//***
+// ***

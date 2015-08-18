@@ -15,7 +15,7 @@ import org.jfree.data.xy.XYDataItem;
 public class BasicMacroDatabase implements MacroDatabase {
 
 	@SuppressWarnings("javadoc")
-	private static final String AGENT_VALUE = "agentValue"; 
+	private static final String AGENT_VALUE = "agentValue";
 
 	@SuppressWarnings("javadoc")
 	private static final String MAX = "max";
@@ -32,49 +32,78 @@ public class BasicMacroDatabase implements MacroDatabase {
 	@SuppressWarnings("javadoc")
 	private static final String VAL = "val";
 
-	/** A map that stores data so future requests can be served faster. */
-	private final Map<String,Double> cache = new LinkedHashMap<String,Double>(1000) {
+	/**
+	 * Parses the specified string and returns the time lag. The string "t", for
+	 * example, yields 0 as result, "t-1" yields 1, etc.
+	 * 
+	 * @param string
+	 *            the string to be parsed.
+	 * @return an <code>int</code> representing the time lag.
+	 */
+	private static int parseLag(String string) {
+		final int lag;
+		if (string.equals("t")) {
+			lag = 0;
+		} else if (string.startsWith("t-")) {
+			lag = Integer.parseInt(string.substring(2));
+		} else {
+			throw new IllegalArgumentException("Bad time lag: " + string);
+		}
+		return lag;
+	}
 
-		private static final int MAX_ENTRIES = 1000;
+	/** A map that stores data so future requests can be served faster. */
+	private final Map<String, Double> cache = new LinkedHashMap<String, Double>(
+			1000) {
+
+		private static final int MAX_ENTRIES = 2000;
 
 		@Override
-		protected boolean removeEldestEntry(Map.Entry<String,Double> eldest) {
+		protected boolean removeEldestEntry(Map.Entry<String, Double> eldest) {
 			return size() > MAX_ENTRIES;
 		}
 
 	};
 
-	/** The macroeconomic dataset.*/
-	final private Map<Integer,Map<String,SectorDataset>> macroDataset = new HashMap<Integer,Map<String,SectorDataset>>();
+	/** The macroeconomic dataset. */
+	final private Map<Integer, Map<String, SectorDataset>> macroDataset = new HashMap<Integer, Map<String, SectorDataset>>();
 
 	/** The timer. */
 	private final Timer timer;
 
+	/** The maximum time lag used by the scenario. */
+	private int maxLag = 0;
+
 	/**
-	 * Creates a new dataset. 
-	 * @param timer the timer.
+	 * Creates a new dataset.
+	 * 
+	 * @param timer
+	 *            the timer.
 	 */
-	public BasicMacroDatabase(Timer timer){
+	public BasicMacroDatabase(Timer timer) {
 		super();
-		if (timer==null) {
+		if (timer == null) {
 			throw new IllegalArgumentException("Timer is null.");
 		}
-		this.timer=timer;
+		this.timer = timer;
 	}
 
 	/**
 	 * Returns the specified {@link SectorDataset}.
-	 * @param sector the sector the dataset of which is to be returned.
-	 * @param t the period of the dataset to be returned.
+	 * 
+	 * @param sector
+	 *            the sector the dataset of which is to be returned.
+	 * @param t
+	 *            the period of the dataset to be returned.
 	 * @return the specified {@link SectorDataset}.
 	 */
 	private SectorDataset getSectorDataset(String sector, int t) {
 		final SectorDataset result;
 		final Map<String, SectorDataset> truc = macroDataset.get(t);
-		if (truc!=null) {
+		if (truc != null) {
 			result = truc.get(sector);
-		}
-		else result =null;
+		} else
+			result = null;
 		return result;
 	}
 
@@ -86,255 +115,344 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 	@Override
 	public Expression getFunction(final String query) {
+		final String formated = ExpressionFactory.format(query);
 		final Expression result;
-		final String[] word = query.substring(0, query.length()-1).split("\\(",2);
-		final String[] arg = word[1].split(",",4);
-		final String sector = arg[0];
-		final String data = arg[1];
-		final String timeKey = arg[2];
-		final String select;
-		if (arg.length>3) {
-			select=arg[3];
-		}
-		else {
-			select="";
-		}
-
-		final int lag;
-		if (timeKey.equals("t")) {
-			lag = 0;
-		}
-		else if (timeKey.startsWith("t-")){
-			lag = Integer.parseInt(timeKey.substring(2));
-		}
-		else {			
-			throw new IllegalArgumentException("Malformed query: "+query);
-		}
-
-		if (word[0].equals(SUM)) {
-
-			result=new Expression() {
-
-				@Override
-				public String toString(){
-					return query;
-				}
-
-				@Override
-				public Double value() {
-					final int t = timer.getPeriod().intValue()-lag;
-					final Double value;
-					final String key = word[0]+"("+sector+","+data+","+t+","+select+")";
-					if (cache.containsKey(key)) {
-						value=cache.get(key);
-					}
-					else {
-						final SectorDataset sectorData = getSectorDataset(sector,t);
-						if (sectorData!=null) {
-							value=sectorData.getSum(data, select);
-						}
-						else {
-							value=null;
-						}
-						cache.put(key, value);
-					}
-					return value;
-				}
-			};
-		}
-
-		else if (word[0].equals(MEAN)) {
-
-			result=new Expression() {
-
-				@Override
-				public String toString(){
-					return query;
-				}
-
-				@Override
-				public Double value() {
-					final int t = timer.getPeriod().intValue()-lag;
-					final Double value;
-					final String key = word[0]+"("+sector+","+data+","+t+","+select+")";
-					if (cache.containsKey(key)) {
-						value=cache.get(key);
-					}
-					else {
-						final SectorDataset sectorData = getSectorDataset(sector,t);
-						if (sectorData!=null) {
-							value=sectorData.getMean(data, select);
-						}
-						else {
-							value=null;
-						}
-						cache.put(key, value);
-					}
-					return value;
-				}
-			};
-		}
-
-		else if (word[0].equals(MAX	)) {
-
-			result=new Expression() {
-
-				@Override
-				public String toString(){
-					return query;
-				}
-
-				@Override
-				public Double value() {
-					final int t = timer.getPeriod().intValue()-lag;
-					final Double value;
-					final String key = word[0]+"("+sector+","+data+","+t+","+select+")";
-					if (cache.containsKey(key)) {
-						value=cache.get(key);
-					}
-					else {
-						final SectorDataset sectorData = getSectorDataset(sector,t);
-						if (sectorData!=null) {
-							value=sectorData.getMax(data, select);
-						}
-						else {
-							value=null;
-						}
-						cache.put(key, value);
-					}
-					return value;
-				}
-			};
-		}
-
-		else if (word[0].equals(MIN)) {
-
-			result=new Expression() {
-
-				@Override
-				public String toString(){
-					return query;
-				}
-
-				@Override
-				public Double value() {
-					final int t = timer.getPeriod().intValue()-lag;
-					final Double value;
-					final String key = word[0]+"("+sector+","+data+","+t+","+select+")";
-					if (cache.containsKey(key)) {
-						value=cache.get(key);
-					}
-					else {
-						final SectorDataset sectorData = getSectorDataset(sector,t);
-						if (sectorData!=null) {
-							value=sectorData.getMin(data, select);
-						}
-						else {
-							value=null;
-						}
-						cache.put(key, value);
-					}
-					return value;
-				}
-			};
-		}
-
-		else if (word[0].equals(VAL)) {
-
-			// On rŽcupre une valeur donnŽe enregistrŽe au niveau du secteur.			
-
-			result=new Expression() {
-
-				@Override
-				public String toString(){
-					return query;
-				}
-
-				@Override
-				public Double value() {
-					final int t = timer.getPeriod().intValue()-lag;
-					final Double value;
-					final SectorDataset sectorData = getSectorDataset(sector,t);
-					if (sectorData!=null) {
-						value=sectorData.getSectorialValue(data);
-					}
-					else {
-						value = null;
-					}
-					return value;
-				}
-			};
-		}
-
-		else if (word[0].equals(AGENT_VALUE)) {
-
-			// On rŽcupre une valeur donnŽe pour un agent donnŽ.
-
+		if (query.equals("time()")) {
 			result = new Expression() {
 
 				@Override
-				public String toString(){
-					return query;
+				public String toString() {
+					return formated;
 				}
 
 				@Override
 				public Double value() {
-					final int t = timer.getPeriod().intValue()-lag;
-					final Double value;
-					final SectorDataset sectorData = getSectorDataset(sector,t);
-					if (sectorData!=null) {
-						value=sectorData.getAgentValue(data,arg[3]);
-					}
-					else {
-						value = null;
-					}
-					return value;
+					return (double) timer.getPeriod().intValue();
 				}
+
 			};
+		} else {
+			final String[] word = query.substring(0, query.length() - 1).split(
+					"\\(", 2);
+			final String[] arg = word[1].split(",", 4);
+			final String sector = arg[0];
+			final String data = arg[1];
+			final String timeKey = arg[2];
+			final String select;
+			if (arg.length > 3) {
+				select = arg[3];
+			} else {
+				select = "";
+			}
+
+			final int lag0;
+			final int lag1;
+			if (timeKey.contains("...")) {
+				final String[] keys = timeKey.split("\\.\\.\\.", 2);
+				lag0 = parseLag(keys[0]);
+				lag1 = parseLag(keys[1]) - 1;
+			} else {
+				lag0 = parseLag(timeKey);
+				lag1 = lag0 - 1;
+			}
+
+			if (lag0 > this.maxLag) {
+				maxLag = lag0;
+			}
+
+			if (word[0].equals(SUM)) {
+
+				result = new Expression() {
+
+					@Override
+					public String toString() {
+						return formated;
+					}
+
+					@Override
+					public Double value() {
+						Double sum = null;
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer
+								.getPeriod().intValue() - lag1; t++) {
+							final Double value;
+							final String key = word[0] + "(" + sector + ","
+									+ data + "," + t + "," + select + ")";
+							if (cache.containsKey(key)) {
+								value = cache.get(key);
+							} else {
+								final SectorDataset sectorData = getSectorDataset(
+										sector, t);
+								if (sectorData != null) {
+									value = sectorData.getSum(data, select);
+								} else {
+									value = null;
+								}
+								cache.put(key, value);
+							}
+							if (value != null) {
+								if (sum == null) {
+									sum = value;
+								} else {
+									sum += value;
+								}
+							}
+						}
+						return sum;
+					}
+				};
+			}
+
+			else if (word[0].equals(MEAN)) {
+
+				result = new Expression() {
+
+					@Override
+					public String toString() {
+						return formated;
+					}
+
+					@Override
+					public Double value() {
+						Double sum = null;
+						int count = 0;
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer
+								.getPeriod().intValue() - lag1; t++) {
+							final Double value;
+							final String key = word[0] + "(" + sector + ","
+									+ data + "," + t + "," + select + ")";
+							if (cache.containsKey(key)) {
+								value = cache.get(key);
+							} else {
+								final SectorDataset sectorData = getSectorDataset(
+										sector, t);
+								if (sectorData != null) {
+									value = sectorData.getMean(data, select);
+								} else {
+									value = null;
+								}
+								cache.put(key, value);
+							}
+							if (value != null) {
+								count++;
+								if (sum == null) {
+									sum = value;
+								} else {
+									sum += value;
+								}
+							}
+						}
+						if (count == 0) {
+							return null;
+						}
+						return sum / count;
+					}
+				};
+			}
+
+			else if (word[0].equals(MAX)) {
+
+				result = new Expression() {
+
+					@Override
+					public String toString() {
+						return formated;
+					}
+
+					@Override
+					public Double value() {
+						Double max = null;
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer
+								.getPeriod().intValue() - lag1; t++) {
+							final Double value;
+							final String key = word[0] + "(" + sector + ","
+									+ data + "," + t + "," + select + ")";
+							if (cache.containsKey(key)) {
+								value = cache.get(key);
+							} else {
+								final SectorDataset sectorData = getSectorDataset(
+										sector, t);
+								if (sectorData != null) {
+									value = sectorData.getMax(data, select);
+								} else {
+									value = null;
+								}
+								cache.put(key, value);
+							}
+							if (value != null) {
+								if (max == null || value > max) {
+									max = value;
+								}
+							}
+						}
+						return max;
+					}
+				};
+			}
+
+			else if (word[0].equals(MIN)) {
+
+				result = new Expression() {
+
+					@Override
+					public String toString() {
+						return formated;
+					}
+
+					@Override
+					public Double value() {
+						Double min = null;
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer
+								.getPeriod().intValue() - lag1; t++) {
+							final Double value;
+							final String key = word[0] + "(" + sector + ","
+									+ data + "," + t + "," + select + ")";
+							if (cache.containsKey(key)) {
+								value = cache.get(key);
+							} else {
+								final SectorDataset sectorData = getSectorDataset(
+										sector, t);
+								if (sectorData != null) {
+									value = sectorData.getMin(data, select);
+								} else {
+									value = null;
+								}
+								cache.put(key, value);
+							}
+							if (value != null) {
+								if (min == null || value < min) {
+									min = value;
+								}
+							}
+						}
+						return min;
+					}
+				};
+			}
+
+			else if (word[0].equals(VAL)) {
+
+				// On rŽcupre une valeur donnŽe enregistrŽe au niveau du
+				// secteur.
+
+				result = new Expression() {
+
+					@Override
+					public String toString() {
+						return formated;
+					}
+
+					@Override
+					public Double value() {
+						Double sum = null;
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer
+								.getPeriod().intValue() - lag1; t++) {
+							final Double value;
+							final SectorDataset sectorData = getSectorDataset(
+									sector, t);
+							if (sectorData != null) {
+								value = sectorData.getSectorialValue(data);
+							} else {
+								value = null;
+							}
+							if (value != null) {
+								if (sum == null) {
+									sum = value;
+								} else {
+									sum += value;
+								}
+							}
+						}
+						return sum;
+					}
+
+				};
+			}
+
+			else if (word[0].equals(AGENT_VALUE)) {
+
+				// On rŽcupre une valeur donnŽe pour un agent donnŽ.
+
+				result = new Expression() {
+
+					@Override
+					public String toString() {
+						return formated;
+					}
+
+					@Override
+					public Double value() {
+						final int t = timer.getPeriod().intValue() - lag0;
+						final Double value;
+						final SectorDataset sectorData = getSectorDataset(
+								sector, t);
+						if (sectorData != null) {
+							value = sectorData.getAgentValue(data, arg[3]);
+						} else {
+							value = null;
+						}
+						return value;
+					}
+				};
+			}
+
+			else {
+				result = null;
+				throw new RuntimeException("Not yet implemented: " + query);
+			}
 		}
-
-		else {
-
-			result=null;
-			throw new RuntimeException("Not yet implemented: "+query);
-
-		}
-
 		return result;
 	}
 
 	@Override
-	public List<XYDataItem> getScatterData(String sector, String x, String y, int t, String select) {
+	public List<XYDataItem> getScatterData(String sector, String x, String y,
+			int t, String select) {
 		final List<XYDataItem> result;
-		final SectorDataset sectorDataset = getSectorDataset(sector,t);
-		if (sectorDataset!=null) {
-			result = sectorDataset.getScatter(x,y,select);
+		final SectorDataset sectorDataset = getSectorDataset(sector, t);
+		if (sectorDataset != null) {
+			result = sectorDataset.getScatter(x, y, select);
+		} else {
+			result = null;
 		}
-		else {
-			result=null;
-		}		
 		return result;
 	}
 
 	@Override
-	public double[][] getXYZData(String sector, String x, String y, String z, int t) {
-		final double[][] result;
-		final SectorDataset sectorDataset = getSectorDataset(sector,t);
-		if (sectorDataset==null) {
-			result=null;
-		}
-		else {
-			result = sectorDataset.getXYZData(x,y,z);
+	public Double[] getDistributionData(String sector, String key, int t,
+			String select) {
+		final Double[] result;
+		final SectorDataset sectorDataset = getSectorDataset(sector, t);
+		if (sectorDataset != null) {
+			result = sectorDataset.getField(key, select);
+		} else {
+			result = null;
 		}
 		return result;
+	}
+
+	@Override
+	public double[][] getXYZData(String sector, String x, String y, String z,
+			int t) {
+		final double[][] result;
+		final SectorDataset sectorDataset = getSectorDataset(sector, t);
+		if (sectorDataset == null) {
+			result = null;
+		} else {
+			result = sectorDataset.getXYZData(x, y, z);
+		}
+		return result;
+	}
+
+	@Override
+	public Expression newQuery(String query) {
+		return ExpressionFactory.newExpression(query, this);
 	}
 
 	@Override
 	public void putData(String sector, SectorDataset sectorDataset) {
 		final int t = timer.getPeriod().intValue();
 		if (!this.macroDataset.containsKey(t)) {
-			this.macroDataset.put(t, new HashMap<String,SectorDataset>());
-			this.macroDataset.remove(t-2);
+			this.macroDataset.put(t, new HashMap<String, SectorDataset>());
+			this.macroDataset.remove(t - (1 + this.maxLag));
 		}
 		final Map<String, SectorDataset> sectors = this.macroDataset.get(t);
 		sectors.put(sector, sectorDataset);

@@ -7,9 +7,9 @@ import org.jfree.data.xy.XYZDataset;
 
 /**
  * An abstract dynamic {@link XYZDataset}.
- * Subclasses must provide an implementation of the {@link DynamicData#update()} method.
+ * Subclasses must provide an implementation of the {@link Updatable#update()} method.
  */
-public abstract class BasicXYZDataset extends DefaultXYZDataset implements DynamicData {
+public abstract class BasicXYZDataset extends DefaultXYZDataset implements Updatable {
 	
 	@Override
 	public DomainOrder getDomainOrder() {

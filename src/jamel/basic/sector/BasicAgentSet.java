@@ -52,7 +52,7 @@ public class BasicAgentSet<A extends Agent> implements AgentSet<A> {
 
 	@Override
 	public boolean contains(A agent) {
-		return false;
+		return this.map.containsValue(agent);
 	}
 
 	@Override
@@ -93,14 +93,18 @@ public class BasicAgentSet<A extends Agent> implements AgentSet<A> {
 	@Override
 	public List<A> getSimpleRandomSample(Integer lim) {
 		final int size = this.arrayList.size();
-		final List<A> selection = new LinkedList<A>();
+		final List<A> selection;
 		if (lim<size) {
+			selection = new LinkedList<A>();
 			for (int count = 0; count<lim; count++) {
 				A selected = this.arrayList.get(this.random.nextInt(size));
 				if (!selection.contains(selected)) {
 					selection.add(selected);
 				}
 			}
+		}
+		else {
+			selection = getShuffledList();
 		}
 		return selection;
 	}

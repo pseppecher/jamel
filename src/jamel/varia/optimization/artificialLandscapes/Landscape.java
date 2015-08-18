@@ -119,7 +119,7 @@ public abstract class Landscape implements Sector {
 			}
 
 			@Override
-			public void putSectorialData(String string, Double d) {
+			public void putSectorialValue(String string, Double d) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
 			}

@@ -1,4 +1,4 @@
-package jamel.jamel.firms.util;
+package jamel.jamel.firms.factory;
 
 import jamel.jamel.widgets.Commodities;
 

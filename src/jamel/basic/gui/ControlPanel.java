@@ -86,8 +86,11 @@ public class ControlPanel extends JPanel {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					circuit.pause(true);
+					playButton.setFocusable(true);
+					playButton.requestFocusInWindow();
+					setFocusable(false);
 					ControlPanel.this.repaint();
-				} 
+				}
 			}) ;
 			final URL url = cl.getResource("resources/suspend_co.gif");
 			if (url!=null) {
@@ -109,6 +112,9 @@ public class ControlPanel extends JPanel {
 				@Override
 				public void actionPerformed(ActionEvent e) { 
 					circuit.pause(false);
+					pauseButton.setFocusable(true);
+					pauseButton.requestFocusInWindow();
+					setFocusable(false);
 					ControlPanel.this.repaint();
 				} 
 			}) ;

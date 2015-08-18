@@ -175,7 +175,8 @@ public class Simulator {
 	 * @return the file selected.
 	 */
 	private static File selectScenario() {
-		final String path = prefs.get(KEY.SCENARIO_PATHNAME_PREF,KEY.SCENARIO_DEFAULT_PATHNAME);
+		final String preference = "Jamel-"+version+"."+KEY.SCENARIO_PATHNAME_PREF;
+		final String path = prefs.get(preference,KEY.SCENARIO_DEFAULT_PATHNAME);
 		final JFileChooser fc = new JFileChooser() {{
 			this.setFileFilter(new FileNameExtensionFilter("XML files", "xml"));}
 		};
@@ -190,7 +191,7 @@ public class Simulator {
 		if (returnVal==JFileChooser.APPROVE_OPTION) {
 			file = fc.getSelectedFile();
 			final File parent = file.getParentFile();
-			prefs.put(KEY.SCENARIO_PATHNAME_PREF, parent.getPath());
+			prefs.put(preference, parent.getPath());
 		}
 		else {
 			file=null;
@@ -251,8 +252,8 @@ public class Simulator {
 				Document scenario = null;
 				try {
 					scenario = readXMLFile(file);
-				} catch (InitializationException e1) {
-					e1.printStackTrace();
+				} catch (InitializationException e) {
+					e.printStackTrace();
 					System.exit(0);
 				}
 				if (scenario == null) {
@@ -261,8 +262,8 @@ public class Simulator {
 				Circuit circuit = null;
 				try {
 					circuit = newCircuit(scenario, path, name);
-				} catch (InitializationException e2) {
-					e2.printStackTrace();
+				} catch (InitializationException e) {
+					e.printStackTrace();
 					System.exit(0);
 				}
 				if (circuit == null) {

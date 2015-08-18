@@ -2,26 +2,23 @@ package jamel.jamel.firms;
 
 import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
-import jamel.basic.util.Period;
 import jamel.basic.util.Timer;
+import jamel.jamel.firms.capital.StockCertificate;
+import jamel.jamel.firms.factory.Factory;
 import jamel.jamel.firms.managers.CapitalManager;
+import jamel.jamel.firms.managers.SalesManager;
 import jamel.jamel.firms.managers.PricingManager;
 import jamel.jamel.firms.managers.ProductionManager;
 import jamel.jamel.firms.managers.WorkforceManager;
-import jamel.jamel.firms.util.Factory;
-import jamel.jamel.roles.Supplier;
 import jamel.jamel.util.AnachronismException;
 import jamel.jamel.util.BasicMemory;
 import jamel.jamel.util.Memory;
 import jamel.jamel.widgets.BankAccount;
-import jamel.jamel.widgets.Cheque;
-import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.JobOffer;
 import jamel.jamel.widgets.Supply;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
 import java.util.Random;
 
 /**
@@ -89,6 +86,12 @@ public abstract class AbstractFirm implements Firm {
 	/** A flag that indicates if the data of the firm is to be exported. */
 	private boolean exportData;
 
+	/** A flag that indicates if this firm is open or not. */
+	private boolean open;
+
+	/** The current period. */
+	private Integer period = null;
+
 	/** The account. */
 	protected final BankAccount account;
 
@@ -107,22 +110,6 @@ public abstract class AbstractFirm implements Firm {
 	/** The factory. */
 	protected final Factory factory;
 
-	/** The history of the firm. */
-	protected final LinkedList<String> history = new LinkedList<String>() {
-
-		@Override
-		public boolean add(String string) {
-			final boolean result;
-			if (recordHistoric) {
-				result=super.add(string);
-			}
-			else {
-				result=false;
-			}
-			return result;
-		}
-	};
-
 	/** The memory. */
 	protected final Memory memory;
 
@@ -138,14 +125,17 @@ public abstract class AbstractFirm implements Firm {
 	/** The random. */
 	final protected Random random;
 
+	/** The supply. */
+	//protected Supply supply;
+
 	/** A flag that indicates if the agent records its history. */
 	protected boolean recordHistoric = false;
 
+	/** The marketing manager. */
+	protected final SalesManager salesManager;
+
 	/** The sector. */
 	protected final IndustrialSector sector;
-
-	/** The supply. */
-	protected Supply supply;
 
 	/** The timer. */
 	final protected Timer timer;
@@ -155,13 +145,15 @@ public abstract class AbstractFirm implements Firm {
 
 	/**
 	 * Creates a new firm.
-	 * @param name the name.
-	 * @param sector the sector.
+	 * 
+	 * @param name
+	 *            the name.
+	 * @param sector
+	 *            the sector.
 	 */
-	public AbstractFirm(String name,IndustrialSector sector) {
-		this.history.add("Creation: "+name);
-		this.name=name;
-		this.sector=sector;
+	public AbstractFirm(String name, IndustrialSector sector) {
+		this.name = name;
+		this.sector = sector;
 		this.timer = this.sector.getTimer();
 		this.creation = this.timer.getPeriod().intValue();
 		this.random = this.sector.getRandom();
@@ -172,16 +164,20 @@ public abstract class AbstractFirm implements Firm {
 		this.pricingManager = getNewPricingManager();
 		this.workforceManager = getNewWorkforceManager();
 		this.productionManager = getNewProductionManager();
+		this.salesManager = getNewSalesManager();
 	}
 
 	/**
 	 * Exports agent data in a csv file.
-	 * @throws IOException in the case of an I/O exception.
+	 * 
+	 * @throws IOException
+	 *             in the case of an I/O exception.
 	 */
 	private void exportData() throws IOException {
 		if (this.exportData) {
 			// TODO gerer la localisation du dossier exports, son existence
-			final File outputFile = new File("exports/"+sector.getSimulationID()+"-"+this.name+".csv");
+			final File outputFile = new File("exports/"
+					+ sector.getSimulationID() + "-" + this.name + ".csv");
 			if (!outputFile.exists()) {
 				this.data.exportHeadersTo(outputFile);
 			}
@@ -190,153 +186,24 @@ public abstract class AbstractFirm implements Firm {
 	}
 
 	/**
-	 * Creates and returns a new commodity supply.
-	 * @return a new {@linkplain Supply}.
-	 */
-	protected Supply createSupply() {
-		final Supply supply;
-		final Period validPeriod = timer.getPeriod();
-		final long initialSize = Math.min((long) (sector.getParam(PROPENSITY2SELL)*factory.getFinishedGoodsVolume()), (long) (sector.getParam(SELLING_CAPACITY)*factory.getMaxUtilAverageProduction()));
-
-		if (pricingManager.getPrice()==null) {
-			pricingManager.updatePrice();
-		}
-		final Double price = pricingManager.getPrice();
-
-		final long initialValue;
-
-		if (initialSize>0) {
-			initialValue=(long) (price*initialSize);
-		}
-		else {
-			initialValue=0;
-		}
-
-		supply = new Supply() {
-
-			private AgentDataset dataset = new BasicAgentDataset("Supply");
-
-			private long grossProfit = 0;
-
-			private long salesValue=0;
-
-			private long salesValueAtCost=0;
-
-			private long salesVolume=0;
-
-			private long volume=initialSize; 
-
-			@Override
-			public Commodities buy(long demand,Cheque cheque) {
-				if (!validPeriod.isPresent()) {
-					throw new AnachronismException("Bad period.");
-				}
-				if (demand>this.volume) {
-					throw new IllegalArgumentException("Demand cannot exceed supply.");
-				}
-				if ((long)(this.getPrice()*demand)!=cheque.getAmount()) {
-					throw new IllegalArgumentException("Cheque amount : expected <"+(long) (demand*this.getPrice())+"> but was <"+cheque.getAmount()+">");
-				}
-				account.deposit(cheque);
-				this.volume-=demand;
-				this.salesValue+=cheque.getAmount();
-				this.salesVolume+=demand;
-				final Commodities sales = factory.getCommodities(demand);
-				this.salesValueAtCost += sales.getValue();
-				this.grossProfit = this.salesValue-this.salesValueAtCost;
-				return sales;
-			}
-
-			@Override
-			public void close() {
-				this.dataset.put("supply.vol", (double) initialSize);
-				this.dataset.put("supply.val", (double) initialValue);
-				this.dataset.put("sales.vol", (double) salesVolume);
-				this.dataset.put("sales.val", (double) salesValue);
-				this.dataset.put("sales.costValue", (double) salesValueAtCost);
-				this.dataset.put("grossProfit", (double) this.grossProfit);		
-			}
-
-			@Override
-			public AgentDataset getData() {
-				return this.dataset;
-			}
-
-			@Override
-			public double getGrossProfit() {
-				return this.grossProfit;
-			}
-
-			@Override
-			public double getPrice() {
-				return price;
-			}
-
-			@Override
-			public long getPrice(long volume) {
-				return (long) (price*volume);
-			}
-
-			@Override
-			public double getSalesRatio() {
-				// TODO: a revoir. Est-ce ici qu'il faut calculer a ?
-				final double result;
-				if (initialSize>0) {
-					result = ((double) this.salesVolume)/initialSize; 
-				}
-				else {
-					result=0;
-				}
-				return result;
-			}
-
-			@Override
-			public Supplier getSupplier() {
-				return AbstractFirm.this;
-			}
-
-			@Override
-			public long getVolume() {
-				return this.volume;
-			}
-
-			@Override
-			public String toString() {
-				return "Supply by "+name+": price <"+price+">, volume <"+volume+">"; 
-			}
-
-		};
-		return supply;
-	}
-
-
-	/**
 	 * Returns the age of the firm (= the number of periode since its creation).
+	 * 
 	 * @return the age of the firm.
 	 */
 	protected int getAge() {
-		return timer.getPeriod().intValue()-this.creation;
-	}
-
-	/**
-	 * Returns the inventory ratio.<br>
-	 * If inventoryRatio > 1 : the volume of finished goods exceeds the normal volume,<br>
-	 * If inventoryRatio = 1 : the volume of finished goods meets the normal volume,<br>
-	 * If inventoryRatio < 1 : the volume of finished goods is under the normal volume.
-	 * @return the inventory ratio.
-	 */
-	protected double getInventoryRatio() {
-		return this.factory.getFinishedGoodsVolume()/(sector.getParam(INVENTORY_NORMAL_LEVEL)*this.factory.getMaxUtilAverageProduction());
+		return timer.getPeriod().intValue() - this.creation;
 	}
 
 	/**
 	 * Creates and returns a new capital manager.
+	 * 
 	 * @return a new {@linkplain CapitalManager}.
 	 */
 	abstract protected CapitalManager getNewCapitalManager();
 
 	/**
 	 * Creates and returns a new agent dataset.
+	 * 
 	 * @return a new agent dataset.
 	 */
 	protected AgentDataset getNewDataset() {
@@ -345,24 +212,35 @@ public abstract class AbstractFirm implements Firm {
 
 	/**
 	 * Creates and returns a new factory.
+	 * 
 	 * @return a new factory.
 	 */
 	abstract protected Factory getNewFactory();
 
 	/**
 	 * Creates and returns a new pricing manager.
+	 * 
 	 * @return a new pricing manager.
 	 */
 	abstract protected PricingManager getNewPricingManager();
 
 	/**
-	 * Creates and returns a new {@linkplain ProductionManager}. 
+	 * Creates and returns a new {@linkplain ProductionManager}.
+	 * 
 	 * @return a new {@linkplain ProductionManager}.
 	 */
 	abstract protected ProductionManager getNewProductionManager();
 
 	/**
+	 * Creates and returns a new marketing manager.
+	 * 
+	 * @return a new {@linkplain SalesManager}.
+	 */
+	protected abstract SalesManager getNewSalesManager();
+
+	/**
 	 * Returns a new {@link WorkforceManager}.
+	 * 
 	 * @return a new {@link WorkforceManager}.
 	 */
 	abstract protected WorkforceManager getNewWorkforceManager();
@@ -379,40 +257,44 @@ public abstract class AbstractFirm implements Firm {
 		this.data.putAll(this.pricingManager.getData());
 		this.data.putAll(this.factory.getData());
 		this.data.putAll(this.capitalManager.getData());
-		this.data.putAll(this.supply.getData());
+		this.data.putAll(this.salesManager.getData());
 
-		// TODO: trouver un manager pour calculer a. Factory ?
-		this.data.put("inventories.fg.vol.normal", sector.getParam(INVENTORY_NORMAL_LEVEL)*factory.getMaxUtilAverageProduction());						
-
-		if (bankrupted){
+		if (bankrupted) {
 			this.data.put("bankruptcies", 1.);
-		}
-		else {
-			this.data.put("bankruptcies", 0.);					
+		} else {
+			this.data.put("bankruptcies", 0.);
 		}
 
 	}
 
 	@Override
-	public void close() {
+	public void clearOwnership() {
+		this.capitalManager.clearOwnership();
+	}
 
+	@Override
+	public void close() {
+		if(!this.open) {
+			throw new RuntimeException("Already closed.");
+		}
+		this.open=false;
+		this.salesManager.close();
 		this.pricingManager.close();
 		this.capitalManager.close();
 		this.workforceManager.close();
 		this.factory.close();
-		this.supply.close();
 
 		this.updateData();
 
 		try {
 			this.exportData();
 		} catch (IOException e) {
-			throw new RuntimeException("Error while exporting firm data",e);
+			throw new RuntimeException("Error while exporting firm data", e);
 		}
 	}
 
 	@Override
-	public long getBookValue() {
+	public Long getBookValue() {
 		return this.capitalManager.getCapital();
 	}
 
@@ -432,15 +314,23 @@ public abstract class AbstractFirm implements Firm {
 	}
 
 	@Override
+	public StockCertificate getNewShares(Integer nShares) {
+		return this.capitalManager.getNewShares(nShares);
+	}
+
+	@Override
 	public Supply getSupply() {
-		final Supply result;
-		if (this.supply.getVolume()>0){
-			result=this.supply;
-		}
-		else {
-			result=null;
-		}
-		return result;
+		return this.salesManager.getSupply();
+	}
+
+	@Override
+	public long getValueOfAssets() {
+		return this.capitalManager.getValueOfAssets();
+	}
+
+	@Override
+	public long getValueOfLiabilities() {
+		return this.capitalManager.getValueOfLiabilities();
 	}
 
 	@Override
@@ -455,22 +345,36 @@ public abstract class AbstractFirm implements Firm {
 	}
 
 	@Override
+	public boolean isCancelled() {
+		return this.bankrupted;
+	}
+	@Override
 	public boolean isSolvent() {
 		return this.capitalManager.isSolvent();
 	}
 
 	@Override
 	public void open() {
-		this.data=getNewDataset();
-		this.history.add("");
-		this.history.add("Period: "+timer.getPeriod().intValue());
-		this.supply=null;
+		if(this.open) {
+			throw new RuntimeException("Already open.");
+		}
+		this.open=true;
+		if (this.period==null) {
+			this.period=this.timer.getPeriod().intValue();
+		}
+		else {
+			this.period++;
+			if (this.period!=timer.getPeriod().intValue()) {
+				throw new AnachronismException("Bad period");
+			}
+		}
+		this.data = getNewDataset();
 		if (this.bankrupted) {
 			this.capitalManager.bankrupt();
 			this.workforceManager.layoff();
-		}
-		else {
+		} else {
 			this.factory.open();
+			this.salesManager.open();
 			this.pricingManager.open();
 			this.capitalManager.open();
 			this.workforceManager.open();
@@ -508,17 +412,8 @@ public abstract class AbstractFirm implements Firm {
 		this.workforceManager.updateWorkforce();
 
 		// *** Secures financing.
-		
-		// TODO: c'est au capital manager de faire les taches ci-dessous.
 
-		final long payroll = this.workforceManager.getPayroll();
-
-		if ( payroll>this.account.getAmount() ) {
-			account.lend(payroll-this.account.getAmount()) ;
-		}
-		if (account.getAmount() < payroll) {
-			throw new RuntimeException("Production is not financed.") ;
-		}
+		this.capitalManager.secureFinancing(this.workforceManager.getPayroll());
 
 	}
 
@@ -528,8 +423,8 @@ public abstract class AbstractFirm implements Firm {
 			throw new RuntimeException("This firm is bankrupted.");
 		}
 		this.workforceManager.payWorkers();
-		factory.process(this.workforceManager.getLaborPowers()) ;
-		this.supply = createSupply();
+		factory.process(this.workforceManager.getLaborPowers());
+		this.salesManager.createSupply();
 	}
 
 }

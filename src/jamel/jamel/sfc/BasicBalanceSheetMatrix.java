@@ -1,7 +1,6 @@
 package jamel.jamel.sfc;
 
 import jamel.basic.data.Expression;
-import jamel.basic.data.ExpressionFactory;
 import jamel.basic.data.MacroDatabase;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.Timer;
@@ -106,7 +105,7 @@ public class BasicBalanceSheetMatrix implements BalanceSheetMatrix {
 						final Element item = (Element) childs.item(j);
 						final String value = item.getAttribute("val");
 						final String sector = item.getTagName();
-						final Expression expression = ExpressionFactory.newExpression(value, macroDatabase);
+						final Expression expression = macroDatabase.newQuery(value);
 						sfcMap.put(sector+"."+this.rows[i], expression);
 					}
 				}

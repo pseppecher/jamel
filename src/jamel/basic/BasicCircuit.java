@@ -374,7 +374,7 @@ public class BasicCircuit implements Circuit {
 		this.phases = getNewPhases(this.sectors, elem);
 		this.events = getNewEvents(elem);
 		this.controlPanel = getNewControlPanel();
-		this.dataManager = getNewDataManager(settings, timer, path, name);
+		this.dataManager = getNewDataManager(elem, timer, path, name);
 		this.chartManager = getNewChartManager(this.dataManager, settings, path);
 		this.gui = getNewGUI(title + " ("+name+")",this.controlPanel);
 		this.gui.addPanel(this.chartManager.getPanelList());
@@ -451,15 +451,15 @@ public class BasicCircuit implements Circuit {
 	}
 
 	/**
-	 * @param settings a XML element with the settings.
+	 * @param elem a XML element with the settings.
 	 * @param timer the timer.
 	 * @param path the path of scenario file.
 	 * @param name the name of the scenario file.
 	 * @return a new basic data manager.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	protected BasicDataManager getNewDataManager(Element settings, Timer timer, String path, String name) throws InitializationException {
-		return new BasicDataManager(settings, timer, path, name);
+	protected BasicDataManager getNewDataManager(Element elem, Timer timer, String path, String name) throws InitializationException {
+		return new BasicDataManager(elem, timer, path, name);
 	}
 
 	/**

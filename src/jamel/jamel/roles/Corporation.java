@@ -8,7 +8,7 @@ import jamel.jamel.widgets.Asset;
 public interface Corporation extends Asset {
 	
 	@Override
-	long getBookValue();
+	Long getBookValue();
 
 }
 

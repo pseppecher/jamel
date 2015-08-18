@@ -21,7 +21,7 @@ public enum JamelColor {
 
 	/** dark gray */
 	darkGray(Color.darkGray),
-	
+
 	/** gray */
 	gray(Color.gray),
 
@@ -66,7 +66,9 @@ public enum JamelColor {
 
 	/**
 	 * Returns the specified color.
-	 * @param name the name of the color to return.
+	 * 
+	 * @param name
+	 *            the name of the color to return.
 	 * @return a color.
 	 */
 	public static Color getColor(String name) {
@@ -79,18 +81,19 @@ public enum JamelColor {
 
 	/**
 	 * Returns an array of paints with the specified colors.
-	 * @param colorKeys the keys of the paints to return.
+	 * 
+	 * @param colorKeys
+	 *            the keys of the paints to return.
 	 * @return an array of paints.
 	 */
 	public static Paint[] getColors(String... colorKeys) {
 		final Paint[] colors;
-		if (colorKeys.length>0){
+		if (colorKeys.length > 0) {
 			colors = new Paint[colorKeys.length];
-			for (int count = 0; count<colors.length ; count++){
+			for (int count = 0; count < colors.length; count++) {
 				colors[count] = JamelColor.getColor(colorKeys[count]);
 			}
-		}
-		else {
+		} else {
 			colors = null;
 		}
 		return colors;
@@ -101,10 +104,14 @@ public enum JamelColor {
 
 	/**
 	 * Creates a color.
-	 * @param color the color to create.
+	 * 
+	 * @param color
+	 *            the color to create.
 	 */
-	private JamelColor(Color color){
-		this.color=color;
+	private JamelColor(Color color) {
+		this.color = color;
 	}
-	
+
 }
+
+// ***
