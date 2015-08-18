@@ -3,69 +3,118 @@
 <validation
 
 	title="Tests"
-	date="16-07-2015"
+	date="13-08-2015"
 	content="Baseline validation tests"
 	start="1">
 
-	<test
-		val1="sum(Households,employed,t)"
-		val2="sum(Industry,workforce,t)" />
-	<test
-		val1="sum(Households,agents,t)"
-		val2="sum(Households,employed,t) + sum(Households,unemployed,t)" />
-	<test
-		val1="sum(Households,wages,t)"
-		val2="sum(Industry,wageBill,t)" />
+	Sectoral consistency:
 
 	<test
-		val1="sum(Households,capital,t)"
-		val2="sum(Industry,capital,t) + val(Banks,capital,t)" />
+		label="Sector: Households"
+		val1="sum(Households, cash, t) + sum(Households, capital, t)"
+		val2="sum(Households, netWorth, t)" />
+	<test
+		label="Sector: Industry"
+		val1="sum(Industry, inventories.inProcess.val, t) + sum(Industry, inventories.fg.val, t) + sum(Industry, cash, t)"
+		val2="sum(Industry, liabilities, t) + sum(Industry, capital, t)" />
+	<test
+		label="Sector: Banks"
+		val1="val(Banks, assets, t)"
+		val2="val(Banks, liabilities, t) + val(Banks, capital, t)" />
+
+	Cross-sectoral consistency:
 
 	<test
-		val1="sum(Households,dividend,t)"
-		val2="sum(Industry,dividends,t) + val(Banks,dividends,t)" />
-
-	<test1
-		val1="sum(Households,capital,t) - sum(Households,capital,t-1)"
-		val2="sum(Industry,capital,t) - sum(Industry,capital,t-1) + val(banks,capital,t) - val(banks,capital,t-1)" />
+		label="Cross-sectoral: Deposits"
+		val1="sum(Households, cash, t) + sum(Industry, cash, t)"
+		val2="val(Banks, liabilities, t)" />
+	<test
+		label="Cross-sectoral: Loans"
+		val1="sum(Industry, liabilities, t)"
+		val2="val(Banks, assets, t)" />
 
 	<test
-		val1="sum(Industry,grossProfit,t) - sum(Industry,inventories.losses.val,t)"
-		val2="sum(Households,dividend,t) + sum(Households,capital,t) - sum(Households,capital,t-1)" />
+		label="Cross-sectoral: Capital"
+		val1="sum(Households, capital, t)"
+		val2="sum(Industry, capital, t) + val(Banks, capital, t)" />
+
+	<test
+		label="Cross-sectoral: Net Worth"
+		val1="sum(Households, netWorth, t)"
+		val2="sum(Industry, inventories.inProcess.val, t) + sum(Industry, inventories.fg.val, t)" />
+
+	Stock - flow consistency:
+
+	<test
+		label="Definition: Gross Profits"
+		val1="sum(Industry, grossProfit, t)"
+		val2="sum(Industry, sales.val, t) - sum(Industry, sales.cost, t)" />
+
+	<test
+		label="Stocks and flows: Households Deposits"
+		val1="sum(Households, cash, t) - sum(Households, cash, t-1)"
+		val2="sum(Households, wages, t) + sum(Households, dividend, t) - sum(Households, consumption.val, t) - sum(Households, sharePurchase, t) " />
+
+	<test
+		label="Stocks and flows: Households Capital"
+		val1="sum(Households, capital, t) - sum(Households, capital, t-1)"
+		val2="sum(Industry, grossProfit, t) - sum(Industry, dividends, t) - sum(Industry, inventories.losses.val, t) - val(Banks, dividends, t) + val(Banks, foreclosures, t)" />
+
+	<test
+		label="Stocks and flows: Households Net Worth"
+		val1="sum(Households, netWorth, t) - sum(Households, netWorth, t-1)"
+		val2="sum(Industry, wageBill, t) - sum(Industry, sales.cost, t) - sum(Industry, inventories.inProcess.losses, t) - sum(Industry, inventories.fg.losses, t)" />
+
+	<test
+		label="Stocks and flows: Firms Inventories (Work In Progress)"
+		val1="sum(Industry, inventories.inProcess.val, t) - sum(Industry, inventories.inProcess.val, t-1)"
+		val2="sum(Industry, wageBill, t) - sum(Industry, production.val, t) - sum(Industry, inventories.inProcess.losses, t)" />
+
+	<test
+		label="Stocks and flows: Firms Inventories (Finished Goods)"
+		val1="sum(Industry, inventories.fg.val, t) - sum(Industry, inventories.fg.val, t-1)"
+		val2="sum(Industry, production.val, t) - sum(Industry, sales.cost, t) - sum(Industry, inventories.fg.losses, t)" />
+
+	<test
+		label="Stocks and flows: Firms Deposits"
+		val1="sum(Industry, cash, t) - sum(Industry, cash, t-1)"
+		val2="sum(Industry, liabilities.new, t) - sum(Industry, liabilities.repayment, t) + sum(Industry, sales.val, t) - sum(Industry, wageBill, t) - sum(Industry, dividends, t) - sum(Industry, interest, t) - sum(Industry, canceledDeposits, t)" />
+
+	<test
+		label="Stocks and flows: Firms Debts"
+		val1="sum(Industry, liabilities, t) - sum(Industry, liabilities, t-1)"
+		val2="sum(Industry, liabilities.new, t) - sum(Industry, liabilities.repayment, t) - sum(Industry, canceledDebts, t)" />
+
+	<test
+		label="Stocks and flows: Firms Capital"
+		val1="sum(Industry, capital, t) - sum(Industry, capital, t-1)"
+		val2="sum(Industry, grossProfit, t) - sum(Industry, dividends, t) - sum(Industry, interest, t) - sum(Industry, inventories.losses.val, t) - sum(Industry, canceledDeposits, t) + sum(Industry, canceledDebts, t)" />
+
+	<test
+		label="Stocks and flows: Banks Deposits"
+		val1="val(Banks, liabilities, t) - val(Banks, liabilities, t-1)"
+		val2="val(Banks, loans.new, t) + val(Banks, dividends, t) - val(Banks, loans.repayment, t) - val(Banks, interest, t) - val(Banks, canceledDeposits, t) - val(Banks, foreclosures, t)" />
+
+	<test
+		label="Stocks and flows: Banks Loans"
+		val1="val(Banks, assets, t) - val(Banks, assets, t-1)"
+		val2="val(Banks, loans.new, t) - val(Banks, loans.repayment, t) - val(Banks, canceledDebts, t)" />
 		
 	<test
-		val1="sum(Industry,grossProfit,t)"
-		val2="sum(Industry,dividends,t) + sum(Industry,interest,t) + sum(Industry,inventories.losses.val,t) + sum(Industry,canceledDeposits,t) + sum(Industry,capital,t) - sum(Industry,capital,t-1) - sum(Industry,canceledDebts,t)" />
+		label="Stocks and flows: Banks Capital"
+		val1="val(Banks, capital, t) - val(Banks, capital, t-1)"
+		val2="val(Banks, interest, t) - val(Banks, dividends, t) + val(Banks, canceledDeposits, t) - val(Banks, canceledDebts, t) + val(Banks, foreclosures, t)" />
+	
+	Volume:
+	
+	<test
+		label="Volume: Inventories (Finished Goods)"
+		val1="sum(Industry, inventories.fg.vol, t) - sum(Industry, inventories.fg.vol, t-1)"
+		val2="sum(Industry, production.vol, t) - sum(Industry, sales.vol, t) - sum(Industry, inventories.fg.losses.vol, t)" />
 
 	<test
-		val1="sum(Industry,capital,t) - sum(Industry,capital,t-1)"
-		val2="sum(Industry,grossProfit,t) - sum(Industry,dividends,t) - sum(Industry,interest,t) - sum(Industry,inventories.losses.val,t) - sum(Industry,canceledDeposits,t) + sum(Industry,canceledDebts,t)"
-		comment="L'augmentation du capital des entreprises doit être égale au profit brut, moins les dividendes, les intérêts, les pertes d'inventaire, les dépôts annulés, plus les dettes annulées." />
-
-	<test
-		val1="sum(Industry,sales.vol,t)"
-		val2="sum(Households,consumption.vol,t)" />
-	<test
-		val1="sum(Industry,sales.val,t)"
-		val2="sum(Households,consumption.val,t)" />
-	<test
-		val1="sum(Industry,inventories.fg.val,t) + sum(Industry,inventories.inProcess.val,t)"
-		val2="sum(Households,cash,t) + sum(Households,capital,t)" />
-	<test
-		val1="sum(Industry,interest,t)"
-		val2="val(Banks,interest,t)" />
-
-	<test
-		val1="sum(Industry,canceledDeposits,t)"
-		val2="val(Banks,canceledDeposits,t)" />
-	<test
-		val1="sum(Industry,canceledDebts,t)"
-		val2="val(Banks,canceledDebts,t)" />
-	<test
-		val1="sum(Industry,bankruptcies,t)"
-		val2="val(Banks,bankruptcies,t)" />
-	<test
-		val1="sum(Industry,insolvents,t)"
-		val2="0" />
+		label="Volume: Sales"
+		val1="sum(Industry, sales.vol, t)"
+		val2="sum(Households, consumption.vol, t)" />
 
 </validation>

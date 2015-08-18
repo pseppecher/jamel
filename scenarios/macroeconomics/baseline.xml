@@ -2,7 +2,7 @@
 
 <circuit
 	type="jamel.jamel.sfc.SFCCircuit"
-	date="25-06-2015"
+	date="10-08-2015"
 	title="Baseline scenario"
 	content="The baseline scenario of the Jamel model.">
 
@@ -84,6 +84,7 @@
 		<Households action="opening" />
 		<Banks action="pay_dividend" />
 		<Industry action="pay_dividend" />
+		<Households action="take_dividends" />
 		<Industry action="plan_production" />
 		<Households action="job_search" />
 		<Industry action="production" />
@@ -108,9 +109,18 @@
 			sector="Industry"
 			size="100" />
 
-		<pause period="120" />
 		<pause period="600" />
-
+		
 	</events>
+
+	<export file="exports/baseline.csv">
+		<data value="time()" />
+		<data value="sum(Industry, dividends, t)" />
+		<data value="sum(Industry, capital, t)" />
+		<data value="val(Banks, dividends, t)" />
+		<data value="val(Banks, capital, t)" />
+		<data value="sum(Industry, grossProfit, t)" />
+		<data value="sum(Households, capital, t)" />
+	</export>
 
 </circuit>
