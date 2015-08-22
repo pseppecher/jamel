@@ -81,9 +81,6 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 	/** The macroeconomic circuit. */
 	private final Circuit circuit;
 
-	/** To count the number of firms created since the start of the simulation. */
-	private int countFirms;
-
 	/** The sector dataset (collected at the end of the previous period). */
 	private SectorDataset dataset;
 
@@ -98,6 +95,9 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 
 	/** The timer. */
 	final private Timer timer;
+
+	/** To count the number of firms created since the start of the simulation. */
+	protected int countFirms;
 
 	/** The collection of firms. */
 	protected final AgentSet<Firm> firms;
@@ -133,6 +133,33 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 	}
 
 	/**
+	 * Prepares the regeneration of a firm some periods later.
+	 */
+	private void prepareRegeneration() {
+		final int min = parameters.get(PARAM_REGENERATION_MIN).intValue();
+		final int max = parameters.get(PARAM_REGENERATION_MAX).intValue();
+		final int now = timer.getPeriod().intValue();
+		final int later = now + min + random.nextInt(max - min);
+		Integer creations = this.regeneration.get(later);
+		if (creations != null) {
+			creations++;
+		} else {
+			creations = 1;
+		}
+		this.regeneration.put(later, creations);
+	}
+
+	/**
+	 * Regenerates firms.
+	 */
+	private void regenerate() {
+		final Integer lim = this.regeneration.get(timer.getPeriod().intValue());
+		if (lim != null) {
+			this.firms.putAll(this.createFirms(this.agentType, lim));
+		}
+	}
+
+	/**
 	 * Creates firms.
 	 * 
 	 * @param type
@@ -141,7 +168,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 	 *            the number of firms to create.
 	 * @return a list containing the new firms.
 	 */
-	private List<Firm> createFirms(String type, int lim) {
+	protected List<Firm> createFirms(String type, int lim) {
 		final List<Firm> result = new ArrayList<Firm>(lim);
 		try {
 			for (int index = 0; index < lim; index++) {
@@ -174,33 +201,6 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 			}
 		}
 		this.firms.removeAll(bankrupted);
-	}
-
-	/**
-	 * Prepares the regeneration of a firm some periods later.
-	 */
-	private void prepareRegeneration() {
-		final int min = parameters.get(PARAM_REGENERATION_MIN).intValue();
-		final int max = parameters.get(PARAM_REGENERATION_MAX).intValue();
-		final int now = timer.getPeriod().intValue();
-		final int later = now + min + random.nextInt(max - min);
-		Integer creations = this.regeneration.get(later);
-		if (creations != null) {
-			creations++;
-		} else {
-			creations = 1;
-		}
-		this.regeneration.put(later, creations);
-	}
-
-	/**
-	 * Regenerates firms.
-	 */
-	private void regenerate() {
-		final Integer lim = this.regeneration.get(timer.getPeriod().intValue());
-		if (lim != null) {
-			this.firms.putAll(this.createFirms(this.agentType, lim));
-		}
 	}
 
 	@Override
@@ -266,7 +266,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 
 	@Override
 	public Phase getPhase(String name) {
-		Phase result = null;
+		final Phase result;
 
 		if (name.equals(PHASE_OPENING)) {
 			result = new AbstractPhase(name, this) {
@@ -317,6 +317,10 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 					BasicIndustrialSector.this.close();
 				}
 			};
+		}
+		
+		else {
+			result=null;
 		}
 
 		return result;
@@ -384,9 +388,6 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 
 		// Initialization of the agent type:
 		final String agentAttribute = element.getAttribute("agent");
-		if ("".equals(agentAttribute)) {
-			throw new InitializationException("Attribute not found: agent");
-		}
 		this.agentType = agentAttribute;
 
 		// Initialization of the dependencies:

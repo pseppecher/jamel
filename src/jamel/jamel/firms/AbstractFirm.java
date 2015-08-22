@@ -11,8 +11,6 @@ import jamel.jamel.firms.managers.PricingManager;
 import jamel.jamel.firms.managers.ProductionManager;
 import jamel.jamel.firms.managers.WorkforceManager;
 import jamel.jamel.util.AnachronismException;
-import jamel.jamel.util.BasicMemory;
-import jamel.jamel.util.Memory;
 import jamel.jamel.widgets.BankAccount;
 import jamel.jamel.widgets.JobOffer;
 import jamel.jamel.widgets.Supply;
@@ -86,12 +84,6 @@ public abstract class AbstractFirm implements Firm {
 	/** A flag that indicates if the data of the firm is to be exported. */
 	private boolean exportData;
 
-	/** A flag that indicates if this firm is open or not. */
-	private boolean open;
-
-	/** The current period. */
-	private Integer period = null;
-
 	/** The account. */
 	protected final BankAccount account;
 
@@ -110,11 +102,17 @@ public abstract class AbstractFirm implements Firm {
 	/** The factory. */
 	protected final Factory factory;
 
-	/** The memory. */
-	protected final Memory memory;
-
 	/** The name. */
 	protected final String name;
+
+	/** A flag that indicates if this firm is open or not. */
+	protected boolean open;
+
+	/** The memory. */
+	//protected final Memory memory; TODO DELETE
+
+	/** The current period. */
+	protected Integer period = null;
 
 	/** The pricing manager. */
 	protected final PricingManager pricingManager;
@@ -124,12 +122,6 @@ public abstract class AbstractFirm implements Firm {
 
 	/** The random. */
 	final protected Random random;
-
-	/** The supply. */
-	//protected Supply supply;
-
-	/** A flag that indicates if the agent records its history. */
-	protected boolean recordHistoric = false;
 
 	/** The marketing manager. */
 	protected final SalesManager salesManager;
@@ -157,7 +149,6 @@ public abstract class AbstractFirm implements Firm {
 		this.timer = this.sector.getTimer();
 		this.creation = this.timer.getPeriod().intValue();
 		this.random = this.sector.getRandom();
-		this.memory = new BasicMemory(timer, 24);
 		this.account = this.sector.getNewAccount(this);
 		this.factory = getNewFactory();
 		this.capitalManager = getNewCapitalManager();
@@ -183,6 +174,17 @@ public abstract class AbstractFirm implements Firm {
 			}
 			this.data.exportTo(outputFile);
 		}
+	}
+
+	/**
+	 * Closes all the managers of this firm.
+	 */
+	protected void closeManagers() {
+		this.salesManager.close();
+		this.pricingManager.close();
+		this.capitalManager.close();
+		this.workforceManager.close();
+		this.factory.close();
 	}
 
 	/**
@@ -232,7 +234,7 @@ public abstract class AbstractFirm implements Firm {
 	abstract protected ProductionManager getNewProductionManager();
 
 	/**
-	 * Creates and returns a new marketing manager.
+	 * Creates and returns a new sales manager.
 	 * 
 	 * @return a new {@linkplain SalesManager}.
 	 */
@@ -244,6 +246,17 @@ public abstract class AbstractFirm implements Firm {
 	 * @return a new {@link WorkforceManager}.
 	 */
 	abstract protected WorkforceManager getNewWorkforceManager();
+
+	/**
+	 * Opens all the managers of this firm.
+	 */
+	protected void openManagers() {
+		this.factory.open();
+		this.salesManager.open();
+		this.pricingManager.open();
+		this.capitalManager.open();
+		this.workforceManager.open();
+	}
 
 	/**
 	 * Updates the data.
@@ -278,11 +291,8 @@ public abstract class AbstractFirm implements Firm {
 			throw new RuntimeException("Already closed.");
 		}
 		this.open=false;
-		this.salesManager.close();
-		this.pricingManager.close();
-		this.capitalManager.close();
-		this.workforceManager.close();
-		this.factory.close();
+
+		this.closeManagers();
 
 		this.updateData();
 
@@ -295,7 +305,7 @@ public abstract class AbstractFirm implements Firm {
 
 	@Override
 	public Long getBookValue() {
-		return this.capitalManager.getCapital();
+		return (Long) this.capitalManager.askFor("capital");
 	}
 
 	@Override
@@ -325,12 +335,12 @@ public abstract class AbstractFirm implements Firm {
 
 	@Override
 	public long getValueOfAssets() {
-		return this.capitalManager.getValueOfAssets();
+		return (Long) this.capitalManager.askFor("assets");
 	}
 
 	@Override
 	public long getValueOfLiabilities() {
-		return this.capitalManager.getValueOfLiabilities();
+		return (Long) this.capitalManager.askFor("liabilities");
 	}
 
 	@Override
@@ -343,11 +353,11 @@ public abstract class AbstractFirm implements Firm {
 	public boolean isBankrupted() {
 		return this.bankrupted;
 	}
-
 	@Override
 	public boolean isCancelled() {
 		return this.bankrupted;
 	}
+
 	@Override
 	public boolean isSolvent() {
 		return this.capitalManager.isSolvent();
@@ -373,11 +383,7 @@ public abstract class AbstractFirm implements Firm {
 			this.capitalManager.bankrupt();
 			this.workforceManager.layoff();
 		} else {
-			this.factory.open();
-			this.salesManager.open();
-			this.pricingManager.open();
-			this.capitalManager.open();
-			this.workforceManager.open();
+			this.openManagers();
 		}
 	}
 

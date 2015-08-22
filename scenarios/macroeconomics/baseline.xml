@@ -115,6 +115,7 @@
 
 	<export file="exports/baseline.csv">
 		<data value="time()" />
+		<data value="agentValue(Industry,prices,t,Firm1)"/>
 		<data value="sum(Industry, dividends, t)" />
 		<data value="sum(Industry, capital, t)" />
 		<data value="val(Banks, dividends, t)" />

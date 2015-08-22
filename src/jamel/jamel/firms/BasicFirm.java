@@ -20,6 +20,7 @@ import jamel.jamel.roles.Shareholder;
 import jamel.jamel.roles.Supplier;
 import jamel.jamel.roles.Worker;
 import jamel.jamel.util.AnachronismException;
+import jamel.jamel.util.Memory;
 import jamel.jamel.widgets.Cheque;
 import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.JobContract;
@@ -90,6 +91,11 @@ public class BasicFirm extends AbstractFirm {
 			 */
 			private boolean ownership = false;
 
+			private long getCapital() {
+				return factory.getValue() + account.getAmount()
+						- account.getDebt();
+			}
+
 			/**
 			 * Returns the amount of debt exceeding the firm target.
 			 * 
@@ -116,6 +122,24 @@ public class BasicFirm extends AbstractFirm {
 			}
 
 			@Override
+			public Object askFor(String key) {
+				final Object result;
+				if (key.equals("capital")) {
+					result = this.getCapital();
+				}
+				else if(key.equals("assets")) {
+					result = factory.getValue() + account.getAmount();
+				}
+				else if(key.equals("liabilities")) {
+					result = account.getDebt();
+				}
+				else {
+					result=null;
+				}
+				return result;
+			}
+
+			@Override
 			public void bankrupt() {
 				capitalStock.cancel();
 			}
@@ -124,7 +148,8 @@ public class BasicFirm extends AbstractFirm {
 			public void clearOwnership() {
 				final boolean isOpen = capitalStock.isOpen();
 				this.capitalStock.cancel(); // TODO: rename: bankrupt/cancel
-				this.capitalStock = new BasicCapitalStock(BasicFirm.this, account, timer);
+				this.capitalStock = new BasicCapitalStock(BasicFirm.this,
+						account, timer);
 				if (isOpen) {
 					this.capitalStock.open();
 				}
@@ -134,7 +159,7 @@ public class BasicFirm extends AbstractFirm {
 			public void close() {
 
 				this.capitalStock.close();
-				
+
 				isConsistent();
 
 				final long cash = account.getAmount();
@@ -158,8 +183,9 @@ public class BasicFirm extends AbstractFirm {
 				this.dataset.put("liabilities.excess", getLiabilitiesExcess());
 
 				this.dataset.put("liabilities.new", account.getNewDebt());
-				this.dataset.put("liabilities.repayment", account.getRepaidDebt());
-				
+				this.dataset.put("liabilities.repayment",
+						account.getRepaidDebt());
+
 				this.dataset.put("canceledDebts", account.getCanceledDebt());
 				this.dataset
 						.put("canceledDeposits", account.getCanceledMoney());
@@ -169,12 +195,6 @@ public class BasicFirm extends AbstractFirm {
 				} else {
 					this.dataset.put("insolvents", 0.);
 				}
-			}
-
-			@Override
-			public long getCapital() {
-				return factory.getValue() + account.getAmount()
-						- account.getDebt();
 			}
 
 			@Override
@@ -188,26 +208,18 @@ public class BasicFirm extends AbstractFirm {
 			}
 
 			@Override
-			public long getValueOfAssets() {
-				return factory.getValue() + account.getAmount();
-			}
-
-			@Override
-			public long getValueOfLiabilities() {
-				return account.getDebt();
-			}
-
-			@Override
 			public boolean isConsistent() {
 				final boolean isConsistent;
-				final double grossProfit = salesManager.getGrossProfit();
-				final double interest = account.getInterest();
-				final double bankruptcy = account.getCanceledMoney()
+				final long grossProfit = (Long) salesManager.askFor("grossProfit");
+				final long interest = account.getInterest();
+				final double bankruptcy = account.getCanceledMoney() // TODO: why double ??
 						+ factory.getInventoryLosses()
 						- account.getCanceledDebt();
 				final long capital = this.getCapital();
-				isConsistent = (capital == this.initialCapital + grossProfit
-						- (this.capitalStock.getDistributedDividends() + interest + bankruptcy));
+				isConsistent = (capital == this.initialCapital
+						+ grossProfit
+						- (this.capitalStock.getDistributedDividends()
+								+ interest + bankruptcy));
 				if (!isConsistent) {
 					System.out.println("capital = " + capital);
 					System.out
@@ -260,7 +272,6 @@ public class BasicFirm extends AbstractFirm {
 			public void payDividend() {
 				isConsistent();
 				dividend = newDividend();
-				memory.put(MEM_DIVIDEND, dividend);
 				capitalStock.setDividend(dividend);
 				this.dataset.put("debt2target.ratio", (account.getDebt())
 						/ getLiabilitiesTarget());
@@ -372,7 +383,13 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public void close() {
-				this.salesRatio = salesManager.getSalesRatio();
+				final long supplyVolume = (Long) salesManager.askFor("supplyVolume");
+				final double salesVolume = (Long) salesManager.askFor("salesVolume");
+				if (supplyVolume > 0) {
+					this.salesRatio = salesVolume / supplyVolume;
+				} else {
+					this.salesRatio = 0d;
+				}
 			}
 
 			@Override
@@ -492,17 +509,66 @@ public class BasicFirm extends AbstractFirm {
 	protected SalesManager getNewSalesManager() {
 		return new SalesManager() {
 
-			private Supply supply;
-			
+			private AgentDataset dataset = null;
+
+			/**
+			 * The gross profit of the period. 
+			 * <p>
+			 * "In accounting, gross profit or sales profit or 'credit sales' is the
+			 * difference between revenue and the cost of making a product or providing
+			 * a service, before deducting overhead, payroll, taxation, and interest
+			 * payments (...) Gross profit = Net sales Ð Cost of goods sold"
+			 * 
+			 * (ref: <a
+			 * href="https://en.wikipedia.org/wiki/Gross_profit">wikipedia.org</a>)
+			 */
+			private long grossProfit = 0;
+
 			private boolean open = false;
+
+			private long salesValue = 0;
+
+			private long salesValueAtCost = 0;
+
+			private long salesVolume = 0;
+
+			private Supply supply = null;
+			
+			private long supplyValue = 0;
+
+			private long supplyVolume = 0;
+			
+			@Override
+			public Object askFor(String key) {
+				final Object result;
+				if (key.equals("grossProfit")) {
+					result = this.grossProfit;
+				}
+				else if(key.equals("supplyVolume")) {
+					result = this.supplyVolume;
+				}
+				else if(key.equals("salesVolume")) {
+					result = this.salesVolume;
+				}
+				else {
+					result=null;
+				}
+				return result;
+			}
 
 			@Override
 			public void close() {
 				if (!open) {
 					throw new RuntimeException("Already closed.");
 				}
-				this.open=false;
+				this.open = false;
 				this.supply.close();
+				dataset.put("supply.vol", (double) supplyVolume);
+				dataset.put("supply.val", (double) supplyValue);
+				dataset.put("sales.vol", (double) salesVolume);
+				dataset.put("sales.val", (double) salesValue);
+				dataset.put("sales.cost", (double) salesValueAtCost);
+				dataset.put("grossProfit", (double) grossProfit);
 			}
 
 			@Override
@@ -511,7 +577,7 @@ public class BasicFirm extends AbstractFirm {
 					throw new RuntimeException("Closed.");
 				}
 				final Period validPeriod = timer.getPeriod();
-				final long initialSize = Math.min((long) (sector
+				supplyVolume = Math.min((long) (sector
 						.getParam(PROPENSITY2SELL) * factory
 						.getFinishedGoodsVolume()), (long) (sector
 						.getParam(SELLING_CAPACITY) * factory
@@ -525,33 +591,25 @@ public class BasicFirm extends AbstractFirm {
 				}
 				final Double price = pricingManager.getPrice();
 
-				final long initialValue;
-
-				if (initialSize > 0) {
-					initialValue = (long) (price * initialSize);
+				if (supplyVolume > 0) {
+					supplyValue = (long) (price * supplyVolume);
 				} else {
-					initialValue = 0;
+					supplyValue = 0;
 				}
 
 				supply = new Supply() {
 
-					private AgentDataset dataset = new BasicAgentDataset(
-							"Supply");
-
-					private long grossProfit = 0;
-
-					private long salesValue = 0;
-
-					private long salesValueAtCost = 0;
-
-					private long salesVolume = 0;
-
-					private long volume = initialSize;
+					private boolean open = true;
+					
+					private long volume = supplyVolume;
 
 					@Override
 					public Commodities buy(long demand, Cheque cheque) {
 						if (!validPeriod.isPresent()) {
 							throw new AnachronismException("Bad period.");
+						}
+						if (!open) {
+							throw new RuntimeException("This supply is closed.");
 						}
 						if (demand > this.volume) {
 							throw new IllegalArgumentException(
@@ -567,66 +625,52 @@ public class BasicFirm extends AbstractFirm {
 						}
 						account.deposit(cheque);
 						this.volume -= demand;
-						this.salesValue += cheque.getAmount();
-						this.salesVolume += demand;
+						salesValue += cheque.getAmount();
+						salesVolume += demand;
 						final Commodities sales = factory
 								.getCommodities(demand);
-						this.salesValueAtCost += sales.getValue();
-						this.grossProfit = this.salesValue
-								- this.salesValueAtCost;
+						salesValueAtCost += sales.getValue();
+						grossProfit = salesValue - salesValueAtCost;
 						return sales;
 					}
 
 					@Override
 					public void close() {
-						this.dataset.put("supply.vol", (double) initialSize);
-						this.dataset.put("supply.val", (double) initialValue);
-						this.dataset.put("sales.vol", (double) salesVolume);
-						this.dataset.put("sales.val", (double) salesValue);
-						this.dataset.put("sales.cost",
-								(double) salesValueAtCost);
-						this.dataset.put("grossProfit",
-								(double) this.grossProfit);
-					}
-
-					@Override
-					public AgentDataset getData() {
-						return this.dataset;
-					}
-
-					@Override
-					public double getGrossProfit() {
-						return this.grossProfit;
+						if (!open) {
+							throw new RuntimeException("This supply is already closed.");
+						}
+						this.open=false;
 					}
 
 					@Override
 					public double getPrice() {
+						if (!open) {
+							throw new RuntimeException("This supply is closed.");
+						}
 						return price;
 					}
 
 					@Override
 					public long getPrice(long volume) {
+						if (!open) {
+							throw new RuntimeException("This supply is closed.");
+						}
 						return (long) (price * volume);
 					}
 
 					@Override
-					public double getSalesRatio() {
-						final double result;
-						if (initialSize > 0) {
-							result = ((double) this.salesVolume) / initialSize;
-						} else {
-							result = 0;
-						}
-						return result;
-					}
-
-					@Override
 					public Supplier getSupplier() {
+						if (!open) {
+							throw new RuntimeException("This supply is closed.");
+						}
 						return BasicFirm.this;
 					}
 
 					@Override
 					public long getVolume() {
+						if (!open) {
+							throw new RuntimeException("This supply is closed.");
+						}
 						return this.volume;
 					}
 
@@ -641,23 +685,7 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public AgentDataset getData() {
-				return this.supply.getData();
-			}
-
-			@Override
-			public double getGrossProfit() {
-				final double grossProfit;
-				if (supply != null) {
-					grossProfit = supply.getGrossProfit();
-				} else {
-					grossProfit = 0;
-				}
-				return grossProfit;
-			}
-
-			@Override
-			public Double getSalesRatio() {
-				return this.supply.getSalesRatio();
+				return this.dataset;
 			}
 
 			@Override
@@ -679,8 +707,15 @@ public class BasicFirm extends AbstractFirm {
 				if (open) {
 					throw new RuntimeException("Already open.");
 				}
-				this.open=true;
+				this.open = true;
 				this.supply = null;
+				this.grossProfit = 0;
+				this.salesValue = 0;
+				this.salesValueAtCost = 0;
+				this.salesVolume = 0;
+				this.supplyValue = 0;
+				this.supplyVolume = 0;
+				this.dataset = new BasicAgentDataset("SalesManager");
 			}
 
 		};
@@ -694,15 +729,18 @@ public class BasicFirm extends AbstractFirm {
 	@Override
 	protected WorkforceManager getNewWorkforceManager() {
 		return new WorkforceManager() {
+			
+			/** Memory of the recent vacancies. */
+			private final Memory<Integer> recentVacancies = new Memory<Integer>(4);
+
+			/** Memory of the recent job openings. */
+			private final Memory<Integer> recentJobOpenings = new Memory<Integer>(4);
 
 			/** The dataset. */
 			private AgentDataset dataset = null;
 
 			/** The job offer. */
 			private JobOffer jobOffer = null;
-
-			/** Number of job openings in the current period. */
-			private Integer jobOpenings = null;
 
 			/** The manpower target. */
 			private Integer manpowerTarget = null;
@@ -726,17 +764,12 @@ public class BasicFirm extends AbstractFirm {
 			 */
 			private Double getVacancyRate() {
 				final Double result;
-				if (!memory.checkConsistency("vacancies", "jobs")) {
-					throw new RuntimeException("Inconsistent series.");
-				}
-				final Double vacancies = memory.getSum("vacancies", timer
-						.getPeriod().intValue() - 1, 4);
-				final Double jobs = memory.getSum("jobs", timer.getPeriod()
-						.intValue() - 1, 4);
+				final Double vacancies = recentVacancies.getSum();
+				final Double jobs = recentJobOpenings.getSum();
 				if (vacancies == null && jobs == null) {
 					result = null;
 				} else if (vacancies == 0) {
-					result = 0.;
+					result = 0d;
 				} else {
 					result = vacancies / jobs;
 				}
@@ -747,7 +780,6 @@ public class BasicFirm extends AbstractFirm {
 			 * Creates a new job offer.
 			 */
 			private void newJobOffer() {
-				memory.put("jobs", vacancies);
 				if (vacancies < 0) {
 					throw new RuntimeException("Negative number of vacancies");
 				}
@@ -852,7 +884,7 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public void close() {
-				memory.put("vacancies", this.vacancies);
+				recentVacancies.add(this.vacancies);
 				this.dataset.put(JOB_VACANCIES, (double) this.vacancies);
 			}
 
@@ -893,7 +925,6 @@ public class BasicFirm extends AbstractFirm {
 				this.manpowerTarget = null;
 				this.payroll = null;
 				this.vacancies = null;
-				this.jobOpenings = null;
 				this.dataset = new BasicAgentDataset("Workforce Manager");
 			}
 
@@ -958,8 +989,8 @@ public class BasicFirm extends AbstractFirm {
 				workforce.cleanUp();
 				manpowerTarget = Math.round(factory.getCapacity()
 						* productionManager.getTarget());
+				final int jobOpenings;
 				if (manpowerTarget <= workforce.size()) {
-					jobOpenings = manpowerTarget - workforce.size();
 					if (manpowerTarget < workforce.size()) {
 						workforce.layoff(workforce.size() - manpowerTarget);
 					}
@@ -974,8 +1005,9 @@ public class BasicFirm extends AbstractFirm {
 							* (long) ((double) this.wage);
 				}
 				this.dataset.put(JOB_OPENINGS, (double) jobOpenings);
+				this.recentJobOpenings.add(jobOpenings);
 				this.dataset.put(WORKFORCE_TARGET, (double) manpowerTarget);
-				this.vacancies = this.jobOpenings;
+				this.vacancies = jobOpenings;
 				this.newJobOffer();
 			}
 

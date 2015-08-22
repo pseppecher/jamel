@@ -144,6 +144,10 @@ public class BasicDataManager {
 				}
 				exportNodeList = export.getChildNodes();
 				try {
+					final File parentFile = outputFile.getParentFile();
+					if (!parentFile.exists()) {
+						parentFile.mkdirs();
+					}					
 					outputFile.createNewFile();
 				} catch (IOException e) {
 					e.printStackTrace();

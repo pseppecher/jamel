@@ -2,8 +2,27 @@
 
 <charts
 	title="Baseline Charts"
-	date="04-08-2015"
+	date="19-08-2015"
 	content="Configuration of the chart panels for the baseline scenario.">
+
+	<panel title="Test">
+		<chart
+			title="Sales on Procuction Capacity"
+			type="time chart">
+			<series
+				value="agentValue(Industry,sales.ratio.long,t,Firm1)"
+				color="red"
+				label="Firm1 (moving average 12)" />
+			<series
+				value="mean(Industry,sales.ratio.long,t)"
+				color="blue"
+				label="Sector" />
+			<series
+				value="0.8"
+				color="orange"
+				label="Normal level" />
+		</chart>
+	</panel>
 
 	<panel title="Main">
 
@@ -37,8 +56,6 @@
 					value="sum(Households,consumption.vol,t)"
 					color="blue"
 					label="Consumption" />
-				<!-- series value="sum(Industry, production.vol, t-11...t) : 12" color="pink" 
-					label="test" / -->
 			</chart>
 
 			<chart
@@ -189,8 +206,7 @@
 					label="Average" />
 				<yAxis
 					min="0"
-					max="2"
-					/>
+					max="2" />
 			</chart>
 
 			<chart
@@ -210,8 +226,7 @@
 					label="Average" />
 				<yAxis
 					min="0"
-					max="1"
-					/>
+					max="1" />
 			</chart>
 			<chart />
 		</col>
@@ -387,9 +402,9 @@
 					sector="Industry"
 					value="capital"
 					bin="10"
-					color="transparentRed"/>
+					color="transparentRed" />
 			</chart>
-			
+
 
 		</col>
 
@@ -709,7 +724,7 @@
 		</col>
 
 		<col>
-			
+
 			<chart
 				title="Dividends and capital"
 				type="scatter chart">
@@ -720,7 +735,7 @@
 					color="transparentRed"
 					label="Households (x=capital, y=dividends)" />
 			</chart>
-			
+
 			<chart
 				title="Wealth Inequality"
 				type="histogram">
@@ -731,7 +746,7 @@
 					color="transparentRed"
 					label="Households (x=capital, y=dividends)" />
 			</chart>
-			
+
 			<chart
 				title="Wages Inequality"
 				type="histogram">
@@ -740,9 +755,9 @@
 					value="wages"
 					bin="10"
 					select="wages!=0"
-					color="transparentBlue"/>
+					color="transparentBlue" />
 			</chart>
-			
+
 		</col>
 
 	</panel>

@@ -6,7 +6,7 @@ import jamel.jamel.firms.capital.StockCertificate;
 /**
  * The capital manager.
  */
-public interface CapitalManager {
+public interface CapitalManager extends Askable {
 
 	/**
 	 * Should be called when the firm is bankrupted.
@@ -26,13 +26,6 @@ public interface CapitalManager {
 	void close();
 
 	/**
-	 * Returns the capital of the firm.
-	 * 
-	 * @return the capital of the firm.
-	 */
-	long getCapital();
-
-	/**
 	 * Returns the dataset of the manager.
 	 * 
 	 * @return the dataset of the manager.
@@ -47,20 +40,6 @@ public interface CapitalManager {
 	 * @return a {@link StockCertificate} that encapsulates the new shares.
 	 */
 	StockCertificate getNewShares(Integer n);
-
-	/**
-	 * Returns the total value of the assets of the firm.
-	 * 
-	 * @return the total value of the assets of the firm.
-	 */
-	long getValueOfAssets();
-
-	/**
-	 * Returns the total value of the liabilities of the firm.
-	 * 
-	 * @return the total value of the liabilities of the firm.
-	 */
-	long getValueOfLiabilities();
 
 	/**
 	 * Returns <code>true</code> if the firm accounting is consistent,

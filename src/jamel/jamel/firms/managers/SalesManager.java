@@ -6,8 +6,8 @@ import jamel.jamel.widgets.Supply;
 /**
  * Represents the sales manager of the firm.
  */
-public interface SalesManager {
-
+public interface SalesManager extends Askable {
+	
 	/**
 	 * Closes the manager at the end of the period.
 	 */
@@ -24,27 +24,6 @@ public interface SalesManager {
 	 * @return the metrics of the manager.
 	 */
 	AgentDataset getData();
-
-	/**
-	 * Returns the gross profit of the period. 
-	 * <p>
-	 * "In accounting, gross profit or sales profit or 'credit sales' is the
-	 * difference between revenue and the cost of making a product or providing
-	 * a service, before deducting overhead, payroll, taxation, and interest
-	 * payments (...) Gross profit = Net sales Ð Cost of goods sold"
-	 * 
-	 * (ref: <a
-	 * href="https://en.wikipedia.org/wiki/Gross_profit">wikipedia.org</a>)
-	 * 
-	 * @return the gross profit of the period.
-	 */
-	double getGrossProfit();
-
-	/**
-	 * Returns the ratio <code>sales/supply</code>.
-	 * @return the ratio <code>sales/supply</code>.
-	 */
-	Double getSalesRatio();
 
 	/**
 	 * Returns the supply.

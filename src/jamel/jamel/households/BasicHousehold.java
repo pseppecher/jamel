@@ -6,7 +6,6 @@ import jamel.basic.util.Timer;
 import jamel.jamel.firms.capital.StockCertificate;
 import jamel.jamel.sectors.HouseholdSector;
 import jamel.jamel.util.AnachronismException;
-import jamel.jamel.util.BasicMemory;
 import jamel.jamel.util.ConsistencyException;
 import jamel.jamel.util.Memory;
 import jamel.jamel.widgets.Asset;
@@ -105,7 +104,7 @@ public class BasicHousehold implements Household {
 	private final Map<String, Number> variables = new HashMap<String, Number>();
 
 	/** The memory. */
-	final protected Memory memory;
+	final protected Memory<Long> recentIncome;
 
 	/** The random. */
 	final protected Random random;
@@ -126,7 +125,7 @@ public class BasicHousehold implements Household {
 		this.sector = sector;
 		this.timer = this.sector.getTimer();
 		this.random = this.sector.getRandom();
-		this.memory = new BasicMemory(timer, 12);
+		this.recentIncome = new Memory<Long>(12);
 		this.account = sector.getNewAccount(this);
 		this.variables.put("status", UNEMPLOYED);
 		this.variables.put("unemployement duration", 0);
@@ -172,10 +171,17 @@ public class BasicHousehold implements Household {
 
 	@Override
 	public void consumption() {
-		this.memory.put("income", this.variables.get("wage").longValue()
+		this.recentIncome.add(this.variables.get("wage").longValue()
 				+ this.variables.get("dividend").longValue());
-		final double averageIncome = this.memory.getMean("income", this.timer
-				.getPeriod().intValue(), 12);
+		
+		final double averageIncome;
+		
+		if (this.recentIncome.getSize()==0) {
+			averageIncome=0;
+		}
+		else {
+			averageIncome=this.recentIncome.getSum()/this.recentIncome.getSize();
+		}
 		final long savingsTarget = (long) (12 * averageIncome * this.sector
 				.getParam(SAV_TARGET));
 		final long savings = (long) (this.account.getAmount() - averageIncome);

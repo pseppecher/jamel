@@ -1,66 +1,57 @@
 package jamel.jamel.util;
 
+import java.util.LinkedList;
+
 /**
- * The memory of an agent or an object.
+ * Une alternative ˆ {@link Memory}.
+ * 
+ * @param <N>
+ *            the type parameter.
+ * 
+ *<p>
+ *TODO: rename, document
  */
-public interface Memory {
-	
-	/**
-	 * Adds the specified value to the previous value.
-	 * If there is no previous mapping for this key, the mapping is created with the given value.
-	 * @param key key of the data with which the specified value is to be added.
-	 * @param value the value to be added.
-	 */
-	public void add(String key, double value);
+@SuppressWarnings("javadoc")
+public class Memory<N extends Number> {
+
+	final private LinkedList<N> list;
+
+	private int maxSize = 12;
 
 	/**
-	 * Checks if the tow given series of data are consistent.
-	 * @param key1 the key for the first series.
-	 * @param key2 the key for the second series.
-	 * @return <code>true</code> if the series are consistent, <code>false</code> otherwise.
+	 * Creates a new memory.
 	 */
-	public boolean checkConsistency(String key1, String key2);
+	public Memory(int size) {
+		this.list = new LinkedList<N>();
+		maxSize = size;
+	}
 
-	/**
-	 * Returns <code>true</code> if this memory contains data for the specified key.
-	 * @param key the key whose presence in this memory is to be tested.
-	 * @return <code>true</code> if this memory contains data for the specified key.
-	 */
-	public boolean containsKey(String key);
-	
-	/**
-	 * Returns the current <code>Double</code> value for the specified key. 
-	 * @param key the key of the value to return.
-	 * @return the current <code>Double</code> value for the specified key.
-	 */
-	public Double get(String key);
+	public void add(N value) {
+		if (value == null) {
+			throw new IllegalArgumentException("'value' is null.");
+		}
+		list.add(value);
+		if (list.size() > this.maxSize) {
+			list.removeFirst();
+		}
+	}
 
-	/**
-	 * Returns the mean of the specified series for the given period.
-	 * @param key the key of the series.
-	 * @param start the value of the last period to consider.
-	 * @param lim the number of periods to consider.
-	 * @return the mean of the values.
-	 */
-	public Double getMean(String key, int start,int lim);
-	
-	/**
-	 * Returns the sum of the specified series for the given period.
-	 * @param key the key of the series.
-	 * @param start the value of the last period to consider.
-	 * @param lim the number of periods to consider.
-	 * @return the sum of the values.
-	 */
-	public Double getSum(String key, int start,int lim);
+	public N getLast() {
+		return list.getLast();
+	}
 
-	/**
-	 * Associates the specified value with the specified key in this memory. 
-	 * If the memory previously contained a value for the key, the old value is replaced.
-	 * @param key key with which the specified value is to be associated.
-	 * @param value value to be associated with the specified key.
-	 */
-	public void put(String key, double value);
-	
+	public int getSize() {
+		return list.size();
+	}
+
+	public double getSum() {
+		double sum = 0d;
+		for (N value : list) {
+			sum += value.doubleValue();
+		}
+		return sum;
+	}
+
 }
 
 // ***

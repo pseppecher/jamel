@@ -21,8 +21,6 @@ import jamel.jamel.roles.Shareholder;
 import jamel.jamel.sectors.BankingSector;
 import jamel.jamel.sectors.CapitalistSector;
 import jamel.jamel.util.AnachronismException;
-import jamel.jamel.util.BasicMemory;
-import jamel.jamel.util.Memory;
 import jamel.jamel.widgets.BankAccount;
 import jamel.jamel.widgets.Cheque;
 import jamel.jamel.widgets.Chequable;
@@ -91,8 +89,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		 * Adds the specified value with the existing value.
 		 * 
 		 * @param key
-		 *            key of the exisiting value with which the specified value
-		 *            is to be added
+		 *            key of the existing value with which the specified value
+		 *            is to be added.
 		 * @param value
 		 *            value to be added with the existing value.
 		 */
@@ -204,11 +202,11 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 
 		};
 
+		/** The interest paid. */
+		private long interestPaid = 0;
+
 		/** The list of loans for this account. */
 		private final List<Loan> loans = new LinkedList<Loan>();
-
-		/** The memory of the account. */
-		private final Memory memory = new BasicMemory(timer, 6);
 
 		/** The new debt of the period. */
 		private long newDebt = 0;
@@ -392,14 +390,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 
 		@Override
 		public long getInterest() {
-			final long result;
-			Double interest = this.memory.get("interest");
-			if (interest == null) {
-				result = 0;
-			} else {
-				result = interest.longValue();
-			}
-			return result;
+			return this.interestPaid;
 		}
 
 		@Override
@@ -517,7 +508,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 							BasicBankingSector.this.v
 									.add("loans.new", -payment);
 						}
-						Account.this.memory.add("interest", interest);
+						Account.this.interestPaid += interest;
 						v.add("interest", +interest);
 					}
 					this.lastInterestPayment = currentPeriod;
@@ -590,6 +581,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 			}
 			this.open = true;
 			this.repaidDebt = 0;
+			this.interestPaid = 0;
 			this.newDebt = 0;
 			this.canceledDebt = 0;
 			this.canceledMoney = 0;
@@ -815,7 +807,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	 * lender by forcing the sale of the asset used as the collateral for the
 	 * loan."
 	 * 
-	 * (ref: <a href="https://en.wikipedia.org/wiki/Foreclosure">wikipedia.org</a>)
+	 * (ref: <a
+	 * href="https://en.wikipedia.org/wiki/Foreclosure">wikipedia.org</a>)
 	 * 
 	 * @param account
 	 *            the bankrupted account.

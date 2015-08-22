@@ -1,6 +1,5 @@
 package jamel.jamel.widgets;
 
-import jamel.basic.data.AgentDataset;
 import jamel.jamel.roles.Supplier;
 
 /**
@@ -22,18 +21,6 @@ public interface Supply {
 	void close();
 
 	/**
-	 * Returns the dataset of this supply.
-	 * @return an {@link AgentDataset}.
-	 */
-	AgentDataset getData();
-
-	/**
-	 * Returns the gross profit realized.
-	 * @return the gross profit.
-	 */
-	double getGrossProfit();
-
-	/**
 	 * Returns the unit price of the supply.
 	 * @return the unit price.
 	 */
@@ -45,12 +32,6 @@ public interface Supply {
 	 * @return the price.
 	 */
 	long getPrice(long volume);
-
-	/**
-	 * Returns the ratio (sales/initial supply).
-	 * @return the ratio (sales/initial supply).
-	 */
-	double getSalesRatio();
 
 	/**
 	 * Returns the supplier.
