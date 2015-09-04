@@ -1,13 +1,7 @@
-package jamel.jamel.sfc;
-
-import jamel.basic.data.Expression;
-import jamel.basic.data.MacroDatabase;
-import jamel.basic.util.InitializationException;
-import jamel.basic.util.Timer;
+package jamel.basic.gui;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.io.File;
 
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
@@ -17,28 +11,27 @@ import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellRenderer;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
 
-import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
+import jamel.basic.data.Expression;
+import jamel.basic.data.MacroDatabase;
+import jamel.basic.util.Timer;
+
 /**
- * A basic data validator. TODO: create a Test object to encapsulate conditions
- * and results. TODO: clean-up, refactor, comment, validate !
+ * The validation panel.
  */
-public class BasicDataValidator implements DataValidator {
+public class ValidationPanel extends JSplitPane implements Updatable {
+
+	/** A blue color. */
+	private static final Color BLUE = new Color(0.4f, 0.4f, 1f);
 
 	/** A light green color. */
 	private static final Color LIGHT_GREEN = new Color(0.8f, 1f, 0.8f);
 
 	/** A light red color. */
 	private static final Color LIGHT_RED = new Color(1f, 0.8f, 0.8f);
-
-	/** A blue color. */
-	private static final Color BLUE = new Color(0.4f, 0.4f, 1f);
 
 	/** The line separator. */
 	final private static String rc = System.getProperty("line.separator");
@@ -59,9 +52,6 @@ public class BasicDataValidator implements DataValidator {
 	@SuppressWarnings("javadoc")
 	public static final String VAL2 = "val2";
 
-	/** The overall panel that displays all the results. */
-	final private Component dataValidatorPanel;
-
 	/** A text panel to display the result of the tests. */
 	final private JEditorPane failurePanel = new JEditorPane() {
 		{
@@ -77,9 +67,6 @@ public class BasicDataValidator implements DataValidator {
 
 	/** An array to store the labels of the tests. */
 	final private String[] labels;
-
-	/** The name of the data validator. */
-	private String name;
 
 	/** An array to store the result of each test. */
 	final private Boolean[] results;
@@ -145,74 +132,35 @@ public class BasicDataValidator implements DataValidator {
 	private final Timer timer;
 
 	/**
-	 * Creates a new data validator.
-	 * 
-	 * @param file
-	 *            the XML file that contains the description of the tests.
-	 * @param timer
-	 *            the timer.
-	 * @param macroDatabase
-	 *            the dataset.
-	 * @throws InitializationException
-	 *             If something goes wrong. TODO: devrait recevoir l'Žlement
-	 *             root et non un fichier.
+	 * @param elem the XML description of the tests. 
+	 * @param macroDatabase the database.
+	 * @param timer the timer.
 	 */
-	public BasicDataValidator(File file, Timer timer,
-			MacroDatabase macroDatabase) throws InitializationException {
-		this.timer = timer;
-		final DocumentBuilderFactory factory = DocumentBuilderFactory
-				.newInstance();
-		try {
-			final DocumentBuilder builder = factory.newDocumentBuilder();
-			final Document document = builder.parse(file);
-			final Element root = document.getDocumentElement();
-			if (!"validation".equals(root.getNodeName())) {
-				throw new ParserConfigurationException(
-						"The root node of the scenario file must be named <validation>.");
-			}
-			this.name = root.getAttribute("title");
-			final String content = root.getAttribute("content");
-			if (!"".equals(content)) {
-			}
-			final String start = root.getAttribute("start");
-			if (!"".equals(start)) {
-				this.start = Integer.parseInt(start);
-			}
-			final NodeList testNodeList = root.getElementsByTagName(TEST);
-			this.tests = new Expression[testNodeList.getLength()][];
-			this.labels = new String[testNodeList.getLength()];
-			this.results = new Boolean[tests.length];
-			for (int i = 0; i < testNodeList.getLength(); i++) {
-				final String label = ((Element) testNodeList.item(i))
-						.getAttribute(LABEL);
-				final Expression[] item = new Expression[2];
-				final String a = ((Element) testNodeList.item(i))
-						.getAttribute(VAL1);
-				final String b = ((Element) testNodeList.item(i))
-						.getAttribute(VAL2);
-				item[0] = macroDatabase.newQuery(a);
-				item[1] = macroDatabase.newQuery(b);
-				this.labels[i] = label;
-				this.tests[i] = item;
-				this.results[i] = null;
-			}
-		} catch (final Exception e) {
-			throw new InitializationException(
-					"Something went wrong while parsing the file: " + file, e);
+	public ValidationPanel(Element elem, MacroDatabase macroDatabase,Timer timer) {
+		super(JSplitPane.VERTICAL_SPLIT);
+		this.timer=timer;
+		final String startAttribute = elem.getAttribute("start");
+		if (!"".equals(startAttribute)) {
+			this.start = Integer.parseInt(startAttribute);
 		}
-		dataValidatorPanel = getDataValidatorPanel();
-		if (!"".equals(name)) {
-			this.dataValidatorPanel.setName(name);
+		final NodeList testNodeList = elem.getElementsByTagName(TEST);
+		this.tests = new Expression[testNodeList.getLength()][];
+		this.labels = new String[testNodeList.getLength()];
+		this.results = new Boolean[tests.length];
+		for (int i = 0; i < testNodeList.getLength(); i++) {
+			final String label = ((Element) testNodeList.item(i))
+					.getAttribute(LABEL);
+			final Expression[] item = new Expression[2];
+			final String a = ((Element) testNodeList.item(i))
+					.getAttribute(VAL1);
+			final String b = ((Element) testNodeList.item(i))
+					.getAttribute(VAL2);
+			item[0] = macroDatabase.newQuery(a);
+			item[1] = macroDatabase.newQuery(b);
+			this.labels[i] = label;
+			this.tests[i] = item;
+			this.results[i] = null;
 		}
-	}
-
-	/**
-	 * Creates and returns a new panel that displays the results of the tests.
-	 * 
-	 * @return a new panel that displays the results of the tests.
-	 */
-	private Component getDataValidatorPanel() {
-
 		final Component jTable = new JTable(tableModel) {
 			{
 				this.getColumnModel().getColumn(0).setMaxWidth(30);
@@ -252,22 +200,17 @@ public class BasicDataValidator implements DataValidator {
 
 		};
 		final JScrollPane scrollPane = new JScrollPane(jTable);
-		final JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-				scrollPane, new JScrollPane(failurePanel)) {
-			{
-				this.setResizeWeight(0.5);
-				this.setDividerLocation(0.5);
-				this.setDividerSize(2);
-			}
-		}
-
-		;
-		return splitPane;
+		
+		this.setTopComponent(scrollPane);
+		this.setBottomComponent(new JScrollPane(failurePanel));
+		
+		this.setResizeWeight(0.5);
+		this.setDividerLocation(0.5);
+		this.setDividerSize(2);
 	}
 
 	@Override
-	public boolean checkConsistency() {
-		boolean success = true;
+	public void update() {
 		boolean dataChanged = false;
 		if (timer.getPeriod().intValue() > start) {
 			for (int i = 0; i < tests.length; i++) {
@@ -276,7 +219,6 @@ public class BasicDataValidator implements DataValidator {
 				final boolean singleTestResult;
 				if ((a != null && !a.equals(b)) || a == null || b == null) {
 					singleTestResult = false;
-					success = false;
 					failures.append("Period " + timer.getPeriod().intValue()
 							+ ", test " + i + ": failure (" + a + ", " + b
 							+ ")<br>" + rc);
@@ -304,17 +246,6 @@ public class BasicDataValidator implements DataValidator {
 				});
 			}
 		}
-		return success;
-	}
-
-	@Override
-	public String getName() {
-		return this.name;
-	}
-
-	@Override
-	public Component getPanel() {
-		return dataValidatorPanel;
 	}
 
 }

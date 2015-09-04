@@ -55,7 +55,7 @@ public interface Circuit {
 	 * If <code>true</code>, the simulation will be paused. 
 	 * If <code>false</code>, the simulation will run.
 	 */
-	void pause(boolean b);
+	void setPause(boolean b);
 
 	/**
 	 * Runs the simulation.

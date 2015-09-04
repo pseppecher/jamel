@@ -252,9 +252,10 @@ public abstract class AbstractFirm implements Firm {
 	 */
 	protected void openManagers() {
 		this.factory.open();
-		this.salesManager.open();
-		this.pricingManager.open();
 		this.capitalManager.open();
+		this.pricingManager.open();
+		this.productionManager.open();
+		this.salesManager.open();
 		this.workforceManager.open();
 	}
 

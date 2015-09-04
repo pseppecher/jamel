@@ -1,6 +1,5 @@
 package jamel.jamel.firms;
 
-import jamel.basic.agent.Agent;
 import jamel.jamel.firms.capital.StockCertificate;
 import jamel.jamel.roles.AccountHolder;
 import jamel.jamel.roles.Corporation;
@@ -10,7 +9,7 @@ import jamel.jamel.widgets.JobOffer;
 /**
  * Represents an individual firm.
  */
-public interface Firm extends Agent, AccountHolder, Corporation, Supplier {
+public interface Firm extends AccountHolder, Corporation, Supplier {
 
 	/**
 	 * Clears the ownership of the firm.

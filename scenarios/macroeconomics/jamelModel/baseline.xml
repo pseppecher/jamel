@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <circuit
-	type="jamel.jamel.sfc.SFCCircuit"
+	type="jamel.basic.BasicCircuit"
 	date="10-08-2015"
 	title="Baseline scenario"
 	content="The baseline scenario of the Jamel model.">
 
 	<settings
 		randomSeed="0"
-		chartsConfigFile="config/charts.xml"
-		sfcMatrixConfigFile="config/matrix.xml"
-		validationConfigFile="config/validation.xml" />
+		chartsConfigFile="config/panels.xml" />
 
 	<sectors>
 
@@ -113,7 +111,7 @@
 		
 	</events>
 
-	<export file="exports/baseline.csv">
+	<export_DELETE file="exports/baseline.csv">
 		<data value="time()" />
 		<data value="agentValue(Industry,prices,t,Firm1)"/>
 		<data value="sum(Industry, dividends, t)" />
@@ -122,6 +120,6 @@
 		<data value="val(Banks, capital, t)" />
 		<data value="sum(Industry, grossProfit, t)" />
 		<data value="sum(Households, capital, t)" />
-	</export>
+	</export_DELETE>
 
 </circuit>

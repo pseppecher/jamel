@@ -1,38 +1,35 @@
 package jamel.jamel.firms.managers;
 
-import jamel.basic.data.AgentDataset;
+import jamel.basic.util.Timer;
 
 /**
  * The pricing manager.
  */
-public interface PricingManager {
+public abstract class PricingManager extends AbstractManager{
 
 	/**
-	 * Closes the manager.<p>
-	 * Updates internal variables at the end of the period. 
+	 * Creates a new manager.
+	 * 
+	 * @param name
+	 *            the name of the manger.
+	 * @param timer
+	 *            the timer.
 	 */
-	void close();
-
-	/**
-	 * Returns the dataset of the manager.
-	 * @return the dataset of the manager.
-	 */
-	AgentDataset getData();
+	public PricingManager(String name, Timer timer) {
+		super(name, timer);
+	}
 
 	/**
 	 * Returns the price.
 	 * @return the price.
 	 */
-	Double getPrice();
+	public abstract Double getPrice();
 	
-	/**
-	 * Opens the manager.
-	 */
-	void open();
-
 	/**
 	 * Updates the price.
 	 */
-	void updatePrice();
+	public abstract void updatePrice();
 
 }
+
+// ***

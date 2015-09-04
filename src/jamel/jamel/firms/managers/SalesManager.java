@@ -1,41 +1,36 @@
 package jamel.jamel.firms.managers;
 
-import jamel.basic.data.AgentDataset;
+import jamel.basic.util.Timer;
 import jamel.jamel.widgets.Supply;
 
 /**
  * Represents the sales manager of the firm.
  */
-public interface SalesManager extends Askable {
+public abstract class SalesManager extends AbstractManager implements Askable {
 	
 	/**
-	 * Closes the manager at the end of the period.
+	 * Creates a new manager.
+	 * 
+	 * @param name
+	 *            the name of the manger.
+	 * @param timer
+	 *            the timer.
 	 */
-	void close();
+	public SalesManager(String name, Timer timer) {
+		super(name, timer);
+	}
 
 	/**
 	 * Creates a new supply. Must be called at the end of the production phase.
 	 */
-	void createSupply();
-
-	/**
-	 * Returns the metrics of the manager.
-	 * 
-	 * @return the metrics of the manager.
-	 */
-	AgentDataset getData();
+	public abstract void createSupply();
 
 	/**
 	 * Returns the supply.
 	 * 
 	 * @return the supply.
 	 */
-	Supply getSupply();
-
-	/**
-	 * Opens the manager at the beginning of the period.
-	 */
-	void open();
+	public abstract Supply getSupply();
 
 }
 

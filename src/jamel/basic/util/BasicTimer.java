@@ -6,8 +6,10 @@ import java.util.List;
 
 import javax.swing.JTextField;
 
+import jamel.jamel.util.AnachronismException;
+
 /**
- * A basic timer. 
+ * A basic timer.
  */
 public class BasicTimer implements Timer {
 
@@ -18,10 +20,12 @@ public class BasicTimer implements Timer {
 
 		/** The value of the period. */
 		private final Integer value;
-		
+
 		/**
 		 * Creates a period.
-		 * @param t the value of the new period. 
+		 * 
+		 * @param t
+		 *            the value of the new period.
 		 */
 		public BasicPeriod(int t) {
 			this.value = t;
@@ -34,21 +38,22 @@ public class BasicTimer implements Timer {
 
 		@Override
 		public boolean equals(int t) {
-			return this.value==t;
+			return this.value == t;
 		}
 
 		@Override
 		public boolean equals(Period p) {
-			return this.value==p.intValue();
+			return this.value == p.intValue();
 		}
 
 		/**
 		 * Returns the next period.
+		 * 
 		 * @return a period.
 		 */
 		@Override
 		public Period getNext() {
-			return new BasicPeriod(this.value+1);
+			return new BasicPeriod(this.value + 1);
 		}
 
 		@Override
@@ -58,22 +63,22 @@ public class BasicTimer implements Timer {
 
 		@Override
 		public boolean isAfter(int t) {
-			return this.value>t;
+			return this.value > t;
 		}
 
 		@Override
 		public boolean isAfter(Period period2) {
-			return this.value>period2.intValue();
+			return this.value > period2.intValue();
 		}
 
 		@Override
 		public boolean isBefore(int t) {
-			return this.value<t;
+			return this.value < t;
 		}
 
 		@Override
 		public boolean isBefore(Period p) {
-			return this.value<p.intValue();
+			return this.value < p.intValue();
 		}
 
 		@Override
@@ -83,16 +88,18 @@ public class BasicTimer implements Timer {
 
 		@Override
 		public Period plus(int term) {
-			return new BasicPeriod(this.value+term);
+			return new BasicPeriod(this.value + term);
 		}
-		
+
 	}
 
 	/** A time counter for the GUI. */
-	private final JTextField counter = new JTextField (5) {{
-		this.setHorizontalAlignment(RIGHT);
-		this.setEditable(false);
-	}};
+	private final JTextField counter = new JTextField(5) {
+		{
+			this.setHorizontalAlignment(RIGHT);
+			this.setEditable(false);
+		}
+	};
 
 	/** The current period. */
 	private Period current;
@@ -102,7 +109,9 @@ public class BasicTimer implements Timer {
 
 	/**
 	 * Creates a new timer.
-	 * @param t the value of the initial period.
+	 * 
+	 * @param t
+	 *            the value of the initial period.
 	 */
 	public BasicTimer(int t) {
 		current = new BasicPeriod(t);
@@ -113,24 +122,34 @@ public class BasicTimer implements Timer {
 		this.listeners.add(listener);
 	}
 
+	@Override
+	public void checkConsistency(int period) {
+		if (this.current.intValue() != period) {
+			throw new AnachronismException(
+					"Period value: expected: <" + this.current.intValue() + "> but was: <" + period + ">.");
+		}
+	}
+
 	/**
 	 * Returns the graphical counter.
+	 * 
 	 * @return the graphical counter.
 	 */
 	public Component getCounter() {
 		return this.counter;
 	}
 
-	@Override 
+	@Override
 	public Period getPeriod() {
-		return this.current;}
+		return this.current;
+	}
 
 	/**
 	 * Changes to the next period.
 	 */
 	public void next() {
-		this.current=this.current.getNext();
-		for(TimeListener listener:listeners) {
+		this.current = this.current.getNext();
+		for (TimeListener listener : listeners) {
 			listener.setTime(this.current.intValue());
 		}
 	}

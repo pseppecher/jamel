@@ -54,14 +54,14 @@ public class Predators implements Sector {
 	/** The circuit. */
 	private final Circuit circuit;
 
-	/** The preys. */
-	private Preys preys = null;
-	
 	/** The name of the sector. */
 	private final String name;
-
+	
 	/** The parameters of the sector. */
 	private final JamelParameters params = new BasicParameters();
+
+	/** The preys. */
+	private Preys preys = null;
 
 	/** The random. */
 	private final Random random;
@@ -88,11 +88,11 @@ public class Predators implements Sector {
 	 * Eats a prey.
 	 * @param x the X coordinate.
 	 * @param y the Y coordinate.
-	 * @param eatVolume the volume of grass to eat.
+	 * @param eatVol the volume of grass to eat.
 	 * @return the energy.
 	 */
-	public double eatPrey(double x, double y, double eatVolume) {
-		return this.preys.eat(x,y,eatVolume);
+	public double eatPrey(double x, double y, double eatVol) {
+		return this.preys.eat(x,y,eatVol);
 	}
 
 	@Override
@@ -115,10 +115,10 @@ public class Predators implements Sector {
 	}
 
 	@Override
-	public Phase getPhase(final String name) {
+	public Phase getPhase(final String phaseName) {
 		Phase result = null;
-		if (name.equals("move")) {
-			result = new AbstractPhase(name, this){
+		if (phaseName.equals("move")) {
+			result = new AbstractPhase(phaseName, this){
 				@Override
 				public void run() {
 					final float spontaneous = params.get("spontaneous");

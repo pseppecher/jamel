@@ -21,13 +21,13 @@ public class ColorPaintScale implements PaintScale {
 	}
 
 	/** The lower bound. */
-	private double lowerBound;
+	final private double lowerBound;
 
 	/** The color of the paint scale. */
 	final private float lowerHue;
 
 	/** The upper bound. */
-	private double upperBound;
+	final private double upperBound;
 
 	/** The color of the paint scale. */
 	final private float upperHue;
@@ -118,6 +118,11 @@ public class ColorPaintScale implements PaintScale {
 	@Override
 	public double getUpperBound() {
 		return this.upperBound;
+	}
+
+	@Override
+	public int hashCode() {
+		return (int) (17*this.lowerBound+this.upperBound);
 	}
 
 }

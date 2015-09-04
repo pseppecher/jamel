@@ -1,104 +1,73 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
-<charts
-	content="Configuration of the chart panels for the Himmelblau scenario"
+<charts content="Configuration of the chart panels for the Himmelblau scenario"
 	date="16-07-2015">
 
 	<panel title="Main">
 
-		<chart
-			title="Landscape"
-			type="scatter chart">
-			<series
-				sector="Algo0"
-				x="x"
-				y="y"
-				color="red"
-				label="Algo 0" />
-			<series
-				sector="Algo1"
-				x="x"
-				y="y"
-				color="blue"
-				label="Algo 1" />
-			<series
-				sector="Algo2"
-				x="x"
-				y="y"
-				color="green"
-				label="Algo 2" />
-			<series
-				xyBlockSeries="true"
-				sector="Landscape"
-				x="x"
-				y="y"
-				z="z"
-				blockWidth="0.1"
-				blockHeight="0.1">
-				<scale
-					type="colorScale"
-					lowerBound="0"
-					upperBound="500"
-					lowerColor="red"
-					upperColor="blue" />
+		<chart title="Landscape" type="scatter chart">
+			<series sector="Algo0" x="x" y="y" color="red" label="Algo 0" />
+			<series sector="Algo1" x="x" y="y" color="blue" label="Algo 1" />
+			<series sector="Algo2" x="x" y="y" color="green" label="Algo 2" />
+			<series xyBlockSeries="true" sector="Landscape" x="x" y="y" z="z"
+				blockWidth="0.1" blockHeight="0.1">
+				<scale type="colorScale" lowerBound="0" upperBound="500"
+					lowerColor="red" upperColor="blue" />
 			</series>
 			<annotations>
-				<Minimum
-					x="3"
-					y="2"
-					angle="45" />
-				<Minimum
-					x="-2.805118"
-					y="3.131312"
-					angle="45" />
-				<Minimum
-					x="-3.779310"
-					y="-3.283186"
-					angle="45" />
-				<Minimum
-					x="3.584428"
-					y="-1.848126"
-					angle="45" />
+				<Minimum x="3" y="2" angle="45" />
+				<Minimum x="-2.805118" y="3.131312" angle="45" />
+				<Minimum x="-3.779310" y="-3.283186" angle="45" />
+				<Minimum x="3.584428" y="-1.848126" angle="45" />
 			</annotations>
-			<yAxis
-				min="-6"
-				max="6" />
-			<xAxis
-				min="-6"
-				max="6" />
+			<yAxis min="-6" max="6" />
+			<xAxis min="-6" max="6" />
 		</chart>
-		<chart
-			title="Fitness"
-			showLegend="false"
-			type="time chart">
-			<series
-				value="mean(Algo0,fitness,t)"
-				color="red"
-				label="Algo 0" />
-			<series
-				value="mean(Algo1,fitness,t)"
-				color="blue"
-				label="Algo 1" />
-			<series
-				value="mean(Algo2,fitness,t)"
-				color="green"
-				label="Algo 2" />
+		<chart title="Fitness" showLegend="false" type="time chart">
+			<series value="mean(Algo0,fitness,t)" color="red" label="Algo 0" />
+			<series value="mean(Algo1,fitness,t)" color="blue" label="Algo 1" />
+			<series value="mean(Algo2,fitness,t)" color="green" label="Algo 2" />
 			<subplot>
-				<yAxis
-					min="5"
-					max="5000" />
+				<yAxis min="5" max="5000" />
 			</subplot>
 			<subplot>
-				<yAxis
-					min="0.005"
-					max="5" />
+				<yAxis min="0.005" max="5" />
 			</subplot>
 			<subplot>
-				<yAxis
-					min="0"
-					max="0.005" />
+				<yAxis min="0" max="0.005" />
 			</subplot>
 		</chart>
 	</panel>
-
+	
+	<panel title="Info">
+		<html>
+			<center>
+				<h3>
+					<jamel.version />
+				</h3>
+				By
+				<a href="http://p.seppecher.free.fr/">Dr P. Seppecher</a>
+				(original author, U. of Paris 13 and U. of Nice Sophia Antipolis), 
+				<a
+					href="http://www.uva.nl/en/about-the-uva/organisation/staff-members/content/s/a/i.l.salle/i.l.salle.html">
+					Dr I. Salle
+				</a>
+				(U. of Amsterdam) and 
+				<a
+					href="http://www.austrian-models.net/">
+					Dr H. Hagedorn
+				</a>  (Business and Information Technology School, Berlin, Germany).
+				<h1>Java Agent-based MacroEconomic Laboratory</h1>
+				&#169; 2007-2015, P. Seppecher and Contributors.
+				<br />
+				<br />
+				Source code:
+				<a href="https://github.com/pseppecher/jamel">https://github.com/pseppecher/jamel</a>
+				<br />
+				Javadoc:
+				<a href="http://p.seppecher.free.fr/jamel/javadoc/index.html">http://p.seppecher.free.fr/jamel/javadoc/index.html</a>
+			</center>
+		</html>
+	</panel>
+	
 </charts>

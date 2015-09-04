@@ -2,18 +2,16 @@ package jamel.jamel.firms;
 
 import java.util.List;
 
-import jamel.basic.data.AgentDataset;
-import jamel.basic.data.BasicAgentDataset;
-import jamel.basic.util.Period;
+import jamel.basic.util.Timer;
 import jamel.jamel.firms.capital.BasicCapitalStock;
 import jamel.jamel.firms.capital.CapitalStock;
 import jamel.jamel.firms.capital.StockCertificate;
 import jamel.jamel.firms.factory.BasicFactory;
 import jamel.jamel.firms.factory.Factory;
 import jamel.jamel.firms.managers.CapitalManager;
-import jamel.jamel.firms.managers.SalesManager;
 import jamel.jamel.firms.managers.PricingManager;
 import jamel.jamel.firms.managers.ProductionManager;
+import jamel.jamel.firms.managers.SalesManager;
 import jamel.jamel.firms.managers.WorkforceManager;
 import jamel.jamel.firms.util.Workforce;
 import jamel.jamel.roles.Shareholder;
@@ -54,6 +52,59 @@ public class BasicFirm extends AbstractFirm {
 	protected static final String WORKFORCE_TARGET = "workforceTarget";
 
 	/**
+	 * Creates and returns a new {@link JobContract}.
+	 * 
+	 * @param worker
+	 *            the worker.
+	 * @param wage
+	 *            the wage.
+	 * @param term
+	 *            the term.
+	 * @param timer
+	 *            the timer.
+	 * @return a new {@link JobContract}.
+	 */
+	private static JobContract newJobContract(final Worker worker, final long wage, final int term, final Timer timer) {
+		final JobContract jobContract = new JobContract() {
+
+			private int end = timer.getPeriod().intValue() + term;
+
+			@Override
+			public void breach() {
+				end = timer.getPeriod().intValue();
+			}
+
+			@Override
+			public LaborPower getLaborPower() {
+				if (!isValid()) {
+					throw new RuntimeException("Invalid job contract.");
+				}
+				return worker.getLaborPower();
+			}
+
+			@Override
+			public long getWage() {
+				return wage;
+			}
+
+			@Override
+			public boolean isValid() {
+				return this.end > timer.getPeriod().intValue();
+			}
+
+			@Override
+			public void payWage(Cheque paycheck) {
+				if (!isValid()) {
+					throw new RuntimeException("Invalid job contract.");
+				}
+				worker.earnWage(paycheck);
+			}
+
+		};
+		return jobContract;
+	}
+
+	/**
 	 * Creates a new firm.
 	 * 
 	 * @param name
@@ -73,11 +124,9 @@ public class BasicFirm extends AbstractFirm {
 	@Override
 	protected CapitalManager getNewCapitalManager() {
 
-		final CapitalManager capitalManager = new CapitalManager() {
+		final CapitalManager newCapitalManager = new CapitalManager("CapitalManager", timer) {
 
 			private CapitalStock capitalStock = null;
-
-			private AgentDataset dataset;
 
 			/** The dividend paid. */
 			private long dividend;
@@ -92,8 +141,7 @@ public class BasicFirm extends AbstractFirm {
 			private boolean ownership = false;
 
 			private long getCapital() {
-				return factory.getValue() + account.getAmount()
-						- account.getDebt();
+				return factory.getValue() + account.getAmount() - account.getDebt();
 			}
 
 			/**
@@ -103,8 +151,7 @@ public class BasicFirm extends AbstractFirm {
 			 */
 			private double getLiabilitiesExcess() {
 				final double result;
-				final double excess = account.getDebt()
-						- getLiabilitiesTarget();
+				final double excess = account.getDebt() - getLiabilitiesTarget();
 				result = Math.max(0, excess);
 				return result;
 			}
@@ -116,40 +163,38 @@ public class BasicFirm extends AbstractFirm {
 			 */
 			private double getLiabilitiesTarget() {
 				final long assets = account.getAmount() + factory.getValue();
-				final long capitalTarget = (long) ((assets) * sector
-						.getParam(CAPITAL_TARGET));
+				final long capitalTarget = (long) ((assets) * sector.getParam(CAPITAL_TARGET));
 				return assets - capitalTarget;
 			}
 
 			@Override
 			public Object askFor(String key) {
+				checkConsistency();
 				final Object result;
 				if (key.equals("capital")) {
 					result = this.getCapital();
-				}
-				else if(key.equals("assets")) {
+				} else if (key.equals("assets")) {
 					result = factory.getValue() + account.getAmount();
-				}
-				else if(key.equals("liabilities")) {
+				} else if (key.equals("liabilities")) {
 					result = account.getDebt();
-				}
-				else {
-					result=null;
+				} else {
+					result = null;
 				}
 				return result;
 			}
 
 			@Override
 			public void bankrupt() {
+				checkConsistency();
 				capitalStock.cancel();
 			}
 
 			@Override
 			public void clearOwnership() {
+				checkConsistency();
 				final boolean isOpen = capitalStock.isOpen();
 				this.capitalStock.cancel(); // TODO: rename: bankrupt/cancel
-				this.capitalStock = new BasicCapitalStock(BasicFirm.this,
-						account, timer);
+				this.capitalStock = new BasicCapitalStock(BasicFirm.this, account, timer);
 				if (isOpen) {
 					this.capitalStock.open();
 				}
@@ -157,6 +202,7 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public void close() {
+				checkConsistency();
 
 				this.capitalStock.close();
 
@@ -167,8 +213,7 @@ public class BasicFirm extends AbstractFirm {
 				final long assets = factoryValue + cash;
 				final long liabilities = account.getDebt();
 				final long capital = assets - liabilities;
-				final boolean insolvent = (timer.getPeriod().intValue()
-						- creation > 12 && capital < 0);
+				final boolean insolvent = (timer.getPeriod().intValue() - creation > 12 && capital < 0);
 				// TODO: 12 should be a parameter
 
 				this.dataset.put("cash", (double) cash);
@@ -183,12 +228,10 @@ public class BasicFirm extends AbstractFirm {
 				this.dataset.put("liabilities.excess", getLiabilitiesExcess());
 
 				this.dataset.put("liabilities.new", account.getNewDebt());
-				this.dataset.put("liabilities.repayment",
-						account.getRepaidDebt());
+				this.dataset.put("liabilities.repayment", account.getRepaidDebt());
 
 				this.dataset.put("canceledDebts", account.getCanceledDebt());
-				this.dataset
-						.put("canceledDeposits", account.getCanceledMoney());
+				this.dataset.put("canceledDeposits", account.getCanceledMoney());
 
 				if (insolvent) {
 					this.dataset.put("insolvents", 1.);
@@ -198,34 +241,29 @@ public class BasicFirm extends AbstractFirm {
 			}
 
 			@Override
-			public AgentDataset getData() {
-				return this.dataset;
-			}
-
-			@Override
 			public StockCertificate getNewShares(Integer nShares) {
+				checkConsistency();
 				return this.capitalStock.issueNewShares(nShares);
 			}
 
 			@Override
 			public boolean isConsistent() {
+				checkConsistency();
 				final boolean isConsistent;
 				final long grossProfit = (Long) salesManager.askFor("grossProfit");
 				final long interest = account.getInterest();
-				final double bankruptcy = account.getCanceledMoney() // TODO: why double ??
-						+ factory.getInventoryLosses()
-						- account.getCanceledDebt();
+				final double bankruptcy = account.getCanceledMoney() // TODO:
+																		// why
+																		// double
+																		// ??
+						+ factory.getInventoryLosses() - account.getCanceledDebt();
 				final long capital = this.getCapital();
-				isConsistent = (capital == this.initialCapital
-						+ grossProfit
-						- (this.capitalStock.getDistributedDividends()
-								+ interest + bankruptcy));
+				isConsistent = (capital == this.initialCapital + grossProfit
+						- (this.capitalStock.getDistributedDividends() + interest + bankruptcy));
 				if (!isConsistent) {
 					System.out.println("capital = " + capital);
-					System.out
-							.println("expected = "
-									+ (this.initialCapital + grossProfit - (this.dividend
-											+ interest + bankruptcy)));
+					System.out.println("expected = "
+							+ (this.initialCapital + grossProfit - (this.dividend + interest + bankruptcy)));
 					throw new RuntimeException("Inconsistency");
 				}
 				return isConsistent;
@@ -233,53 +271,53 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public boolean isSolvent() {
+				checkConsistency();
 				return (this.getCapital() >= 0);
 			}
 
 			@Override
 			public long newDividend() {
-				final long dividend;
+				checkConsistency();
+				final long newDividend;
 				final long cash = account.getAmount();
 				final long assets = cash + factory.getValue();
 				final long capital = getCapital();
-				final long capitalTarget = (long) ((assets) * sector
-						.getParam(CAPITAL_TARGET));
+				final long capitalTarget = (long) ((assets) * sector.getParam(CAPITAL_TARGET));
 				if (capital <= 0) {
-					dividend = 0l;
+					newDividend = 0l;
 				} else {
 					if (capital <= capitalTarget) {
-						dividend = 0l;
+						newDividend = 0l;
 					} else {
-						dividend = Math
-								.min((long) ((capital - capitalTarget) * sector
-										.getParam(CAPITAL_PROPENSITY2DISTRIBUTE)),
-										cash);
+						newDividend = Math.min(
+								(long) ((capital - capitalTarget) * sector.getParam(CAPITAL_PROPENSITY2DISTRIBUTE)),
+								cash);
 					}
 				}
-				return dividend;
+				return newDividend;
 			}
 
 			@Override
 			public void open() {
-				this.dataset = new BasicAgentDataset("Capital Manager");
+				super.open();
 				this.initialCapital = this.getCapital();
 				this.dividend = 0;
 				this.capitalStock.open();
-				isConsistent();
 			}
 
 			@Override
 			public void payDividend() {
+				checkConsistency();
 				isConsistent();
 				dividend = newDividend();
 				capitalStock.setDividend(dividend);
-				this.dataset.put("debt2target.ratio", (account.getDebt())
-						/ getLiabilitiesTarget());
+				this.dataset.put("debt2target.ratio", (account.getDebt()) / getLiabilitiesTarget());
 				isConsistent();
 			}
 
 			@Override
 			public void secureFinancing(long amount) {
+				checkConsistency();
 				if (amount > account.getAmount()) {
 					account.lend(amount - account.getAmount());
 				}
@@ -290,17 +328,14 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public void updateOwnership() {
+				// checkChronologicalConsistency();
 				if (ownership) {
-					throw new RuntimeException(
-							"The ownership of this firm is already fixed.");
+					throw new RuntimeException("The ownership of this firm is already fixed.");
 				}
-				final List<Shareholder> shareHolders = sector
-						.selectCapitalOwner(10);
+				final List<Shareholder> shareHolders = sector.selectCapitalOwner(10);
 				if (shareHolders.size() > 0) {
-					this.capitalStock = new BasicCapitalStock(BasicFirm.this,
-							shareHolders.size(), account, timer);
-					List<StockCertificate> certificates = this.capitalStock
-							.getCertificates();
+					this.capitalStock = new BasicCapitalStock(BasicFirm.this, shareHolders.size(), account, timer);
+					List<StockCertificate> certificates = this.capitalStock.getCertificates();
 					for (int id = 0; id < certificates.size(); id++) {
 						final StockCertificate certif = certificates.get(id);
 						final Shareholder shareHolder = shareHolders.get(id);
@@ -312,8 +347,8 @@ public class BasicFirm extends AbstractFirm {
 				}
 			}
 		};
-		capitalManager.updateOwnership();
-		return capitalManager;
+		newCapitalManager.updateOwnership();
+		return newCapitalManager;
 	}
 
 	/**
@@ -323,8 +358,7 @@ public class BasicFirm extends AbstractFirm {
 	 */
 	@Override
 	protected Factory getNewFactory() {
-		return new BasicFactory((int) sector.getParam(PRODUCTION_TIME),
-				(int) sector.getParam(PRODUCTION_CAPACITY),
+		return new BasicFactory((int) sector.getParam(PRODUCTION_TIME), (int) sector.getParam(PRODUCTION_CAPACITY),
 				(long) sector.getParam(PRODUCTIVITY), timer);
 	}
 
@@ -335,9 +369,7 @@ public class BasicFirm extends AbstractFirm {
 	 */
 	@Override
 	protected PricingManager getNewPricingManager() {
-		return new PricingManager() {
-
-			private AgentDataset dataset;
+		return new PricingManager("PricingManager", timer) {
 
 			/** The higher price. */
 			private Double highPrice = null;
@@ -354,17 +386,17 @@ public class BasicFirm extends AbstractFirm {
 			/**
 			 * Returns a new price chosen at random in the given interval.
 			 * 
-			 * @param lowPrice
+			 * @param lowerBound
 			 *            the lower price
-			 * @param highPrice
+			 * @param upperBound
 			 *            the higher price
 			 * @return the new price.
 			 */
-			private double getNewPrice(Double lowPrice, Double highPrice) {
-				if (lowPrice > highPrice) {
+			private double getNewPrice(Double lowerBound, Double upperBound) {
+				if (lowerBound > upperBound) {
 					throw new IllegalArgumentException("lowPrice > highPrice.");
 				}
-				return lowPrice + random.nextFloat() * (highPrice - lowPrice);
+				return lowerBound + random.nextFloat() * (upperBound - lowerBound);
 			}
 
 			/**
@@ -373,8 +405,7 @@ public class BasicFirm extends AbstractFirm {
 			private void setUnitCostPrice() {
 				final double unitCost = factory.getUnitCost();
 				if (!Double.isNaN(unitCost)) {
-					final float priceFlexibility = sector
-							.getParam(PRICE_FLEXIBILITY);
+					final float priceFlexibility = sector.getParam(PRICE_FLEXIBILITY);
 					this.price = unitCost;
 					this.highPrice = (1f + priceFlexibility) * this.price;
 					this.lowPrice = (1f - priceFlexibility) * this.price;
@@ -383,6 +414,7 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public void close() {
+				checkConsistency();
 				final long supplyVolume = (Long) salesManager.askFor("supplyVolume");
 				final double salesVolume = (Long) salesManager.askFor("salesVolume");
 				if (supplyVolume > 0) {
@@ -393,43 +425,30 @@ public class BasicFirm extends AbstractFirm {
 			}
 
 			@Override
-			public AgentDataset getData() {
-				return this.dataset;
-			}
-
-			@Override
 			public Double getPrice() {
+				checkConsistency();
 				return this.price;
 			}
 
 			@Override
-			public void open() {
-				this.dataset = new BasicAgentDataset("Pricing Manager");
-			}
-
-			@Override
 			public void updatePrice() {
-				final double inventoryRatio = factory.getInventoryRatio(sector
-						.getParam(INVENTORY_NORMAL_LEVEL));
+				checkConsistency();
+				final double inventoryRatio = factory.getInventoryRatio(sector.getParam(INVENTORY_NORMAL_LEVEL));
 				if (this.price == null) {
 					this.setUnitCostPrice();
 				}
 				if (this.price != null && salesRatio != null) {
-					final float priceFlexibility = sector
-							.getParam(PRICE_FLEXIBILITY);
+					final float priceFlexibility = sector.getParam(PRICE_FLEXIBILITY);
 					if ((salesRatio == 1)) {
 						this.lowPrice = this.price;
 						if (inventoryRatio < 1) {
-							this.price = getNewPrice(this.lowPrice,
-									this.highPrice);
+							this.price = getNewPrice(this.lowPrice, this.highPrice);
 						}
-						this.highPrice = this.highPrice
-								* (1f + priceFlexibility);
+						this.highPrice = this.highPrice * (1f + priceFlexibility);
 					} else {
 						this.highPrice = this.price;
 						if (inventoryRatio > 1) {
-							this.price = getNewPrice(this.lowPrice,
-									this.highPrice);
+							this.price = getNewPrice(this.lowPrice, this.highPrice);
 						}
 						this.lowPrice = this.lowPrice * (1f - priceFlexibility);
 					}
@@ -447,7 +466,7 @@ public class BasicFirm extends AbstractFirm {
 	 */
 	@Override
 	protected ProductionManager getNewProductionManager() {
-		return new ProductionManager() {
+		return new ProductionManager("ProductionManager", timer) {
 
 			/**
 			 * The capacity utilization rate targeted.
@@ -466,27 +485,29 @@ public class BasicFirm extends AbstractFirm {
 			private Float utilizationRateTargeted = null;
 
 			@Override
+			public void close() {
+				// Does nothing.
+			}
+
+			@Override
 			public float getTarget() {
+				checkConsistency();
 				if (this.utilizationRateTargeted == null) {
-					this.utilizationRateTargeted = sector
-							.getParam(UTILIZATION_RATE_INITIAL_VALUE);
+					this.utilizationRateTargeted = sector.getParam(UTILIZATION_RATE_INITIAL_VALUE);
 				}
 				return this.utilizationRateTargeted;
 			}
 
 			@Override
 			public void updateCapacityUtilizationTarget() {
+				checkConsistency();
 				if (this.utilizationRateTargeted == null) {
-					this.utilizationRateTargeted = sector
-							.getParam(UTILIZATION_RATE_INITIAL_VALUE);
+					this.utilizationRateTargeted = sector.getParam(UTILIZATION_RATE_INITIAL_VALUE);
 				} else {
-					final double inventoryRatio = factory
-							.getInventoryRatio(sector
-									.getParam(INVENTORY_NORMAL_LEVEL));
+					final double inventoryRatio = factory.getInventoryRatio(sector.getParam(INVENTORY_NORMAL_LEVEL));
 					final float alpha1 = random.nextFloat();
 					final float alpha2 = random.nextFloat();
-					final float delta = (alpha1 * sector
-							.getParam(UTILIZATION_RATE_FLEXIBILITY));
+					final float delta = (alpha1 * sector.getParam(UTILIZATION_RATE_FLEXIBILITY));
 					if (inventoryRatio < 1 - alpha1 * alpha2) { // Low level
 						this.utilizationRateTargeted += delta;
 						if (this.utilizationRateTargeted > 1) {
@@ -507,24 +528,22 @@ public class BasicFirm extends AbstractFirm {
 
 	@Override
 	protected SalesManager getNewSalesManager() {
-		return new SalesManager() {
-
-			private AgentDataset dataset = null;
+		return new SalesManager("SalesManager", timer) {
 
 			/**
-			 * The gross profit of the period. 
+			 * The gross profit of the period.
 			 * <p>
-			 * "In accounting, gross profit or sales profit or 'credit sales' is the
-			 * difference between revenue and the cost of making a product or providing
-			 * a service, before deducting overhead, payroll, taxation, and interest
-			 * payments (...) Gross profit = Net sales Ð Cost of goods sold"
+			 * "In accounting, gross profit or sales profit or 'credit sales' is
+			 * the difference between revenue and the cost of making a product
+			 * or providing a service, before deducting overhead, payroll,
+			 * taxation, and interest payments (...) Gross profit = Net sales -
+			 * Cost of goods sold"
 			 * 
-			 * (ref: <a
-			 * href="https://en.wikipedia.org/wiki/Gross_profit">wikipedia.org</a>)
+			 * (ref:
+			 * <a href="https://en.wikipedia.org/wiki/Gross_profit">wikipedia.
+			 * org</a>)
 			 */
 			private long grossProfit = 0;
-
-			private boolean open = false;
 
 			private long salesValue = 0;
 
@@ -533,36 +552,30 @@ public class BasicFirm extends AbstractFirm {
 			private long salesVolume = 0;
 
 			private Supply supply = null;
-			
+
 			private long supplyValue = 0;
 
 			private long supplyVolume = 0;
-			
+
 			@Override
 			public Object askFor(String key) {
+				checkConsistency();
 				final Object result;
 				if (key.equals("grossProfit")) {
 					result = this.grossProfit;
-				}
-				else if(key.equals("supplyVolume")) {
+				} else if (key.equals("supplyVolume")) {
 					result = this.supplyVolume;
-				}
-				else if(key.equals("salesVolume")) {
+				} else if (key.equals("salesVolume")) {
 					result = this.salesVolume;
-				}
-				else {
-					result=null;
+				} else {
+					result = null;
 				}
 				return result;
 			}
 
 			@Override
 			public void close() {
-				if (!open) {
-					throw new RuntimeException("Already closed.");
-				}
-				this.open = false;
-				this.supply.close();
+				checkConsistency();
 				dataset.put("supply.vol", (double) supplyVolume);
 				dataset.put("supply.val", (double) supplyValue);
 				dataset.put("sales.vol", (double) salesVolume);
@@ -573,20 +586,15 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public void createSupply() {
-				if (!open) {
-					throw new RuntimeException("Closed.");
-				}
-				final Period validPeriod = timer.getPeriod();
-				supplyVolume = Math.min((long) (sector
-						.getParam(PROPENSITY2SELL) * factory
-						.getFinishedGoodsVolume()), (long) (sector
-						.getParam(SELLING_CAPACITY) * factory
-						.getMaxUtilAverageProduction()));
+				checkConsistency();
+				final int validPeriod = timer.getPeriod().intValue();
+				supplyVolume = Math.min((long) (sector.getParam(PROPENSITY2SELL) * factory.getFinishedGoodsVolume()),
+						(long) (sector.getParam(SELLING_CAPACITY) * factory.getMaxUtilAverageProduction()));
 
 				if (pricingManager.getPrice() == null) {
 					pricingManager.updatePrice();// TODO: combien de fois update
-					// price est-il appelŽ ? ne
-					// peut-il tre appelŽ q'une
+					// price est-il appelï¿½ ? ne
+					// peut-il ï¿½tre appelï¿½ q'une
 					// fois, ici ?
 				}
 				final Double price = pricingManager.getPrice();
@@ -599,100 +607,70 @@ public class BasicFirm extends AbstractFirm {
 
 				supply = new Supply() {
 
-					private boolean open = true;
-					
 					private long volume = supplyVolume;
+
+					private void anachronismDetection() {
+						if (validPeriod != timer.getPeriod().intValue()) {
+							throw new AnachronismException("Out of date.");
+						}
+					}
 
 					@Override
 					public Commodities buy(long demand, Cheque cheque) {
-						if (!validPeriod.isPresent()) {
-							throw new AnachronismException("Bad period.");
-						}
-						if (!open) {
-							throw new RuntimeException("This supply is closed.");
-						}
+						anachronismDetection();
 						if (demand > this.volume) {
-							throw new IllegalArgumentException(
-									"Demand cannot exceed supply.");
+							throw new IllegalArgumentException("Demand cannot exceed supply.");
 						}
-						if ((long) (this.getPrice() * demand) != cheque
-								.getAmount()) {
-							throw new IllegalArgumentException(
-									"Cheque amount : expected <"
-											+ (long) (demand * this.getPrice())
-											+ "> but was <"
-											+ cheque.getAmount() + ">");
+						if ((long) (this.getPrice() * demand) != cheque.getAmount()) {
+							throw new IllegalArgumentException("Cheque amount : expected <"
+									+ (long) (demand * this.getPrice()) + "> but was <" + cheque.getAmount() + ">");
 						}
 						account.deposit(cheque);
 						this.volume -= demand;
 						salesValue += cheque.getAmount();
 						salesVolume += demand;
-						final Commodities sales = factory
-								.getCommodities(demand);
+						final Commodities sales = factory.getCommodities(demand);
 						salesValueAtCost += sales.getValue();
 						grossProfit = salesValue - salesValueAtCost;
 						return sales;
 					}
 
 					@Override
-					public void close() {
-						if (!open) {
-							throw new RuntimeException("This supply is already closed.");
-						}
-						this.open=false;
-					}
-
-					@Override
 					public double getPrice() {
-						if (!open) {
-							throw new RuntimeException("This supply is closed.");
-						}
+						anachronismDetection();
 						return price;
 					}
 
 					@Override
-					public long getPrice(long volume) {
-						if (!open) {
-							throw new RuntimeException("This supply is closed.");
-						}
-						return (long) (price * volume);
+					public long getPrice(long vol) {
+						anachronismDetection();
+						return (long) (price * vol);
 					}
 
 					@Override
 					public Supplier getSupplier() {
-						if (!open) {
-							throw new RuntimeException("This supply is closed.");
-						}
+						anachronismDetection();
 						return BasicFirm.this;
 					}
 
 					@Override
 					public long getVolume() {
-						if (!open) {
-							throw new RuntimeException("This supply is closed.");
-						}
+						anachronismDetection();
 						return this.volume;
 					}
 
 					@Override
 					public String toString() {
-						return "Supply by " + name + ": price <" + price
-								+ ">, volume <" + volume + ">";
+						anachronismDetection();
+						return "Supply by " + name + ": price <" + price + ">, volume <" + volume + ">";
 					}
 
 				};
 			}
 
 			@Override
-			public AgentDataset getData() {
-				return this.dataset;
-			}
-
-			@Override
 			public Supply getSupply() {
-				if (!open) {
-					throw new RuntimeException("Closed.");
-				}
+				checkConsistency();
 				final Supply result;
 				if (this.supply.getVolume() > 0) {
 					result = this.supply;
@@ -704,10 +682,7 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public void open() {
-				if (open) {
-					throw new RuntimeException("Already open.");
-				}
-				this.open = true;
+				super.open();
 				this.supply = null;
 				this.grossProfit = 0;
 				this.salesValue = 0;
@@ -715,7 +690,6 @@ public class BasicFirm extends AbstractFirm {
 				this.salesVolume = 0;
 				this.supplyValue = 0;
 				this.supplyVolume = 0;
-				this.dataset = new BasicAgentDataset("SalesManager");
 			}
 
 		};
@@ -728,16 +702,7 @@ public class BasicFirm extends AbstractFirm {
 	 */
 	@Override
 	protected WorkforceManager getNewWorkforceManager() {
-		return new WorkforceManager() {
-			
-			/** Memory of the recent vacancies. */
-			private final Memory<Integer> recentVacancies = new Memory<Integer>(4);
-
-			/** Memory of the recent job openings. */
-			private final Memory<Integer> recentJobOpenings = new Memory<Integer>(4);
-
-			/** The dataset. */
-			private AgentDataset dataset = null;
+		return new WorkforceManager("WorkforceManager", timer) {
 
 			/** The job offer. */
 			private JobOffer jobOffer = null;
@@ -747,6 +712,12 @@ public class BasicFirm extends AbstractFirm {
 
 			/** The payroll (= the anticipated wage bill) */
 			private Long payroll = null;
+
+			/** Memory of the recent job openings. */
+			private final Memory<Integer> recentJobOpenings = new Memory<Integer>(4);
+
+			/** Memory of the recent vacancies. */
+			private final Memory<Integer> recentVacancies = new Memory<Integer>(4);
 
 			/** Number of job vacancies in the current period. */
 			private Integer vacancies = null;
@@ -764,14 +735,12 @@ public class BasicFirm extends AbstractFirm {
 			 */
 			private Double getVacancyRate() {
 				final Double result;
-				final Double vacancies = recentVacancies.getSum();
-				final Double jobs = recentJobOpenings.getSum();
-				if (vacancies == null && jobs == null) {
-					result = null;
-				} else if (vacancies == 0) {
+				final double sumVacancies = recentVacancies.getSum();
+				final double sumJobs = recentJobOpenings.getSum();
+				if (sumVacancies == 0) {
 					result = 0d;
 				} else {
-					result = vacancies / jobs;
+					result = sumVacancies / sumJobs;
 				}
 				return result;
 			}
@@ -786,84 +755,29 @@ public class BasicFirm extends AbstractFirm {
 				if (vacancies == 0) {
 					jobOffer = null;
 				} else {
-					final Period validPeriod = timer.getPeriod();
+					final int validPeriod = timer.getPeriod().intValue();
 					jobOffer = new JobOffer() {
 
 						private final long jobWage = (long) Math.floor(wage);
 
 						@Override
 						public JobContract apply(final Worker worker) {
-							if (!validPeriod.isPresent()) {
-								throw new AnachronismException("Out of date.");
-							}
+							timer.checkConsistency(validPeriod);
 							if (!(vacancies > 0)) {
 								throw new RuntimeException("No vacancy.");
 							}
 							vacancies--;
-							final JobContract jobContract = new JobContract() {
 
-								private Period end;
+							final int term;
+							final float min = sector.getParam(LABOUR_CONTRACT_MIN);
+							final float max = sector.getParam(LABOUR_CONTRACT_MAX);
+							if (max == min) {
+								term = (int) min;
+							} else {
+								term = (int) (min + random.nextInt((int) (max - min)));
+							}
 
-								final private Period start = timer.getPeriod();
-
-								{
-									final int term;
-									final float min = sector
-											.getParam(LABOUR_CONTRACT_MIN);
-									final float max = sector
-											.getParam(LABOUR_CONTRACT_MAX);
-									if (max == min) {
-										term = (int) min;
-									} else {
-										term = (int) (min + random
-												.nextInt((int) (max - min)));
-									}
-									end = start.plus(term);
-								}
-
-								@Override
-								public void breach() {
-									this.end = timer.getPeriod();
-								}
-
-								@Override
-								public LaborPower getLaborPower() {
-									if (!isValid()) {
-										throw new RuntimeException(
-												"Invalid job contract.");
-									}
-									return worker.getLaborPower();
-								}
-
-								@Override
-								public long getWage() {
-									return jobWage;
-								}
-
-								@Override
-								public boolean isValid() {
-									return this.end.isAfter(timer.getPeriod());
-								}
-
-								@Override
-								public void payWage(Cheque paycheck) {
-									if (!isValid()) {
-										throw new RuntimeException(
-												"Invalid job contract.");
-									}
-									worker.earnWage(paycheck);
-								}
-
-								@Override
-								public String toString() {
-									return "Employer: " + name + ", Employee: "
-											+ worker.getName() + ", start: "
-											+ start.intValue() + ", end: "
-											+ end.intValue() + ", wage: "
-											+ wage;
-								}
-
-							};
+							final JobContract jobContract = newJobContract(worker, jobWage, term, timer);
 							workforce.add(jobContract);
 							return jobContract;
 
@@ -871,11 +785,13 @@ public class BasicFirm extends AbstractFirm {
 
 						@Override
 						public Object getEmployerName() {
+							timer.checkConsistency(validPeriod);
 							return BasicFirm.this.getName();
 						}
 
 						@Override
 						public long getWage() {
+							timer.checkConsistency(validPeriod);
 							return jobWage;
 						}
 					};
@@ -884,17 +800,14 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public void close() {
+				checkConsistency();
 				recentVacancies.add(this.vacancies);
 				this.dataset.put(JOB_VACANCIES, (double) this.vacancies);
 			}
 
 			@Override
-			public AgentDataset getData() {
-				return this.dataset;
-			}
-
-			@Override
 			public JobOffer getJobOffer() {
+				checkConsistency();
 				final JobOffer result;
 				if (this.vacancies > 0) {
 					result = this.jobOffer;
@@ -906,30 +819,34 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public LaborPower[] getLaborPowers() {
+				checkConsistency();
 				return this.workforce.getLaborPowers();
 			}
 
 			@Override
 			public long getPayroll() {
+				checkConsistency();
 				return this.payroll;
 			}
 
 			@Override
 			public void layoff() {
+				checkConsistency();
 				workforce.layoff();
 			}
 
 			@Override
 			public void open() {
+				super.open();
 				this.jobOffer = null;
 				this.manpowerTarget = null;
 				this.payroll = null;
 				this.vacancies = null;
-				this.dataset = new BasicAgentDataset("Workforce Manager");
 			}
 
 			@Override
 			public void payWorkers() {
+				checkConsistency();
 				double wageBill = 0l;
 				for (JobContract contract : workforce) {
 					contract.payWage(account.newCheque(contract.getWage()));
@@ -949,36 +866,31 @@ public class BasicFirm extends AbstractFirm {
 			 */
 			@Override
 			public void updateWage() {
+				checkConsistency();
 				final Double vacancyRate = getVacancyRate();
 				final Double vacancyRatio;
 				if (vacancyRate != null) {
-					vacancyRatio = getVacancyRate()
-							/ sector.getParam(NORMAL_VACANCY_RATE);
+					vacancyRatio = getVacancyRate() / sector.getParam(NORMAL_VACANCY_RATE);
 				} else {
 					vacancyRatio = null;
 				}
 				if (this.wage == null) {
 					this.wage = sector.getRandomWage();
 					if (this.wage == null) {
-						this.wage = (double) sector
-								.getParam(WAGE_INITIAL_VALUE);
+						this.wage = (double) sector.getParam(WAGE_INITIAL_VALUE);
 					}
 				} else {
 					final float alpha1 = random.nextFloat();
 					final float alpha2 = random.nextFloat();
 					final double newWage;
 					if (vacancyRatio < 1 - alpha1 * alpha2) {
-						newWage = this.wage
-								* (1f - alpha1
-										* sector.getParam(WAGE_FLEX_DOWN));
+						newWage = this.wage * (1f - alpha1 * sector.getParam(WAGE_FLEX_DOWN));
 					} else if (vacancyRatio > 1 + alpha1 * alpha2) {
-						newWage = this.wage
-								* (1f + alpha1 * sector.getParam(WAGE_FLEX_UP));
+						newWage = this.wage * (1f + alpha1 * sector.getParam(WAGE_FLEX_UP));
 					} else {
 						newWage = this.wage;
 					}
-					this.wage = Math
-							.max(newWage, sector.getParam(WAGE_MINIMUM));
+					this.wage = Math.max(newWage, sector.getParam(WAGE_MINIMUM));
 				}
 				this.dataset.put(VACANCIES_RATE, vacancyRate);
 				this.dataset.put(WAGES, wage);
@@ -986,9 +898,9 @@ public class BasicFirm extends AbstractFirm {
 
 			@Override
 			public void updateWorkforce() {
+				checkConsistency();
 				workforce.cleanUp();
-				manpowerTarget = Math.round(factory.getCapacity()
-						* productionManager.getTarget());
+				manpowerTarget = Math.round(factory.getCapacity() * productionManager.getTarget());
 				final int jobOpenings;
 				if (manpowerTarget <= workforce.size()) {
 					if (manpowerTarget < workforce.size()) {
@@ -1001,8 +913,7 @@ public class BasicFirm extends AbstractFirm {
 					}
 				} else {
 					jobOpenings = manpowerTarget - workforce.size();
-					payroll = workforce.getPayroll() + jobOpenings
-							* (long) ((double) this.wage);
+					payroll = workforce.getPayroll() + jobOpenings * (long) ((double) this.wage);
 				}
 				this.dataset.put(JOB_OPENINGS, (double) jobOpenings);
 				this.recentJobOpenings.add(jobOpenings);

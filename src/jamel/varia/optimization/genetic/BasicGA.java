@@ -94,10 +94,10 @@ public class BasicGA implements Sector {
 	}
 
 	@Override
-	public Phase getPhase(final String name) {
+	public Phase getPhase(final String phaseName) {
 		Phase result = null;
-		if (name.equals("tournament")) {
-			result = new AbstractPhase(name, this){
+		if (phaseName.equals("tournament")) {
+			result = new AbstractPhase(phaseName, this){
 				@Override
 				public void run() {
 					final List<Individual> list = population.getList();
@@ -107,8 +107,8 @@ public class BasicGA implements Sector {
 				}				
 			};			
 		}
-		else if (name.equals("adaptation")) {
-			result = new AbstractPhase(name, this){
+		else if (phaseName.equals("adaptation")) {
+			result = new AbstractPhase(phaseName, this){
 				@Override
 				public void run() {
 					final List<Individual> list = population.getList();

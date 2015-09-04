@@ -1,36 +1,33 @@
 package jamel.jamel.firms.managers;
 
-import jamel.basic.data.AgentDataset;
+import jamel.basic.util.Timer;
 import jamel.jamel.firms.capital.StockCertificate;
 
 /**
  * The capital manager.
  */
-public interface CapitalManager extends Askable {
+public abstract class CapitalManager extends AbstractManager implements Askable {
+
+	/**
+	 * Creates a new capital manager.
+	 * @param name the name of the manager.
+	 * @param timer the timer.
+	 */
+	public CapitalManager(String name, Timer timer) {
+		super(name, timer);
+	}
 
 	/**
 	 * Should be called when the firm is bankrupted.
 	 */
-	void bankrupt();
+	public abstract void bankrupt();
 
 	/**
 	 * Clears the ownership of the firm.
 	 * <p>
 	 * Each share is cancelled.
 	 */
-	void clearOwnership();
-
-	/**
-	 * Closes the capital manager.
-	 */
-	void close();
-
-	/**
-	 * Returns the dataset of the manager.
-	 * 
-	 * @return the dataset of the manager.
-	 */
-	AgentDataset getData();
+	public abstract void clearOwnership();
 
 	/**
 	 * Issues the specified number of new shares.
@@ -39,7 +36,7 @@ public interface CapitalManager extends Askable {
 	 *            the number of new shares to be issued.
 	 * @return a {@link StockCertificate} that encapsulates the new shares.
 	 */
-	StockCertificate getNewShares(Integer n);
+	public abstract StockCertificate getNewShares(Integer n);
 
 	/**
 	 * Returns <code>true</code> if the firm accounting is consistent,
@@ -48,7 +45,7 @@ public interface CapitalManager extends Askable {
 	 * @return <code>true</code> if the firm accounting is consistent,
 	 *         <code>false</code> otherwise.
 	 */
-	boolean isConsistent();
+	public abstract boolean isConsistent();
 
 	/**
 	 * Returns <code>true</code> if the firm is solvent, <code>false</code>
@@ -57,7 +54,7 @@ public interface CapitalManager extends Askable {
 	 * @return <code>true</code> if the firm is solvent, <code>false</code>
 	 *         otherwise.
 	 */
-	boolean isSolvent();
+	public abstract boolean isSolvent();
 
 	/**
 	 * Determines and returns the amount that will be paid as dividend for the
@@ -65,17 +62,12 @@ public interface CapitalManager extends Askable {
 	 * 
 	 * @return the amount of the dividend for the current period.
 	 */
-	long newDividend();
-
-	/**
-	 * Opens the capital manager at the beginning of the period.
-	 */
-	void open();
+	public abstract long newDividend();
 
 	/**
 	 * Determines and pays the dividend to the owner of the firm.
 	 */
-	void payDividend();
+	public abstract void payDividend();
 
 	/**
 	 * Secures the financing of the specified amount.
@@ -83,12 +75,12 @@ public interface CapitalManager extends Askable {
 	 * @param amount
 	 *            the amount.
 	 */
-	void secureFinancing(long amount);
+	public abstract void secureFinancing(long amount);
 
 	/**
 	 * Updates the ownership of the firm.
 	 */
-	void updateOwnership();
+	public abstract void updateOwnership();
 
 }
 

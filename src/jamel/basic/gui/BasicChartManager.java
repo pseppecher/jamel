@@ -2,12 +2,14 @@ package jamel.basic.gui;
 
 import jamel.basic.data.BasicDataManager;
 import jamel.basic.util.InitializationException;
+import jamel.basic.util.Timer;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.BoxLayout;
@@ -32,10 +34,7 @@ public class BasicChartManager implements ChartManager {
 	private class EmptyPanel extends ChartPanel {@SuppressWarnings("javadoc")
 	public EmptyPanel() {
 		super(null);
-		this.setBackground(backgroundColor);	}}
-
-	/** A gray color for the empty panels. */
-	private static final Color backgroundColor = new Color(230,230,230);
+		this.setBackground(JamelColor.getColor("background"));	}}
 
 	/** The font used for chart titles. */
 	private static final Font titleFont = new Font("Tahoma", Font.PLAIN, 14);
@@ -50,12 +49,18 @@ public class BasicChartManager implements ChartManager {
 	private final JPanel[] tabbedPanes;
 
 	/**
+	 * The list of objects to be updated.
+	 */
+	private List<Updatable> updatables = new LinkedList<Updatable>();
+
+	/**
 	 * Creates the chart manager.
 	 * @param root  a XML element that contains the chart panel configuration.
 	 * @param dataManager  the parent data manager.
+	 * @param timer the timer.
 	 * @throws InitializationException If something goes wrong.
 	 */
-	public BasicChartManager(Element root, BasicDataManager dataManager) throws InitializationException {
+	public BasicChartManager(Element root, BasicDataManager dataManager, Timer timer) throws InitializationException {
 		final NodeList panelNodeList = root.getElementsByTagName("panel");
 		this.dataManager=dataManager;
 		this.tabbedPanes = new JPanel[panelNodeList.getLength()];
@@ -72,7 +77,7 @@ public class BasicChartManager implements ChartManager {
 			tabPanel.setName(panelElement.getAttribute("title"));
 			final NodeList nodeList = panelElement.getChildNodes();
 			for (int j = 0; j<nodeList.getLength(); j++) {
-				final JPanel subPanel = getPanel(nodeList.item(j));
+				final Component subPanel = getPanel(nodeList.item(j),timer);
 				if (subPanel!=null) {
 					tabPanel.add(subPanel);					
 				}
@@ -83,11 +88,12 @@ public class BasicChartManager implements ChartManager {
 	/**
 	 * Creates and returns a new {@link JPanel} according to the specified description. 
 	 * @param node an XML node that contains the description of the panel to create.
+	 * @param timer a timer.
 	 * @return a new JPanel {@link JPanel}
 	 * @throws InitializationException If something goes wrong.
 	 */
-	private JPanel getPanel(Node node) throws InitializationException {
-		final JPanel result;
+	private Component getPanel(Node node, Timer timer) throws InitializationException {
+		final Component result;
 		if (node.getNodeType()!=Node.ELEMENT_NODE) {
 			result=null;
 		}
@@ -106,27 +112,37 @@ public class BasicChartManager implements ChartManager {
 					result = chartPanel;
 				}
 			}
+			else if(elem.getNodeName().equals("html")) {
+				final HtmlPanel panel = new HtmlPanel(elem,this.dataManager.getMacroDatabase());
+				this.updatables.add(panel);
+				result = panel;
+			}
+			else if(elem.getNodeName().equals("validation")) {
+				final ValidationPanel panel = new ValidationPanel(elem,this.dataManager.getMacroDatabase(), timer);
+				this.updatables.add(panel);
+				result = panel;
+			}
 			else {
 				// The panel is not a chart panel.
-				result = new JPanel();
+				final JPanel jPanel = new JPanel();
 				if (elem.getNodeName().equals("col")) {
-					final BoxLayout layout = new BoxLayout(result, BoxLayout.Y_AXIS);
-					result.setLayout(layout);
+					final BoxLayout layout = new BoxLayout(jPanel, BoxLayout.Y_AXIS);
+					jPanel.setLayout(layout);
 					final String title = elem.getAttribute("title");
 					if (!title.equals("")) {
 						final JLabel titleLabel = new JLabel(title,SwingConstants.CENTER);
-						titleLabel.setBackground(backgroundColor);
+						titleLabel.setBackground(JamelColor.getColor("background"));
 						titleLabel.setOpaque(true);
 						titleLabel.setMaximumSize(new Dimension(1000, 25));
 						titleLabel.setMinimumSize(new Dimension(10, 25));
 						titleLabel.setPreferredSize(new Dimension(1000, 25));
 						titleLabel.setFont(titleFont);
 						titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-						result.add(titleLabel);
+						jPanel.add(titleLabel);
 					}
 				}
 				else if (elem.getNodeName().equals("line")) {
-					result.setLayout(new BoxLayout(result, BoxLayout.X_AXIS));
+					jPanel.setLayout(new BoxLayout(jPanel, BoxLayout.X_AXIS));
 				}
 				else {
 					throw new InitializationException("Unexpected node name: "+elem.getNodeName());
@@ -134,15 +150,16 @@ public class BasicChartManager implements ChartManager {
 				final NodeList nodeList = elem.getChildNodes();
 				if (nodeList.getLength()>0) {
 					for (int j = 0; j<nodeList.getLength(); j++) {
-						final JPanel subPanel = getPanel(nodeList.item(j));
+						final Component subPanel = getPanel(nodeList.item(j),timer);
 						if (subPanel!=null) {
-							result.add(subPanel);
+							jPanel.add(subPanel);
 						}
 					}
 				}
 				else {
-					result.add(new EmptyPanel());
+					jPanel.add(new EmptyPanel());
 				}
+				result=jPanel;
 			}
 		}
 		return result;
@@ -161,6 +178,13 @@ public class BasicChartManager implements ChartManager {
 	@Override
 	public Component[] getPanelList() {
 		return this.tabbedPanes;
+	}
+
+	@Override
+	public void update() {
+		for (Updatable updatable: this.updatables ) {
+			updatable.update();
+		}
 	}
 
 }

@@ -91,11 +91,13 @@ public class Schelling implements Sector {
 
 	/**
 	 * Returns the color of the specified location.
-	 * @param x the x coordinate.
-	 * @param y the y coordinate.
+	 * @param x1 the x coordinate.
+	 * @param y1 the y coordinate.
 	 * @return the color.
 	 */
-	private int getColorAt(int x, int y) {
+	private int getColorAt(final int x1, final int y1) {
+		int x = x1;
+		int y = y1;
 		if (x<0) {
 			x+=height;
 		}
@@ -203,10 +205,10 @@ public class Schelling implements Sector {
 	}
 
 	@Override
-	public Phase getPhase(final String name) {
+	public Phase getPhase(final String phaseName) {
 		Phase result = null;
-		if (name.equals("move")) {
-			result = new AbstractPhase(name, this){
+		if (phaseName.equals("move")) {
+			result = new AbstractPhase(phaseName, this){
 
 				@Override
 				public void run() {

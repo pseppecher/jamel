@@ -88,10 +88,10 @@ public class Preys implements Sector {
 	 * Eats a prey at the given location.
 	 * @param x the X coordinate.
 	 * @param y the Y coordinate.
-	 * @param eatVolume the volume of meat to eat.
+	 * @param eatVol the volume of meat to eat.
 	 * @return the energy.
 	 */
-	public double eat(double x, double y, double eatVolume) {
+	public double eat(double x, double y, double eatVol) {
 		double result=0;
 		for(Prey prey:agents.getList()) {
 			final double pX = prey.getX();
@@ -105,7 +105,7 @@ public class Preys implements Sector {
 				yProx = true;
 			}
 			if (xProx && yProx) {
-				result = prey.eat(eatVolume);
+				result = prey.eat(eatVol);
 				break;
 			}
 		}
@@ -116,11 +116,11 @@ public class Preys implements Sector {
 	 * Eats the grass.
 	 * @param x the X coordinate.
 	 * @param y the Y coordinate.
-	 * @param eatVolume the volume of grass to eat.
+	 * @param eatVol the volume of grass to eat.
 	 * @return the energy.
 	 */
-	public double eatGrass(double x, double y, double eatVolume) {
-		return this.landSector.eat(x,y,eatVolume);
+	public double eatGrass(double x, double y, double eatVol) {
+		return this.landSector.eat(x,y,eatVol);
 	}
 
 	@Override
@@ -143,10 +143,10 @@ public class Preys implements Sector {
 	}
 
 	@Override
-	public Phase getPhase(final String name) {
+	public Phase getPhase(final String phaseName) {
 		Phase result = null;
-		if (name.equals("move")) {
-			result = new AbstractPhase(name, this){
+		if (phaseName.equals("move")) {
+			result = new AbstractPhase(phaseName, this){
 				@Override
 				public void run() {
 					final List<Prey> list = agents.getList();

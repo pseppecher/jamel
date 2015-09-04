@@ -105,18 +105,18 @@ public class ExpressionFactory {
 	 * @param string the string to be formated.
 	 * @return the formated string. 
 	 */
-	public static String format(String string) {
-		string = string.replace(",", ", ");
-		string = string.replace("=", " = ");
-		string = string.replace("+", " + ");
-		string = string.replace("*", " * ");
-		string = string.replace(":", " : ");
-		string = string.replace(" t-", " t#");
-		string = string.replace("-", " - ");
-		string = string.replace(" t#", " t-");
-		string = string.replace("   ", " ");
-		string = string.replace("  ", " ");
-		return string;
+	public static String format(final String string) {
+		String result = string.replace(",", ", ");
+		result = string.replace("=", " = ");
+		result = string.replace("+", " + ");
+		result = string.replace("*", " * ");
+		result = string.replace(":", " : ");
+		result = string.replace(" t-", " t#");
+		result = string.replace("-", " - ");
+		result = string.replace(" t#", " t-");
+		result = string.replace("   ", " ");
+		result = string.replace("  ", " ");
+		return result;
 	}
 
 	/**
@@ -138,7 +138,7 @@ public class ExpressionFactory {
 	/** The literal description of the expression to be created. */
 	private final String literal;
 
-	/** The macroeconomic dataset. */
+	/** The macro-economic dataset. */
 	private final MacroDatabase macroDatabase;
 	
 	/**
@@ -184,13 +184,13 @@ public class ExpressionFactory {
 
 			@Override
 			public Double value() {
-				final Double result;
+				final Double value;
 				if (term1.value() == null || term2.value() == null) {
-					result = null;
+					value = null;
 				} else {
-					result = term1.value() + term2.value();
+					value = term1.value() + term2.value();
 				}
-				return result;
+				return value;
 			}
 
 		};
@@ -226,13 +226,13 @@ public class ExpressionFactory {
 
 			@Override
 			public Double value() {
-				final Double result;
+				final Double value;
 				if (dividend.value() == null || divisor.value() == null) {
-					result = null;
+					value = null;
 				} else {
-					result = dividend.value() / divisor.value();
+					value = dividend.value() / divisor.value();
 				}
-				return result;
+				return value;
 			}
 
 		};
@@ -270,13 +270,13 @@ public class ExpressionFactory {
 
 			@Override
 			public Double value() {
-				final Double result;
+				final Double value;
 				if (exp1.value() == null || exp2.value() == null) {
-					result = null;
+					value = null;
 				} else {
-					result = exp1.value() * exp2.value();
+					value = exp1.value() * exp2.value();
 				}
-				return result;
+				return value;
 			}
 
 		};
@@ -307,13 +307,13 @@ public class ExpressionFactory {
 
 			@Override
 			public Double value() {
-				final Double result;
+				final Double value;
 				if (positive.value() == null) {
-					result = null;
+					value = null;
 				} else {
-					result = -positive.value();
+					value = -positive.value();
 				}
-				return result;
+				return value;
 			}
 
 		};
@@ -349,13 +349,13 @@ public class ExpressionFactory {
 
 			@Override
 			public Double value() {
-				final Double result;
+				final Double value;
 				if (term1.value() == null || term2.value() == null) {
-					result = null;
+					value = null;
 				} else {
-					result = term1.value() - term2.value();
+					value = term1.value() - term2.value();
 				}
-				return result;
+				return value;
 			}
 
 		};

@@ -20,6 +20,11 @@ public interface ChartManager {
 	 */
 	public abstract Component[] getPanelList();
 
+	/**
+	 * Updates the components of the manager.
+	 */
+	public abstract void update();
+
 }
 
 // ***

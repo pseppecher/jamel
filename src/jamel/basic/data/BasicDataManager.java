@@ -101,11 +101,11 @@ public class BasicDataManager {
 
 	/**
 	 * Exports the data into the output file.
+	 * @throws IOException If something goes wrong.
 	 */
-	private void exportData() {
+	private void exportData() throws IOException {
 		if (outputFile != null && outputFile.exists()) {
 			FileWriter writer;
-			try {
 				writer = new FileWriter(outputFile, true);
 				for (Expression query : exports) {
 					final Double val = query.value();
@@ -117,9 +117,6 @@ public class BasicDataManager {
 				}
 				writer.write(rc);
 				writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 
@@ -258,9 +255,9 @@ public class BasicDataManager {
 			histogramDataset = new DynamicHistogramDataset() {
 				@Override
 				public void update() {
-					final int t = timer.getPeriod().intValue() - lag;
+					final int t1 = timer.getPeriod().intValue() - lag;
 					final Double[] series = macroDatabase.getDistributionData(
-							sector, valKey, t, select);
+							sector, valKey, t1, select);
 					if (series != null && series.length > 0) {
 						this.addSeries(seriesKey, series, nBins);
 					} else {
@@ -325,9 +322,9 @@ public class BasicDataManager {
 				@SuppressWarnings("unchecked")
 				@Override
 				public void update() {
-					final int t = timer.getPeriod().intValue() - lag;
+					final int t1 = timer.getPeriod().intValue() - lag;
 					final List<XYDataItem> newData = macroDatabase
-							.getScatterData(sector, xKey, yKey, t, select);
+							.getScatterData(sector, xKey, yKey, t1, select);
 					this.data.clear();
 					if (newData != null) {
 						this.data.addAll(newData);
@@ -480,7 +477,11 @@ public class BasicDataManager {
 	 */
 	public void update() {
 		this.updateSeries();
-		this.exportData();
+		try {
+			this.exportData();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 }

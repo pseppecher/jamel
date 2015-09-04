@@ -40,6 +40,9 @@ public enum JamelColor {
 	/** red */
 	red(Color.red),
 
+	/** The background color for panels. */
+	background(new Color(230,230,230)),
+	
 	/** transparent blue */
 	transparentBlue(new Color(0x80, 0x80, 0xFF, 100)),
 
@@ -72,11 +75,13 @@ public enum JamelColor {
 	 * @return a color.
 	 */
 	public static Color getColor(String name) {
+		final Color result;
 		try {
-			return valueOf(name).color;
-		} catch (IllegalArgumentException e) {
+			result = valueOf(name).color;
+		} catch (@SuppressWarnings("unused") IllegalArgumentException e) {
 			return null;
 		}
+		return result;
 	}
 
 	/**

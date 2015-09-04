@@ -1,18 +1,20 @@
 package jamel;
 
-import jamel.basic.Circuit;
-import jamel.basic.util.InitializationException;
-
 import java.awt.Desktop;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFileChooser;
@@ -23,10 +25,13 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
+import jamel.basic.Circuit;
+import jamel.basic.util.InitializationException;
+
 /**
  * The main class for Jamel.
  */
-public class Simulator {
+public class Jamel {
 
 	/**
 	 * A convenient class to store String constants.
@@ -45,8 +50,8 @@ public class Simulator {
 		/** The default path to the scenario folder. */
 		public static final String SCENARIO_DEFAULT_PATHNAME = "scenarios";
 
-		/** The key for the scenario path preference.*/
-		public static final String SCENARIO_PATHNAME_PREF = "The key for the scenario path preference";
+		/** The key for the scenario path preference. */
+		public static final String PREFERENCE_SCENARIO_PATHNAME = "The key for the scenario path preference";
 
 		/** The URL to check the latest version. */
 		public static final String VERSION_URL = "http://p.seppecher.free.fr/jamel/version.php";
@@ -57,21 +62,23 @@ public class Simulator {
 	private static final Preferences prefs = Preferences.userRoot();
 
 	/** The remind-me-later period (in ms). */
-	private static final long remindMeLaterPeriod = 15*24*60*60*1000;
+	private static final long remindMeLaterPeriod = 15 * 24 * 60 * 60 * 1000;
 
 	/** The simulationID. */
 	private static final long simulationID = (new Date()).getTime();
 
 	/** This version of Jamel. */
-	final public static int version = 20150722;
+	final public static int version = 20150903;
 
 	/**
 	 * Downloads the latest version of Jamel.
-	 * @return <code>true</code> if the download is successful, <code>false</code> otherwise.
+	 * 
+	 * @return <code>true</code> if the download is successful,
+	 *         <code>false</code> otherwise.
 	 */
 	private static boolean downloadLatestVersion() {
 		boolean result;
-		if(Desktop.isDesktopSupported()) {
+		if (Desktop.isDesktopSupported()) {
 			try {
 				Desktop.getDesktop().browse(new URI(KEY.DOWNLOAD_URI));
 				result = true;
@@ -82,8 +89,7 @@ public class Simulator {
 				e.printStackTrace();
 				result = false;
 			}
-		}
-		else {
+		} else {
 			// TODO proposer un lien dans un dialog
 			result = true;
 		}
@@ -91,49 +97,58 @@ public class Simulator {
 	}
 
 	/**
-	 * Returns <code>true</code> if this version of Jamel is out of date, <code>false</code> otherwise.
-	 * @return <code>true</code> if this version of Jamel is out of date, <code>false</code> otherwise.
+	 * Returns <code>true</code> if this version of Jamel is out of date,
+	 * <code>false</code> otherwise.
+	 * 
+	 * @return <code>true</code> if this version of Jamel is out of date,
+	 *         <code>false</code> otherwise.
 	 */
 	private static boolean isOutOfDate() {
 		class FileReader extends Thread {
 			private boolean isOutOfDate = false;
+
 			@Override
 			public void run() {
 				try {
-					final URL u = new URL(KEY.VERSION_URL);
+					final URL u = new URL(KEY.VERSION_URL + "?v=" + version);
 					BufferedReader d = new BufferedReader(new InputStreamReader(u.openStream()));
 					String line;
 					while ((line = d.readLine()) != null) {
 						final String words[] = line.split(":");
-						if (words.length==2) {
+						if (words.length == 2) {
 							if ("version".equals(words[0].trim())) {
 								final int newVersion = Integer.parseInt(words[1]);
-								isOutOfDate=(newVersion>version);
+								isOutOfDate = (newVersion > version);
 							}
 						}
 					}
 					d.close();
-				} catch (MalformedURLException e) {
-				} catch (IOException e) {
-				}				
+				} catch (@SuppressWarnings("unused") MalformedURLException e) {
+				} catch (@SuppressWarnings("unused") IOException e) {
+				}
 			}
 		}
 		final FileReader fileReader = new FileReader();
 		fileReader.start();
 		try {
 			fileReader.join(500);
-		} catch (InterruptedException e) {
+		} catch (@SuppressWarnings("unused") InterruptedException e) {
 		}
 		return fileReader.isOutOfDate;
 	}
 
 	/**
 	 * Creates and returns a new circuit.
-	 * @param document a XML doc that contains the parameters of the new circuit. 
-	 * @param path the path to the scenario file.
-	 * @param name the name of the scenario file.
+	 * 
+	 * @param document
+	 *            a XML doc that contains the parameters of the new circuit.
+	 * @param path
+	 *            the path to the scenario file.
+	 * @param name
+	 *            the name of the scenario file.
 	 * @return a new circuit.
-	 * @throws InitializationException If something goes wrong.
+	 * @throws InitializationException
+	 *             If something goes wrong.
 	 */
 	private static Circuit newCircuit(Document document, String path, String name) throws InitializationException {
 		Circuit circuit = null;
@@ -142,89 +157,96 @@ public class Simulator {
 			throw new InitializationException("The root node of the scenario file must be named <circuit>.");
 		}
 		final String circuitType = root.getAttribute("type");
-		if (circuitType=="") {
-			throw new InitializationException("Attribute \"type\" not found for the tag \"circuit\".");				
+		if (circuitType == "") {
+			throw new InitializationException("Attribute \"type\" not found for the tag \"circuit\".");
 		}
 		try {
-			circuit = (Circuit) Class.forName(circuitType,false,ClassLoader.getSystemClassLoader()).getConstructor(Element.class,String.class,String.class).newInstance(root,path,name);
+			circuit = (Circuit) Class.forName(circuitType, false, ClassLoader.getSystemClassLoader())
+					.getConstructor(Element.class, String.class, String.class).newInstance(root, path, name);
 		} catch (Exception e) {
-			throw new InitializationException("Something went wrong while creating the circuit.",e);				
+			throw new InitializationException("Something went wrong while creating the circuit.", e);
 		}
 		return circuit;
 	}
 
 	/**
-	 * Parses the content of the given file as an XML document and return a new DOM Document object.
-	 * @param file the file containing the XML to parse.
+	 * Parses the content of the given file as an XML document and return a new
+	 * DOM Document object.
+	 * 
+	 * @param file
+	 *            the file containing the XML to parse.
 	 * @return A new DOM Document object.
-	 * @throws InitializationException If something goes wrong.
+	 * @throws InitializationException
+	 *             If something goes wrong.
 	 */
 	private static Document readXMLFile(File file) throws InitializationException {
 		Document document = null;
 		try {
 			document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
-		}
-		catch (final Exception e) {
-			throw new InitializationException("Something went wrong while reading the file \""+file.getName()+"\"",e);			
+		} catch (final Exception e) {
+			throw new InitializationException("Something went wrong while reading the file \"" + file.getName() + "\"",
+					e);
 		}
 		return document;
 	}
 
 	/**
 	 * Returns the file scenario selected by the user.
+	 * 
 	 * @return the file selected.
 	 */
 	private static File selectScenario() {
-		final String preference = "Jamel-"+version+"."+KEY.SCENARIO_PATHNAME_PREF;
-		final String path = prefs.get(preference,KEY.SCENARIO_DEFAULT_PATHNAME);
-		final JFileChooser fc = new JFileChooser() {{
-			this.setFileFilter(new FileNameExtensionFilter("XML files", "xml"));}
+		final String preference = "Jamel-" + version + "." + KEY.PREFERENCE_SCENARIO_PATHNAME;
+		final String path = prefs.get(preference, KEY.SCENARIO_DEFAULT_PATHNAME);
+		final JFileChooser fc = new JFileChooser() {
+			{
+				this.setFileFilter(new FileNameExtensionFilter("XML files", "xml"));
+			}
 		};
 		File dir = new File(path);
 		if (!dir.exists()) {
-			dir=new File(KEY.SCENARIO_DEFAULT_PATHNAME);
+			dir = new File(KEY.SCENARIO_DEFAULT_PATHNAME);
 		}
 		final File file;
 		fc.setDialogTitle("Open Scenario");
 		fc.setCurrentDirectory(dir);
 		final int returnVal = fc.showOpenDialog(null);
-		if (returnVal==JFileChooser.APPROVE_OPTION) {
+		if (returnVal == JFileChooser.APPROVE_OPTION) {
 			file = fc.getSelectedFile();
 			final File parent = file.getParentFile();
 			prefs.put(preference, parent.getPath());
-		}
-		else {
-			file=null;
+		} else {
+			file = null;
 		}
 		return file;
 	}
 
 	/**
 	 * Looks for the latest version of Jamel.
-	 * @return <code>true</code> if a new version is available and the user chooses to download it, <code>false</code> otherwise.
+	 * 
+	 * @return <code>true</code> if a new version is available and the user
+	 *         chooses to download it, <code>false</code> otherwise.
 	 */
 	@SuppressWarnings("unused")
 	private static boolean updateVersion() {
 		final boolean result;
 		if (isOutOfDate()) {
 			final long now = System.currentTimeMillis();
-			long previous = prefs.getLong(KEY.REMIND_ME_LATER,0);
-			if (now>previous+remindMeLaterPeriod) {
-				final Object[] options = {KEY.DOWNLOAD, KEY.REMIND_ME_LATER};
-				final int n = JOptionPane.showOptionDialog(null, "A new version of Jamel is available.", "New version", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
-				if (n==0) {
+			long previous = prefs.getLong(KEY.REMIND_ME_LATER, 0);
+			if (now > previous + remindMeLaterPeriod) {
+				final Object[] options = { KEY.DOWNLOAD, KEY.REMIND_ME_LATER };
+				final int n = JOptionPane.showOptionDialog(null, "A new version of Jamel is available.", "New version",
+						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+				if (n == 0) {
 					result = downloadLatestVersion();
-				}
-				else {
-					prefs.putLong(KEY.REMIND_ME_LATER,now);
+				} else {
+					prefs.putLong(KEY.REMIND_ME_LATER, now);
 					result = false;
 				}
-			}
-			else {
+			} else {
 				result = false;
 			}
-		}
-		else {
+		} else {
 			result = false;
 		}
 		return result;
@@ -232,6 +254,7 @@ public class Simulator {
 
 	/**
 	 * Returns the simulation ID.
+	 * 
 	 * @return the simulation ID.
 	 */
 	public static long getSimulationID() {
@@ -239,14 +262,39 @@ public class Simulator {
 	}
 
 	/**
+	 * Returns a string description of the current version of Jamel.
+	 * 
+	 * @return a string description of the current version of Jamel.
+	 */
+	public static String getVersion() {
+		return "Jamel v3 beta (" + version + ")";
+	}
+
+	/**
 	 * The main method for Jamel.
-	 * @param args unused.
+	 * 
+	 * @param args
+	 *            unused.
 	 */
 	public static void main(String[] args) {
-		//if (updateVersion()) {} else 
+		PrintStream out = null;
+		try {
+			out = new PrintStream(new FileOutputStream("jamel.log"));
+			System.setOut(out);
+			System.setErr(out);
+		} catch (FileNotFoundException e1) {
+			e1.printStackTrace();
+		}
+		final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d HH:mm:ss", Locale.US);
+		final String dateStr = simpleDateFormat.format(new Date());
+		System.out.println(dateStr);
+		System.out.println(getVersion());
+
+		//if (!updateVersion())
 		{
 			final File file = selectScenario();
-			if (file!=null) {
+			if (file != null) {
+				System.out.println("run "+file.getPath());
 				final String path = file.getParent();
 				final String name = file.getName();
 				Document scenario = null;
@@ -254,9 +302,15 @@ public class Simulator {
 					scenario = readXMLFile(file);
 				} catch (InitializationException e) {
 					e.printStackTrace();
+					if (out != null) {
+						out.close();
+					}
 					System.exit(0);
 				}
 				if (scenario == null) {
+					if (out != null) {
+						out.close();
+					}
 					System.exit(0);
 				}
 				Circuit circuit = null;
@@ -264,13 +318,22 @@ public class Simulator {
 					circuit = newCircuit(scenario, path, name);
 				} catch (InitializationException e) {
 					e.printStackTrace();
+					if (out != null) {
+						out.close();
+					}
 					System.exit(0);
 				}
 				if (circuit == null) {
+					if (out != null) {
+						out.close();
+					}
 					System.exit(0);
 				}
-				circuit.run();					
+				circuit.run();
 			}
+		}
+		if (out != null) {
+			out.close();
 		}
 	}
 

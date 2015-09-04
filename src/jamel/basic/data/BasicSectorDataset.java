@@ -39,8 +39,7 @@ public class BasicSectorDataset implements SectorDataset {
 		} else if (dirty.startsWith("+")) {
 			final String str2 = dirty.substring(1, dirty.length());
 			result = cleanUp(str2);
-		} else if (dirty.charAt(0) == '('
-				&& dirty.charAt(dirty.length() - 1) == ')') {
+		} else if (dirty.charAt(0) == '(' && dirty.charAt(dirty.length() - 1) == ')') {
 			int count = 1;
 			for (int i = 1; i < dirty.length() - 1; i++) {
 				if (dirty.charAt(i) == '(') {
@@ -106,16 +105,14 @@ public class BasicSectorDataset implements SectorDataset {
 	 *            all datasets are selected.
 	 * @return a selection of individual datasets.
 	 */
-	private static Map<String, AgentDataset> select(
-			final Map<String, AgentDataset> data, final String select) {
+	private static Map<String, AgentDataset> select(final Map<String, AgentDataset> data, final String select) {
 		final Map<String, AgentDataset> result;
 		if (select == null) {
 			throw new IllegalArgumentException("Select is null");
 		} else if (select.equals("")) {
 			result = data;
 		} else if (!isBalanced(select)) {
-			throw new IllegalArgumentException("Parentheses not balanced: "
-					+ select);
+			throw new IllegalArgumentException("Parentheses not balanced: " + select);
 		} else {
 			final String query = cleanUp(select);
 			if (query.startsWith("name=")) {
@@ -152,10 +149,8 @@ public class BasicSectorDataset implements SectorDataset {
 				}
 				final String substring = query.substring(3, query.length() - 1);
 				final String[] arg = split(substring);
-				final Map<String, AgentDataset> selection1 = select(data,
-						arg[0]);
-				final Map<String, AgentDataset> selection2 = select(data,
-						arg[1]);
+				final Map<String, AgentDataset> selection1 = select(data, arg[0]);
+				final Map<String, AgentDataset> selection2 = select(data, arg[1]);
 				selection1.putAll(selection2);
 				result = selection1;
 			} else if (query.contains("!=")) {
@@ -164,7 +159,7 @@ public class BasicSectorDataset implements SectorDataset {
 				final String value = term[1];
 				result = new HashMap<String, AgentDataset>();
 				for (AgentDataset agentData : data.values()) {
-					if (!agentData.get(key).equals(Double.valueOf(value))) {
+					if (agentData.get(key)!=null && !agentData.get(key).equals(Double.valueOf(value))) {
 						result.put(agentData.getName(), agentData);
 					}
 				}
@@ -175,11 +170,10 @@ public class BasicSectorDataset implements SectorDataset {
 				result = new HashMap<String, AgentDataset>();
 				for (AgentDataset agentData : data.values()) {
 					final Double agentValue = agentData.get(key);
-					if (agentValue == null) {
-						throw new NullPointerException("agent: "
-								+ agentData.getName() + "; field: " + key);
-					}
-					if (agentValue.equals(selectValue)) {
+					/*if (agentValue == null) {
+						throw new NullPointerException("agent: " + agentData.getName() + "; field: " + key);
+					}*/
+					if (agentValue != null && agentValue.equals(selectValue)) {
 						result.put(agentData.getName(), agentData);
 					}
 				}
@@ -189,14 +183,6 @@ public class BasicSectorDataset implements SectorDataset {
 			}
 		}
 		return result;
-	}
-
-	@SuppressWarnings("javadoc")
-	public static void main(String arg[]) {
-		String[] x = split("cou(,c),ou");
-		for (int i = 0; i < x.length; i++) {
-			System.out.println(x[i]);
-		}
 	}
 
 	/**
@@ -277,8 +263,7 @@ public class BasicSectorDataset implements SectorDataset {
 		Double mean = null;
 		Double max = null;
 		Double min = null;
-		final Map<String, AgentDataset> selection = select(this.agentsData,
-				select);
+		final Map<String, AgentDataset> selection = select(this.agentsData, select);
 
 		int count = 0;
 		for (final AgentDataset agentDataset : selection.values()) {
@@ -331,8 +316,7 @@ public class BasicSectorDataset implements SectorDataset {
 
 	@Override
 	public Double[] getField(String key, String select) {
-		final Map<String, AgentDataset> selection = select(this.agentsData,
-				select);
+		final Map<String, AgentDataset> selection = select(this.agentsData, select);
 		final Double[] result;
 		if (selection != null) {
 			result = new Double[selection.size()];
@@ -386,14 +370,16 @@ public class BasicSectorDataset implements SectorDataset {
 	@Override
 	public List<XYDataItem> getScatter(String xKey, String yKey, String select) {
 		final List<XYDataItem> result;
-		final Map<String, AgentDataset> selection = select(this.agentsData,
-				select);
+		final Map<String, AgentDataset> selection = select(this.agentsData, select);
 		if (selection != null) {
 			result = new ArrayList<XYDataItem>(selection.size());
 			for (AgentDataset data : selection.values()) {
-				final XYDataItem item = new XYDataItem(data.get(xKey),
-						data.get(yKey));
-				result.add(item);
+				final Double x = data.get(xKey);
+				final Double y = data.get(yKey);
+				if (x!=null && y!=null) {
+					final XYDataItem item = new XYDataItem(data.get(xKey), data.get(yKey));
+					result.add(item);
+				}
 			}
 		} else {
 			result = null;
@@ -433,6 +419,9 @@ public class BasicSectorDataset implements SectorDataset {
 
 	@Override
 	public void putIndividualData(AgentDataset agentDataset) {
+		if (agentDataset == null) {
+			throw new IllegalArgumentException("AgentDataset is null.");
+		}
 		this.agentsData.put(agentDataset.getName(), agentDataset);
 	}
 

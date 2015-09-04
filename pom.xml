@@ -5,14 +5,11 @@
 
 	<groupId>jamel</groupId>
 	<artifactId>jamel</artifactId>
-	<version>0.1.0</version>
 	<packaging>jar</packaging>
 
-	<!-- <scm>
-		<connection>scm:git:git@github.com:apclement/jamel.git</connection>
-		<developerConnection>scm:svn:git@github.com:apclement/jamel.git</developerConnection>
-		<url>git@github.com:apclement/jamel.git</url>
-	</scm> -->
+	<!-- <scm> <connection>scm:git:git@github.com:apclement/jamel.git</connection> 
+		<developerConnection>scm:svn:git@github.com:apclement/jamel.git</developerConnection> 
+		<url>git@github.com:apclement/jamel.git</url> </scm> -->
 
 	<build>
 		<sourceDirectory>src</sourceDirectory>
@@ -48,4 +45,5 @@
 
 	</dependencies>
 
+	<version>v3 (20150903)</version>
 </project>

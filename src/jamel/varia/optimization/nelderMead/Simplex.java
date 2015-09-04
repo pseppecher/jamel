@@ -121,10 +121,10 @@ public class Simplex implements Sector {
 	}
 
 	@Override
-	public Phase getPhase(final String name) {
+	public Phase getPhase(final String phaseName) {
 		Phase result = null;
-		if (name.equals("move")) {
-			result = new AbstractPhase(name, this){
+		if (phaseName.equals("move")) {
+			result = new AbstractPhase(phaseName, this){
 				/**
 				 *  Implements the downhill simplex method.
 				 * @see jamel.basic.sector.Phase#run()
@@ -200,9 +200,9 @@ public class Simplex implements Sector {
 		this.landscape = (Landscape) circuit.getSector(landscapeName);
 		
 		// Looking for the vertices of the simplex. 
-		final NodeList vertices = element.getElementsByTagName("vertex");
+		final NodeList verticesNodeList = element.getElementsByTagName("vertex");
 		for (int i=0;i<3;i++) {
-			final Element elem = (Element) vertices.item(i);
+			final Element elem = (Element) verticesNodeList.item(i);
 			final float x = Float.parseFloat(elem.getAttribute("x"));
 			final float y = Float.parseFloat(elem.getAttribute("y"));
 			final Vertex vertex = new Vertex(this,x,y);

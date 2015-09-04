@@ -129,6 +129,7 @@ public class BasicHousehold implements Household {
 		this.account = sector.getNewAccount(this);
 		this.variables.put("status", UNEMPLOYED);
 		this.variables.put("unemployement duration", 0);
+		this.data = new BasicAgentDataset(this.name);
 	}
 
 	/**
@@ -381,7 +382,7 @@ public class BasicHousehold implements Household {
 
 		switch (this.variables.get("status").intValue()) {
 		case UNEMPLOYED:
-			// Attention, c'est un peu plus compliqué dans les dernières
+			// Attention, c'est un peu plus compliquÔøΩ dans les derniÔøΩres
 			// versions de Jamel1.
 			Double reservationWage = (Double) this.variables
 					.get("reservationWage");
@@ -437,8 +438,8 @@ public class BasicHousehold implements Household {
 	public void takeDividends() {
 		long dividend = 0;
 		for (Asset asset : this.assetPortfolio.getList()) {
-			// REMARQUE: pour le moment, le portefeuille des ménages n'est
-			// composé que d'actions.
+			// REMARQUE: pour le moment, le portefeuille des mÔøΩnages n'est
+			// composÔøΩ que d'actions.
 			final Cheque cheque = ((StockCertificate) asset).getDividend();
 			if (cheque != null) {
 				dividend += cheque.getAmount();

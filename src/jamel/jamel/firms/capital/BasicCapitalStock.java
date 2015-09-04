@@ -240,11 +240,11 @@ public class BasicCapitalStock implements CapitalStock {
 			this.bookValue = this.corporation.getBookValue();
 			long remainder = this.bookValue;
 			for (int id = 0; id < this.bookValues.size(); id++) {
-				final long bookValue = this.bookValue
+				final long newBookValue = this.bookValue
 						* this.shares.get(id).getShares()
 						/ this.sharesAuthorised;
-				this.bookValues.set(id, bookValue);
-				remainder -= bookValue;
+				this.bookValues.set(id, newBookValue);
+				remainder -= newBookValue;
 			}
 			if (remainder > 0) {
 				for (int id = 0; id < bookValues.size(); id++) {

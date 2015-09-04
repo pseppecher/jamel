@@ -173,12 +173,12 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 		try {
 			for (int index = 0; index < lim; index++) {
 				this.countFirms++;
-				final String name = "Firm" + this.countFirms;
+				final String firmName = "Firm" + this.countFirms;
 				final Firm firm = (Firm) Class
 						.forName(type, false,
 								ClassLoader.getSystemClassLoader())
 						.getConstructor(String.class, IndustrialSector.class)
-						.newInstance(name, this);
+						.newInstance(firmName, this);
 				result.add(firm);
 			}
 		} catch (Exception e) {
@@ -265,11 +265,11 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 	}
 
 	@Override
-	public Phase getPhase(String name) {
+	public Phase getPhase(String phaseName) {
 		final Phase result;
 
-		if (name.equals(PHASE_OPENING)) {
-			result = new AbstractPhase(name, this) {
+		if (phaseName.equals(PHASE_OPENING)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					BasicIndustrialSector.this.open();
@@ -277,8 +277,8 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 			};
 		}
 
-		else if (name.equals(PHASE_PAY_DIVIDEND)) {
-			result = new AbstractPhase(name, this) {
+		else if (phaseName.equals(PHASE_PAY_DIVIDEND)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					for (final Firm firm : firms.getList()) {
@@ -288,8 +288,8 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 			};
 		}
 
-		else if (name.equals(PHASE_PLAN_PRODUCTION)) {
-			result = new AbstractPhase(name, this) {
+		else if (phaseName.equals(PHASE_PLAN_PRODUCTION)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					for (final Firm firm : firms.getShuffledList()) {
@@ -299,8 +299,8 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 			};
 		}
 
-		else if (name.equals(PHASE_PRODUCTION)) {
-			result = new AbstractPhase(name, this) {
+		else if (phaseName.equals(PHASE_PRODUCTION)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					for (final Firm firm : firms.getShuffledList()) {
@@ -310,8 +310,8 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 			};
 		}
 
-		else if (name.equals(PHASE_CLOSURE)) {
-			result = new AbstractPhase(name, this) {
+		else if (phaseName.equals(PHASE_CLOSURE)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					BasicIndustrialSector.this.close();
@@ -405,12 +405,12 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 		if (capitalistSectorElement == null) {
 			throw new InitializationException("Element not found: " + key1);
 		}
-		final String capitalists = capitalistSectorElement
+		final String capitalistsKey = capitalistSectorElement
 				.getAttribute("value");
-		if (capitalists == "") {
+		if (capitalistsKey == "") {
 			throw new InitializationException("Missing attribute: value");
 		}
-		this.capitalists = (CapitalistSector) circuit.getSector(capitalists);
+		this.capitalists = (CapitalistSector) circuit.getSector(capitalistsKey);
 
 		// Looking for the banking sector.
 		final String key3 = "Banks";

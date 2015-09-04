@@ -1,6 +1,5 @@
 package jamel.basic.gui;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,9 +20,7 @@ import org.jfree.util.PublicCloneable;
  *
  * @see SimpleHistogramDataset
  */
-public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
-		implements IntervalXYDataset, Cloneable, PublicCloneable, Serializable,
-		Updatable {
+public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset implements PublicCloneable, Updatable {
 
 	/**
 	 * Returns the maximum value in an array of values.
@@ -36,8 +33,7 @@ public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
 	 */
 	private static double getMaximum(double[] values) {
 		if (values == null || values.length < 1) {
-			throw new IllegalArgumentException(
-					"Null or zero length 'values' argument.");
+			throw new IllegalArgumentException("Null or zero length 'values' argument.");
 		}
 		double max = -Double.MAX_VALUE;
 		for (int i = 0; i < values.length; i++) {
@@ -59,8 +55,7 @@ public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
 	 */
 	private static double getMinimum(double[] values) {
 		if (values == null || values.length < 1) {
-			throw new IllegalArgumentException(
-					"Null or zero length 'values' argument.");
+			throw new IllegalArgumentException("Null or zero length 'values' argument.");
 		}
 		double min = Double.MAX_VALUE;
 		for (int i = 0; i < values.length; i++) {
@@ -72,10 +67,12 @@ public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
 	}
 
 	/** A list of maps. */
-	private List<Map<String, Object>> list;
+	private final List<Map<String, Object>> list;
 
-	/** A map that associates the key of the series with its index in the list. */
-	private Map<String, Integer> seriesMap;
+	/**
+	 * A map that associates the key of the series with its index in the list.
+	 */
+	private final Map<String, Integer> seriesMap;
 
 	/** The histogram type. */
 	private HistogramType type;
@@ -112,7 +109,7 @@ public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
 	 * @return The total.
 	 */
 	private int getTotal(int series) {
-		Map<String,Object> map = this.list.get(series);
+		Map<String, Object> map = this.list.get(series);
 		return ((Integer) map.get("values.length")).intValue();
 	}
 
@@ -130,7 +127,7 @@ public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
 	 */
 	@SuppressWarnings("unchecked")
 	List<HistogramBin> getBins(int series) {
-		Map<String,Object> map = this.list.get(series);
+		Map<String, Object> map = this.list.get(series);
 		return (List<HistogramBin>) map.get("bins");
 	}
 
@@ -169,14 +166,12 @@ public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
 	 * @param maximum
 	 *            the upper bound of the bin range.
 	 */
-	public void addSeries(String key, double[] values, int bins,
-			double minimum, double maximum) {
+	public void addSeries(String key, double[] values, int bins, double minimum, double maximum) {
 
 		ParamChecks.nullNotPermitted(key, "key");
 		ParamChecks.nullNotPermitted(values, "values");
 		if (bins < 1) {
-			throw new IllegalArgumentException(
-					"The 'bins' value must be at least 1.");
+			throw new IllegalArgumentException("The 'bins' value must be at least 1.");
 		}
 		double binWidth = (maximum - minimum) / bins;
 
@@ -246,13 +241,18 @@ public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
 	 */
 	public void addSeries(String key, Double[] values, int bins) {
 		double[] values2 = new double[values.length];
+		boolean nullValue = false;
 		for (int i = 0; i < values.length; i++) {
 			if (values[i] == null) {
-				throw new RuntimeException("null");
+				nullValue=true;
+				break;
+				//throw new RuntimeException("null");
 			}
 			values2[i] = values[i];
 		}
-		addSeries(key, values2, bins);
+		if (!nullValue) {
+			addSeries(key, values2, bins);			
+		}
 	}
 
 	/**
@@ -267,10 +267,8 @@ public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
 	public Object clone() throws CloneNotSupportedException {
 		DynamicHistogramDataset clone = (DynamicHistogramDataset) super.clone();
 		int seriesCount = getSeriesCount();
-		clone.list = new ArrayList<Map<String,Object>>(seriesCount);
-		clone.seriesMap = new HashMap<String,Integer>(); 
 		for (int i = 0; i < seriesCount; i++) {
-			Map<String,Object> map = new HashMap<String,Object>(this.list.get(i));
+			Map<String, Object> map = new HashMap<String, Object>(this.list.get(i));
 			clone.list.add(map);
 			String key = (String) map.get("key");
 			clone.seriesMap.put(key, i);
@@ -497,6 +495,11 @@ public abstract class DynamicHistogramDataset extends AbstractIntervalXYDataset
 		} else { // pretty sure this shouldn't ever happen
 			throw new IllegalStateException();
 		}
+	}
+
+	@Override
+	public int hashCode() {
+		return this.list.hashCode() * 31 + this.seriesMap.hashCode();
 	}
 
 	/**

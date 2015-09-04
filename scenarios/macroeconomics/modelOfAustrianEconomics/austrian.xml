@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<circuit type="jamel.basic.BasicCircuit"
+	date="03-09-2015"
+	title="A model of Austrian economics"
+	author="Hendrik Hagedorn">
+
+	<settings
+		randomSeed="0"
+		chartsConfigFile="config/charts.xml"/>
+
+	<sectors>
+	
+	
+		<Markets
+			type="jamel.austrian.markets.MarketSector"
+			agent="jamel.austrian.markets.Market">
+			<settings
+				numSearch="3.0" />
+			<dependencies>
+				<Households value="Households" />
+				<Firms value="Firms" />
+				<Banks value="Banks" />
+			</dependencies>
+		</Markets>
+		
+		
+		<InvestmentBank
+			type="jamel.austrian.banks.InvestmentBank">
+			<settings
+				equityBuffer="0.1" />
+			<dependencies>
+				<Households value="Households" />
+				<Firms value="Firms" />
+				<Banks value="Banks" />
+			</dependencies>
+		</InvestmentBank>
+		
+
+		<Households
+			type="jamel.austrian.households.HouseholdSector"
+			agent="jamel.austrian.households.BasicHousehold">
+			<settings
+				prefs.structureLength="6" 
+				prefs.typeRange="1"
+				prefs.skewness="2"
+				prefs.savings="4"
+				prefs.horizons="4" 
+				prefs.equity="3"
+				prefs.moneyDemand="400"
+				prefs.timePref="0.0016"
+				prefs.timePrefFlex="200000"
+				prefs.wageOffset="15000"
+				prefs.wageLeisureFlex="12"
+				prefs.wageWealthFlex="1" />
+			<dependencies>
+				<Firms value="Firms" />
+				<Banks value="Banks" />
+				<Markets value="Markets" />
+			</dependencies>
+		</Households>
+
+		<Banks 
+			type="jamel.austrian.banks.BankingSector"
+			agent="jamel.austrian.banks.CommercialBank">
+			<settings
+				markup = "0.01"/>
+			<dependencies>
+				<Households value="Households" />
+				<Firms value="Firms" />
+				<Markets value="Markets" />
+			</dependencies>
+		</Banks>
+
+		<Firms
+			type="jamel.austrian.firms.FirmSector"
+			agent="jamel.austrian.firms.BasicFirm">
+			<settings
+				stages = "3"
+				typeMin = "0"  
+				typeRange = "1" />
+			<!--  typeMin = 0 means that fixed capital is included; typeMin > 0 means no fixed capital. -->
+			<!--  typeRange: the number of different consumer goods. -->
+			<dependencies>
+				<Households value="Households" />
+				<Banks value="Banks" />
+				<Markets value="Markets" />
+			</dependencies>
+		</Firms>
+	</sectors>
+
+	<phases>
+		<InvestmentBank action="opening" />
+		<Banks action="opening" />
+		<Households action="opening" />
+		<Firms action="opening" />
+		<Markets action="opening" />
+		<Banks action="offering" />
+		<Firms action="offering" />
+		<Firms action="setProductionMode" />
+		<Firms action="buyMachinery" />
+		<Firms action="updateMachinePrices" />
+		<Firms action="planProduction" />
+		<Firms action="offerJobs" />
+		<Households action="setReservationWage" />
+		<Households action="job_search" />
+		<InvestmentBank action="offering" />
+		<Markets action="generalTrading" />
+		<Firms action="registerExpansionDemand" />
+		<Markets action="generalTrading2" />
+		<Households action="registerExpenditure" />
+		<Firms action="updatePrices" />
+		<Banks action="updateInterestRates" />
+		<Firms action="payInterest" />
+		<Banks action="payInterest" />
+		<Firms action="production" />
+		<Firms action="updateProfits" />
+		<Banks action="updateProfits" />
+		<Markets action="closure" />
+		<Firms action="closure" />
+		<Banks action="closure" />
+		<InvestmentBank action="closure" />
+		<Households action="closure" />
+	</phases>
+
+	<events>
+			
+		<new
+			period="0"
+			sector="Banks"
+			size="100" />
+
+		<new
+			period="0"
+			sector="Households"
+			size="800" />
+
+		<new
+			period="0"
+			sector="Firms"
+			size="200" />
+			
+		<assignOwnership
+			period="0"
+			sector="Banks" />
+
+		<declareCapitalUse
+			period="0"
+			sector="InvestmentBank" />
+
+		<pause period="1500" />
+
+	</events>
+	
+	<export file="exports/austrian.csv">
+	<data value="time()" />
+	<data value="agentValue(Firms, nextOfferingTarget, t,Company140)"/>
+	<data value="agentValue(Firms, productionTarget, t,Company140)"/>
+	<data value="agentValue(Firms, productionVolume, t,Company140)"/>
+	<data value="agentValue(Firms, offeringTarget, t,Company140)"/>
+	<data value="agentValue(Firms, offeredGoods, t,Company140)"/>
+	<data value="agentValue(Firms, salesVolume, t,Company140)"/>
+	<data value="agentValue(Firms, inventoriesVolume, t,Company140)"/>
+	
+	<data value="agentValue(Firms, registeredCapital, t,Company140)"/>
+	<data value="agentValue(Firms, initialMoney, t,Company140)"/>
+	<data value="agentValue(Firms, inventoriesValue, t,Company140)"/>
+	<data value="agentValue(Firms, investmentReserve, t,Company140)"/>
+	<data value="agentValue(Firms, tiedUpMoney, t,Company140)"/>
+	<data value="agentValue(Firms, dividendsPaid, t,Company140)"/>
+	<data value="agentValue(Firms, interestPaid, t,Company140)"/>
+	<data value="agentValue(Firms, redemptionPaid, t,Company140)"/>
+	<data value="agentValue(Firms, revenue, t,Company140)"/>
+	<data value="agentValue(Firms, operationsInvestment, t,Company140)"/>
+	<data value="agentValue(Firms, newOperatingCredit, t,Company140)"/>
+	<data value="agentValue(Firms, numberOfLoans, t,Company140)"/>
+	<data value="agentValue(Firms, moneyHoldings, t,Company140)"/>
+	
+	<data value="agentValue(Firms, noDemand, t,Company140)"/>
+	<data value="agentValue(Firms, inputConstrained, t,Company140)"/>
+	<data value="agentValue(Firms, costConstrained, t,Company140)"/>
+	<data value="agentValue(Firms, liquidityConstrained, t,Company140)"/>
+	<data value="agentValue(Firms, unconstrained, t,Company140)"/>
+	
+	</export>
+
+
+</circuit>

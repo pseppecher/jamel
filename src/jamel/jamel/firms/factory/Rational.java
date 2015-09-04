@@ -11,19 +11,21 @@ public class Rational {
 	 * Computes and returns the greatest common divisor of the two positive
 	 * parameters. Uses Euclid's algorithm.
 	 * 
-	 * @param int1
+	 * @param val1
 	 *            the first parameter.
-	 * @param int2
+	 * @param val2
 	 *            the second parameter.
 	 * @return the greatest common divisor of the two positive parameters
 	 */
-	private static int gcd(int int1, int int2) {
-		while (int1 != int2)
+	private static int gcd(final int val1, final int val2) {
+		int int1=val1;
+		int int2=val2;
+		while (int1 != int2) {
 			if (int1 > int2)
 				int1 = int1 - int2;
 			else
 				int2 = int2 - int1;
-
+		}
 		return int1;
 	}
 
@@ -91,22 +93,29 @@ public class Rational {
 	/**
 	 * Creates a new rational number.
 	 * 
-	 * @param numerator
+	 * @param numerator1
 	 *            the numerator.
-	 * @param denominator
+	 * @param denominator1
 	 *            the denominator.
 	 */
-	public Rational(int numerator, int denominator) {
-		if (denominator == 0) {
+	public Rational(int numerator1, int denominator1) {
+		if (denominator1 == 0) {
 			throw new IllegalArgumentException(
 					"The denominator cannot be zero.");
 		}
+		final int numerator2;
+		final int denominator2;
+		
 		// Make the numerator "store" the sign
-		if (denominator < 0) {
-			numerator = numerator * -1;
-			denominator = denominator * -1;
+		if (denominator1 < 0) {
+			numerator2 = numerator1 * -1;
+			denominator2 = denominator1 * -1;
 		}
-		final int[] reduced = reduce(numerator, denominator);
+		else {
+			numerator2 = numerator1;
+			denominator2 = denominator1;			
+		}
+		final int[] reduced = reduce(numerator2, denominator2);
 		this.numerator = reduced[0];
 		this.denominator = reduced[1];
 	}

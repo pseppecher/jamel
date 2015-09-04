@@ -136,13 +136,13 @@ public class BasicHouseholdSector implements Sector, HouseholdSector,
 		final List<Household> list = new ArrayList<Household>(lim);
 		for (int index = 0; index < lim; index++) {
 			this.countAgents++;
-			final String name = this.name + "-" + this.countAgents;
+			final String householdName = this.name + "-" + this.countAgents;
 			try {
 				list.add((Household) Class
 						.forName(type, false,
 								ClassLoader.getSystemClassLoader())
 						.getConstructor(String.class, HouseholdSector.class)
-						.newInstance(name, this));
+						.newInstance(householdName, this));
 			} catch (Exception e) {
 				throw new RuntimeException(
 						"Something goes wrong while creating households.", e);
@@ -206,11 +206,11 @@ public class BasicHouseholdSector implements Sector, HouseholdSector,
 	}
 
 	@Override
-	public Phase getPhase(String name) throws InitializationException {
+	public Phase getPhase(String phaseName) throws InitializationException {
 		final Phase result;
 
-		if (name.equals(PHASE_OPENING)) {
-			result = new AbstractPhase(name, this) {
+		if (phaseName.equals(PHASE_OPENING)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					for (final Household household : households.getList()) {
@@ -220,8 +220,8 @@ public class BasicHouseholdSector implements Sector, HouseholdSector,
 			};
 		}
 
-		else if (name.equals(PHASE_TAKE_DIVIDENDS)) {
-			result = new AbstractPhase(name, this) {
+		else if (phaseName.equals(PHASE_TAKE_DIVIDENDS)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					for (final Household household : households.getList()) {
@@ -231,8 +231,8 @@ public class BasicHouseholdSector implements Sector, HouseholdSector,
 			};
 		}
 
-		else if (name.equals(PHASE_JOB_SEARCH)) {
-			result = new AbstractPhase(name, this) {
+		else if (phaseName.equals(PHASE_JOB_SEARCH)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					for (final Household household : households
@@ -243,8 +243,8 @@ public class BasicHouseholdSector implements Sector, HouseholdSector,
 			};
 		}
 
-		else if (name.equals(PHASE_CONSUMPTION)) {
-			result = new AbstractPhase(name, this) {
+		else if (phaseName.equals(PHASE_CONSUMPTION)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					for (final Household household : households
@@ -255,8 +255,8 @@ public class BasicHouseholdSector implements Sector, HouseholdSector,
 			};
 		}
 
-		else if (name.equals(PHASE_CLOSURE)) {
-			result = new AbstractPhase(name, this) {
+		else if (phaseName.equals(PHASE_CLOSURE)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					BasicHouseholdSector.this.close();
@@ -266,7 +266,7 @@ public class BasicHouseholdSector implements Sector, HouseholdSector,
 
 		else {
 			result = null;
-			throw new InitializationException("Unknown phase: \"" + name
+			throw new InitializationException("Unknown phase: \"" + phaseName
 					+ "\".");
 		}
 
@@ -426,7 +426,7 @@ public class BasicHouseholdSector implements Sector, HouseholdSector,
 			newShares[i] = firm.getNewShares(shares.get(i));
 		}
 
-		// Tout le capital est maintenant partagŽ proportionnellement aux
+		// Tout le capital est maintenant partagï¿½ proportionnellement aux
 		// contributions de chacun.
 
 		final Cheque[] cheques = new Cheque[buyers.size()];

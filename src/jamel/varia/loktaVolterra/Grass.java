@@ -96,10 +96,10 @@ public class Grass implements Sector, LandSector {
 	}
 
 	@Override
-	public Phase getPhase(final String name) {
+	public Phase getPhase(final String phaseName) {
 		Phase result = null;
-		if (name.equals("grow")) {
-			result = new AbstractPhase(name, this){
+		if (phaseName.equals("grow")) {
+			result = new AbstractPhase(phaseName, this){
 				@Override
 				public void run() {
 					for (int x=0;x<width;x++) {

@@ -142,7 +142,7 @@ public abstract class Landscape implements Sector {
 	}
 
 	@Override
-	public Phase getPhase(final String name) {
+	public Phase getPhase(final String phaseName) {
 		// Not used.
 		throw new RuntimeException("Not yet implemented");
 	}

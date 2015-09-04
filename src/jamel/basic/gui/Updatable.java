@@ -1,7 +1,7 @@
 package jamel.basic.gui;
 
 /**
- * An interface for the data that requires to be updated at the end of the period.
+ * An interface for the object thats requires to be updated.
  */
 public interface Updatable {
 

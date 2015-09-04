@@ -16,11 +16,6 @@ public interface Supply {
 	Commodities buy(long volume, Cheque cheque);
 
 	/**
-	 * Closes this supply.
-	 */
-	void close();
-
-	/**
 	 * Returns the unit price of the supply.
 	 * @return the unit price.
 	 */

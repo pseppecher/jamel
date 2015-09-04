@@ -52,7 +52,7 @@ class FinishedGoods implements Materials, Commodities {
 	}
 
 	@Override
-	public void delete(long inputVolume, long value) {
+	public void delete(long volume1, long value1) {
 		throw new RuntimeException("Not used.");
 	}
 

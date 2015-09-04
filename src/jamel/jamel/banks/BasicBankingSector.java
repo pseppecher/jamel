@@ -767,8 +767,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 			account.close();
 		}
 		this.updateDataset();
-		if (!checkConsistency()) { // TODO faut-il vérifier la cohérence
-			// automatiquement ? réfléchir à ça.
+		if (!checkConsistency()) { // TODO faut-il vÔøΩrifier la cohÔøΩrence
+			// automatiquement ? rÔøΩflÔøΩchir ÔøΩ ÔøΩa.
 			throw new RuntimeException("Inconsistency");
 		}
 	}
@@ -1002,38 +1002,38 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	}
 
 	@Override
-	public Phase getPhase(final String name) {
+	public Phase getPhase(final String phaseName) {
 		Phase result = null;
-		if (name.equals(PHASE_OPENING)) {
-			result = new AbstractPhase(name, this) {
+		if (phaseName.equals(PHASE_OPENING)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					BasicBankingSector.this.open();
 				}
 			};
-		} else if (name.equals(PHASE_PAY_DIVIDEND)) {
-			result = new AbstractPhase(name, this) {
+		} else if (phaseName.equals(PHASE_PAY_DIVIDEND)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					BasicBankingSector.this.payDividend();
 				}
 			};
-		} else if (name.equals(PHASE_DEBT_RECOVERY)) {
-			result = new AbstractPhase(name, this) {
+		} else if (phaseName.equals(PHASE_DEBT_RECOVERY)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					BasicBankingSector.this.debtRecovery();
 				}
 			};
-		} else if (name.equals(PHASE_CLOSURE)) {
-			result = new AbstractPhase(name, this) {
+		} else if (phaseName.equals(PHASE_CLOSURE)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					BasicBankingSector.this.close();
 				}
 			};
-		} else if (name.equals(PHASE_CHECK_CONSISTENCY)) {
-			result = new AbstractPhase(name, this) {
+		} else if (phaseName.equals(PHASE_CHECK_CONSISTENCY)) {
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					// For debugging purpose. TODO valider cette methode.

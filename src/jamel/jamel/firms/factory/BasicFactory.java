@@ -3,6 +3,7 @@ package jamel.jamel.firms.factory;
 import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Timer;
+import jamel.jamel.firms.managers.AbstractManager;
 import jamel.jamel.widgets.Asset;
 import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.LaborPower;
@@ -11,18 +12,17 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Map.Entry;
 import java.util.List;
 
 /**
  * A basic factory.
  */
-public class BasicFactory implements Factory {
+public class BasicFactory extends AbstractManager implements Factory {
 
 	/**
 	 * A basic implementation of {@link WorkInProgress}.
 	 * 
-	 * TODO: objet ˆ supprimer, remplacer par une classe anonyme.
+	 * TODO: objet ï¿½ supprimer, remplacer par une classe anonyme.
 	 * TODO: externaliser l'interface.
 	 */
 	private class BasicWorkInProgress extends HashMap<Rational, Materials>
@@ -83,9 +83,14 @@ public class BasicFactory implements Factory {
 		}
 
 		@Override
-		public void put(WorkInProgress workInProgress) {
+		public boolean isCancelled() {
+			return false;
+		}
+
+		@Override
+		public void put(WorkInProgress input) {
 			for (Entry<Rational, Materials> entry : this.entrySet()) {
-				entry.getValue().add(workInProgress.get(entry.getKey()));
+				entry.getValue().add(input.get(entry.getKey()));
 			}
 		}
 
@@ -107,11 +112,6 @@ public class BasicFactory implements Factory {
 						+ "; ";
 			}
 			return result;
-		}
-
-		@Override
-		public boolean isCancelled() {
-			return false;
 		}
 
 	}
@@ -193,9 +193,6 @@ public class BasicFactory implements Factory {
 		}
 	};
 
-	/** The factory dataset. */
-	private AgentDataset dataset;
-
 	/**
 	 * Finished goods inventory.
 	 * <p>
@@ -219,7 +216,7 @@ public class BasicFactory implements Factory {
 	private final int productionTime;
 
 	/** The timer. */
-	private final Timer timer;
+	//private final Timer timer;
 
 	/** The work in progress. */
 	private final WorkInProgress workInProgress;
@@ -241,8 +238,9 @@ public class BasicFactory implements Factory {
 	 */
 	public BasicFactory(int productionTime, int capacity, long productivity,
 			Timer timer) {
+		
+		super("Factory",timer);
 
-		this.timer = timer;
 		this.productionTime = productionTime;
 
 		for (int i = 0; i < capacity; i++) {
@@ -274,11 +272,20 @@ public class BasicFactory implements Factory {
 		return productivity;
 	}
 
+	/**
+	 * Performs some consistency tests.
+	 */
+	@Override
+	protected void checkConsistency() {
+		super.checkConsistency();
+		if (this.canceled) {
+			throw new RuntimeException("This factory is definitively closed.");
+		}		
+	}
+
 	@Override
 	public void bankrupt() {
-		if (this.canceled) {
-			throw new RuntimeException("This factory is already closed.");
-		}
+		checkConsistency();
 		this.dataset.put("inventories.losses.val", (double) this.getValue());
 		this.dataset.put("inventories.fg.losses", (double) this.finishedGoods.getValue());
 		this.dataset.put("inventories.inProcess.losses", (double) this.workInProgress.getBookValue());
@@ -290,6 +297,7 @@ public class BasicFactory implements Factory {
 
 	@Override
 	public void close() {
+		checkConsistency();
 		this.dataset.put("inventories.inProcess.val",
 				(double) this.workInProgress.getBookValue());
 		this.dataset.put("inventories.fg.val",
@@ -297,37 +305,40 @@ public class BasicFactory implements Factory {
 		this.dataset.put("inventories.fg.vol",
 				(double) this.finishedGoods.getVolume());
 	}
-
+	
 	@Override
 	public int getCapacity() {
+		checkConsistency();
 		return this.machinery.size();
 	}
 
 	@Override
 	public Commodities getCommodities(long demand) {
-		if (this.canceled) {
-			throw new RuntimeException("This factory is definitively closed.");
-		}
+		checkConsistency();
 		return this.finishedGoods.detach(demand);
 	}
 
 	@Override
 	public AgentDataset getData() {
+		checkConsistency();
 		return this.dataset;
 	}
 
 	@Override
 	public long getFinishedGoodsVolume() {
+		checkConsistency();
 		return this.finishedGoods.getVolume();
 	}
 
 	@Override
 	public double getInventoryLosses() {
+		checkConsistency();
 		return this.dataset.get("inventories.losses.val");
 	}
 
 	@Override
 	public double getInventoryRatio(float normalLevel) {
+		checkConsistency();
 		final double normalVolume = normalLevel
 				* this.getMaxUtilAverageProduction();
 		this.dataset.put("inventories.fg.vol.normal", normalVolume);
@@ -336,6 +347,7 @@ public class BasicFactory implements Factory {
 
 	@Override
 	public double getMaxUtilAverageProduction() {
+		checkConsistency();
 		final Double maxUtilAverageProduction;
 		if (this.machinery.size() == 0) {
 			maxUtilAverageProduction = null;
@@ -351,11 +363,13 @@ public class BasicFactory implements Factory {
 
 	@Override
 	public double getUnitCost() {
+		checkConsistency();
 		return this.finishedGoods.getUnitCost();
 	}
 
 	@Override
 	public long getValue() {
+		checkConsistency();
 		return this.workInProgress.getBookValue()
 				+ this.finishedGoods.getValue();
 	}
@@ -367,6 +381,7 @@ public class BasicFactory implements Factory {
 
 	@Override
 	public void open() {
+		super.open();
 		this.dataset = new BasicAgentDataset("Factory");
 		this.dataset.put("inventories.losses.val", 0d);
 		this.dataset.put("inventories.fg.losses", 0d);
@@ -376,6 +391,7 @@ public class BasicFactory implements Factory {
 
 	@Override
 	public void process(LaborPower... laborPowers) {
+		checkConsistency();
 
 		if (laborPowers.length > machinery.size()) {
 			throw new IllegalArgumentException(

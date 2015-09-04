@@ -1,0 +1,1699 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<charts>
+
+<panel title="Key figures">
+	
+	<col>
+	
+		<chart title="GDP indices" type="time chart">
+			<series
+				value="val(Firms, nominalGDP_index, t)"
+				color="green"
+				label="Nominal GDP (Index)" />
+			<series
+				value="val(Markets, realGDP, t)"
+				color="veryLightRed"
+				label="Real GDP (Index)" />
+			
+			<yAxis label="Index (t=1 = 100)" />
+			
+		</chart>
+		
+		<chart title="Money holdings" type="time chart">
+			<series
+				value="sum(Households, moneyHoldings, t)"
+				color="red"
+				label="Households" />
+			<series
+				value="sum(Firms, moneyHoldings, t)"
+				color="blue"
+				label="Firms" />
+			<series
+				value="sum(Banks, moneyHoldings, t)"
+				color="green"
+				label="Banks" />
+			<series
+				value="sum(Banks, moneyHoldings, t) + sum(Firms, moneyHoldings, t)
+				+sum(Households, moneyHoldings, t) + val(InvestmentBank, moneyHoldings, t)"
+				color="gray"
+				label="Total" />
+			<yAxis label="Monetary units" />
+			
+		</chart>
+		
+		<chart title="Employment" type="time chart">
+			<series
+				value="val(Households, households, t)"
+				color="blue"
+				label="Households" />
+			<series
+				value="sum(Households, employed, t)"
+				color="green"
+				label="Employed" />
+			<yAxis label="Households" />
+			
+		</chart>
+		
+	</col>
+		
+	<col>
+	
+		<chart title="Real consumption" type="time chart">
+			<series
+				value="val(Markets, realConsumption, t)"
+				color="veryLightBlue"
+				label="Real consumption (Index)" />
+			<yAxis label="Index (t=1 = 100)" />
+			
+		</chart>
+  		
+  	
+		
+		<chart title="Total Production and Sales" type="time chart">
+			<series
+				value="sum(Firms, offeringTarget, t)"
+				color="orange"
+				label="Off.target" />
+			<series
+				value="sum(Firms, productionTarget, t)"
+				color="transparentBlue"
+				label="Prod.target" />
+			<series
+				value="sum(Firms, productionVolume, t)"
+				color="red"
+				label="Production" />
+			<series
+				value="sum(Firms, offeredGoods, t)"
+				color="green"
+				label="Offers" />
+			<series
+				value="sum(Firms, salesVolume, t)"
+				color="yellow"
+				label="Sales" />
+			<series
+				value="sum(Firms, inventoriesVolume, t)"
+				color="gray"
+				label="Inventories" />
+			<yAxis label="Goods" />
+			
+		</chart> 
+		
+		
+		<chart title="Interest rates (asked)" type="time chart">
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, savings)"
+				color="cyan"
+				label="Rate on savings" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, loans)"
+				color="magenta"
+				label="Rate on loans" />
+			<yAxis label="Percent" />
+			
+		</chart>
+
+	</col>
+	
+	<col>
+	
+		<chart title="Net national income" type="time chart">
+			<series
+				value="sum(Households, consumptionExpenditure, t)
+					+sum(Firms, machineInvestment, t) + sum(Firms, operationsInvestment, t)"
+				color="blue"
+				label="Gross Value of Output" />
+			<series
+				value="val(Firms, nominalGDP, t)"
+				color="green"
+				label="GDP" />
+			<series
+				value="sum(Households, consumptionExpenditure, t)
+					+sum(Firms, machineInvestment, t) + sum(Firms, operationsInvestment, t)
+					-sum(Firms, costsOfGoodsSold, t) - sum(Firms, depreciation, t)"
+				color="black"
+				label="Net national income" />
+			<yAxis label="Monetary units" />
+			
+		</chart>
+			
+		<chart title="Price levels" type="time chart">
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, B0)"
+				color="blue"
+				label="B0" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, B1)"
+				color="veryLightBlue"
+				label="B1" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, B2)"
+				color="cyan"
+				label="B2" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, B3)"
+				color="gray"
+				label="B3" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, labor)"
+				color="red"
+				label="labor" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, machines)"
+				color="green"
+				label="machine parts" />
+			<yAxis label="Monetary units per good" />
+			
+		</chart> 
+	
+		
+		<chart title="Firms: Net profit / Revenue" type="time chart">
+			<series
+				value="sum(Firms, netProfit, t, and(type=1, stage=1)):sum(Firms, revenue, t, and(type=1, stage=1))"
+				color="blue"
+				label="B1" />
+			<series
+				value="sum(Firms, netProfit, t, and(type=1, stage=2)):sum(Firms, revenue, t, and(type=1, stage=2))"
+				color="veryLightBlue"
+				label="B2" />
+			<series
+				value="sum(Firms, netProfit, t, and(type=1, stage=3)):sum(Firms, revenue, t, and(type=1, stage=3))"
+				color="cyan"
+				label="B3" />
+			<series
+				value="sum(Firms, netProfit, t, and(type=1, stage=4)):sum(Firms, revenue, t, and(type=1, stage=4))"
+				color="gray"
+				label="B4" />
+			<yAxis label="Percent" />
+			
+		</chart>  
+	
+	</col>		
+		
+	</panel>
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+	
+
+	<panel title="Households">
+	
+	<col>
+		
+		<chart title="Household income"
+			   type="time chart">
+			<series
+				value="agentValue(Markets, turnover, t, labor)"
+				color="blue"
+				label="Wages" />
+			<series
+				value="sum(Households, dividendsReceived, t)"
+				color="red"
+				label="Dividends" />
+			<series
+				value="sum(Banks, savingsRedemptions, t)+sum(Banks, interestPaidOnSavings, t)"
+				color="green"
+				label="Redemption" />
+			<yAxis label="Monetary units" />
+			
+		</chart>
+		
+			
+	 	<chart title="Budget Allocation" type="time chart">
+			<series
+				value="sum(Households, totalBudget, t)"
+				color="blue"
+				label="Total budget" />
+			<series
+				value="sum(Households, consumptionExpenditure, t)"
+				color="green"
+				label="Consumption" />
+			<series
+				value="sum(Banks, newSavings, t)"
+				color="red"
+				label="Saving" />
+			<series
+				value="agentValue(Markets, turnover, t, equity)"
+				color="yellow"
+				label="Equity purchases" />
+			<series
+				value="sum(Households, hoarding, t)"
+				color="veryLightBlue"
+				label="Hoarding" />
+			<yAxis label="Monetary units" />
+		</chart> 
+		
+	
+		<chart title="Consumption" type="time chart">
+			<series
+				value="sum(Households, realConsumption, t)"
+				color="blue"
+				label="Consumer goods bought" />
+				<yAxis label="Goods" />
+		</chart> 
+		
+	</col>
+		
+	<col>
+  		<chart title="Asset holdings" type="scatter chart">
+			<series
+				sector="Households"
+				x="timeDeposits"
+				y="equityHoldings"
+				color="green" 
+				label="Households (x=time deposits, y=equity holdings)" />
+			<xAxis label="Number of deposits" />
+			<yAxis label="Number of shares" />
+		</chart> 
+		
+		<chart title="Income components" type="scatter chart">
+			<series
+				sector="Households"
+				x="dividendsReceived"
+				y="wages"
+				color="green" 
+				label="Households (x=dividends, y=wages)" />
+			<xAxis label="Monetary units" />
+			<yAxis label="Monetary units" />
+		</chart> 
+	
+		
+		<chart title="Income distribution" type="time chart">
+			<series
+				value="mean(Households, totalBudget, t)"
+				color="blue"
+				label="Mean total budget" />
+			<series
+				value="max(Households, totalBudget, t)"
+				color="veryLightBlue"
+				label="Max" />
+			<series
+				value="min(Households, totalBudget, t)"
+				color="veryLightBlue"
+				label="Min" />
+			<yAxis label="Monetary units" />
+		</chart> 
+
+
+	</col>
+	
+	<col>
+	
+		<chart title="Savings rate" type="time chart">
+			<series
+				value="(val(Firms, nominalGDP, t) - sum(Households, consumptionExpenditure, t)) : val(Firms, nominalGDP, t)"
+				color="veryLightBlue"
+				label="Gross savings rate" />
+			<series
+				value="(val(Firms, nominalGDP, t) - sum(Households, consumptionExpenditure, t) - sum(Firms, depreciation, t)) 
+						: (val(Firms, nominalGDP, t) - sum(Firms, depreciation, t))"
+				color="orange"
+				label="Net savings rate" />
+			<series
+				value="(agentValue(Markets, turnover, t, equity)+agentValue(Markets, turnover, t, savings)) : sum(Households, totalBudget, t)"
+				color="green"
+				label="Household savings rate" />
+			<yAxis label="Percent" />
+		</chart>
+		<chart></chart>
+		<chart></chart>
+	
+	</col>		
+		
+	</panel>
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+	<panel title="Production">
+		
+	<col>
+		
+		<chart title="Total Production and Sales" type="time chart">
+			<series
+				value="sum(Firms, offeringTarget, t)"
+				color="orange"
+				label="Off.target" />
+			<series
+				value="sum(Firms, productionTarget, t)"
+				color="transparentBlue"
+				label="Prod.target" />
+			<series
+				value="sum(Firms, productionVolume, t)"
+				color="red"
+				label="Production" />
+			<series
+				value="sum(Firms, offeredGoods, t)"
+				color="green"
+				label="Offers" />
+			<series
+				value="sum(Firms, salesVolume, t)"
+				color="yellow"
+				label="Sales" />
+			<series
+				value="sum(Firms, inventoriesVolume, t)"
+				color="gray"
+				label="Inventories" />
+			<yAxis label="Goods" />
+		</chart> 
+		
+		<chart title="Price levels" type="time chart">
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, B0)"
+				color="blue"
+				label="B0" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, B1)"
+				color="veryLightBlue"
+				label="B1" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, B2)"
+				color="cyan"
+				label="B2" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, B3)"
+				color="gray"
+				label="B3" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, labor)"
+				color="red"
+				label="labor" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, machines)"
+				color="green"
+				label="machine parts" />
+			<yAxis label="Monetary units per good" />
+		</chart> 
+		
+		<chart title="Prices B0" type="time chart">
+			
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, B0)"
+				color="blue"
+				label="Mean" />
+			<series
+				value="agentValue(Markets, MAX_PRICE, t, B0)"
+				color="veryLightBlue"
+				label="Max" />
+			<series
+				value="agentValue(Markets, MIN_PRICE, t, B0)"
+				color="veryLightBlue"
+				label="Min" />
+			<yAxis label="Monetary units per good" />
+		</chart> 
+ 	</col>	 
+	<col>
+
+		<chart title="Processing Capacity" type="time chart">
+			<series
+				value="sum(Firms, processingCapacity, t, and(type=1, stage=1))"
+				color="blue"
+				label="B1" />
+			<series
+				value="sum(Firms, processingCapacity, t, and(type=1, stage=2))"
+				color="veryLightBlue"
+				label="B2" />
+			<series
+				value="sum(Firms, processingCapacity, t, and(type=1, stage=3))"
+				color="cyan"
+				label="B3" />
+			<series
+				value="sum(Firms, processingCapacity, t, and(type=1, stage=4))"
+				color="gray"
+				label="B4" />
+			<yAxis label="Goods" />
+		</chart> 
+		
+	
+		
+		
+		<chart title="Sales" type="time chart">
+			<series
+				value="sum(Firms, salesVolume, t, and(type=1, stage=1))"
+				color="blue"
+				label="B1" />
+			<series
+				value="sum(Firms, salesVolume, t, and(type=1, stage=2))"
+				color="veryLightBlue"
+				label="B2" />
+			<series
+				value="sum(Firms, salesVolume, t, and(type=1, stage=3))"
+				color="cyan"
+				label="B3" />
+			<series
+				value="sum(Firms, salesVolume, t, and(type=1, stage=4))"
+				color="gray"
+				label="B4" />
+			<yAxis label="Goods" />
+		</chart> 
+		
+				
+		<chart title="Revenue" type="time chart">
+			<series
+				value="sum(Firms, revenue, t, and(type=1, stage=1))"
+				color="blue"
+				label="B1" />
+			<series
+				value="sum(Firms, revenue, t, and(type=1, stage=2))"
+				color="veryLightBlue"
+				label="B2" />
+			<series
+				value="sum(Firms, revenue, t, and(type=1, stage=3))"
+				color="cyan"
+				label="B3" />
+			<series
+				value="sum(Firms, revenue, t, and(type=1, stage=4))"
+				color="gray"
+				label="B4" />
+			<yAxis label="Monetary units" />
+		</chart> 
+
+</col>
+
+	<col>
+		
+		<chart title="Structure length" type="time chart">
+			<series
+				value="val(Firms, maxStageB, t)"
+				color="green"
+				label="Structure length B" />
+			<yAxis label="Stages" />
+		</chart> 	
+
+		
+		
+		<chart title="Firm positions" type="time chart">
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1))"
+				color="blue"
+				label="B1" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2))"
+				color="veryLightBlue"
+				label="B2" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3))"
+				color="cyan"
+				label="B3" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=4))"
+				color="gray"
+				label="B4" />
+				
+			<series
+				value="sum(Firms, firms, t, and(type=0, stage=1))"
+				color="green"
+				label="A1" />
+			
+			<yAxis label="Firms" />
+		</chart>
+	 	<chart></chart>
+	 	
+		</col>
+		
+	</panel>
+	
+	
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+	<panel
+		title="Profit and Loss">
+	
+	<col>
+		<chart title="Firms' profit and loss" type="time chart">
+			<series
+				value="sum(Firms, grossProfit, t)"
+				color="lightGray"
+				label="Gross profits" />
+			<series
+				value="sum(Firms, netProfit, t)"
+				color="veryLightBlue"
+				label="Net profits" />	
+			<series
+				value="sum(Firms, losses, t)"
+				color="veryLightRed"
+				label="Net losses" />
+			<series
+				value="0"
+				color="black"/>
+			<yAxis label="Monetary units" />
+		</chart> 
+		
+		<chart title="Banks' profit and loss" type="time chart">
+			<series
+				value="sum(Banks, profits, t)"
+				color="veryLightBlue"
+				label="Profits" />
+			<series
+				value="sum(Banks, losses, t)"
+				color="veryLightRed"
+				label="Losses" />
+			<series
+				value="0"
+				color="black"/>	
+			<yAxis label="Monetary units" />
+		</chart>
+		
+		
+		<chart title="Firms: Net profit / Revenue" type="time chart">
+			<series
+				value="sum(Firms, netProfit, t, and(type=1, stage=1)):sum(Firms, revenue, t, and(type=1, stage=1))"
+				color="blue"
+				label="B1" />
+			<series
+				value="sum(Firms, netProfit, t, and(type=1, stage=2)):sum(Firms, revenue, t, and(type=1, stage=2))"
+				color="veryLightBlue"
+				label="B2" />
+			<series
+				value="sum(Firms, netProfit, t, and(type=1, stage=3)):sum(Firms, revenue, t, and(type=1, stage=3))"
+				color="cyan"
+				label="B3" />
+			<series
+				value="sum(Firms, netProfit, t, and(type=1, stage=4)):sum(Firms, revenue, t, and(type=1, stage=4))"
+				color="gray"
+				label="B4" />
+			<yAxis label="Percent" />
+		</chart>  
+	</col>
+	<col>
+	
+		<chart title="Firm bankruptcies" type="time chart">
+			<series
+				value="val(Firms, firmFailures, t)"
+				color="gray"
+				label="#bankrupt firms" />
+			<yAxis label="Firms" />
+		</chart> 
+		
+	  	<chart title="Bank bankruptcies" type="time chart">
+			<series
+				value="val(Banks, bankFailures, t)"
+				color="gray"
+				label="#bankrupt banks" />
+			<yAxis label="Banks" />
+		</chart> 
+		
+		<chart></chart>
+
+	</col>
+	<col>
+	
+		
+		<chart title="Firm number" type="time chart">
+			<series
+				value="val(Firms, firmNumber, t)"
+				color="blue"
+				label="#firms" />
+				
+			<series
+				value="val(Firms, newFirms, t)"
+				color="green"
+				label="#new firms" />
+			<yAxis label="Banks" />
+		</chart>
+		
+		<chart title="Bank number" type="time chart">
+			<series
+				value="val(Banks, bankNumber, t)"
+				color="blue"
+				label="#banks" />
+				
+			<series
+				value="val(Banks, newBanks, t)"
+				color="green"
+				label="#new banks" />
+				
+			<series
+				value="sum(Banks, illiquidBanks, t)"
+				color="red"
+				label="#illiquid banks" />
+			<yAxis label="Firms" />
+		</chart> 
+	
+		
+		<chart></chart>
+	</col>
+			
+	</panel>
+	
+
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+	<panel	title="Labor Market">
+	
+	<col>
+		<chart title="Supply and Demand" type="time chart">
+			<series
+				value="agentValue(Markets, offers, t, labor)"
+				color="veryLightBlue"
+				label="Job offers" />
+			<series
+				value="sum(Households, jobSeekers, t)"
+				color="veryLightRed"
+				label="Job seekers" />
+			<series
+				value="sum(Firms, hiring, t)"
+				color="green"
+				label="Hiring" />
+			<series
+				value="sum(Firms, vacancies, t)"
+				color="lightGray"
+				label="Vacancies" />
+			<yAxis label="Households" />	
+		</chart> 
+	
+		<chart title="Wages" type="time chart">
+		
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, labor)"
+				color="red"
+				label="Mean Wages" />
+			<series
+				value="agentValue(Markets, MAX_PRICE, t, labor)"
+				color="veryLightRed"
+				label="Max" />
+			<series
+				value="agentValue(Markets, MIN_PRICE, t, labor)"
+				color="veryLightRed"
+				label="Min" />
+			<yAxis label="Monetary units per worker" />
+		</chart> 
+		
+		<chart title="Employment" type="time chart">
+			<series
+				value="val(Households, households, t)"
+				color="blue"
+				label="Households" />
+			<series
+				value="sum(Households, employed, t)"
+				color="green"
+				label="Employed" />
+			<yAxis label="Households" />
+		</chart>
+		
+	</col>
+	
+	<col>
+		
+		
+		<chart title="Unemployment types" type="time chart">
+			<series
+				value="sum(Households, employed, t)"
+				color="green"
+				label="Employed" />
+			<series
+				value="sum(Households, voluntarilyUnemployed, t)"
+				color="veryLightBlue"
+				label="voluntarily unemployed " />
+			<series
+				value="sum(Households, involuntarilyUnemployed, t)"
+				color="veryLightRed"
+				label="involuntarily unemployed " />
+			<yAxis label="Households" />
+		</chart>  	
+		
+		
+		<chart title="Labor allocation" type="time chart">
+			<series
+				value="sum(Firms, hiring, t, and(type=1, stage=1))"
+				color="green"
+				label="B1" />
+			<series
+				value="sum(Firms, hiring, t, and(type=1, stage=2))"
+				color="veryLightBlue"
+				label="B2" />
+			<series
+				value="sum(Firms, hiring, t, and(type=1, stage=3))"
+				color="veryLightRed"
+				label="B3" />
+			<yAxis label="Households" />
+		</chart>  
+		
+			
+		<chart title="Hiring" type="scatter chart">
+			<series
+				sector="Firms"
+				y="offeredWage"
+				x="hiring"
+				color="green" 
+				label="Firms (x=hiring, y=offeredWage)" />
+			<xAxis label="Hired workers" />
+			<yAxis label="Monetary units per worker" />
+		</chart> 
+	</col>
+	<col>
+	
+	
+		<chart></chart>
+		<chart></chart>
+		<chart></chart>
+		</col>
+	</panel>
+
+	
+	
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+	<panel
+		title="Credit and Equity Markets">
+	
+	<col>
+	
+		<chart title="Credit supply and demand" type="time chart">
+			<series
+				value="sum(Banks, loanableFunds, t)"
+				color="veryLightRed"
+				label="Loanable funds" />
+			<series
+				value="agentValue(Markets, offers, t, loans)"
+				color="veryLightBlue"
+				label="Offered credit" />	
+			<series
+				value="agentValue(Markets, salesVolume, t, loans)"
+				color="green"
+				label="New loans" />
+			<yAxis label="Monetary units" />
+		</chart> 
+		
+		
+		<chart title="Bank reserves" type="time chart">
+			<series
+				value="sum(Banks, registeredCapital, t)"
+				color="veryLightBlue"
+				label="Registered capital" />
+			<series
+				value="sum(Banks, reserves, t)"
+				color="veryLightRed"
+				label="Reserves" />	
+			<yAxis label="Monetary units" />
+		</chart> 
+		
+	
+		
+		<chart title="Equity market" type="time chart">
+			<series
+				value="val(InvestmentBank, offeredShares, t)"
+				color="veryLightBlue"
+				label="Offered shares" />
+			<series
+				value="val(InvestmentBank, sharesSold, t)"
+				color="green"
+				label="Shares sold" />
+			<yAxis label="Shares" />
+		</chart>  
+		
+	</col>	
+	<col>
+		
+		<chart title="Interest rates" type="time chart">
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, savings)"
+				color="cyan"
+				label="Rate on savings" />
+			<series
+				value="agentValue(Markets, MEAN_PRICE, t, loans)"
+				color="magenta"
+				label="Rate on loans" />
+			<yAxis label="Percent" />
+		</chart> 
+		
+	
+		
+		<chart title="Loans and loanable funds" type="time chart">
+			<series
+				value="sum(Banks, timeDepositsVolume, t)"
+				color="veryLightRed"
+				label="Time deposits" />
+			<series
+				value="sum(Banks, loanableFunds, t)"
+				color="veryLightBlue"
+				label="Loanable funds" />	
+			<series
+				value="sum(Banks, outstandingLoans, t)"
+				color="green"
+				label="Loans outstanding" />
+			<series
+				value="sum(Banks, outstandingLoans, t)+sum(Banks, loanableFunds, t)"
+				color="blue"
+				label="Loans outstanding+Loanable funds" />
+			<yAxis label="Monetary units" />
+		</chart> 
+		
+		
+		<chart title="Equity investment" type="time chart">
+			<series
+				value="val(InvestmentBank, equityInvestment, t)"
+				color="veryLightRed"
+				label="Equity investment" />
+			<yAxis label="Monetary units" />
+		</chart> 
+		
+	</col>
+	<col>
+	
+		<chart title="Savings and redemption" type="time chart">
+			<series
+				value="sum(Banks, newSavings, t)"
+				color="veryLightBlue"
+				label="New savings" />
+			<series
+				value="sum(Banks, savingsRedemptions, t)"
+				color="green"
+				label="Savings redemptions" />
+			<yAxis label="Monetary units" />
+		</chart>
+		
+			
+		<chart title="Loans and redemption" type="time chart">
+			<series
+				value="sum(Firms, newOperatingCredit, t)"
+				color="veryLightBlue"
+				label="New operating credit" />
+			<series
+				value="sum(Firms, newInvestmentCredit, t)"
+				color="veryLightRed"
+				label="New investment credit" />
+			<series
+				value="sum(Banks, loanRedemptions, t)"
+				color="green"
+				label="Loan redemptions" />
+			<yAxis label="Monetary units" />
+		</chart> 
+		
+		<chart title="Credit allocation" type="time chart">
+			<series
+				value="sum(Firms, acquiredFunds, t, and(type=1, stage=1))"
+				color="blue"
+				label="B1" />
+			<series
+				value="sum(Firms, acquiredFunds, t, and(type=1, stage=2))"
+				color="veryLightBlue"
+				label="B2" />
+			<series
+				value="sum(Firms, acquiredFunds, t, and(type=1, stage=3))"
+				color="cyan"
+				label="B3" />
+			<yAxis label="Monetary units" />
+		</chart> 
+		
+	
+	 	
+	
+
+		
+	</col>
+		
+	</panel>
+
+	
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+	<panel
+		title="National Acounting">
+		
+	<col>
+		
+		<chart title="Net national income" type="time chart">
+			<series
+				value="sum(Households, consumptionExpenditure, t)
+					+sum(Firms, machineInvestment, t) + sum(Firms, operationsInvestment, t)"
+				color="blue"
+				label="Gross Value of Output" />
+			<series
+				value="val(Firms, nominalGDP, t)"
+				color="green"
+				label="GDP" />
+			<series
+				value="val(Firms, nominalGDP, t) - sum(Firms, depreciation, t)"
+				color="black"
+				label="Net national income" />
+			<yAxis label="Monetary units" />
+		</chart>
+		
+			
+		<chart title="GDP indices" type="time chart">
+			<series
+				value="val(Markets, realGDP, t)"
+				color="veryLightRed"
+				label="Real GDP (Index)" />
+			<series
+				value="val(Firms, nominalGDP_index, t)"
+				color="green"
+				label="Nominal GDP (Index)" />
+			<yAxis label="Index (t=1 = 100)" />
+		</chart>
+		
+	
+	
+		<chart title="Transaction volume" type="time chart">
+			<series
+				value="sum(Banks, transactionVolume, t)"
+				color="transparentRed"
+				label="Transaction volume" />
+			<yAxis label="Monetary units" />
+		</chart>
+	
+	
+	</col>
+	<col>
+		
+		<chart title="Expenditure compilation" type="time chart">
+			<series
+				value="sum(Households, consumptionExpenditure, t)"
+				color="blue"
+				label="Consumption expenditure" />
+			<series
+				value="val(Firms, nominalGDP, t) - sum(Firms, depreciation, t)"
+				color="black"
+				label="Net national income" />
+			<yAxis label="Monetary units" />
+		</chart>
+		
+		<chart title="Investment" type="time chart">
+			<series
+				value="val(Firms, nominalGDP, t) - sum(Households, consumptionExpenditure, t)"
+				color="veryLightBlue"
+				label="Gross investment" />
+			<series
+				value="sum(Firms, depreciation, t)"
+				color="red"
+				label="Depreciation" />
+			<series
+				value="val(Firms, nominalGDP, t) - sum(Households, consumptionExpenditure, t) - sum(Firms, depreciation, t)"
+				color="orange"
+				label="Net investment" />
+			<yAxis label="Monetary units" />
+		</chart>
+	
+		
+		<chart title="Money holdings" type="time chart">
+			<series
+				value="sum(Households, moneyHoldings, t)"
+				color="red"
+				label="Households" />
+			<series
+				value="sum(Firms, moneyHoldings, t)"
+				color="blue"
+				label="Firms" />
+			<series
+				value="sum(Banks, moneyHoldings, t)"
+				color="green"
+				label="Banks" />
+			<series
+				value="sum(Banks, moneyHoldings, t) + sum(Firms, moneyHoldings, t)
+				+sum(Households, moneyHoldings, t) + val(InvestmentBank, moneyHoldings, t)"
+				color="gray"
+				label="Total" />
+			<yAxis label="Monetary units" />
+		</chart>
+	
+	</col>
+	<col>
+	
+		
+		<chart title="Income compilation" type="time chart">
+			<series
+				value="agentValue(Markets, turnover, t, labor)"
+				color="red"
+				label="Compensation of employees" />
+			<series
+				value="val(Firms, nominalGDP, t) - sum(Firms, depreciation, t)"
+				color="black"
+				label="Net national income" />
+			<yAxis label="Monetary units" />
+		</chart>
+	
+	
+		<chart title="Savings rate" type="time chart">
+			<series
+				value="(val(Firms, nominalGDP, t) - sum(Households, consumptionExpenditure, t)) : val(Firms, nominalGDP, t)"
+				color="veryLightBlue"
+				label="Gross savings rate" />
+			<series
+				value="(val(Firms, nominalGDP, t) - sum(Households, consumptionExpenditure, t) - sum(Firms, depreciation, t)) 
+						: (val(Firms, nominalGDP, t) - sum(Firms, depreciation, t))"
+				color="orange"
+				label="Net savings rate" />
+			<series
+				value="(agentValue(Markets, turnover, t, equity)+agentValue(Markets, turnover, t, savings)) : sum(Households, totalBudget, t)"
+				color="green"
+				label="Household savings rate" />
+			<yAxis label="Percent" />
+		</chart>
+		
+		<chart></chart>
+
+	</col>
+	</panel> 
+	
+	
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+
+<panel title="Balance Sheets">
+
+		<html>
+			<style type="text/css">.boldtable, .boldtable TD, .boldtable TH
+				{font-family:sans-serif;font-size:12pt;}
+			</style>
+
+
+
+			<BR />
+			<BR />
+			<BR />
+			<BR />
+			<table border="0" align="center" class="boldtable" cellspacing="10">
+				<caption>
+					<b>Sectoral Cash Flow Statements</b> (period
+					<data value="time()" />
+					)
+				</caption>
+				<TR>
+					<TD colspan="8">
+						<HR />
+					</TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="center" />
+					<TH WIDTH="110" align="center" colspan="2">Households</TH>
+					<TH WIDTH="110" align="center" colspan="2">Firms</TH>
+					<TH WIDTH="110" align="center" colspan="2">Banks</TH>
+					<TH WIDTH="110" align="center">Sum</TH>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="center" />
+					<TH WIDTH="110" align="center">Inflow</TH>
+					<TH WIDTH="110" align="center">Outflow</TH>
+					<TH WIDTH="110" align="center">Inflow</TH>
+					<TH WIDTH="110" align="center">Outflow</TH>
+					<TH WIDTH="110" align="center">Inflow</TH>
+					<TH WIDTH="110" align="center">Outflow</TH>
+					<TH WIDTH="110" align="center"> </TH>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Consumption Expenditure</TH>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-sum(Households,consumptionExpenditure,t)" /></TD>
+					<TD align="center"><data value="sum(Households,consumptionExpenditure,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Wage payments</TH>
+					<TD align="center"><data value="agentValue(Markets, turnover, t, labor)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-agentValue(Markets, turnover, t, labor)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Investment in intermediate goods</TH>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="sum(Firms,intermediateGoodsInvestment,t)" /></TD>
+					<TD align="center"><data value="-sum(Firms,intermediateGoodsInvestment,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Investment in machines</TH>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="sum(Firms,machineInvestment,t)" /></TD>
+					<TD align="center"><data value="-sum(Firms,machineInvestment,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Purchases of equity shares</TH>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-agentValue(Markets, turnover, t, equity)" /></TD>
+					<TD align="center"><data value="val(InvestmentBank, equityInvestment, t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="agentValue(Markets, turnover, t, equity)" /></TD>
+					<TD align="center"><data value="-val(InvestmentBank, equityInvestment, t)" /></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Savings and new loans</TH>
+					<TD align="center"><data value="sum(Banks,savingsRedemptions,t)" /></TD>
+					<TD align="center"><data value="-agentValue(Markets, turnover, t, savings)" /></TD>
+					<TD align="center"><data value="agentValue(Markets, turnover, t, loans)" /></TD>
+					<TD align="center"><data value="-sum(Firms,redemptionPaid,t)" /></TD>
+					<TD align="center"><data value="agentValue(Markets, turnover, t, savings)+sum(Firms,redemptionPaid,t)" /></TD>
+					<TD align="center"><data value="-agentValue(Markets, turnover, t, loans)-sum(Banks,savingsRedemptions,t)" /></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Interest payments</TH>
+					<TD align="center"><data value="sum(Banks,interestPaidOnSavings,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-sum(Banks,interestPaidOnLoans,t)" /></TD>
+					<TD align="center"><data value="sum(Banks,interestPaidOnLoans,t)" /></TD>
+					<TD align="center"><data value="-sum(Banks,interestPaidOnSavings,t)" /></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Dividend payments</TH>
+					<TD align="center"><data value="sum(Households,dividendsReceived,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-sum(Firms,dividendsPaid,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-sum(Banks,dividendsPaid,t)" /></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TD colspan="8">
+						<HR />
+				</TD>
+				<TR>
+					<TH WIDTH="200" align="right">Sum</TH>
+					<TD WIDTH="110" align="center">0</TD>
+					<TD WIDTH="110" align="center">0</TD>
+					<TD WIDTH="110" align="center">0</TD>
+					<TD WIDTH="110" align="center">0</TD>
+					<TD WIDTH="110" align="center">0</TD>
+					<TD WIDTH="110" align="center">0</TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TD colspan="8">
+						<HR />
+				</TD>
+				<TR>
+					<TD colspan="8">
+					</TD>
+				</TR>
+			</table>
+			
+			<table border="0" align="center" class="boldtable" cellspacing="10">
+				<caption>
+					<b>Sectoral Balance Sheets</b> (period
+					<data value="time()" />
+					)
+				</caption>
+				<TR>
+					<TD colspan="8">
+						<HR />
+					</TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="center" />
+					<TH WIDTH="110" align="center" colspan="2">Households</TH>
+					<TH WIDTH="110" align="center" colspan="2">Firms</TH>
+					<TH WIDTH="110" align="center" colspan="2">Banks</TH>
+					<TH WIDTH="110" align="center">Sum</TH>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="center" />
+					<TH WIDTH="110" align="center">Assets</TH>
+					<TH WIDTH="110" align="center">Liabilities</TH>
+					<TH WIDTH="110" align="center">Assets</TH>
+					<TH WIDTH="110" align="center">Liabilities</TH>
+					<TH WIDTH="110" align="center">Assets</TH>
+					<TH WIDTH="110" align="center">Liabilities</TH>
+					<TH WIDTH="110" align="center"> </TH>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Sight deposits</TH>
+					<TD align="center" ><data value="sum(Households,moneyHoldings,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="sum(Firms,moneyHoldings,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center" color="blue"><data value="sum(Firms,moneyHoldings,t)+sum(Households,moneyHoldings,t)" /></TD>
+					<TD align="center"><data value="-sum(Firms,moneyHoldings,t)-sum(Households,moneyHoldings,t)" /></TD>
+					<TD align="center"><data value="sum(Firms,moneyHoldings,t)+sum(Households,moneyHoldings,t)" /></TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Loanable funds</TH>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center" color="blue"><data value="sum(Banks,loanableFunds,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center" ><data value="sum(Banks,loanableFunds,t)" /></TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Reserves</TH>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center" color="blue"><data value="sum(Banks,reserves,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="sum(Banks,reserves,t)" /></TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Escrow</TH>
+						<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center" color="blue"><data value="val(InvestmentBank,moneyHoldings,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="val(InvestmentBank,moneyHoldings,t)" /></TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Time deposits and loans</TH>
+					<TD align="center"><data value="sum(Households,timeDepositsVolume,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-sum(Banks,outstandingLoans,t)" /></TD>
+					<TD align="center"><data value="sum(Banks,outstandingLoans,t)" /></TD>
+					<TD align="center"><data value="-sum(Households,timeDepositsVolume,t)" /></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Value of inventories</TH>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="sum(Firms,inventoriesValue,t)+sum(Firms,productionValue,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="sum(Firms,inventoriesValue,t)+sum(Firms,productionValue,t)" /></TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Value of machines</TH>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="sum(Firms,fixedAssets,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="sum(Firms,fixedAssets,t)" /></TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Equity</TH>
+					<TD align="center"><data value="sum(Firms,equity,t)+sum(Banks,equity,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-sum(Firms,equity,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-sum(Banks,equity,t)-val(InvestmentBank,moneyHoldings,t)" /></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TR>
+					<TH WIDTH="200" align="right">Net worth</TH>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-sum(Households,moneyHoldings,t)-sum(Households,timeDeposits,t)-sum(Firms,equity,t)-sum(Banks,equity,t)" /></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD WIDTH="110" align="center"></TD>
+					<TD align="center"><data value="-sum(Households,moneyHoldings,t)-sum(Households,timeDeposits,t)-sum(Firms,equity,t)-sum(Banks,equity,t)" /></TD>
+				</TR>
+				<TD colspan="8">
+						<HR />
+				</TD>
+				<TR>
+					<TH WIDTH="200" align="right">Sum</TH>
+					<TD align="center"><data value="sum(Households,moneyHoldings,t)+sum(Households,timeDepositsVolume,t)+sum(Firms,equity,t)+sum(Banks,equity,t)" /></TD>
+					<TD align="center"><data value="-sum(Households,moneyHoldings,t)-sum(Households,timeDepositsVolume,t)-sum(Firms,equity,t)-sum(Banks,equity,t)" /></TD>
+					<TD align="center"><data value="sum(Firms,moneyHoldings,t)+sum(Firms,productionValue,t)+sum(Firms,inventoriesValue,t)+sum(Firms,fixedAssets,t)" /></TD>
+					<TD align="center"><data value="-sum(Banks,outstandingLoans,t)-sum(Firms,equity,t)" /></TD>
+					<TD align="center"><data value="sum(Firms,moneyHoldings,t)+sum(Households,moneyHoldings,t)+val(InvestmentBank,moneyHoldings,t)+sum(Banks,reserves,t)+sum(Banks,loanableFunds,t)+sum(Banks,outstandingLoans,t)" /></TD>
+					<TD align="center"><data value="-sum(Firms,moneyHoldings,t)-sum(Households,timeDepositsVolume,t)-val(InvestmentBank,moneyHoldings,t)-sum(Households,moneyHoldings,t)-sum(Banks,equity,t)" /></TD>
+					<TD WIDTH="110" align="center"> 0 </TD>
+				</TR>
+				<TD colspan="8">
+						<HR />
+				</TD>
+				<TR>
+					<TD colspan="7" align="right">
+						For informational purposes: Total money: </TD>
+					<TD align="center" color="blue"> <data value="sum(Firms,moneyHoldings,t)+sum(Households,moneyHoldings,t)+val(InvestmentBank,moneyHoldings,t)+sum(Banks,reserves,t)+sum(Banks,loanableFunds,t)" />
+					</TD>
+				</TR>
+				<TD colspan="8">
+						<HR />
+				</TD>
+				<TR>
+					<TD colspan="8" align="center">
+					<font size="3">Press 'pause' to scroll up.</font>
+						 </TD>
+				</TR>
+			</table>
+		</html>
+
+
+	</panel>
+
+	<panel title="Info">
+		<html>
+
+
+			<table>
+				<TR>
+					<TD align="left">
+						Model written by Hendrik Hagedorn.<br />
+						For documentation see <a href="http://www.austrian-models.net">www.austrian-models.net</a> or 
+						<a href="http://www.springer.com/us/book/9783658070762">www.springer.com</a>.<br />
+						Source code available under <a href="https://github.com/pseppecher/jamel">https://github.com/pseppecher/jamel</a>.
+						<br />
+						<br />
+						The model is built in the Jamel framework.<br />
+						Jamel is a Java-based modeling platform developed by Pascal Seppecher.<br />
+						See <a href="http://p.seppecher.free.fr/jamel/">http://p.seppecher.free.fr/jamel/</a> for further information.
+				
+					</TD>
+				</TR>
+			</table>
+		</html>
+	</panel>
+	
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+	<!-- <panel
+		title="Analytical">
+		
+		<col>
+
+	
+		<chart title="Investment constraints B1" type="time chart">
+				<series
+				value="agentValue(Firms, registeredCapital, t,Company 85)"
+				color="magenta"
+				label="Company 85" />
+		</chart>
+		
+		<chart title="Investment constraints B1" type="time chart">
+				<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, inputConstrained=1))"
+				color="blue"
+				label="input" />
+		</chart>
+		
+		
+		<chart title="Investment constraints B1" type="time chart">
+			
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, noDemand=1))"
+				color="veryLightRed"
+				label="noDemand" />
+			
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, liquidityConstrained=1))"
+				color="cyan"
+				label="cash" />
+			
+		</chart>
+		
+			<chart title="Investment constraints B1" type="time chart">
+		
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, costConstrained=1))"
+				color="yellow"
+				label="cost" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, unconstrained=1))"
+				color="green"
+				label="unconstrained" />
+			
+		</chart>
+		
+		
+		
+		<chart title="Investment constraints B1" type="time chart">
+			
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, noDemand=1))"
+				color="veryLightRed"
+				label="noDemand" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, noDemand=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, inputConstrained=1))"
+				color="blue"
+				label="input" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, noDemand=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, inputConstrained=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, liquidityConstrained=1))"
+				color="cyan"
+				label="cash" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, noDemand=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, inputConstrained=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, liquidityConstrained=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, costConstrained=1))"
+				color="yellow"
+				label="cost" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, noDemand=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, inputConstrained=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, liquidityConstrained=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, costConstrained=1))
+						+sum(Firms, firms, t, and(type=1, stage=1, unconstrained=1))"
+				color="green"
+				label="unconstrained" />
+			
+		</chart>
+		s
+		</col>
+		
+		
+		
+		
+		
+		<chart title="Investment constraints B2" type="time chart">
+				
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, noDemand=1))"
+				color="veryLightBlue"
+				label="noDemand" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, capacityConstrained=1))"
+				color="magenta"
+				label="capacity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, costConstrained=1))"
+				color="cyan"
+				label="cost" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, inputConstrained=1))"
+				color="lightGray"
+				label="input" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, liquidityConstrained=1))"
+				color="veryLightRed"
+				label="liquidity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, unconstrained=1))"
+				color="green"
+				label="unconstrained" />
+				
+		</chart>
+		
+		<chart title="Investment constraints B3" type="time chart">
+				
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, noDemand=1))"
+				color="veryLightBlue"
+				label="noDemand" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, capacityConstrained=1))"
+				color="magenta"
+				label="capacity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, costConstrained=1))"
+				color="cyan"
+				label="cost" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, inputConstrained=1))"
+				color="lightGray"
+				label="input" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, liquidityConstrained=1))"
+				color="veryLightRed"
+				label="liquidity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, unconstrained=1))"
+				color="green"
+				label="unconstrained" />
+				
+		</chart>	
+	
+	</col>
+	<col>
+		<chart title="Investment constraints B1" type="time chart">
+				
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, noDemand_2=1))"
+				color="veryLightBlue"
+				label="noDemand" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, capacityConstrained_21))"
+				color="magenta"
+				label="capacity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, costConstrained_2=1))"
+				color="cyan"
+				label="cost" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, inputConstrained_2=1))"
+				color="lightGray"
+				label="input" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, liquidityConstrained_2=1))"
+				color="veryLightRed"
+				label="liquidity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=1, unconstrained_2=1))"
+				color="green"
+				label="unconstrained" />
+				
+		</chart>
+		
+		<chart title="Investment constraints B2" type="time chart">
+				
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, noDemand_2=1))"
+				color="veryLightBlue"
+				label="noDemand" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, capacityConstrained_21))"
+				color="magenta"
+				label="capacity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, costConstrained_2=1))"
+				color="cyan"
+				label="cost" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, inputConstrained_2=1))"
+				color="lightGray"
+				label="input" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, liquidityConstrained_2=1))"
+				color="veryLightRed"
+				label="liquidity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=2, unconstrained_2=1))"
+				color="green"
+				label="unconstrained" />
+				
+		</chart>
+		
+		<chart title="Investment constraints B3" type="time chart">
+				
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, noDemand_2=1))"
+				color="veryLightBlue"
+				label="noDemand" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, capacityConstrained_21))"
+				color="magenta"
+				label="capacity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, costConstrained_2=1))"
+				color="cyan"
+				label="cost" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, inputConstrained_2=1))"
+				color="lightGray"
+				label="input" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, liquidityConstrained_2=1))"
+				color="veryLightRed"
+				label="liquidity" />
+			<series
+				value="sum(Firms, firms, t, and(type=1, stage=3, unconstrained_2=1))"
+				color="green"
+				label="unconstrained" />
+				
+		</chart>	
+	</col>
+	<col>
+		
+		<chart title="Supply B1" type="scatter chart">
+			<series
+				sector="Firms"
+				x="offeredGoods"
+				y="price"
+				color="blue" 
+				select="and(type=1, stage=1)"
+				label="Offerers (x=quantity, y=price)" />
+		</chart> 
+		
+		<chart title="inventoryRatio B1" type="scatter chart">
+			<series
+				sector="Firms"
+				x="inventoryRatio"
+				y="price"
+				color="blue" 
+				select="and(type=1, stage=1)"
+				label="Offerers (x=quantity, y=price)" />
+		</chart> 
+		
+		<chart title="Leverage" type="time chart">
+				
+			<series
+				value="sum(Firms, newInvestmentCredit, t)"
+				color="gray"
+				label="Investment credit" />
+			
+			<series
+				value="agentValue(Markets, turnover, t, machines)"
+				color="green"
+				label="Machine investments" />
+				
+		</chart>
+		
+		</col>
+		<col>
+		
+		<chart title="Supply A1" type="scatter chart">
+			<series
+				sector="Firms"
+				x="offeredGoods"
+				y="price"
+				color="blue" 
+				select="and(type=0, stage=1)"
+				label="Offerers (x=quantity, y=price)" />
+		</chart> 
+		
+		<chart title="inventoryRatio A1" type="scatter chart">
+			<series
+				sector="Firms"
+				x="inventoryRatio"
+				y="price"
+				color="blue" 
+				select="and(type=0, stage=1)"
+				label="Offerers (x=quantity, y=price)" />
+		</chart> 
+		
+			<chart title="Sales (A)" type="time chart">
+				
+			<series
+				value="sum(Firms, firms, t, and(type=0, highSales=1))"
+				color="green"
+				label="A high" />
+			
+			<series
+				value="sum(Firms, firms, t, and(type=0, lowSales=1))"
+				color="red"
+				label="A low" />
+				
+		</chart>
+		
+		
+		</col>
+
+	</panel>   -->
+	
+	
+</charts>

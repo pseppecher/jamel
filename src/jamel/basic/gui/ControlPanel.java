@@ -85,10 +85,7 @@ public class ControlPanel extends JPanel {
 			this.addActionListener(new ActionListener() { 
 				@Override
 				public void actionPerformed(ActionEvent e) {
-					circuit.pause(true);
-					playButton.setFocusable(true);
-					playButton.requestFocusInWindow();
-					setFocusable(false);
+					circuit.setPause(true);
 					ControlPanel.this.repaint();
 				}
 			}) ;
@@ -98,7 +95,7 @@ public class ControlPanel extends JPanel {
 				this.setText("");
 			}
 			this.setToolTipText("Pause "+circuit.getName()) ;
-			this.setEnabled(false);			
+			//this.setEnabled(false);			
 		}};		
 	}
 
@@ -111,10 +108,7 @@ public class ControlPanel extends JPanel {
 			this.addActionListener(new ActionListener() { 
 				@Override
 				public void actionPerformed(ActionEvent e) { 
-					circuit.pause(false);
-					pauseButton.setFocusable(true);
-					pauseButton.requestFocusInWindow();
-					setFocusable(false);
+					circuit.setPause(false);
 					ControlPanel.this.repaint();
 				} 
 			}) ;
@@ -137,9 +131,17 @@ public class ControlPanel extends JPanel {
 			final boolean b = circuit.isPaused();
 			if (pauseButton!=null) {
 				pauseButton.setEnabled(!b) ;
+				pauseButton.setFocusable(!b);
 				pauseButton.setSelected(false) ;
 				playButton.setEnabled(b) ;
+				playButton.setFocusable(b);
 				playButton.setSelected(false) ;
+				if (b) {
+					playButton.requestFocusInWindow();					
+				} else {
+					pauseButton.requestFocusInWindow();					
+				}
+				ControlPanel.this.setFocusable(false);
 			}			
 		}
 		super.repaint();

@@ -3,11 +3,11 @@ package jamel.jamel.firms.factory;
 import jamel.basic.util.Timer;
 
 /**
- * A heap of basic materials.
+ * A heap of homogeneous basic materials.
  */
 class BasicMaterials implements Materials {
 
-	/** The completion of the materials. */
+	/** The completion of the materials in this heap. */
 	private final Rational completion;
 
 	/** When the materials were produced. */
@@ -62,9 +62,9 @@ class BasicMaterials implements Materials {
 	}
 
 	@Override
-	public void delete(long volume, long value) {
-		this.value -= value;
-		this.volume -= volume;
+	public void delete(long volume1, long value1) {
+		this.value -= value1;
+		this.volume -= volume1;
 	}
 
 	@Override

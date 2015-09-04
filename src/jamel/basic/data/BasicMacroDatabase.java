@@ -331,7 +331,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 			else if (word[0].equals(VAL)) {
 
-				// On rcupre une valeur donne enregistre au niveau du
+				// On rï¿½cupï¿½re une valeur donnï¿½e enregistrï¿½e au niveau du
 				// secteur.
 
 				result = new Expression() {
@@ -370,7 +370,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 			else if (word[0].equals(AGENT_VALUE)) {
 
-				// On rcupre une valeur donne pour un agent donn.
+				// On rï¿½cupï¿½re une valeur donnï¿½e pour un agent donnï¿½.
 
 				result = new Expression() {
 
