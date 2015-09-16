@@ -11,19 +11,6 @@ public interface LaborPower {
 	void expend();
 
 	/**
-	 * Expends the specified amount of energy.
-	 * @param energy the amount of energy to be expended.
-	 */
-	void expend(float energy);
-
-	/**
-	 * Returns the energy of the labor power.
-	 * When the energy equals 0, the labor power is exhausted. 
-	 * @return a float in [0,1].
-	 */
-	float getEnergy();
-
-	/**
 	 * Returns the remaining value of this labor power.
 	 * @return the remaining value.
 	 */

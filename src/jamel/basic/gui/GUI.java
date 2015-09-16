@@ -186,6 +186,15 @@ public class GUI {
 	}
 
 	/**
+	 * Add a marker to all time charts.
+	 * @param label the label of the marker to add.
+	 * @param period the value of the marker (the current period). 
+	 */
+	public void addMarker(String label, int period) {
+		this.chartManager.addMarker(label, period);
+	}
+
+	/**
 	 * Adds a component to the tabbed pane of the window.
 	 * 
 	 * @param panel

@@ -1,5 +1,9 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
+<!-- Configuration of the chart panels -->
+<!-- Used by the baseline scenario -->
+<!-- 20/05/2015 -->
+
 <charts>
 
 <panel title="Key figures">
@@ -263,8 +267,8 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				y="equityHoldings"
 				color="green" 
 				label="Households (x=time deposits, y=equity holdings)" />
-			<xAxis label="Number of deposits" />
-			<yAxis label="Number of shares" />
+			<xAxis label="Number of deposits" min="0" max="8" />
+			<yAxis label="Number of shares" min="0" max="25" />
 		</chart> 
 		
 		<chart title="Income components" type="scatter chart">
@@ -274,8 +278,8 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				y="wages"
 				color="green" 
 				label="Households (x=dividends, y=wages)" />
-			<xAxis label="Monetary units" />
-			<yAxis label="Monetary units" />
+			<xAxis label="Monetary units" min="0" max="200000" />
+			<yAxis label="Monetary units" min="0" max="40000" />
 		</chart> 
 	
 		
@@ -314,7 +318,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				value="(agentValue(Markets, turnover, t, equity)+agentValue(Markets, turnover, t, savings)) : sum(Households, totalBudget, t)"
 				color="green"
 				label="Household savings rate" />
-			<yAxis label="Percent" />
+			<yAxis label="Percent" min="-0.3" max="0.4" />
 		</chart>
 		<chart></chart>
 		<chart></chart>
@@ -522,7 +526,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 		title="Profit and Loss">
 	
 	<col>
-		<chart title="Firms' profit and loss" type="time chart">
+		<chart title="Firms' profit and loss" type="time chart" xZeroBaselineVisible="true">
 			<series
 				value="sum(Firms, grossProfit, t)"
 				color="lightGray"
@@ -535,13 +539,10 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				value="sum(Firms, losses, t)"
 				color="veryLightRed"
 				label="Net losses" />
-			<series
-				value="0"
-				color="black"/>
 			<yAxis label="Monetary units" />
 		</chart> 
 		
-		<chart title="Banks' profit and loss" type="time chart">
+		<chart title="Banks' profit and loss" type="time chart" xZeroBaselineVisible="true">
 			<series
 				value="sum(Banks, profits, t)"
 				color="veryLightBlue"
@@ -574,7 +575,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				value="sum(Firms, netProfit, t, and(type=1, stage=4)):sum(Firms, revenue, t, and(type=1, stage=4))"
 				color="gray"
 				label="B4" />
-			<yAxis label="Percent" />
+			<yAxis label="Percent" min="-0.3" max="0.65"/>
 		</chart>  
 	</col>
 	<col>
@@ -741,7 +742,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				color="green" 
 				label="Firms (x=hiring, y=offeredWage)" />
 			<xAxis label="Hired workers" />
-			<yAxis label="Monetary units per worker" />
+			<yAxis label="Monetary units per worker"/>
 		</chart> 
 	</col>
 	<col>
@@ -1043,7 +1044,7 @@ XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 				value="(agentValue(Markets, turnover, t, equity)+agentValue(Markets, turnover, t, savings)) : sum(Households, totalBudget, t)"
 				color="green"
 				label="Household savings rate" />
-			<yAxis label="Percent" />
+			<yAxis label="Percent" min="-0.3" max="0.4" />
 		</chart>
 		
 		<chart></chart>

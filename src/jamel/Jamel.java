@@ -17,8 +17,12 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.prefs.Preferences;
 
+import javax.swing.JEditorPane;
 import javax.swing.JFileChooser;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.event.HyperlinkEvent;
+import javax.swing.event.HyperlinkListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.xml.parsers.DocumentBuilderFactory;
 
@@ -31,6 +35,7 @@ import jamel.basic.util.InitializationException;
 /**
  * The main class for Jamel.
  */
+@SuppressWarnings("unused")
 public class Jamel {
 
 	/**
@@ -44,14 +49,14 @@ public class Jamel {
 		/** The URI to download the latest version of Jamel. */
 		public static final String DOWNLOAD_URI = "http://p.seppecher.free.fr/jamel/download.php";
 
+		/** The key for the scenario path preference. */
+		public static final String PREFERENCE_SCENARIO_PATHNAME = "The key for the scenario path preference";
+
 		/** The "Remind me later" string. */
 		public static final String REMIND_ME_LATER = "Remind me later";
 
 		/** The default path to the scenario folder. */
 		public static final String SCENARIO_DEFAULT_PATHNAME = "scenarios";
-
-		/** The key for the scenario path preference. */
-		public static final String PREFERENCE_SCENARIO_PATHNAME = "The key for the scenario path preference";
 
 		/** The URL to check the latest version. */
 		public static final String VERSION_URL = "http://p.seppecher.free.fr/jamel/version.php";
@@ -64,11 +69,21 @@ public class Jamel {
 	/** The remind-me-later period (in ms). */
 	private static final long remindMeLaterPeriod = 15 * 24 * 60 * 60 * 1000;
 
+	/**
+	 * Message see log file for more details.
+	 */
+	private static final String seeLogFile = "See the jamel.log file for more details.";
+
 	/** The simulationID. */
 	private static final long simulationID = (new Date()).getTime();
 
+	/**
+	 * A string of four em spaces. To simulate a tab character.
+	 */
+	private static final String tab = "&emsp;&emsp;&emsp;&emsp;";
+
 	/** This version of Jamel. */
-	final public static int version = 20150903;
+	final public static int version = 20150916;
 
 	/**
 	 * Downloads the latest version of Jamel.
@@ -90,7 +105,23 @@ public class Jamel {
 				result = false;
 			}
 		} else {
-			// TODO proposer un lien dans un dialog
+			final JEditorPane jEditorPane = new JEditorPane();
+			jEditorPane.setContentType("text/html");
+			jEditorPane.setText("<html>Visit <a href=\"" + KEY.DOWNLOAD_URI + "\">" + KEY.DOWNLOAD_URI
+					+ "</a> to download Jamel.</html>");
+			jEditorPane.setEditable(false);
+			jEditorPane.setBackground((new JLabel()).getBackground());
+			jEditorPane.addHyperlinkListener(new HyperlinkListener() {
+				@Override
+				public void hyperlinkUpdate(HyperlinkEvent e) {
+					if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
+						try {
+							java.awt.Desktop.getDesktop().browse(e.getURL().toURI());
+						} catch (Exception ex) {
+							ex.printStackTrace();
+						}
+				}
+			});
 			result = true;
 		}
 		return result;
@@ -123,8 +154,8 @@ public class Jamel {
 						}
 					}
 					d.close();
-				} catch (@SuppressWarnings("unused") MalformedURLException e) {
-				} catch (@SuppressWarnings("unused") IOException e) {
+				} catch (MalformedURLException e) {
+				} catch (IOException e) {
 				}
 			}
 		}
@@ -132,7 +163,7 @@ public class Jamel {
 		fileReader.start();
 		try {
 			fileReader.join(500);
-		} catch (@SuppressWarnings("unused") InterruptedException e) {
+		} catch (InterruptedException e) {
 		}
 		return fileReader.isOutOfDate;
 	}
@@ -227,7 +258,6 @@ public class Jamel {
 	 * @return <code>true</code> if a new version is available and the user
 	 *         chooses to download it, <code>false</code> otherwise.
 	 */
-	@SuppressWarnings("unused")
 	private static boolean updateVersion() {
 		final boolean result;
 		if (isOutOfDate()) {
@@ -235,6 +265,7 @@ public class Jamel {
 			long previous = prefs.getLong(KEY.REMIND_ME_LATER, 0);
 			if (now > previous + remindMeLaterPeriod) {
 				final Object[] options = { KEY.DOWNLOAD, KEY.REMIND_ME_LATER };
+
 				final int n = JOptionPane.showOptionDialog(null, "A new version of Jamel is available.", "New version",
 						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 				if (n == 0) {
@@ -278,34 +309,43 @@ public class Jamel {
 	 */
 	public static void main(String[] args) {
 		PrintStream out = null;
-		try {
-			out = new PrintStream(new FileOutputStream("jamel.log"));
-			System.setOut(out);
-			System.setErr(out);
-		} catch (FileNotFoundException e1) {
-			e1.printStackTrace();
+		/*
+		 * TODO: desactiver ce bloc pour envoyer les messages vers la console
+		 * d'Eclipse plutot que dans le fichier log.
+		 */
+		{
+			try {
+				out = new PrintStream(new FileOutputStream("jamel.log"));
+				System.setOut(out);
+				System.setErr(out);
+			} catch (FileNotFoundException e1) {
+				e1.printStackTrace();
+			}
 		}
+		/**/
 		final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d HH:mm:ss", Locale.US);
 		final String dateStr = simpleDateFormat.format(new Date());
 		System.out.println(dateStr);
 		System.out.println(getVersion());
 
-		//if (!updateVersion())
+		// if (!updateVersion())
 		{
 			final File file = selectScenario();
 			if (file != null) {
-				System.out.println("run "+file.getPath());
+				System.out.println("run " + file.getPath());
 				final String path = file.getParent();
 				final String name = file.getName();
 				Document scenario = null;
 				try {
 					scenario = readXMLFile(file);
 				} catch (InitializationException e) {
+					JOptionPane.showMessageDialog(null, "<html>" + e.getMessage() + "<br>" + seeLogFile + "</html>",
+							"Initialization Error", JOptionPane.ERROR_MESSAGE);
 					e.printStackTrace();
 					if (out != null) {
 						out.close();
 					}
-					System.exit(0);
+					System.exit(1);
 				}
 				if (scenario == null) {
 					if (out != null) {
@@ -317,24 +357,79 @@ public class Jamel {
 				try {
 					circuit = newCircuit(scenario, path, name);
 				} catch (InitializationException e) {
+					JOptionPane.showMessageDialog(null, "<html>" + e.getMessage() + "<br>" + seeLogFile + "</html>",
+							"Initialization Error", JOptionPane.ERROR_MESSAGE);
+					e.printStackTrace();
+					if (out != null) {
+						out.close();
+					}
+					System.exit(1);
+				}
+				try {
+					circuit.run();
+				} catch (RuntimeException e) {
+					final String message = e.getMessage() + "<br>";
+					final String cause;
+					if (e.getCause() != null) {
+						cause = tab + "Cause: '" + e.getCause().getMessage() + "'.<br>" + tab + "Where: "
+								+ e.getCause().getStackTrace()[0].toString() + "<br>";
+					} else {
+						cause = "";
+					}
+					JOptionPane.showMessageDialog(null, "<html>" + message + cause + seeLogFile + "</html>",
+							"Runtime Error", JOptionPane.ERROR_MESSAGE);
 					e.printStackTrace();
 					if (out != null) {
 						out.close();
 					}
 					System.exit(0);
 				}
-				if (circuit == null) {
-					if (out != null) {
-						out.close();
-					}
-					System.exit(0);
-				}
-				circuit.run();
 			}
 		}
 		if (out != null) {
 			out.close();
 		}
+	}
+
+	/**
+	 * A short cut for <code>System.out.println()</code>.
+	 */
+	public static void println() {
+		System.out.println();
+	}
+
+	/**
+	 * Prints the specified numbers into the "standard" output stream. Numbers
+	 * are printed on the same line and are separated by commas.
+	 * 
+	 * @param numbers
+	 *            the numbers to be printed.
+	 */
+	public static void println(Number... numbers) {
+		for (int i = 0; i < numbers.length; i++) {
+			System.out.print(numbers[i]);
+			if (i < numbers.length - 1) {
+				System.out.print(", ");
+			}
+		}
+		System.out.println();
+	}
+
+	/**
+	 * Prints the specified strings into the "standard" output stream. Strings
+	 * are printed on the same line and are separated by commas.
+	 * 
+	 * @param strings
+	 *            the strings to be printed.
+	 */
+	public static void println(String... strings) {
+		for (int i = 0; i < strings.length; i++) {
+			System.out.print(strings[i]);
+			if (i < strings.length - 1) {
+				System.out.print(", ");
+			}
+		}
+		System.out.println();
 	}
 
 }

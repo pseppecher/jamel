@@ -1,4 +1,4 @@
-package jamel.jamel.firms.capital;
+package jamel.jamel.capital;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -35,12 +35,12 @@ public class BasicCapitalStockTest {
 			}
 
 			@Override
-			public double getCanceledDebt() {
+			public long getCanceledDebt() {
 				throw new RuntimeException("Not yet implemented.");
 			}
 
 			@Override
-			public double getCanceledMoney() {
+			public long getCanceledMoney() {
 				throw new RuntimeException("Not yet implemented.");
 			}
 
@@ -70,11 +70,6 @@ public class BasicCapitalStockTest {
 			}
 
 			@Override
-			public void lend(long principal) {
-				throw new RuntimeException("Not yet implemented.");
-			}
-
-			@Override
 			public Cheque newCheque(final long amount) {
 				return new Cheque() {
 
@@ -90,6 +85,16 @@ public class BasicCapitalStockTest {
 
 				};
 			}
+
+			@Override
+			public void newLongTermLoan(long principal) {
+				throw new RuntimeException("Not yet implemented.");				
+			}
+
+			@Override
+			public void newShortTermLoan(long principal) {
+				throw new RuntimeException("Not yet implemented.");
+			}
 		};
 	}
 
@@ -103,6 +108,11 @@ public class BasicCapitalStockTest {
 
 			@Override
 			public boolean isCancelled() {
+				throw new RuntimeException("Not used.");
+			}
+
+			@Override
+			public String getName() {
 				throw new RuntimeException("Not used.");
 			}
 

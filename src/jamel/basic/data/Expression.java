@@ -10,7 +10,13 @@ public interface Expression {
 	 * @return the current value of this expression.
 	 */
 	public Double value();
-
+	
+	/**
+	 * Returns the query used to create this expression.
+	 * @return the query used to create this expression.
+	 */
+	public String getQuery();
+	
 }
 
 // ***

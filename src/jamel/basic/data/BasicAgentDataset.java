@@ -59,6 +59,17 @@ public class BasicAgentDataset extends TreeMap<String,Double> implements AgentDa
 		}
 	}
 
+	@Override
+	public Double put(String key, Number value) {
+		final Double d;
+		if (value==null) {
+			d=null;
+		} else {
+			d=value.doubleValue();
+		}
+		return super.put(key, d);
+	}
+
 }
 
 // ***

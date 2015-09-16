@@ -1,5 +1,7 @@
 package jamel.basic.data;
 
+import jamel.basic.util.InitializationException;
+
 /**
  * An utility method for creating some standard (mathematical or statistical)
  * expressions.
@@ -62,7 +64,7 @@ public class ExpressionFactory {
 		result = new Expression() {
 
 			@Override
-			public String toString() {
+			public String getQuery() {
 				return value.toString();
 			}
 
@@ -125,22 +127,43 @@ public class ExpressionFactory {
 	 * @param query
 	 *            the literal description of the expression to be created.
 	 * @param macroDatabase
-	 *            the macro dataset.
+	 *            the macro database.
 	 * @return an expression.
+	 * @throws InitializationException if something goes wrong.
 	 */
 	public static Expression newExpression(String query,
-			MacroDatabase macroDatabase) {
+			MacroDatabase macroDatabase) throws InitializationException {
 		final ExpressionFactory expressionFactory = new ExpressionFactory(
 				query, macroDatabase);
 		return expressionFactory.newExpression();
 	}
 
+	/**
+	 * Returns an {@link Expression} the value of which is null.
+	 * @param query the query.
+	 * @return an {@link Expression} the value of which is null.
+	 */
+	public static Expression newNullExpression(final String query) {
+		return new Expression(){
+
+			@Override
+			public String getQuery() {
+				return query;
+			}
+			
+			@Override
+			public Double value() {
+				return null;
+			}};
+			
+	}
+
 	/** The literal description of the expression to be created. */
 	private final String literal;
-
+	
 	/** The macro-economic dataset. */
 	private final MacroDatabase macroDatabase;
-	
+
 	/**
 	 * Creates a new {@link ExpressionFactory}.
 	 * 
@@ -162,10 +185,11 @@ public class ExpressionFactory {
 	 *            the literal description of the addition to be created.
 	 * @param lim
 	 *            the position of the
-	 *            <code>+<code> character in the literal description.
+	 *            <code>+</code> character in the literal description.
 	 * @return an expression representing the specified addition.
+	 * @throws InitializationException if something goes wrong.
 	 */
-	private Expression getAddition(final String query, final int lim) {
+	private Expression getAddition(final String query, final int lim) throws InitializationException {
 		final Expression result;
 		final String a = query.substring(0, lim);
 		final String b = query.substring(lim + 1, query.length());
@@ -178,7 +202,7 @@ public class ExpressionFactory {
 			final private String formated = format(query);
 
 			@Override
-			public String toString() {
+			public String getQuery() {
 				return formated;
 			}
 
@@ -204,10 +228,11 @@ public class ExpressionFactory {
 	 *            the literal description of the division to be created.
 	 * @param lim
 	 *            the position of the
-	 *            <code>:<code> character in the literal description.
+	 *            <code>:</code> character in the literal description.
 	 * @return an expression representing the specified division.
+	 * @throws InitializationException if something goes wrong.
 	 */
-	private Expression getDivision(final String query, final int lim) {
+	private Expression getDivision(final String query, final int lim) throws InitializationException {
 		final Expression result;
 		final String a = query.substring(0, lim);
 		final String b = query.substring(lim + 1, query.length());
@@ -220,7 +245,7 @@ public class ExpressionFactory {
 			final private String formated = format(query);
 
 			@Override
-			public String toString() {
+			public String getQuery() {
 				return formated;
 			}
 
@@ -246,11 +271,12 @@ public class ExpressionFactory {
 	 *            the literal description of the multiplication to be created.
 	 * @param lim
 	 *            the position of the
-	 *            <code>*<code> character in the literal description.
+	 *            <code>*</code> character in the literal description.
 	 * @return an expression representing the specified multiplication.
+	 * @throws InitializationException if something goes wrong.
 	 */
 	private Expression getMultiplication(final String query,
-			final int lim) {
+			final int lim) throws InitializationException {
 		final Expression result;
 		final String a = query.substring(0, lim);
 		final String b = query.substring(lim + 1,
@@ -264,7 +290,7 @@ public class ExpressionFactory {
 			final private String formated = format(query);
 
 			@Override
-			public String toString() {
+			public String getQuery() {
 				return formated;
 			}
 
@@ -290,8 +316,9 @@ public class ExpressionFactory {
 	 *            the literal description of the negative expression to be
 	 *            created.
 	 * @return the specified negative expression.
+	 * @throws InitializationException if something goes wrong.
 	 */
-	private Expression getNegative(final String query) {
+	private Expression getNegative(final String query) throws InitializationException {
 		final Expression result;
 		final String a = query.substring(1, query.length());
 		final Expression positive = ExpressionFactory.newExpression(a,
@@ -301,7 +328,7 @@ public class ExpressionFactory {
 			final private String formated = format(query);
 
 			@Override
-			public String toString() {
+			public String getQuery() {
 				return formated;
 			}
 
@@ -327,10 +354,11 @@ public class ExpressionFactory {
 	 *            the literal description of the subtraction to be created.
 	 * @param lim
 	 *            the position of the
-	 *            <code>-<code> character in the literal description.
+	 *            <code>-</code> character in the literal description.
 	 * @return an expression representing the specified subtraction.
+	 * @throws InitializationException if something goes wrong.
 	 */
-	private Expression getSubtraction(final String query, final int lim) {
+	private Expression getSubtraction(final String query, final int lim) throws InitializationException {
 		final Expression result;
 		final String a = query.substring(0, lim);
 		final String b = query.substring(lim + 1, query.length());
@@ -343,7 +371,7 @@ public class ExpressionFactory {
 			final private String formated = format(query);
 
 			@Override
-			public String toString() {
+			public String getQuery() {
 				return formated;
 			}
 
@@ -367,8 +395,9 @@ public class ExpressionFactory {
 	 * expression.
 	 * 
 	 * @return the expression specified by the literal description.
+	 * @throws InitializationException if something goes wrong.
 	 */
-	private Expression newExpression() {
+	private Expression newExpression() throws InitializationException {
 		if (!isBalanced(literal)) {
 			throw new IllegalArgumentException("Parentheses are not balanced: "
 					+ literal);

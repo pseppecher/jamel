@@ -36,7 +36,7 @@ public interface BankAccount extends Chequable{
 	 * @return the amount of debt canceled by the bank for this account for the
 	 *         current period.
 	 */
-	double getCanceledDebt();
+	long getCanceledDebt();
 
 	/**
 	 * Returns the amount of money canceled by the bank for this account for the
@@ -45,7 +45,7 @@ public interface BankAccount extends Chequable{
 	 * @return the amount of money canceled by the bank for this account for the
 	 *         current period.
 	 */
-	double getCanceledMoney();
+	long getCanceledMoney();
 
 	/**
 	 * Returns the total debt for this account.
@@ -88,13 +88,22 @@ public interface BankAccount extends Chequable{
 	boolean isCancelled();
 
 	/**
-	 * Creates a new loan. The principal of the new loan is credited to this
+	 * Creates a new long-term loan. The principal of the new loan is credited to this
 	 * account.
 	 * 
 	 * @param principal
 	 *            the amount of the new loan.
 	 */
-	void lend(long principal);
+	void newLongTermLoan(long principal);
+
+	/**
+	 * Creates a new short-term loan. The principal of the new loan is credited
+	 * to this account.
+	 * 
+	 * @param principal
+	 *            the amount of the new loan.
+	 */
+	void newShortTermLoan(long principal);
 
 }
 

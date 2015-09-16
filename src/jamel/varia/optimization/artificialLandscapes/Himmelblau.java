@@ -7,7 +7,7 @@ import jamel.basic.Circuit;
  * 
  * Himmelblau's function is a multi-modal function.<p>
  * 
- * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Himmelblau_function.svg/400px-Himmelblau_function.svg.png" />
+ * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Himmelblau_function.svg/400px-Himmelblau_function.svg.png">
  */
 public class Himmelblau extends Landscape {
 

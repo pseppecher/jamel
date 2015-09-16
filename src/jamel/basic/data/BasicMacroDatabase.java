@@ -1,5 +1,6 @@
 package jamel.basic.data;
 
+import jamel.basic.util.InitializationException;
 import jamel.basic.util.Timer;
 
 import java.util.HashMap;
@@ -53,8 +54,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 	}
 
 	/** A map that stores data so future requests can be served faster. */
-	private final Map<String, Double> cache = new LinkedHashMap<String, Double>(
-			1000) {
+	private final Map<String, Double> cache = new LinkedHashMap<String, Double>(1000) {
 
 		private static final int MAX_ENTRIES = 2000;
 
@@ -68,11 +68,11 @@ public class BasicMacroDatabase implements MacroDatabase {
 	/** The macroeconomic dataset. */
 	final private Map<Integer, Map<String, SectorDataset>> macroDataset = new HashMap<Integer, Map<String, SectorDataset>>();
 
-	/** The timer. */
-	private final Timer timer;
-
 	/** The maximum time lag used by the scenario. */
 	private int maxLag = 0;
+
+	/** The timer. */
+	private final Timer timer;
 
 	/**
 	 * Creates a new dataset.
@@ -114,14 +114,26 @@ public class BasicMacroDatabase implements MacroDatabase {
 	}
 
 	@Override
-	public Expression getFunction(final String query) {
+	public Double[] getDistributionData(String sector, String key, int t, String select) {
+		final Double[] result;
+		final SectorDataset sectorDataset = getSectorDataset(sector, t);
+		if (sectorDataset != null) {
+			result = sectorDataset.getField(key, select);
+		} else {
+			result = null;
+		}
+		return result;
+	}
+
+	@Override
+	public Expression getFunction(final String query) throws InitializationException {
 		final String formated = ExpressionFactory.format(query);
 		final Expression result;
 		if (query.equals("time()")) {
 			result = new Expression() {
 
 				@Override
-				public String toString() {
+				public String getQuery() {
 					return formated;
 				}
 
@@ -132,9 +144,13 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 			};
 		} else {
-			final String[] word = query.substring(0, query.length() - 1).split(
-					"\\(", 2);
+			
+			
+			final String[] word = query.substring(0, query.length() - 1).split("\\(", 2);
 			final String[] arg = word[1].split(",", 4);
+			if (arg.length < 3) {
+				throw new InitializationException("Malformed query: "+query);
+			}
 			final String sector = arg[0];
 			final String data = arg[1];
 			final String timeKey = arg[2];
@@ -149,6 +165,9 @@ public class BasicMacroDatabase implements MacroDatabase {
 			final int lag1;
 			if (timeKey.contains("...")) {
 				final String[] keys = timeKey.split("\\.\\.\\.", 2);
+				if (keys.length !=2) {
+					throw new InitializationException("Malformed query: "+query);
+				}
 				lag0 = parseLag(keys[0]);
 				lag1 = parseLag(keys[1]) - 1;
 			} else {
@@ -165,23 +184,21 @@ public class BasicMacroDatabase implements MacroDatabase {
 				result = new Expression() {
 
 					@Override
-					public String toString() {
+					public String getQuery() {
 						return formated;
 					}
 
 					@Override
 					public Double value() {
 						Double sum = null;
-						for (int t = timer.getPeriod().intValue() - lag0; t < timer
-								.getPeriod().intValue() - lag1; t++) {
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer.getPeriod().intValue()
+								- lag1; t++) {
 							final Double value;
-							final String key = word[0] + "(" + sector + ","
-									+ data + "," + t + "," + select + ")";
+							final String key = word[0] + "(" + sector + "," + data + "," + t + "," + select + ")";
 							if (cache.containsKey(key)) {
 								value = cache.get(key);
 							} else {
-								final SectorDataset sectorData = getSectorDataset(
-										sector, t);
+								final SectorDataset sectorData = getSectorDataset(sector, t);
 								if (sectorData != null) {
 									value = sectorData.getSum(data, select);
 								} else {
@@ -207,7 +224,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 				result = new Expression() {
 
 					@Override
-					public String toString() {
+					public String getQuery() {
 						return formated;
 					}
 
@@ -215,16 +232,14 @@ public class BasicMacroDatabase implements MacroDatabase {
 					public Double value() {
 						Double sum = null;
 						int count = 0;
-						for (int t = timer.getPeriod().intValue() - lag0; t < timer
-								.getPeriod().intValue() - lag1; t++) {
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer.getPeriod().intValue()
+								- lag1; t++) {
 							final Double value;
-							final String key = word[0] + "(" + sector + ","
-									+ data + "," + t + "," + select + ")";
+							final String key = word[0] + "(" + sector + "," + data + "," + t + "," + select + ")";
 							if (cache.containsKey(key)) {
 								value = cache.get(key);
 							} else {
-								final SectorDataset sectorData = getSectorDataset(
-										sector, t);
+								final SectorDataset sectorData = getSectorDataset(sector, t);
 								if (sectorData != null) {
 									value = sectorData.getMean(data, select);
 								} else {
@@ -254,23 +269,21 @@ public class BasicMacroDatabase implements MacroDatabase {
 				result = new Expression() {
 
 					@Override
-					public String toString() {
+					public String getQuery() {
 						return formated;
 					}
 
 					@Override
 					public Double value() {
 						Double max = null;
-						for (int t = timer.getPeriod().intValue() - lag0; t < timer
-								.getPeriod().intValue() - lag1; t++) {
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer.getPeriod().intValue()
+								- lag1; t++) {
 							final Double value;
-							final String key = word[0] + "(" + sector + ","
-									+ data + "," + t + "," + select + ")";
+							final String key = word[0] + "(" + sector + "," + data + "," + t + "," + select + ")";
 							if (cache.containsKey(key)) {
 								value = cache.get(key);
 							} else {
-								final SectorDataset sectorData = getSectorDataset(
-										sector, t);
+								final SectorDataset sectorData = getSectorDataset(sector, t);
 								if (sectorData != null) {
 									value = sectorData.getMax(data, select);
 								} else {
@@ -294,23 +307,21 @@ public class BasicMacroDatabase implements MacroDatabase {
 				result = new Expression() {
 
 					@Override
-					public String toString() {
+					public String getQuery() {
 						return formated;
 					}
 
 					@Override
 					public Double value() {
 						Double min = null;
-						for (int t = timer.getPeriod().intValue() - lag0; t < timer
-								.getPeriod().intValue() - lag1; t++) {
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer.getPeriod().intValue()
+								- lag1; t++) {
 							final Double value;
-							final String key = word[0] + "(" + sector + ","
-									+ data + "," + t + "," + select + ")";
+							final String key = word[0] + "(" + sector + "," + data + "," + t + "," + select + ")";
 							if (cache.containsKey(key)) {
 								value = cache.get(key);
 							} else {
-								final SectorDataset sectorData = getSectorDataset(
-										sector, t);
+								final SectorDataset sectorData = getSectorDataset(sector, t);
 								if (sectorData != null) {
 									value = sectorData.getMin(data, select);
 								} else {
@@ -337,18 +348,17 @@ public class BasicMacroDatabase implements MacroDatabase {
 				result = new Expression() {
 
 					@Override
-					public String toString() {
+					public String getQuery() {
 						return formated;
 					}
 
 					@Override
 					public Double value() {
 						Double sum = null;
-						for (int t = timer.getPeriod().intValue() - lag0; t < timer
-								.getPeriod().intValue() - lag1; t++) {
+						for (int t = timer.getPeriod().intValue() - lag0; t < timer.getPeriod().intValue()
+								- lag1; t++) {
 							final Double value;
-							final SectorDataset sectorData = getSectorDataset(
-									sector, t);
+							final SectorDataset sectorData = getSectorDataset(sector, t);
 							if (sectorData != null) {
 								value = sectorData.getSectorialValue(data);
 							} else {
@@ -371,11 +381,17 @@ public class BasicMacroDatabase implements MacroDatabase {
 			else if (word[0].equals(AGENT_VALUE)) {
 
 				// On r�cup�re une valeur donn�e pour un agent donn�.
-
+				
+				if (arg.length!=4) {
+					throw new InitializationException("Malformed query: "+query);
+				}
+				
+				final String agentName = arg[3];
+				
 				result = new Expression() {
 
 					@Override
-					public String toString() {
+					public String getQuery() {
 						return formated;
 					}
 
@@ -383,10 +399,9 @@ public class BasicMacroDatabase implements MacroDatabase {
 					public Double value() {
 						final int t = timer.getPeriod().intValue() - lag0;
 						final Double value;
-						final SectorDataset sectorData = getSectorDataset(
-								sector, t);
+						final SectorDataset sectorData = getSectorDataset(sector, t);
 						if (sectorData != null) {
-							value = sectorData.getAgentValue(data, arg[3]);
+							value = sectorData.getAgentValue(data, agentName);
 						} else {
 							value = null;
 						}
@@ -404,8 +419,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 	}
 
 	@Override
-	public List<XYDataItem> getScatterData(String sector, String x, String y,
-			int t, String select) {
+	public List<XYDataItem> getScatterData(String sector, String x, String y, int t, String select) {
 		final List<XYDataItem> result;
 		final SectorDataset sectorDataset = getSectorDataset(sector, t);
 		if (sectorDataset != null) {
@@ -417,21 +431,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 	}
 
 	@Override
-	public Double[] getDistributionData(String sector, String key, int t,
-			String select) {
-		final Double[] result;
-		final SectorDataset sectorDataset = getSectorDataset(sector, t);
-		if (sectorDataset != null) {
-			result = sectorDataset.getField(key, select);
-		} else {
-			result = null;
-		}
-		return result;
-	}
-
-	@Override
-	public double[][] getXYZData(String sector, String x, String y, String z,
-			int t) {
+	public double[][] getXYZData(String sector, String x, String y, String z, int t) {
 		final double[][] result;
 		final SectorDataset sectorDataset = getSectorDataset(sector, t);
 		if (sectorDataset == null) {
@@ -443,8 +443,12 @@ public class BasicMacroDatabase implements MacroDatabase {
 	}
 
 	@Override
-	public Expression newQuery(String query) {
-		return ExpressionFactory.newExpression(query, this);
+	public Expression newQuery(String query) throws InitializationException {
+		try {
+			return ExpressionFactory.newExpression(query, this);
+		} catch (Exception e) {
+			throw new InitializationException("Something went wrong while parsing this query: \"" + query + "\"", e);
+		}
 	}
 
 	@Override

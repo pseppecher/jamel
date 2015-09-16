@@ -1,4 +1,4 @@
-package jamel.jamel.firms.capital;
+package jamel.jamel.capital;
 
 import jamel.basic.util.Timer;
 import jamel.jamel.roles.Corporation;
@@ -77,8 +77,7 @@ public class BasicCapitalStock implements CapitalStock {
 	 *            the timer.
 	 * 
 	 */
-	public BasicCapitalStock(Corporation corporation, Chequable account,
-			Timer timer) {
+	public BasicCapitalStock(Corporation corporation, Chequable account, Timer timer) {
 		this.corporation = corporation;
 		this.account = account;
 		this.timer = timer;
@@ -99,8 +98,7 @@ public class BasicCapitalStock implements CapitalStock {
 	 *            the timer.
 	 * 
 	 */
-	public BasicCapitalStock(Corporation corporation, int shareholders,
-			Chequable account, Timer timer) {
+	public BasicCapitalStock(Corporation corporation, int shareholders, Chequable account, Timer timer) {
 		this(corporation, account, timer);
 		this.shareOutCapital(shareholders);
 	}
@@ -127,8 +125,7 @@ public class BasicCapitalStock implements CapitalStock {
 	private StockCertificate getNewShares(final int id, final int size) {
 
 		if (size + this.issuedShares > this.sharesAuthorised) {
-			throw new IllegalArgumentException(
-					"Shares issued exceeds the authorized amount.");
+			throw new IllegalArgumentException("Shares issued: "+(size + this.issuedShares)+", authorised: "+this.sharesAuthorised);
 		}
 
 		this.issuedShares += size;
@@ -199,8 +196,7 @@ public class BasicCapitalStock implements CapitalStock {
 			remainder -= size;
 		}
 		if (remainder < 0) {
-			throw new RuntimeException(
-					"Something went wrong while sharing out this stock.");
+			throw new RuntimeException("Something went wrong while sharing out this stock.");
 		}
 		if (remainder > 0) {
 			for (int i = 0; i < sizes.length; i++) {
@@ -212,8 +208,7 @@ public class BasicCapitalStock implements CapitalStock {
 			}
 		}
 		if (remainder != 0) {
-			throw new RuntimeException(
-					"Something went wrong while sharing out this stock.");
+			throw new RuntimeException("Something went wrong while sharing out this stock.");
 		}
 		for (int id = 0; id < sizes.length; id++) {
 			final StockCertificate newShares = this.getNewShares(id, sizes[id]);
@@ -233,16 +228,13 @@ public class BasicCapitalStock implements CapitalStock {
 			throw new RuntimeException("This capital stock is canceled.");
 		}
 		if (this.issuedShares != this.sharesAuthorised) {
-			throw new RuntimeException(
-					"The distribution of this capital stock is not completed.");
+			throw new RuntimeException("The distribution of this capital stock is not completed.");
 		}
 		if (this.corporation.getBookValue() != this.bookValue) {
 			this.bookValue = this.corporation.getBookValue();
 			long remainder = this.bookValue;
 			for (int id = 0; id < this.bookValues.size(); id++) {
-				final long newBookValue = this.bookValue
-						* this.shares.get(id).getShares()
-						/ this.sharesAuthorised;
+				final long newBookValue = this.bookValue * this.shares.get(id).getShares() / this.sharesAuthorised;
 				this.bookValues.set(id, newBookValue);
 				remainder -= newBookValue;
 			}
@@ -266,8 +258,7 @@ public class BasicCapitalStock implements CapitalStock {
 				}
 			}
 			if (remainder != 0) {
-				throw new RuntimeException(
-						"Something went wrong while updating the book value.");
+				throw new RuntimeException("Something went wrong while updating the book value.");
 			}
 		}
 	}
@@ -352,9 +343,8 @@ public class BasicCapitalStock implements CapitalStock {
 		} else {
 			period++;
 			if (period != this.timer.getPeriod().intValue()) {
-				throw new AnachronismException("Current period expected <"
-						+ period + "> but was <"
-						+ this.timer.getPeriod().intValue() + ">");
+				throw new AnachronismException(
+						"Current period expected <" + period + "> but was <" + this.timer.getPeriod().intValue() + ">");
 			}
 		}
 		this.open = true;
@@ -376,12 +366,15 @@ public class BasicCapitalStock implements CapitalStock {
 		if (dividend < 0) {
 			throw new RuntimeException("The dividend must be positive.");
 		}
+		if (this.issuedShares != this.sharesAuthorised) {
+			throw new RuntimeException("Issued shares is " + this.issuedShares + ", expected " + this.sharesAuthorised
+					+ ": " + this.corporation.getName()+", period "+this.timer.getPeriod().intValue());
+		}
 		this.dividend = dividend;
 		if (dividend > 0) {
 			long remainder = dividend;
 			for (int id = 0; id < shares.size(); id++) {
-				final long div = dividend * this.shares.get(id).getShares()
-						/ this.sharesAuthorised;
+				final long div = dividend * this.shares.get(id).getShares() / this.sharesAuthorised;
 				this.dividends.set(id, div);
 				remainder -= div;
 			}

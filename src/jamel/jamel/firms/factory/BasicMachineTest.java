@@ -8,6 +8,7 @@ import jamel.jamel.util.AnachronismException;
 import jamel.jamel.widgets.LaborPower;
 
 import java.util.List;
+import java.util.Random;
 
 import org.junit.Test;
 
@@ -35,16 +36,6 @@ public class BasicMachineTest {
 			}
 
 			@Override
-			public void expend(float energy) {
-				throw new RuntimeException("Not used.");
-			}
-
-			@Override
-			public float getEnergy() {
-				throw new RuntimeException("Not used.");
-			}
-
-			@Override
 			public long getValue() {
 				throw new RuntimeException("Not used.");
 			}
@@ -65,13 +56,14 @@ public class BasicMachineTest {
 	@Test
 	public void testWork1() {
 		final BasicTimer timer = new BasicTimer(0);
-		final Machine machine = new BasicMachine(5, 100, timer);
+		final Random random = new Random();
+		final Machine machine = new BasicMachine(5, 100, 0, timer, random);
 		final LaborPower laborPower = getNewLabourPower(100, timer);
 		final List<Materials> outputs = machine.work(laborPower);
 		assertEquals("outputs.size()", 1, outputs.size());
 		final Materials stuff = outputs.get(0);
 		assertEquals("stuff.getBookValue()", 100, (long) stuff.getBookValue());
-		assertEquals("stuff.getVolume()", 100, stuff.getVolume());
+		assertEquals("stuff.getVolume()", 500, stuff.getVolume());
 		assertEquals("stuff.getCompletion()", 0.2, stuff.getCompletion()
 				.doubleValue(), 0);
 		timer.next();
@@ -83,7 +75,7 @@ public class BasicMachineTest {
 		assertEquals("stuff.getCompletion()", 0.2, stuff.getCompletion()
 				.doubleValue(), 0);
 		assertEquals("stuff.getBookValue()", 0, (long) stuff.getBookValue());
-		assertEquals("stuff2.getVolume()", 100, stuff2.getVolume());
+		assertEquals("stuff2.getVolume()", 500, stuff2.getVolume());
 		assertEquals("stuff2.getCompletion()", 0.4, stuff2.getCompletion()
 				.doubleValue(), 0);
 		assertEquals("stuff2.getBookValue()", 200, (long) stuff2.getBookValue());
@@ -92,7 +84,8 @@ public class BasicMachineTest {
 	@Test(expected = IllegalArgumentException.class)
 	public void testWork2() {
 		final Timer timer = new BasicTimer(0);
-		final Machine machine = new BasicMachine(6, 100, timer);
+		final Random random = new Random();
+		final Machine machine = new BasicMachine(6, 100, 0, timer, random);
 		final LaborPower laborPower = getNewLabourPower(100, timer);
 		machine.work(laborPower);
 		assertTrue(laborPower.isExhausted());
@@ -104,7 +97,8 @@ public class BasicMachineTest {
 	@Test(expected = AnachronismException.class)
 	public void testWork3() {
 		final Timer timer = new BasicTimer(0);
-		final Machine machine = new BasicMachine(6, 100, timer);
+		final Random random = new Random();
+		final Machine machine = new BasicMachine(6, 100, 0, timer, random);
 		final LaborPower laborPower = getNewLabourPower(100, timer);
 		final LaborPower laborPower2 = getNewLabourPower(100, timer);
 		machine.work(laborPower);
@@ -116,7 +110,8 @@ public class BasicMachineTest {
 	@Test
 	public void testWork4() {
 		final BasicTimer timer = new BasicTimer(0);
-		final Machine machine = new BasicMachine(5, 100, timer);
+		final Random random = new Random();
+		final Machine machine = new BasicMachine(5, 100, 0, timer, random);
 		final LaborPower laborPower1 = getNewLabourPower(100, timer);
 		final List<Materials> outputs1 = machine.work(laborPower1);
 		final Materials stuff1 = outputs1.get(0);
@@ -126,7 +121,7 @@ public class BasicMachineTest {
 		final Materials stuff2 = outputs2.get(0);
 		stuff1.add(stuff2);
 
-		assertEquals("stuff1.getVolume()", 200, stuff1.getVolume());
+		assertEquals("stuff1.getVolume()", 1000, stuff1.getVolume());
 		assertEquals("stuff1.getCompletion()", 0.2, stuff1.getCompletion()
 				.doubleValue(), 0);
 		assertEquals("stuff1.getBookValue()", 200, (long) stuff1.getBookValue());
@@ -141,11 +136,11 @@ public class BasicMachineTest {
 		final List<Materials> outputs3 = machine.work(laborPower3, stuff1);
 		final Materials stuff3 = outputs3.get(0);
 
-		assertEquals("stuff1.getVolume()", 100, stuff1.getVolume());
+		assertEquals("stuff1.getVolume()", 500, stuff1.getVolume());
 		assertEquals("stuff1.getCompletion()", 0.2, stuff1.getCompletion()
 				.doubleValue(), 0);
 		assertEquals("stuff1.getBookValue()", 100, (long) stuff1.getBookValue());
-		assertEquals("stuff3.getVolume()", 100, stuff3.getVolume());
+		assertEquals("stuff3.getVolume()", 500, stuff3.getVolume());
 		assertEquals("stuff3.getCompletion()", 0.4, stuff3.getCompletion()
 				.doubleValue(), 0);
 		assertEquals("stuff3.getBookValue()", 200, (long) stuff3.getBookValue());

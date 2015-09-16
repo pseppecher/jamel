@@ -1,13 +1,14 @@
 package jamel.jamel.firms.factory;
 
 import jamel.basic.data.AgentDataset;
+import jamel.jamel.firms.managers.Askable;
 import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.LaborPower;
 
 /**
  * Represents a factory.
  */
-public interface Factory {
+public interface Factory extends Askable {
 
 	/**
 	 * Definitively closes the factory.
@@ -18,6 +19,15 @@ public interface Factory {
 	 * Closes the factory.
 	 */
 	void close();
+
+	/**
+	 * Expands the capacity of this factory by adding the specified machines to
+	 * its machinery.
+	 * 
+	 * @param machines
+	 *            the new machines to be added.
+	 */
+	void expandCapacity(Machine[] machines);
 
 	/**
 	 * Returns the capacity of the factory, i.e. its maximum number of workers.
@@ -55,18 +65,21 @@ public interface Factory {
 	 * 
 	 * @return the value of inventory losses for the current period.
 	 */
-	double getInventoryLosses();
+	long getInventoryLosses();
 
 	/**
 	 * Returns the inventory ratio.
 	 * <p>
-	 * If inventoryRatio > 1 : the volume of finished goods exceeds the normal
-	 * volume,<br>
+	 * If inventoryRatio upper than 1 : the volume of finished goods exceeds the
+	 * normal volume,<br>
 	 * If inventoryRatio = 1 : the volume of finished goods meets the normal
 	 * volume,<br>
-	 * If inventoryRatio < 1 : the volume of finished goods is under the normal
-	 * volume.
-	 * @param normalLevel the normal level, expressed as a number of period of production at full capacity.
+	 * If inventoryRatio lower than 1 : the volume of finished goods is under
+	 * the normal volume.
+	 * 
+	 * @param normalLevel
+	 *            the normal level, expressed as a number of period of
+	 *            production at full capacity.
 	 * 
 	 * @return the inventory ratio.
 	 */
@@ -85,8 +98,8 @@ public interface Factory {
 	 * cost is
 	 * "The cost incurred by a company to produce, store and sell one unit of a particular product."
 	 * 
-	 * @see <a
-	 *      href="http://www.investopedia.com/terms/u/unitcost.asp">www.investopedia.com/terms/u/unitcost.asp</a>
+	 * @see <a href="http://www.investopedia.com/terms/u/unitcost.asp">www.
+	 *      investopedia.com/terms/u/unitcost.asp</a>
 	 * @return the unit cost.
 	 */
 	double getUnitCost();
@@ -97,19 +110,11 @@ public interface Factory {
 	 * finished goods that are considered to be the portion of a business's
 	 * assets that are ready or will be ready for sale")
 	 * 
-	 * @see <a
-	 *      href="http://www.investopedia.com/articles/04/031004.asp">investopedia.com</a>
+	 * @see <a href="http://www.investopedia.com/articles/04/031004.asp">
+	 *      investopedia.com</a>
 	 * @return the total value.
 	 */
 	long getValue();
-
-	/**
-	 * Receives an investment process. A new machine is then created.
-	 * 
-	 * @param investmentProcess
-	 *            the
-	 */
-	void investment(InvestmentProcess investmentProcess);
 
 	/**
 	 * Opens the factory.

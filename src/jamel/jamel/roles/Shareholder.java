@@ -1,7 +1,7 @@
 package jamel.jamel.roles;
 
 import jamel.basic.agent.Agent;
-import jamel.jamel.firms.capital.StockCertificate;
+import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.widgets.Asset;
 import jamel.jamel.widgets.Cheque;
 

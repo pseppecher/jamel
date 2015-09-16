@@ -1,6 +1,5 @@
 package jamel.jamel.banks;
 
-import jamel.basic.util.Period;
 import jamel.basic.util.Timer;
 
 /**
@@ -8,17 +7,8 @@ import jamel.basic.util.Timer;
  */
 public abstract class AbstractLoan implements Loan {
 
-	/** The extended maturity date.*/
-	protected final Period extendedDate;
-
-	/** The period of the last payment of interest. */
-	protected Period lastInterestPayment;
-
 	/** The maturity date.*/
-	protected final Period maturityDate;
-
-	/** The penalty interest rate. */
-	protected final double penaltyRate ;
+	protected final int maturityDate;
 
 	/** The remaining principal. */
 	protected long principal ;
@@ -33,18 +23,19 @@ public abstract class AbstractLoan implements Loan {
 	 * Creates a new loan.
 	 * @param principal the principal.
 	 * @param rate the normal rate of interest. 
-	 * @param penaltyRate the penalty rate.
 	 * @param normalTerm the normal term.
-	 * @param extendedTerm the extended term.
 	 * @param timer the timer.
 	 */
-	public AbstractLoan(long principal, double rate, double penaltyRate, int normalTerm, int extendedTerm, Timer timer) {
+	public AbstractLoan(long principal, double rate, int normalTerm, Timer timer) {
 		this.timer=timer;
 		this.principal = principal;
 		this.rate = rate;
-		this.penaltyRate = penaltyRate;
-		this.maturityDate = this.timer.getPeriod().plus(normalTerm);
-		this.extendedDate = this.timer.getPeriod().plus(extendedTerm);
+		this.maturityDate = this.timer.getPeriod().intValue()+normalTerm;
+	}
+
+	@Override
+	public void cancel() {
+		cancel(this.principal);
 	}
 
 	@Override
@@ -53,8 +44,8 @@ public abstract class AbstractLoan implements Loan {
 	}
 	
 	@Override
-	public boolean isDoubtfull() {
-		return (timer.getPeriod().isAfter(this.maturityDate));
+	public int getMaturity() {
+		return this.maturityDate;
 	}
 
 }

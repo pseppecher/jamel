@@ -57,12 +57,10 @@ public class ChartFactory {
 	private static final Color colorTransparent = new Color(0, 0, 0, 0);
 
 	/** The tick unit source. */
-	private static final TickUnitSource IntegerTickUnits = NumberAxis
-			.createIntegerTickUnits();
+	private static final TickUnitSource IntegerTickUnits = NumberAxis.createIntegerTickUnits();
 
 	/** The font used for legend items. */
-	private static final Font legendItemFont = new Font("Monaco", Font.PLAIN,
-			10);
+	private static final Font legendItemFont = new Font("Monaco", Font.PLAIN, 10);
 
 	/** A shape line used by time charts. */
 	private static final Shape line = new Line2D.Double(0, 0, 15, 0);
@@ -88,11 +86,9 @@ public class ChartFactory {
 	 *            the tick unit source.
 	 * @return a new Y axis.
 	 */
-	private static NumberAxis createAxis(Element description,
-			TickUnitSource source) {
+	private static NumberAxis createAxis(Element description, TickUnitSource source) {
 		final NumberAxis axis;
-		if (description != null
-				&& description.getAttribute("logarithmic").equals("true")) {
+		if (description != null && description.getAttribute("logarithmic").equals("true")) {
 			axis = new LogarithmicAxis(null);
 		} else {
 			axis = new NumberAxis(null);
@@ -100,10 +96,10 @@ public class ChartFactory {
 				axis.setStandardTickUnits(source);
 			}
 		}
+		
 		axis.setAutoRangeIncludesZero(false);
-
-		if (description != null
-				&& !description.getAttribute("label").equals("")) {
+		
+		if (description != null && !description.getAttribute("label").equals("")) {
 			axis.setLabel(description.getAttribute("label"));
 		}
 
@@ -157,13 +153,13 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	private static JFreeChart createCombinedTimeChart(Element description,
-			BasicDataManager dataManager) throws InitializationException {
+	private static JFreeChart createCombinedTimeChart(Element description, BasicDataManager dataManager)
+			throws InitializationException {
 		final JFreeChart chart;
 		final String name = description.getAttribute("title");
 
-		final NumberAxis xAxis = createAxis((Element) description
-				.getElementsByTagName("xAxis").item(0), IntegerTickUnits);
+		final NumberAxis xAxis = createAxis((Element) description.getElementsByTagName("xAxis").item(0),
+				IntegerTickUnits);
 		final CombinedDomainXYPlot plot = new CombinedDomainXYPlot(xAxis);
 
 		final NodeList childList = description.getChildNodes();
@@ -177,12 +173,10 @@ public class ChartFactory {
 				final Element serieXML = (Element) childList.item(j);
 				final String seriesKey = serieXML.getAttribute("value");
 				if (!seriesKey.equals("")) {
-					final XYSeries timeSeries = dataManager.getTimeSeries(
-							seriesKey, serieXML.getAttribute("mod"));
+					final XYSeries timeSeries = dataManager.getTimeSeries(seriesKey, serieXML.getAttribute("mod"));
 					if (timeSeries != null) {
 						mainSeries.add(timeSeries);
-						final Paint paint = JamelColor.getColor(serieXML
-								.getAttribute("color"));
+						final Paint paint = JamelColor.getColor(serieXML.getAttribute("color"));
 						mainColors.add(paint);
 						final String label = serieXML.getAttribute("label");
 						final String legendLabel;
@@ -194,8 +188,7 @@ public class ChartFactory {
 							legendLabel = seriesKey;
 							tooltip = "";
 						}
-						final LegendItem legendItem = new LegendItem(
-								legendLabel, null, tooltip, null, line,
+						final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, line,
 								basicStroke, paint);
 						defaultLegendItemCollection.add(legendItem);
 					}
@@ -206,8 +199,7 @@ public class ChartFactory {
 		final NodeList subPlots = description.getElementsByTagName("subplot");
 		final int nSubPlots = subPlots.getLength();
 		for (int i = 0; i < nSubPlots; i++) {
-			final XYItemRenderer renderer = new XYLineAndShapeRenderer(true,
-					false);
+			final XYItemRenderer renderer = new XYLineAndShapeRenderer(true, false);
 			final XYSeriesCollection dataset = new XYSeriesCollection();
 
 			int countSeries = 0;
@@ -220,19 +212,16 @@ public class ChartFactory {
 			}
 
 			final Element subplotElem = (Element) subPlots.item(i);
-			final NodeList seriesList = subplotElem
-					.getElementsByTagName("series");
+			final NodeList seriesList = subplotElem.getElementsByTagName("series");
 			final int nbSeries = seriesList.getLength();
 			for (int k = 0; k < nbSeries; k++) {
 				final Element serieXML = (Element) seriesList.item(k);
 				final String seriesKey = serieXML.getAttribute("value");
 				if (!seriesKey.equals("")) {
-					final XYSeries timeSeries = dataManager.getTimeSeries(
-							seriesKey, serieXML.getAttribute("mod"));
+					final XYSeries timeSeries = dataManager.getTimeSeries(seriesKey, serieXML.getAttribute("mod"));
 					if (timeSeries != null) {
 						dataset.addSeries(timeSeries);
-						final Paint paint = JamelColor.getColor(serieXML
-								.getAttribute("color"));
+						final Paint paint = JamelColor.getColor(serieXML.getAttribute("color"));
 						renderer.setSeriesPaint(countSeries, paint);
 						countSeries++;
 						final String label = serieXML.getAttribute("label");
@@ -245,15 +234,13 @@ public class ChartFactory {
 							legendLabel = seriesKey;
 							tooltip = "";
 						}
-						final LegendItem legendItem = new LegendItem(
-								legendLabel, null, tooltip, null, line,
+						final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, line,
 								basicStroke, paint);
 						defaultLegendItemCollection.add(legendItem);
 					}
 				}
 			}
-			final NumberAxis yAxis = createAxis((Element) subplotElem
-					.getElementsByTagName("yAxis").item(0), null);
+			final NumberAxis yAxis = createAxis((Element) subplotElem.getElementsByTagName("yAxis").item(0), null);
 			final XYPlot subplot = createXYPlot(dataset, xAxis, yAxis, renderer);
 			plot.add(subplot);
 		}
@@ -271,8 +258,8 @@ public class ChartFactory {
 				final String legendLabel = item.getAttribute("label");
 				final String color = item.getAttribute("color");
 				final Paint paint = JamelColor.getColor(color);
-				final LegendItem legendItem = new LegendItem(legendLabel, null,
-						tooltip, null, line, basicStroke, paint);
+				final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, line, basicStroke,
+						paint);
 				try {
 					legendItemCollection.add(legendItem);
 				} catch (ArrayIndexOutOfBoundsException e) {
@@ -288,163 +275,6 @@ public class ChartFactory {
 	}
 
 	/**
-	 * Creates and returns a new scatter chart.
-	 * 
-	 * @param description
-	 *            an XML element that contains the description of the chart to
-	 *            create.
-	 * @param dataManager
-	 *            the data manager.
-	 * @return a new scatter chart.
-	 * @throws InitializationException
-	 *             If something goes wrong.
-	 */
-	private static JFreeChart createScatterChart(Element description,
-			BasicDataManager dataManager) throws InitializationException {
-		final String name = description.getAttribute("title");
-		final NodeList seriesList = description.getElementsByTagName("series");
-		final int nbSeries = seriesList.getLength();
-		final XYSeriesCollection dataset = new XYSeriesCollection();
-		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(
-				false, true);
-		renderer.setUseFillPaint(true);
-		final NumberAxis xAxis = createAxis((Element) description
-				.getElementsByTagName("xAxis").item(0), null);
-		final NumberAxis yAxis = createAxis((Element) description
-				.getElementsByTagName("yAxis").item(0), null);
-
-		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
-
-		PaintScaleLegend psl = null;
-
-		final LegendItemCollection defaultLegendItemCollection = new LegendItemCollection();
-		for (int k = 0; k < nbSeries; k++) {
-			final Element serieXML = (Element) seriesList.item(k);
-			final String xyBlockSeries = serieXML.getAttribute("xyBlockSeries");
-			if (xyBlockSeries.equals("true")) {
-				final XYZDataset xyzDataset;
-				final String sector = serieXML.getAttribute("sector");
-				final String x = serieXML.getAttribute("x");
-				final String y = serieXML.getAttribute("y");
-				final String z = serieXML.getAttribute("z");
-				xyzDataset = dataManager.getXYBlockData(sector, x, y, z);
-				plot.setDataset(1, xyzDataset);
-				final XYBlockRenderer blockRenderer = new XYBlockRenderer();
-				final PaintScale scale = getNewColorPaintScale(serieXML);
-				if (scale == null) {
-					throw new InitializationException("The paint scale is null");
-				}
-				blockRenderer.setPaintScale(scale);
-				final String blockHeight = serieXML.getAttribute("blockHeight");
-				final String blockWidth = serieXML.getAttribute("blockWidth");
-				if (!"".equals(blockHeight)) {
-					blockRenderer.setBlockHeight(Double
-							.parseDouble(blockHeight));
-				}
-				if (!"".equals(blockWidth)) {
-					blockRenderer.setBlockWidth(Double.parseDouble(blockWidth));
-				}
-
-				blockRenderer.setBlockAnchor(RectangleAnchor.BOTTOM_LEFT);
-				plot.setRenderer(1, blockRenderer);
-
-				final String showScale = serieXML.getAttribute("showScale");
-				if (!"false".equals(showScale)) {
-					final NumberAxis scaleAxis = new NumberAxis();
-					scaleAxis.setRange(scale.getLowerBound(),
-							scale.getUpperBound());
-					psl = new PaintScaleLegend(scale, scaleAxis);
-					psl.setMargin(new RectangleInsets(10, 10, 10, 10));
-					psl.setPosition(RectangleEdge.BOTTOM);
-					psl.setAxisOffset(5.0);
-					psl.setFrame(new BlockBorder(Color.GRAY));
-				} else {
-					psl = null;
-				}
-			}
-
-			else {
-				final String sector = serieXML.getAttribute("sector");
-				final String x = serieXML.getAttribute("x");
-				final String y = serieXML.getAttribute("y");
-				final String select = serieXML.getAttribute("select");
-				final String color = serieXML.getAttribute("color");
-				final Paint paint = JamelColor.getColor(color);
-				renderer.setSeriesFillPaint(k, paint);
-				renderer.setSeriesPaint(k, lineColor);
-				renderer.setSeriesShape(k, square);
-				String t = serieXML.getAttribute("t");
-				if (t.equals("")) {
-					t = "t";
-				}
-				final XYSeries scatterSeries = dataManager.getScatterSeries(
-						sector, x, y, t, select);
-				dataset.addSeries(scatterSeries);
-				final String toolTipText;
-				if (select.equals("")) {
-					toolTipText = "x=" + x + ", y=" + y
-							+ " for each element in " + sector + ", " + t;
-				} else {
-					toolTipText = "x=" + x + ", y=" + y
-							+ " for each element in " + sector + ", " + t
-							+ " where " + select;
-				}
-				final String label = serieXML.getAttribute("label");
-				final LegendItem legendItem = new LegendItem(label, null,
-						toolTipText, null, true, square, true, paint, true,
-						lineColor, basicStroke, false, null, basicStroke, null);
-				defaultLegendItemCollection.add(legendItem);
-			}
-		}
-
-		// Annotations:
-		final List<XYAnnotation> annotations = getAnnotations(description);
-		if (annotations != null) {
-			for (XYAnnotation annotation : annotations) {
-				plot.addAnnotation(annotation);
-			}
-		}
-
-		final String background = description.getAttribute("background");
-		if (!"".equals(background)) {
-			plot.setBackgroundPaint(JamelColor.getColor(background));
-		}
-
-		final JFreeChart result = createChart(name, plot);
-		if (psl != null) {
-			result.addSubtitle(psl);
-		}
-
-		final NodeList legends = description.getElementsByTagName("legend");
-		if (legends.getLength() > 0) {
-			Element legend = (Element) legends.item(0);
-			final NodeList items = legend.getElementsByTagName("item");
-
-			final LegendItemCollection legendItemCollection = new LegendItemCollection();
-			for (int i = 0; i < items.getLength(); i++) {
-				final Element item = (Element) items.item(i);
-				final String tooltip = item.getAttribute("series");
-				final String legendLabel = item.getAttribute("value");
-				final Paint paint = JamelColor.getColor(item
-						.getAttribute("color"));
-				final LegendItem legendItem = new LegendItem(legendLabel, null,
-						tooltip, null, true, square, true, paint, true,
-						lineColor, basicStroke, false, null, basicStroke, null);
-				try {
-					legendItemCollection.add(legendItem);
-				} catch (ArrayIndexOutOfBoundsException e) {
-					e.printStackTrace();
-					// ???
-				}
-			}
-			plot.setFixedLegendItems(legendItemCollection);
-		} else {
-			plot.setFixedLegendItems(defaultLegendItemCollection);
-		}
-		return result;
-	}
-
-	/**
 	 * Creates and returns a new histogram.
 	 * <p>
 	 * <b>Work in progress. TODO: color, legend,</b>
@@ -456,16 +286,13 @@ public class ChartFactory {
 	 *            the data manager.
 	 * @return a new histogram.
 	 */
-	private static JFreeChart createHistogram(Element description,
-			BasicDataManager dataManager) {
+	private static JFreeChart createHistogram(Element description, BasicDataManager dataManager) {
 		final String name = description.getAttribute("title");
 		final NodeList seriesList = description.getElementsByTagName("series");
 		final XYItemRenderer renderer = new XYBarRenderer();
 		// renderer.setUseFillPaint(true);
-		final NumberAxis xAxis = createAxis((Element) description
-				.getElementsByTagName("xAxis").item(0), null);
-		final NumberAxis yAxis = createAxis((Element) description
-				.getElementsByTagName("yAxis").item(0), null);
+		final NumberAxis xAxis = createAxis((Element) description.getElementsByTagName("xAxis").item(0), null);
+		final NumberAxis yAxis = createAxis((Element) description.getElementsByTagName("yAxis").item(0), null);
 
 		final Element serieXML = (Element) seriesList.item(0);
 
@@ -484,8 +311,7 @@ public class ChartFactory {
 		if (t.equals("")) {
 			t = "t";
 		}
-		final DynamicHistogramDataset dataset = dataManager
-				.getHistogramDataset(sector, x, t, select, bins);
+		final DynamicHistogramDataset dataset = dataManager.getHistogramDataset(sector, x, t, select, bins);
 		final String toolTipText = "Not yet implemented."; // FIXME
 		if (select.equals("")) {
 			// toolTipText = "x=" + x + ", y=" + y +
@@ -495,9 +321,8 @@ public class ChartFactory {
 			// " for each element in "+sector+", "+t+ " where "+select;// FIXME
 		}
 		final String label = serieXML.getAttribute("label");
-		final LegendItem legendItem = new LegendItem(label, null, toolTipText,
-				null, true, square, true, paint, true, lineColor, basicStroke,
-				false, null, basicStroke, null);
+		final LegendItem legendItem = new LegendItem(label, null, toolTipText, null, true, square, true, paint, true,
+				lineColor, basicStroke, false, null, basicStroke, null);
 
 		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
 
@@ -536,6 +361,152 @@ public class ChartFactory {
 	}
 
 	/**
+	 * Creates and returns a new scatter chart.
+	 * 
+	 * @param description
+	 *            an XML element that contains the description of the chart to
+	 *            create.
+	 * @param dataManager
+	 *            the data manager.
+	 * @return a new scatter chart.
+	 * @throws InitializationException
+	 *             If something goes wrong.
+	 */
+	private static JFreeChart createScatterChart(Element description, BasicDataManager dataManager)
+			throws InitializationException {
+		final String name = description.getAttribute("title");
+		final NodeList seriesList = description.getElementsByTagName("series");
+		final int nbSeries = seriesList.getLength();
+		final XYSeriesCollection dataset = new XYSeriesCollection();
+		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(false, true);
+		renderer.setUseFillPaint(true);
+		final NumberAxis xAxis = createAxis((Element) description.getElementsByTagName("xAxis").item(0), null);
+		final NumberAxis yAxis = createAxis((Element) description.getElementsByTagName("yAxis").item(0), null);
+
+		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
+
+		PaintScaleLegend psl = null;
+
+		final LegendItemCollection defaultLegendItemCollection = new LegendItemCollection();
+		for (int k = 0; k < nbSeries; k++) {
+			final Element serieXML = (Element) seriesList.item(k);
+			final String xyBlockSeries = serieXML.getAttribute("xyBlockSeries");
+			if (xyBlockSeries.equals("true")) {
+				final XYZDataset xyzDataset;
+				final String sector = serieXML.getAttribute("sector");
+				final String x = serieXML.getAttribute("x");
+				final String y = serieXML.getAttribute("y");
+				final String z = serieXML.getAttribute("z");
+				xyzDataset = dataManager.getXYBlockData(sector, x, y, z);
+				plot.setDataset(1, xyzDataset);
+				final XYBlockRenderer blockRenderer = new XYBlockRenderer();
+				final PaintScale scale = getNewColorPaintScale(serieXML);
+				if (scale == null) {
+					throw new InitializationException("The paint scale is null");
+				}
+				blockRenderer.setPaintScale(scale);
+				final String blockHeight = serieXML.getAttribute("blockHeight");
+				final String blockWidth = serieXML.getAttribute("blockWidth");
+				if (!"".equals(blockHeight)) {
+					blockRenderer.setBlockHeight(Double.parseDouble(blockHeight));
+				}
+				if (!"".equals(blockWidth)) {
+					blockRenderer.setBlockWidth(Double.parseDouble(blockWidth));
+				}
+
+				blockRenderer.setBlockAnchor(RectangleAnchor.BOTTOM_LEFT);
+				plot.setRenderer(1, blockRenderer);
+
+				final String showScale = serieXML.getAttribute("showScale");
+				if (!"false".equals(showScale)) {
+					final NumberAxis scaleAxis = new NumberAxis();
+					scaleAxis.setRange(scale.getLowerBound(), scale.getUpperBound());
+					psl = new PaintScaleLegend(scale, scaleAxis);
+					psl.setMargin(new RectangleInsets(10, 10, 10, 10));
+					psl.setPosition(RectangleEdge.BOTTOM);
+					psl.setAxisOffset(5.0);
+					psl.setFrame(new BlockBorder(Color.GRAY));
+				} else {
+					psl = null;
+				}
+			}
+
+			else {
+				final String sector = serieXML.getAttribute("sector");
+				final String x = serieXML.getAttribute("x");
+				final String y = serieXML.getAttribute("y");
+				final String select = serieXML.getAttribute("select");
+				final String color = serieXML.getAttribute("color");
+				final Paint paint = JamelColor.getColor(color);
+				renderer.setSeriesFillPaint(k, paint);
+				renderer.setSeriesPaint(k, lineColor);
+				renderer.setSeriesShape(k, square);
+				String t = serieXML.getAttribute("t");
+				if (t.equals("")) {
+					t = "t";
+				}
+				final XYSeries scatterSeries = dataManager.getScatterSeries(sector, x, y, t, select);
+				dataset.addSeries(scatterSeries);
+				final String toolTipText;
+				if (select.equals("")) {
+					toolTipText = "x=" + x + ", y=" + y + " for each element in " + sector + ", " + t;
+				} else {
+					toolTipText = "x=" + x + ", y=" + y + " for each element in " + sector + ", " + t + " where "
+							+ select;
+				}
+				final String label = serieXML.getAttribute("label");
+				final LegendItem legendItem = new LegendItem(label, null, toolTipText, null, true, square, true, paint,
+						true, lineColor, basicStroke, false, null, basicStroke, null);
+				defaultLegendItemCollection.add(legendItem);
+			}
+		}
+
+		// Annotations:
+		final List<XYAnnotation> annotations = getAnnotations(description);
+		if (annotations != null) {
+			for (XYAnnotation annotation : annotations) {
+				plot.addAnnotation(annotation);
+			}
+		}
+
+		final String background = description.getAttribute("background");
+		if (!"".equals(background)) {
+			plot.setBackgroundPaint(JamelColor.getColor(background));
+		}
+
+		final JFreeChart result = createChart(name, plot);
+		if (psl != null) {
+			result.addSubtitle(psl);
+		}
+
+		final NodeList legends = description.getElementsByTagName("legend");
+		if (legends.getLength() > 0) {
+			Element legend = (Element) legends.item(0);
+			final NodeList items = legend.getElementsByTagName("item");
+
+			final LegendItemCollection legendItemCollection = new LegendItemCollection();
+			for (int i = 0; i < items.getLength(); i++) {
+				final Element item = (Element) items.item(i);
+				final String tooltip = item.getAttribute("series");
+				final String legendLabel = item.getAttribute("value");
+				final Paint paint = JamelColor.getColor(item.getAttribute("color"));
+				final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, true, square, true,
+						paint, true, lineColor, basicStroke, false, null, basicStroke, null);
+				try {
+					legendItemCollection.add(legendItem);
+				} catch (ArrayIndexOutOfBoundsException e) {
+					e.printStackTrace();
+					// ???
+				}
+			}
+			plot.setFixedLegendItems(legendItemCollection);
+		} else {
+			plot.setFixedLegendItems(defaultLegendItemCollection);
+		}
+		return result;
+	}
+
+	/**
 	 * Creates and returns a new standard time chart.
 	 * 
 	 * @param description
@@ -544,14 +515,16 @@ public class ChartFactory {
 	 * @param dataManager
 	 *            the data manager.
 	 * @return a new standard time chart.
+	 * @throws InitializationException
+	 *             if something goes wrong.
 	 */
-	private static JFreeChart createStandardTimeChart(
-			final Element description, final BasicDataManager dataManager) {
+	private static JFreeChart createStandardTimeChart(final Element description, final BasicDataManager dataManager)
+			throws InitializationException {
 
 		final JFreeChart chart;
 		final String name = description.getAttribute("title");
-		final NumberAxis xAxis = createAxis((Element) description
-				.getElementsByTagName("xAxis").item(0), IntegerTickUnits);
+		final NumberAxis xAxis = createAxis((Element) description.getElementsByTagName("xAxis").item(0),
+				IntegerTickUnits);
 		final LegendItemCollection defaultLegendItemCollection = new LegendItemCollection();
 		final DefaultDrawingSupplier drawingSupplier = new DefaultDrawingSupplier();
 
@@ -563,8 +536,7 @@ public class ChartFactory {
 			final Element serieXML = (Element) seriesList.item(k);
 			final String seriesKey = serieXML.getAttribute("value");
 			if (!seriesKey.equals("")) {
-				final XYSeries timeSeries = dataManager.getTimeSeries(
-						seriesKey, serieXML.getAttribute("mod"));
+				final XYSeries timeSeries = dataManager.getTimeSeries(seriesKey, serieXML.getAttribute("mod"));
 				if (timeSeries != null) {
 					dataset.addSeries(timeSeries);
 				}
@@ -576,8 +548,7 @@ public class ChartFactory {
 				try {
 					paint = JamelColor.getColor(serieXML.getAttribute("color"));
 				} catch (IllegalArgumentException e) {
-					throw new RuntimeException("Color not found: "
-							+ serieXML.getAttribute("color"), e);
+					throw new RuntimeException("Color not found: " + serieXML.getAttribute("color"), e);
 				}
 			} else {
 				paint = drawingSupplier.getNextPaint();
@@ -594,14 +565,19 @@ public class ChartFactory {
 				legendLabel = serieXML.getAttribute("label");
 				tooltip = ExpressionFactory.format(seriesKey);
 			}
-			final LegendItem legendItem = new LegendItem(legendLabel, null,
-					tooltip, null, line, basicStroke, paint);
+			final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, line, basicStroke, paint);
 			defaultLegendItemCollection.add(legendItem);
 		}
-
-		final NumberAxis yAxis = createAxis((Element) description
-				.getElementsByTagName("yAxis").item(0), null);
+		
+		final NumberAxis yAxis = createAxis((Element) description.getElementsByTagName("yAxis").item(0), null);
 		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
+		
+		if (description.getAttribute("xZeroBaselineVisible").equals("true")) {
+			plot.setRangeZeroBaselineVisible(true);
+		}
+		if (description.getAttribute("yZeroBaselineVisible").equals("true")) {
+			plot.setDomainZeroBaselineVisible(true);
+		}
 
 		chart = createChart(name, plot);
 		final NodeList legends = description.getElementsByTagName("legend");
@@ -614,10 +590,9 @@ public class ChartFactory {
 				final Element item = (Element) items.item(i);
 				final String tooltip = item.getAttribute("series");
 				final String legendLabel = item.getAttribute("value");
-				final Paint paint = JamelColor.getColor(item
-						.getAttribute("color"));
-				final LegendItem legendItem = new LegendItem(legendLabel, null,
-						tooltip, null, line, basicStroke, paint);
+				final Paint paint = JamelColor.getColor(item.getAttribute("color"));
+				final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, line, basicStroke,
+						paint);
 				try {
 					legendItemCollection.add(legendItem);
 				} catch (ArrayIndexOutOfBoundsException e) {
@@ -643,8 +618,8 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	private static JFreeChart createTimeChart(final Element description,
-			BasicDataManager dataManager) throws InitializationException {
+	private static JFreeChart createTimeChart(final Element description, BasicDataManager dataManager)
+			throws InitializationException {
 		final JFreeChart chart;
 		final NodeList subPlots = description.getElementsByTagName("subplot");
 		if (subPlots.getLength() > 0) {
@@ -664,23 +639,23 @@ public class ChartFactory {
 	 * @param dataManager
 	 *            the data manager.
 	 * @return a new time scatter chart.
+	 * @throws InitializationException
+	 *             if something goes wrong.
 	 */
-	private static JFreeChart createTimeScatterChart(Element description,
-			BasicDataManager dataManager) {
+	private static JFreeChart createTimeScatterChart(Element description, BasicDataManager dataManager)
+			throws InitializationException {
 		final String name = description.getAttribute("title");
 		final NodeList seriesList = description.getElementsByTagName("series");
 		final int nbSeries = seriesList.getLength();
 		final XYSeriesCollection dataset = new XYSeriesCollection();
-		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(
-				true, true);
+		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
 		final DefaultDrawingSupplier drawingSupplier = new DefaultDrawingSupplier();
 		final LegendItemCollection defaultLegendItemCollection = new LegendItemCollection();
 		for (int k = 0; k < nbSeries; k++) {
 			final Element serieXML = (Element) seriesList.item(k);
 			final String x = serieXML.getAttribute("x");
 			final String y = serieXML.getAttribute("y");
-			final XYSeries xySeries = dataManager.getTimeScatterSeries(x, y,
-					serieXML.getAttribute("mod"));
+			final XYSeries xySeries = dataManager.getTimeScatterSeries(x, y, serieXML.getAttribute("mod"));
 			dataset.addSeries(xySeries);
 			final String color = serieXML.getAttribute("color");
 			renderer.setSeriesShape(k, square);
@@ -705,16 +680,13 @@ public class ChartFactory {
 				legendLabel = serieXML.getAttribute("label");
 				tooltip = ExpressionFactory.format(seriesKey);
 			}
-			final LegendItem legendItem = new LegendItem(legendLabel, null,
-					tooltip, null, true, square, true, paint, true, lineColor,
-					basicStroke, false, null, basicStroke, null);
+			final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, true, square, true, paint,
+					true, lineColor, basicStroke, false, null, basicStroke, null);
 			defaultLegendItemCollection.add(legendItem);
 
 		}
-		final NumberAxis xAxis = createAxis((Element) description
-				.getElementsByTagName("xAxis").item(0), null);
-		final NumberAxis yAxis = createAxis((Element) description
-				.getElementsByTagName("yAxis").item(0), null);
+		final NumberAxis xAxis = createAxis((Element) description.getElementsByTagName("xAxis").item(0), null);
+		final NumberAxis yAxis = createAxis((Element) description.getElementsByTagName("yAxis").item(0), null);
 
 		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
 
@@ -727,12 +699,10 @@ public class ChartFactory {
 			for (int i = 0; i < items.getLength(); i++) {
 				final Element item = (Element) items.item(i);
 				final String legendLabel = item.getAttribute("value");
-				final Paint paint = JamelColor.getColor(item
-						.getAttribute("color"));
+				final Paint paint = JamelColor.getColor(item.getAttribute("color"));
 				final String tooltip = item.getAttribute("tooltip");
-				final LegendItem legendItem = new LegendItem(legendLabel, null,
-						tooltip, null, true, square, true, paint, true,
-						lineColor, basicStroke, false, null, basicStroke, null);
+				final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, true, square, true,
+						paint, true, lineColor, basicStroke, false, null, basicStroke, null);
 				try {
 					legendItemCollection.add(legendItem);
 				} catch (ArrayIndexOutOfBoundsException e) {
@@ -768,8 +738,7 @@ public class ChartFactory {
 	 *            the renderer (<code>null</code> permitted).
 	 * @return a new plot.
 	 */
-	private static XYPlot createXYPlot(XYDataset dataset, NumberAxis xAxis,
-			NumberAxis yAxis, XYItemRenderer renderer) {
+	private static XYPlot createXYPlot(XYDataset dataset, NumberAxis xAxis, NumberAxis yAxis, XYItemRenderer renderer) {
 		return new XYPlot(dataset, xAxis, yAxis, renderer) {
 			{
 				this.setOrientation(PlotOrientation.VERTICAL);
@@ -794,8 +763,7 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	private static List<XYAnnotation> getAnnotations(Element description)
-			throws InitializationException {
+	private static List<XYAnnotation> getAnnotations(Element description) throws InitializationException {
 		final List<XYAnnotation> result;
 		final NodeList list = description.getElementsByTagName("annotations");
 		if (list.getLength() > 0) {
@@ -811,14 +779,10 @@ public class ChartFactory {
 				if (item2.getNodeType() == Node.ELEMENT_NODE) {
 					final Element element2 = (Element) item2;
 					final String label = element2.getNodeName();
-					final float x = Float
-							.parseFloat(element2.getAttribute("x"));
-					final float y = Float
-							.parseFloat(element2.getAttribute("y"));
-					final float angle = Float.parseFloat(element2
-							.getAttribute("angle"));
-					final XYAnnotation annotation = new XYPointerAnnotation(
-							label, x, y, angle);
+					final float x = Float.parseFloat(element2.getAttribute("x"));
+					final float y = Float.parseFloat(element2.getAttribute("y"));
+					final float angle = Float.parseFloat(element2.getAttribute("angle"));
+					final XYAnnotation annotation = new XYPointerAnnotation(label, x, y, angle);
 					result.add(annotation);
 				}
 			}
@@ -838,8 +802,7 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	private static PaintScale getNewColorPaintScale(Element elem)
-			throws InitializationException {
+	private static PaintScale getNewColorPaintScale(Element elem) throws InitializationException {
 		PaintScale result = null;
 		final NodeList list = elem.getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
@@ -848,34 +811,26 @@ public class ChartFactory {
 				final Element scaleElem = ((Element) truc);
 				final String type = scaleElem.getAttribute("type");
 				if ("lookupScale".equals(type)) {
-					final LookupPaintScale lookupPaintScale = new LookupPaintScale(
-							1, 3, Color.red);
+					final LookupPaintScale lookupPaintScale = new LookupPaintScale(1, 3, Color.red);
 					lookupPaintScale.add(1, Color.WHITE);
 					lookupPaintScale.add(2, Color.BLACK);
 					result = lookupPaintScale;
 				} else if ("colorScale".equals(type)) {
-					final String lowerColorString = scaleElem
-							.getAttribute("lowerColor");
-					final String upperColorString = scaleElem
-							.getAttribute("upperColor");
+					final String lowerColorString = scaleElem.getAttribute("lowerColor");
+					final String upperColorString = scaleElem.getAttribute("upperColor");
 					final Color upperColor;
 					final Color lowerColor;
-					if ("".equals(lowerColorString)
-							|| "".equals(upperColorString)) {
-						// L'une des deux couleurs n'est pas dŽfinie.
+					if ("".equals(lowerColorString) || "".equals(upperColorString)) {
+						// L'une des deux couleurs n'est pas dï¿½finie.
 						throw new IllegalArgumentException("A color is missing");
 					}
 					upperColor = JamelColor.getColor(upperColorString);
 					lowerColor = JamelColor.getColor(lowerColorString);
-					final double upperBound = Double.parseDouble(scaleElem
-							.getAttribute("upperBound"));
-					final double lowerBound = Double.parseDouble(scaleElem
-							.getAttribute("lowerBound"));
-					result = new ColorPaintScale(lowerBound, upperBound,
-							lowerColor, upperColor);
+					final double upperBound = Double.parseDouble(scaleElem.getAttribute("upperBound"));
+					final double lowerBound = Double.parseDouble(scaleElem.getAttribute("lowerBound"));
+					result = new ColorPaintScale(lowerBound, upperBound, lowerColor, upperColor);
 				} else {
-					throw new InitializationException(
-							"Unexpected PaintScale type: " + type);
+					throw new InitializationException("Unexpected PaintScale type: " + type);
 				}
 				break;
 			}
@@ -912,25 +867,20 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	public static JamelChartPanel createChartPanel(Element elem,
-			BasicDataManager dataManager) throws InitializationException {
+	public static JamelChartPanel createChartPanel(Element elem, BasicDataManager dataManager)
+			throws InitializationException {
 		final JamelChartPanel chartPanel;
 		final String type = elem.getAttribute("type");
 		if ("".equals(type)) {
-			throw new InitializationException("Chart "
-					+ elem.getAttribute("title") + ": Chart type is missing.");
+			throw new InitializationException("Chart " + elem.getAttribute("title") + ": Chart type is missing.");
 		} else if ("scatter chart".equals(type)) {
-			chartPanel = new JamelChartPanel(createScatterChart(elem,
-					dataManager), false);
+			chartPanel = new JamelChartPanel(createScatterChart(elem, dataManager), false);
 		} else if ("time scatter chart".equals(type)) {
-			chartPanel = new JamelChartPanel(createTimeScatterChart(elem,
-					dataManager), true);
+			chartPanel = new JamelChartPanel(createTimeScatterChart(elem, dataManager), false);
 		} else if ("time chart".equals(type)) {
-			chartPanel = new JamelChartPanel(
-					createTimeChart(elem, dataManager), false);
+			chartPanel = new JamelChartPanel(createTimeChart(elem, dataManager), true);
 		} else if ("histogram".equals(type)) {
-			chartPanel = new JamelChartPanel(
-					createHistogram(elem, dataManager), false);
+			chartPanel = new JamelChartPanel(createHistogram(elem, dataManager), false);
 		} else {
 			throw new InitializationException("Unexpected chart type: " + type);
 		}

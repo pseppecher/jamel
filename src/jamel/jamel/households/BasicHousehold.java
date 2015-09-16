@@ -3,7 +3,7 @@ package jamel.jamel.households;
 import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Timer;
-import jamel.jamel.firms.capital.StockCertificate;
+import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.sectors.HouseholdSector;
 import jamel.jamel.util.AnachronismException;
 import jamel.jamel.util.ConsistencyException;
@@ -280,8 +280,10 @@ public class BasicHousehold implements Household {
 		}
 		this.variables.put("worked", 1);
 		return new LaborPower() {
+			
+			final private int date = timer.getPeriod().intValue();
 
-			private float energy = 1;
+			private boolean exhausted = false;
 
 			private long value = jobContract.getWage();
 
@@ -289,32 +291,14 @@ public class BasicHousehold implements Household {
 
 			@Override
 			public void expend() {
-				energy = 0;
-				value = 0;
-			}
-
-			@Override
-			public void expend(float work) {
-				if (work > energy) {
-					if ((work - energy) < 0.001) {
-						energy = 0;
-						value = 0;
-					} else {
-						throw new IllegalArgumentException();
-					}
-				} else {
-					value -= wage * work;
-					energy -= work;
-					if (energy < 0.001) {
-						energy = 0;
-						value = 0;
-					}
+				if (date != timer.getPeriod().intValue()) {
+					throw new AnachronismException("This worforce is out of date.");
 				}
-			}
-
-			@Override
-			public float getEnergy() {
-				return energy;
+				if (exhausted) {
+					throw new RuntimeException("This workforce is exhausted.");
+				}
+				exhausted = true;
+				value = 0;
 			}
 
 			@Override
@@ -329,7 +313,7 @@ public class BasicHousehold implements Household {
 
 			@Override
 			public boolean isExhausted() {
-				return energy == 0;
+				return exhausted;
 			}
 
 		};

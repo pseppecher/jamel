@@ -3,9 +3,9 @@ package jamel.jamel.firms;
 import java.util.List;
 
 import jamel.basic.util.Timer;
-import jamel.jamel.firms.capital.BasicCapitalStock;
-import jamel.jamel.firms.capital.CapitalStock;
-import jamel.jamel.firms.capital.StockCertificate;
+import jamel.jamel.capital.BasicCapitalStock;
+import jamel.jamel.capital.CapitalStock;
+import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.firms.factory.BasicFactory;
 import jamel.jamel.firms.factory.Factory;
 import jamel.jamel.firms.managers.CapitalManager;
@@ -167,6 +167,33 @@ public class BasicFirm extends AbstractFirm {
 				return assets - capitalTarget;
 			}
 
+			/**
+			 * Determines and returns the amount that will be paid as dividend for the
+			 * current period.
+			 * 
+			 * @return the amount of the dividend for the current period.
+			 */
+			private long newDividend() {
+				checkConsistency();
+				final long newDividend;
+				final long cash = account.getAmount();
+				final long assets = cash + factory.getValue();
+				final long capital = getCapital();
+				final long capitalTarget = (long) ((assets) * sector.getParam(CAPITAL_TARGET));
+				if (capital <= 0) {
+					newDividend = 0l;
+				} else {
+					if (capital <= capitalTarget) {
+						newDividend = 0l;
+					} else {
+						newDividend = Math.min(
+								(long) ((capital - capitalTarget) * sector.getParam(CAPITAL_PROPENSITY2DISTRIBUTE)),
+								cash);
+					}
+				}
+				return newDividend;
+			}
+
 			@Override
 			public Object askFor(String key) {
 				checkConsistency();
@@ -193,7 +220,7 @@ public class BasicFirm extends AbstractFirm {
 			public void clearOwnership() {
 				checkConsistency();
 				final boolean isOpen = capitalStock.isOpen();
-				this.capitalStock.cancel(); // TODO: rename: bankrupt/cancel
+				this.capitalStock.cancel();
 				this.capitalStock = new BasicCapitalStock(BasicFirm.this, account, timer);
 				if (isOpen) {
 					this.capitalStock.open();
@@ -230,9 +257,15 @@ public class BasicFirm extends AbstractFirm {
 				this.dataset.put("liabilities.new", account.getNewDebt());
 				this.dataset.put("liabilities.repayment", account.getRepaidDebt());
 
-				this.dataset.put("canceledDebts", account.getCanceledDebt());
-				this.dataset.put("canceledDeposits", account.getCanceledMoney());
+				this.dataset.put("canceledDebts", (double) account.getCanceledDebt());
+				this.dataset.put("canceledDeposits", (double) account.getCanceledMoney());
+				
+				// TODO: alimenter les statistiques avec quelques ratios financiers.
 
+				//final long netProfit = capital-initialCapital+dividend;
+				//final float returnOnEquity = netProfit/capital;
+				//this.dataset.put("returnOnEquity", (double) 1);
+				
 				if (insolvent) {
 					this.dataset.put("insolvents", 1.);
 				} else {
@@ -252,10 +285,7 @@ public class BasicFirm extends AbstractFirm {
 				final boolean isConsistent;
 				final long grossProfit = (Long) salesManager.askFor("grossProfit");
 				final long interest = account.getInterest();
-				final double bankruptcy = account.getCanceledMoney() // TODO:
-																		// why
-																		// double
-																		// ??
+				final long bankruptcy = account.getCanceledMoney()
 						+ factory.getInventoryLosses() - account.getCanceledDebt();
 				final long capital = this.getCapital();
 				isConsistent = (capital == this.initialCapital + grossProfit
@@ -273,28 +303,6 @@ public class BasicFirm extends AbstractFirm {
 			public boolean isSolvent() {
 				checkConsistency();
 				return (this.getCapital() >= 0);
-			}
-
-			@Override
-			public long newDividend() {
-				checkConsistency();
-				final long newDividend;
-				final long cash = account.getAmount();
-				final long assets = cash + factory.getValue();
-				final long capital = getCapital();
-				final long capitalTarget = (long) ((assets) * sector.getParam(CAPITAL_TARGET));
-				if (capital <= 0) {
-					newDividend = 0l;
-				} else {
-					if (capital <= capitalTarget) {
-						newDividend = 0l;
-					} else {
-						newDividend = Math.min(
-								(long) ((capital - capitalTarget) * sector.getParam(CAPITAL_PROPENSITY2DISTRIBUTE)),
-								cash);
-					}
-				}
-				return newDividend;
 			}
 
 			@Override
@@ -319,7 +327,7 @@ public class BasicFirm extends AbstractFirm {
 			public void secureFinancing(long amount) {
 				checkConsistency();
 				if (amount > account.getAmount()) {
-					account.lend(amount - account.getAmount());
+					account.newShortTermLoan(amount - account.getAmount());
 				}
 				if (account.getAmount() < amount) {
 					throw new RuntimeException("Production is not financed.");
@@ -359,7 +367,7 @@ public class BasicFirm extends AbstractFirm {
 	@Override
 	protected Factory getNewFactory() {
 		return new BasicFactory((int) sector.getParam(PRODUCTION_TIME), (int) sector.getParam(PRODUCTION_CAPACITY),
-				(long) sector.getParam(PRODUCTIVITY), timer);
+				(long) sector.getParam(PRODUCTIVITY), timer, random);
 	}
 
 	/**
@@ -567,6 +575,8 @@ public class BasicFirm extends AbstractFirm {
 					result = this.supplyVolume;
 				} else if (key.equals("salesVolume")) {
 					result = this.salesVolume;
+				} else if (key.equals("salesValue")) {
+					result = this.salesValue;
 				} else {
 					result = null;
 				}
@@ -632,6 +642,7 @@ public class BasicFirm extends AbstractFirm {
 						final Commodities sales = factory.getCommodities(demand);
 						salesValueAtCost += sales.getValue();
 						grossProfit = salesValue - salesValueAtCost;
+						sales.setValue(cheque.getAmount());
 						return sales;
 					}
 
@@ -725,6 +736,11 @@ public class BasicFirm extends AbstractFirm {
 			/** The wage offered. */
 			private Double wage = null;
 
+			/**
+			 * The wagebill.
+			 */
+			private Long wagebill;
+
 			/** The workforce. */
 			private final Workforce workforce = new Workforce();
 
@@ -799,6 +815,20 @@ public class BasicFirm extends AbstractFirm {
 			}
 
 			@Override
+			public Object askFor(String key) {
+				checkConsistency();
+				final Object result;
+				if ("wagebill".equals(key)) {
+					result = this.wagebill;
+				} else if ("workforce".equals(key)) {
+					result = this.workforce.size();
+				} else {
+					result = null;
+				}
+				return result;
+			}
+
+			@Override
 			public void close() {
 				checkConsistency();
 				recentVacancies.add(this.vacancies);
@@ -842,17 +872,18 @@ public class BasicFirm extends AbstractFirm {
 				this.manpowerTarget = null;
 				this.payroll = null;
 				this.vacancies = null;
+				this.wagebill = null;
 			}
 
 			@Override
 			public void payWorkers() {
 				checkConsistency();
-				double wageBill = 0l;
+				this.wagebill = 0l;
 				for (JobContract contract : workforce) {
 					contract.payWage(account.newCheque(contract.getWage()));
-					wageBill += contract.getWage();
+					this.wagebill += contract.getWage();
 				}
-				this.dataset.put(WAGE_BILL, wageBill);
+				this.dataset.put(WAGE_BILL, this.wagebill.doubleValue());
 			}
 
 			/*

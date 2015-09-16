@@ -223,7 +223,7 @@ public class Rational {
 	 * 
 	 * @param multiplicand
 	 *            value to be multiplied by this <code>rational</code>.
-	 * @return <code>this * multiplicand<code>.
+	 * @return <code>this * multiplicand</code>.
 	 */
 	public Rational multiply(Rational multiplicand) {
 		int numer = numerator * multiplicand.getNumerator();

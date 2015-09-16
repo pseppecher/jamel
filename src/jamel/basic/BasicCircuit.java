@@ -72,7 +72,7 @@ public class BasicCircuit implements Circuit {
 	 * @param param
 	 *            a XML element with the phases description.
 	 * @param sectors
-	 *            a collection (a Map<name,sector>)of sectors.
+	 *            a collection (a Map:name,sector) of sectors.
 	 * @return a list of phases.
 	 * @throws InitializationException
 	 *             If an <code>InitializationException</code> occurs.
@@ -95,8 +95,8 @@ public class BasicCircuit implements Circuit {
 				}
 				final Phase newPhase = sector.getPhase(phaseName);
 				if (newPhase == null) {
-					throw new InitializationException("Error while parsing phases: phase: \"" + phaseName
-							+ "\" (sector: \"" + sectorName + "\").");
+					throw new InitializationException("Error while parsing phases: null phase \"" + phaseName
+							+ "\" for sector \"" + sectorName + "\".");
 				}
 				result.add(newPhase);
 
@@ -136,7 +136,7 @@ public class BasicCircuit implements Circuit {
 	 *            the circuit.
 	 * @param params
 	 *            the parameters.
-	 * @return a map <name of the sector, sector>.
+	 * @return a map (name of the sector, sector).
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
@@ -252,7 +252,6 @@ public class BasicCircuit implements Circuit {
 	 */
 	protected static Element getSettings(Element params) {
 		final Element settings = (Element) params.getElementsByTagName("settings").item(0);
-		// TODO tester la pr�sence de settings
 		return settings;
 	}
 
@@ -335,10 +334,7 @@ public class BasicCircuit implements Circuit {
 			for (Element event : eventList) {
 				final String markerMessage = event.getAttribute("marker");
 				if (!"".equals(markerMessage)) {
-					throw new RuntimeException("Not yet implemented.");
-					// this.chartManager.addMarker(markerMessage,
-					// this.timer.getPeriod().intValue());
-					// FIXME
+					this.gui.addMarker(markerMessage, this.timer.getPeriod().intValue());
 				}
 				final String sectorName = event.getAttribute("sector");
 				if ("".equals(sectorName)) {
@@ -396,7 +392,12 @@ public class BasicCircuit implements Circuit {
 		this.doPause();
 		timer.next();
 		for (Phase phase : phases) {
-			phase.run();
+			try {
+				phase.run();
+			}
+			catch (Exception e) {
+				throw new RuntimeException("Something went wrong while running the phase: '"+phase.getName()+"', sector: '"+phase.getSector().getName()+"'.",e);
+			}
 		}
 	}
 
@@ -487,8 +488,6 @@ public class BasicCircuit implements Circuit {
 	@Override
 	public void setPause(boolean b) {
 		this.pause = b;
-		// FIXME: il faut mettre à jour le control panel
-		//this.controlPanel.repaint();
 	}
 
 	@Override

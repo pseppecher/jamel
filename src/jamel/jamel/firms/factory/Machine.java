@@ -1,5 +1,6 @@
 package jamel.jamel.firms.factory;
 
+import jamel.jamel.widgets.Asset;
 import jamel.jamel.widgets.LaborPower;
 
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.List;
 /**
  * Represents a machine.
  */
-public interface Machine {
+public interface Machine extends Asset {
 
 	/**
 	 * Returns the productivity of this machine.
@@ -25,8 +26,13 @@ public interface Machine {
 	 *            the inputs.
 	 * @return the outputs.
 	 */
-	public List<Materials> work(final LaborPower laborPower,
-			Materials... inputs);
+	public List<Materials> work(final LaborPower laborPower, Materials... inputs);
+
+	/**
+	 * Depreciates this machine.
+	 * @return the depreciation amount.
+	 */
+	public long depreciate();
 
 }
 

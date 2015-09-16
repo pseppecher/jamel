@@ -7,7 +7,7 @@ import jamel.basic.Circuit;
  * 
  * The Beale's function is multimodal, with sharp peaks at the corners of the input domain.<p>
  * 
- * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Beale%27s_function.pdf/page1-400px-Beale%27s_function.pdf.jpg" />
+ * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/de/Beale%27s_function.pdf/page1-400px-Beale%27s_function.pdf.jpg">
  */
 public class Beale extends Landscape {
 

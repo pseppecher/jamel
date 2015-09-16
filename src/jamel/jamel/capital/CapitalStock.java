@@ -1,11 +1,11 @@
-package jamel.jamel.firms.capital;
+package jamel.jamel.capital;
 
 import jamel.jamel.roles.Corporation;
 
 import java.util.List;
 
 /**
- * Represents the capital stock of a corporation.
+ * Represents the capital stock of a {@link Corporation}.
  */
 public interface CapitalStock {
 

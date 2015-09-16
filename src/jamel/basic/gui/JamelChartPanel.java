@@ -20,11 +20,11 @@ public class JamelChartPanel extends ChartPanel {
 	/**
 	 * Constructs a panel that displays the specified chart.
 	 * @param chart the chart to be displayed.
-	 * @param isScatter a flag that indicates if the chart is a scatter chart or not.
+	 * @param isTimeChart a flag that indicates if the chart is a scatter chart or not.
 	 */
-	public JamelChartPanel(JFreeChart chart, boolean isScatter) {
+	public JamelChartPanel(JFreeChart chart, boolean isTimeChart) {
 		super(chart);
-		this.isTimeChart = isScatter;
+		this.isTimeChart = isTimeChart;
 		this.setBackground(background);
 	}
 	

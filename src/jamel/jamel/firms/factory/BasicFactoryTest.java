@@ -10,7 +10,7 @@ import jamel.jamel.widgets.LaborPower;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
+import java.util.Random;
 
 import org.junit.After;
 import org.junit.Before;
@@ -39,18 +39,6 @@ public class BasicFactoryTest {
 				public void expend() {
 					checkAnachronism();
 					this.exhausted = true;
-				}
-
-				@Override
-				public void expend(float energy) {
-					checkAnachronism();
-					throw new RuntimeException("Not used");
-				}
-
-				@Override
-				public float getEnergy() {
-					checkAnachronism();
-					throw new RuntimeException("Not used");
 				}
 
 				@Override
@@ -90,13 +78,15 @@ public class BasicFactoryTest {
 	 */
 	@Test
 	public void test1() {
+		final Timer timer = new BasicTimer(0);
+		final Random random = new Random();
 		final List<Machine> machinery = new LinkedList<Machine>();
-		machinery.add(new BasicMachine(1, 10, null));
-		machinery.add(new BasicMachine(1, 5, null));
-		machinery.add(new BasicMachine(1, 100, null));
-		machinery.add(new BasicMachine(1, 9, null));
-		machinery.add(new BasicMachine(1, 2, null));
-		machinery.add(new BasicMachine(1, 50, null));
+		machinery.add(new BasicMachine(1, 10, 0, timer, random));
+		machinery.add(new BasicMachine(1, 5, 0, timer, random));
+		machinery.add(new BasicMachine(1, 100, 0, timer, random));
+		machinery.add(new BasicMachine(1, 9, 0, timer, random));
+		machinery.add(new BasicMachine(1, 2, 0, timer, random));
+		machinery.add(new BasicMachine(1, 50, 0, timer, random));
 		Collections.sort(machinery, BasicFactory.productivityComparator);
 		assertEquals("machinery.get(0).getProductivity()", 100, machinery
 				.get(0).getProductivity());
@@ -115,7 +105,8 @@ public class BasicFactoryTest {
 	@Test
 	public void test2() {
 		final Timer timer = new BasicTimer(0);
-		final Factory factory = new BasicFactory(6, 10, 100, timer);
+		final Random random = new Random();
+		final Factory factory = new BasicFactory(6, 10, 100, timer, random);
 		LaborPower[] laborPowers = getLaborPowers(5, 7, timer);
 		factory.open();
 		factory.process(laborPowers);
@@ -139,14 +130,15 @@ public class BasicFactoryTest {
 	@Test
 	public void test3() {
 		final BasicTimer timer = new BasicTimer(0);
-		final Factory factory = new BasicFactory(6, 10, 100, timer);
+		final Random random = new Random();
+		final Factory factory = new BasicFactory(6, 10, 100, timer, random);
 
 		for (int i = 0; i < 6; i++) {
+			timer.next();
 			final LaborPower[] laborPowers = getLaborPowers(5, 7, timer);
 			factory.open();
 			factory.process(laborPowers);
 			factory.close();
-			timer.next();
 		}
 
 		final AgentDataset data = factory.getData();
@@ -168,11 +160,13 @@ public class BasicFactoryTest {
 	@Test
 	public void test4() {
 		final BasicTimer timer = new BasicTimer(0);
-		final Factory factory = new BasicFactory(6, 10, 100, timer);
+		final Random random = new Random();
+		final Factory factory = new BasicFactory(6, 10, 100, timer, random);
 
 		for (int i = 0; i < 100; i++) {
-			final LaborPower[] laborPowers = getLaborPowers(10, 10, timer);
 			factory.open();
+			final int capacity=factory.getCapacity();
+			final LaborPower[] laborPowers = getLaborPowers(capacity, 10, timer);
 			factory.process(laborPowers);
 			factory.close();
 			final AgentDataset data = factory.getData();

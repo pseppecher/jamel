@@ -7,7 +7,7 @@ import jamel.jamel.widgets.LaborPower;
 /**
  * The workforce manager.
  */
-public abstract class WorkforceManager extends AbstractManager{
+public abstract class WorkforceManager extends AbstractManager implements Askable {
 	
 	/**
 	 * Creates a new workforce manager.

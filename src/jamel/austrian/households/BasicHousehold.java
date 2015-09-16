@@ -282,6 +282,7 @@ public class BasicHousehold extends SFCAgent implements Household{
 		else employmentDuration = 0;
 		employmentStatus = EmploymentStatus.INVOLONTARILY_UNEMPLOYED;
 		jobs=0;
+		wagesReceived = 0;
 		newTimeDeposits = 0;
 		redeemedTimeDeposits = 0;
 		defaultedTimeDeposits = 0;

@@ -7,7 +7,7 @@ import jamel.basic.Circuit;
  * 
  * This function has one global optimum and several local minima.<p>
  * 
- * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Goldstein_Price_function.pdf/page1-400px-Goldstein_Price_function.pdf.jpg" />
+ * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/8c/Goldstein_Price_function.pdf/page1-400px-Goldstein_Price_function.pdf.jpg">
  */
 public class GoldsteinPrice extends Landscape {
 

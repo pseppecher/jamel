@@ -1,7 +1,7 @@
 package jamel.jamel.firms.managers;
 
 import jamel.basic.util.Timer;
-import jamel.jamel.firms.capital.StockCertificate;
+import jamel.jamel.capital.StockCertificate;
 
 /**
  * The capital manager.
@@ -55,14 +55,6 @@ public abstract class CapitalManager extends AbstractManager implements Askable 
 	 *         otherwise.
 	 */
 	public abstract boolean isSolvent();
-
-	/**
-	 * Determines and returns the amount that will be paid as dividend for the
-	 * current period.
-	 * 
-	 * @return the amount of the dividend for the current period.
-	 */
-	public abstract long newDividend();
 
 	/**
 	 * Determines and pays the dividend to the owner of the firm.

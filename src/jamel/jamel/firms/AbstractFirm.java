@@ -3,7 +3,7 @@ package jamel.jamel.firms;
 import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Timer;
-import jamel.jamel.firms.capital.StockCertificate;
+import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.firms.factory.Factory;
 import jamel.jamel.firms.managers.CapitalManager;
 import jamel.jamel.firms.managers.SalesManager;
@@ -107,9 +107,6 @@ public abstract class AbstractFirm implements Firm {
 
 	/** A flag that indicates if this firm is open or not. */
 	protected boolean open;
-
-	/** The memory. */
-	//protected final Memory memory; TODO DELETE
 
 	/** The current period. */
 	protected Integer period = null;

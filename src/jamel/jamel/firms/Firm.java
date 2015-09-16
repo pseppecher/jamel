@@ -1,6 +1,6 @@
 package jamel.jamel.firms;
 
-import jamel.jamel.firms.capital.StockCertificate;
+import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.roles.AccountHolder;
 import jamel.jamel.roles.Corporation;
 import jamel.jamel.roles.Supplier;

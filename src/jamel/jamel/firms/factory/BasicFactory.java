@@ -9,10 +9,13 @@ import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.LaborPower;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Random;
 
 /**
  * A basic factory.
@@ -22,11 +25,10 @@ public class BasicFactory extends AbstractManager implements Factory {
 	/**
 	 * A basic implementation of {@link WorkInProgress}.
 	 * 
-	 * TODO: objet � supprimer, remplacer par une classe anonyme.
-	 * TODO: externaliser l'interface.
+	 * TODO: objet � supprimer, remplacer par une classe anonyme. TODO:
+	 * externaliser l'interface.
 	 */
-	private class BasicWorkInProgress extends HashMap<Rational, Materials>
-			implements WorkInProgress {
+	private class BasicWorkInProgress extends HashMap<Rational, Materials>implements WorkInProgress {
 
 		/**
 		 * Creates a new {@link BasicWorkInProgress}.
@@ -39,8 +41,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 			super();
 			for (int i = 1; i < productionTime; i++) {
 				final Rational completion = new Rational(i, productionTime);
-				final Materials materials = new BasicMaterials(0, 0,
-						completion, timer);
+				final Materials materials = new BasicMaterials(0, 0, completion, timer);
 				this.put(completion, materials);
 			}
 		}
@@ -55,8 +56,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 		@Override
 		public Materials get(Rational completion) {
 			if (!this.containsKey(completion)) {
-				throw new RuntimeException("This completion not exists: "
-						+ completion);
+				throw new RuntimeException("This completion not exists: " + completion);
 			}
 			return super.get(completion);
 		}
@@ -74,8 +74,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 		public Materials[] getStuff(int maxCompletion) {
 			final Materials[] inputs = new Materials[maxCompletion];
 			for (int i = 0; i < maxCompletion; i++) {
-				final Rational completion = new Rational(maxCompletion - i,
-						productionTime);
+				final Rational completion = new Rational(maxCompletion - i, productionTime);
 				final Materials input = this.get(completion);
 				inputs[i] = input;
 			}
@@ -98,8 +97,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 		public void putStuff(Materials stuff) {
 			final Materials materials = this.get(stuff.getCompletion());
 			if (materials == null) {
-				throw new RuntimeException("Materials not found: "
-						+ stuff.getCompletion());
+				throw new RuntimeException("Materials not found: " + stuff.getCompletion());
 			}
 			materials.add(stuff);
 		}
@@ -108,8 +106,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 		public String toString() {
 			String result = "";
 			for (Materials m : this.values()) {
-				result = result + m.getCompletion() + ": " + m.getVolume()
-						+ "; ";
+				result = result + m.getCompletion() + ": " + m.getVolume() + "; ";
 			}
 			return result;
 		}
@@ -124,8 +121,9 @@ public class BasicFactory extends AbstractManager implements Factory {
 	 * materials and partly finished products that are at various stages of the
 	 * production process. WIP excludes inventory of raw materials at the start
 	 * of the production cycle and finished products inventory at the end of the
-	 * production cycle." (ref: <a href="http://www.investopedia.com/terms/w/
-	 * workinprogress.asp">www.investopedia.com</a>)
+	 * production cycle." (ref:
+	 * <a href="http://www.investopedia.com/terms/w/workinprogress.asp">www.
+	 * investopedia.com</a>)
 	 */
 	private interface WorkInProgress extends Asset {
 
@@ -201,9 +199,9 @@ public class BasicFactory extends AbstractManager implements Factory {
 	 * sold to customers."
 	 * 
 	 * (ref: <a href =
-	 * "http://www.accountingtools.com/definition-finished-goods-inve">
-	 * www.accountingtools.com</a>)
-	 * */
+	 * "http://www.accountingtools.com/definition-finished-goods-inve"> www.
+	 * accountingtools.com</a>)
+	 */
 	private final Commodities finishedGoods;
 
 	/** The machinery (a collection of machines) */
@@ -214,9 +212,6 @@ public class BasicFactory extends AbstractManager implements Factory {
 	 * this process).
 	 */
 	private final int productionTime;
-
-	/** The timer. */
-	//private final Timer timer;
 
 	/** The work in progress. */
 	private final WorkInProgress workInProgress;
@@ -235,22 +230,53 @@ public class BasicFactory extends AbstractManager implements Factory {
 	 *            the productivity.
 	 * @param timer
 	 *            the timer.
+	 * @param random
+	 *            the random.
 	 */
-	public BasicFactory(int productionTime, int capacity, long productivity,
-			Timer timer) {
-		
-		super("Factory",timer);
+	public BasicFactory(int productionTime, int capacity, long productivity, Timer timer, Random random) {
+
+		super("Factory", timer);
 
 		this.productionTime = productionTime;
 
 		for (int i = 0; i < capacity; i++) {
-			this.machinery.add(new BasicMachine(productionTime, productivity,
-					timer));
+			this.machinery.add(new BasicMachine(productionTime, productivity, 0, timer, random));
 		}
+
+		// FIXME: les machines n'ont pas de valeur...
 
 		this.workInProgress = new BasicWorkInProgress(productionTime);
 		this.finishedGoods = new FinishedGoods();
 
+	}
+
+	/**
+	 * Depreciates the machines.
+	 */
+	private void depreciation() {
+		long depreciation = 0;
+		final List<Machine> cancelled = new LinkedList<Machine>();
+		for (Machine machine : machinery) {
+			depreciation += machine.depreciate();
+			if (machine.isCancelled()) {
+				cancelled.add(machine);
+			}
+		}
+		this.machinery.removeAll(cancelled);
+		this.dataset.put("depreciation", (double) depreciation);
+	}
+
+	/**
+	 * Returns the value of the machinery.
+	 * 
+	 * @return the value of the machinery.
+	 */
+	private long getMachineryValue() {
+		long value = 0;
+		for (Machine machine : machinery) {
+			value += machine.getBookValue();
+		}
+		return value;
 	}
 
 	/**
@@ -280,7 +306,25 @@ public class BasicFactory extends AbstractManager implements Factory {
 		super.checkConsistency();
 		if (this.canceled) {
 			throw new RuntimeException("This factory is definitively closed.");
-		}		
+		}
+	}
+
+	@Override
+	public Object askFor(String key) {
+		final Object result;
+		if ("machinery".equals(key)) {
+			final long[] productivities = new long[machinery.size()];
+			Collections.sort(this.machinery, productivityComparator);
+			int index = 0;
+			for (Machine machine : this.machinery) {
+				productivities[index] = machine.getProductivity();
+				index++;
+			}
+			result = productivities;
+		} else {
+			result = null;
+		}
+		return result;
 	}
 
 	@Override
@@ -298,14 +342,17 @@ public class BasicFactory extends AbstractManager implements Factory {
 	@Override
 	public void close() {
 		checkConsistency();
-		this.dataset.put("inventories.inProcess.val",
-				(double) this.workInProgress.getBookValue());
-		this.dataset.put("inventories.fg.val",
-				(double) this.finishedGoods.getValue());
-		this.dataset.put("inventories.fg.vol",
-				(double) this.finishedGoods.getVolume());
+		this.dataset.put("machinery.val", (double) this.getMachineryValue());
+		this.dataset.put("inventories.inProcess.val", (double) this.workInProgress.getBookValue());
+		this.dataset.put("inventories.fg.val", (double) this.finishedGoods.getValue());
+		this.dataset.put("inventories.fg.vol", (double) this.finishedGoods.getVolume());
 	}
-	
+
+	@Override
+	public void expandCapacity(Machine[] machines) {
+		this.machinery.addAll(Arrays.asList(machines));
+	}
+
 	@Override
 	public int getCapacity() {
 		checkConsistency();
@@ -331,16 +378,18 @@ public class BasicFactory extends AbstractManager implements Factory {
 	}
 
 	@Override
-	public double getInventoryLosses() {
+	public long getInventoryLosses() {
 		checkConsistency();
-		return this.dataset.get("inventories.losses.val");
+		return this.dataset.get("inventories.losses.val").longValue(); // TODO
+																		// use
+																		// askable
+																		// ?
 	}
 
 	@Override
-	public double getInventoryRatio(float normalLevel) {
+	public double getInventoryRatio(float normalLevel) { // TODO use askable ?
 		checkConsistency();
-		final double normalVolume = normalLevel
-				* this.getMaxUtilAverageProduction();
+		final double normalVolume = normalLevel * this.getMaxUtilAverageProduction();
 		this.dataset.put("inventories.fg.vol.normal", normalVolume);
 		return (this.getFinishedGoodsVolume()) / normalVolume;
 	}
@@ -348,17 +397,17 @@ public class BasicFactory extends AbstractManager implements Factory {
 	@Override
 	public double getMaxUtilAverageProduction() {
 		checkConsistency();
-		final Double maxUtilAverageProduction;
+		final Double potentialOutPut;
 		if (this.machinery.size() == 0) {
-			maxUtilAverageProduction = null;
+			potentialOutPut = 0.;
 		} else {
 			double sum = 0;
 			for (Machine machine : this.machinery) {
 				sum += machine.getProductivity();
 			}
-			maxUtilAverageProduction = sum;
+			potentialOutPut = sum;
 		}
-		return maxUtilAverageProduction;
+		return potentialOutPut;
 	}
 
 	@Override
@@ -370,13 +419,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 	@Override
 	public long getValue() {
 		checkConsistency();
-		return this.workInProgress.getBookValue()
-				+ this.finishedGoods.getValue();
-	}
-
-	@Override
-	public void investment(InvestmentProcess investmentProcess) {
-		throw new RuntimeException("Not yet implemented"); // TODO: IMPLEMENT ME
+		return this.workInProgress.getBookValue() + this.finishedGoods.getValue() + getMachineryValue();
 	}
 
 	@Override
@@ -387,6 +430,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 		this.dataset.put("inventories.fg.losses", 0d);
 		this.dataset.put("inventories.inProcess.losses", 0d);
 		this.dataset.put("inventories.fg.losses.vol", 0d);
+		depreciation();
 	}
 
 	@Override
@@ -394,16 +438,14 @@ public class BasicFactory extends AbstractManager implements Factory {
 		checkConsistency();
 
 		if (laborPowers.length > machinery.size()) {
-			throw new IllegalArgumentException(
-					"The workforce exceeds the capacity");
+			throw new IllegalArgumentException("Workforce: " + laborPowers.length + ", capacity: " + machinery.size());
 		}
 
 		Collections.sort(this.machinery, productivityComparator);
 		int machineID = 0;
 		int completion = productionTime - 1;
 
-		final WorkInProgress newWorkInProgress = new BasicWorkInProgress(
-				this.productionTime);
+		final WorkInProgress newWorkInProgress = new BasicWorkInProgress(this.productionTime);
 		final Commodities production = new FinishedGoods();
 
 		// Expends each labor power.
@@ -411,8 +453,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 
 			final Materials[] inputs = this.workInProgress.getStuff(completion);
 
-			final List<Materials> outputs = machinery.get(machineID).work(
-					laborPower, inputs);
+			final List<Materials> outputs = machinery.get(machineID).work(laborPower, inputs);
 
 			// Dispatches finished and not finished goods.
 			for (Materials output : outputs) {
@@ -434,10 +475,12 @@ public class BasicFactory extends AbstractManager implements Factory {
 		this.dataset.put("workforce", (double) laborPowers.length);
 		this.dataset.put("production.vol", (double) production.getVolume());
 		this.dataset.put("production.val", (double) production.getValue());
-		this.dataset.put("productivity", (double) this.getProductivity());
+		if (this.getProductivity() != null) {
+			// This happens when the machinery is empty.
+			this.dataset.put("productivity", (double) this.getProductivity());
+		}
 		this.dataset.put("capacity", (double) this.machinery.size());
-		this.dataset.put("production.vol.atFullCapacity",
-				this.getMaxUtilAverageProduction());
+		this.dataset.put("production.vol.atFullCapacity", this.getMaxUtilAverageProduction());
 
 		this.finishedGoods.put(production);
 		this.workInProgress.put(newWorkInProgress);

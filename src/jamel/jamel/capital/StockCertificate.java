@@ -1,4 +1,4 @@
-package jamel.jamel.firms.capital;
+package jamel.jamel.capital;
 
 import jamel.jamel.roles.Corporation;
 import jamel.jamel.widgets.Asset;

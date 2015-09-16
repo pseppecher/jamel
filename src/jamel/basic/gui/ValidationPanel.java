@@ -16,7 +16,9 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 import jamel.basic.data.Expression;
+import jamel.basic.data.ExpressionFactory;
 import jamel.basic.data.MacroDatabase;
+import jamel.basic.util.InitializationException;
 import jamel.basic.util.Timer;
 
 /**
@@ -37,8 +39,7 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 	final private static String rc = System.getProperty("line.separator");
 
 	/** Titles of the columns of the JTable. */
-	final private static String tableTitles[] = { "Test", "Label", "Value 1",
-			"", "Value 2", "Result" };
+	final private static String tableTitles[] = { "Test", "Label", "Value 1", "", "Value 2", "Result" };
 
 	@SuppressWarnings("javadoc")
 	public static final String LABEL = "label";
@@ -62,8 +63,7 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 	};
 
 	/** A string buffer to store test failure declarations. */
-	final private StringBuffer failures = new StringBuffer("Failure Trace:<br>"
-			+ rc);
+	final private StringBuffer failures = new StringBuffer("Failure Trace:<br>" + rc);
 
 	/** An array to store the labels of the tests. */
 	final private String[] labels;
@@ -103,13 +103,13 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 				result = labels[row];
 				break;
 			case 2:
-				result = tests[row][0].toString();
+				result = tests[row][0].getQuery();
 				break;
 			case 3:
 				result = "=";
 				break;
 			case 4:
-				result = tests[row][1].toString();
+				result = tests[row][1].getQuery();
 				break;
 			case 5:
 				if (results[row] == null) {
@@ -132,13 +132,16 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 	private final Timer timer;
 
 	/**
-	 * @param elem the XML description of the tests. 
-	 * @param macroDatabase the database.
-	 * @param timer the timer.
+	 * @param elem
+	 *            the XML description of the tests.
+	 * @param macroDatabase
+	 *            the database.
+	 * @param timer
+	 *            the timer.
 	 */
-	public ValidationPanel(Element elem, MacroDatabase macroDatabase,Timer timer) {
+	public ValidationPanel(Element elem, MacroDatabase macroDatabase, Timer timer) {
 		super(JSplitPane.VERTICAL_SPLIT);
-		this.timer=timer;
+		this.timer = timer;
 		final String startAttribute = elem.getAttribute("start");
 		if (!"".equals(startAttribute)) {
 			this.start = Integer.parseInt(startAttribute);
@@ -148,15 +151,22 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 		this.labels = new String[testNodeList.getLength()];
 		this.results = new Boolean[tests.length];
 		for (int i = 0; i < testNodeList.getLength(); i++) {
-			final String label = ((Element) testNodeList.item(i))
-					.getAttribute(LABEL);
+			final String label = ((Element) testNodeList.item(i)).getAttribute(LABEL);
 			final Expression[] item = new Expression[2];
-			final String a = ((Element) testNodeList.item(i))
-					.getAttribute(VAL1);
-			final String b = ((Element) testNodeList.item(i))
-					.getAttribute(VAL2);
-			item[0] = macroDatabase.newQuery(a);
-			item[1] = macroDatabase.newQuery(b);
+			final String a = ((Element) testNodeList.item(i)).getAttribute(VAL1);
+			final String b = ((Element) testNodeList.item(i)).getAttribute(VAL2);
+			try {
+				item[0] = macroDatabase.newQuery(a);
+			} catch (InitializationException e) {
+				e.printStackTrace();
+				item[0] = ExpressionFactory.newNullExpression("Error: " + a);
+			}
+			try {
+				item[1] = macroDatabase.newQuery(b);
+			} catch (InitializationException e) {
+				e.printStackTrace();
+				item[1] = ExpressionFactory.newNullExpression("Error: " + b);
+			}
 			this.labels[i] = label;
 			this.tests[i] = item;
 			this.results[i] = null;
@@ -173,12 +183,10 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 				TableCellRenderer renderer = new DefaultTableCellRenderer() {
 
 					@Override
-					public Component getTableCellRendererComponent(
-							JTable table, Object value, boolean isSelected,
+					public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected,
 							boolean hasFocus, int row, int column) {
-						final Component cell = super
-								.getTableCellRendererComponent(table, value,
-										isSelected, hasFocus, row, column);
+						final Component cell = super.getTableCellRendererComponent(table, value, isSelected, hasFocus,
+								row, column);
 						if (isRowSelected(row)) {
 							cell.setBackground(BLUE);
 							cell.setForeground(Color.WHITE);
@@ -200,10 +208,10 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 
 		};
 		final JScrollPane scrollPane = new JScrollPane(jTable);
-		
+
 		this.setTopComponent(scrollPane);
 		this.setBottomComponent(new JScrollPane(failurePanel));
-		
+
 		this.setResizeWeight(0.5);
 		this.setDividerLocation(0.5);
 		this.setDividerSize(2);
@@ -219,9 +227,8 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 				final boolean singleTestResult;
 				if ((a != null && !a.equals(b)) || a == null || b == null) {
 					singleTestResult = false;
-					failures.append("Period " + timer.getPeriod().intValue()
-							+ ", test " + i + ": failure (" + a + ", " + b
-							+ ")<br>" + rc);
+					failures.append("Period " + timer.getPeriod().intValue() + ", test " + i + ": failure (" + a + ", "
+							+ b + ")<br>" + rc);
 					SwingUtilities.invokeLater(new Runnable() {
 						@Override
 						public void run() {
@@ -231,8 +238,7 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 				} else {
 					singleTestResult = true;
 				}
-				if (results[i] == null
-						|| (!singleTestResult && singleTestResult != results[i])) {
+				if (results[i] == null || (!singleTestResult && singleTestResult != results[i])) {
 					results[i] = singleTestResult;
 					dataChanged = true;
 				}

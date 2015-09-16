@@ -284,6 +284,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 					for (final Firm firm : firms.getList()) {
 						firm.payDividend();
 					}
+
 				}
 			};
 		}

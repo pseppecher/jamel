@@ -349,15 +349,16 @@ public class Market extends SFCAgent {
 
 			data.put("MAX_PRICE",priceStats.getMaxRegularValue().doubleValue());
 			data.put("MEAN_PRICE",priceStats.getMean().doubleValue());
-			data.put("MIN_PRICE",priceStats.getMinRegularValue().doubleValue());
-			data.put("turnover",(double) turnover);
-			data.put("salesVolume",(double) sales);
-			data.put("offers",(double) offeredVolume);
+			data.put("MIN_PRICE",priceStats.getMinRegularValue().doubleValue());	
 		}
 		
 		else{
 			medianPrice = null;
 		}	
+		
+		data.put("turnover",(double) turnover);
+		data.put("salesVolume",(double) sales);
+		data.put("offers",(double) offeredVolume);
 	}
 
 

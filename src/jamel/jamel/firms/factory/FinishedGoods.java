@@ -5,7 +5,7 @@ import jamel.jamel.widgets.Commodities;
 /**
  * Represents a heap of finished goods.
  */
-class FinishedGoods implements Materials, Commodities {
+public class FinishedGoods implements Materials, Commodities {
 
 	/** Finished goods are completed. */
 	private final static Rational completion = new Rational(1, 1);
@@ -47,6 +47,20 @@ class FinishedGoods implements Materials, Commodities {
 	}
 
 	@Override
+	public void consume(long consumption) {
+		if (consumption > this.volume) {
+			throw new RuntimeException("Overconsumption.");
+		}
+		if (consumption == this.volume) {
+			consume();
+		} else {
+			this.value -= (this.value * consumption) / this.volume;
+			this.volume -= consumption;
+		}
+
+	}
+
+	@Override
 	public void delete() {
 		throw new RuntimeException("Not used.");
 	}
@@ -61,8 +75,7 @@ class FinishedGoods implements Materials, Commodities {
 		if (demand > this.volume) {
 			throw new IllegalArgumentException("Demand cannot exceed supply.");
 		}
-		final Commodities result = new FinishedGoods(demand, demand
-				* this.value / this.volume);
+		final Commodities result = new FinishedGoods(demand, demand * this.value / this.volume);
 		this.volume -= result.getVolume();
 		this.value -= result.getValue();
 		return result;
@@ -108,6 +121,11 @@ class FinishedGoods implements Materials, Commodities {
 		this.value += input.getValue();
 		this.volume += input.getVolume();
 		input.consume();
+	}
+
+	@Override
+	public void setValue(long value) {
+		this.value = value;
 	}
 
 }

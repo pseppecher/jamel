@@ -1,5 +1,6 @@
 package jamel.jamel.households;
 
+import jamel.Jamel;
 import jamel.basic.Circuit;
 import jamel.basic.data.SectorDataset;
 import jamel.basic.sector.AbstractPhase;
@@ -9,8 +10,8 @@ import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.Timer;
+import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.firms.Firm;
-import jamel.jamel.firms.capital.StockCertificate;
 import jamel.jamel.roles.Shareholder;
 import jamel.jamel.sectors.BankingSector;
 import jamel.jamel.sectors.CapitalistSector;
@@ -39,7 +40,7 @@ import org.w3c.dom.NodeList;
  * A basic household sector.
  */
 public class BasicHouseholdSector implements Sector, HouseholdSector,
-		CapitalistSector {
+CapitalistSector {
 
 	/** The key word for the "closure" phase. */
 	private static final String PHASE_CLOSURE = "closure";
@@ -381,43 +382,69 @@ public class BasicHouseholdSector implements Sector, HouseholdSector,
 	@Override
 	public Cheque[] sellFim(Firm firm) {
 		final long firmValue = firm.getBookValue();
-		final int n;
-		if (firmValue < 10) {
-			n = 1;
-		} else if (firmValue < 100) {
-			n = 2;
-		} else {
-			n = 10;
-		}
-		final long minimalPrice = firmValue / n + 1;
 		final List<Shareholder> all = new LinkedList<Shareholder>(
 				this.households.getShuffledList());
-		final List<Shareholder> buyers = new ArrayList<Shareholder>(n);
-		final List<Long> prices = new ArrayList<Long>(n);
-		final List<Integer> shares = new ArrayList<Integer>(n);
-		long remainderP = firmValue;
-		int remainderS = 100;
+		final List<Shareholder> buyers = new ArrayList<Shareholder>(10);
+		final List<Long> prices = new ArrayList<Long>(10);
+		final List<Integer> shares = new ArrayList<Integer>(10);
+		final long priceOfOneShare = firmValue/100;
+		if (priceOfOneShare<2) {
+			throw new RuntimeException("priceOfOneShare: "+2);
+			// FIXME
+		}
+		
+		class Auctioneer {
+			// TODO: It is not really an auctioneer. To be renamed. 
+			int auction(long minimalFinancialCapacity) {
+				int nonIssuedShares = 100;
+				for (Shareholder shareholder : all) {
+					final long shareholderFinancialCapacity = shareholder.getFinancialCapacity();
+					if (shareholderFinancialCapacity > minimalFinancialCapacity) {
 
-		// Proportional allocation.
-		for (Shareholder shareholder : all) {
-			if (shareholder.getFinancialCapacity() > minimalPrice) {
-				final long price1 = Math.min(remainderP,
-						shareholder.getFinancialCapacity());
-				final int nShares = (int) ((100 * price1) / firmValue);
-				final long price2 = (firmValue * nShares) / 100;
-				buyers.add(shareholder);
-				prices.add(price2);
-				shares.add(nShares);
-				remainderP -= price2;
-				remainderS -= nShares;
+						final int nShares0 = (int) (shareholderFinancialCapacity/priceOfOneShare);
+						final int nShares = Math.min(nShares0, nonIssuedShares);
+						final long priceOfTheShares = priceOfOneShare * nShares;
+						buyers.add(shareholder);
+						prices.add(priceOfTheShares);
+						shares.add(nShares);
+						nonIssuedShares -= nShares;
+					}
+					if (nonIssuedShares == 0) {
+						break;
+					}
+				}
+				return nonIssuedShares;
 			}
-			if (remainderS == 0) {
-				break;
+		}
+		
+		final Auctioneer auctioneer = new Auctioneer();
+		
+		int nonIssuedShares = auctioneer.auction(priceOfOneShare*10);
+		if (nonIssuedShares>0) {
+			buyers.clear();
+			prices.clear();
+			shares.clear();
+			nonIssuedShares = auctioneer.auction(priceOfOneShare*5);
+			if (nonIssuedShares>0) {
+				buyers.clear();
+				prices.clear();
+				shares.clear();
+				nonIssuedShares = auctioneer.auction(priceOfOneShare*2);
+				if (nonIssuedShares>0) {
+					buyers.clear();
+					prices.clear();
+					shares.clear();
+					nonIssuedShares = auctioneer.auction(priceOfOneShare);
+					if (nonIssuedShares != 0) {
+						Jamel.println("minimalPrice: "+priceOfOneShare);
+						throw new RuntimeException("Non issued shares: "+nonIssuedShares);
+					}
+				}
 			}
 		}
 
-		if (remainderS < 0) {
-			throw new RuntimeException("Bad number of shares.");
+		if (buyers.size()==0) {
+			throw new RuntimeException("Buyers list is empty: "+firm.getName()+", period "+timer.getPeriod().intValue());			
 		}
 
 		firm.clearOwnership();

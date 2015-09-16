@@ -33,8 +33,7 @@ public class BasicDataManager {
 	/**
 	 * A {@link XYSeries} that implements the {@link Updatable} interface.
 	 */
-	private abstract class DynamicXYSeries extends XYSeries implements
-			Updatable {
+	private abstract class DynamicXYSeries extends XYSeries implements Updatable {
 
 		/**
 		 * Constructs a new empty series, with the auto-sort flag set as
@@ -50,8 +49,7 @@ public class BasicDataManager {
 	}
 
 	/** The number format for exporting data. */
-	final private static DecimalFormat nf = (DecimalFormat) NumberFormat
-			.getNumberInstance(new Locale("en", "UK"));
+	final private static DecimalFormat nf = (DecimalFormat) NumberFormat.getNumberInstance(new Locale("en", "UK"));
 
 	/** The line separator. */
 	final private static String rc = System.getProperty("line.separator");
@@ -89,8 +87,7 @@ public class BasicDataManager {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	public BasicDataManager(Element elem, Timer timer, String path, String name)
-			throws InitializationException {
+	public BasicDataManager(Element elem, Timer timer, String path, String name) throws InitializationException {
 		if (timer == null) {
 			throw new IllegalArgumentException("Timer is null.");
 		}
@@ -101,22 +98,24 @@ public class BasicDataManager {
 
 	/**
 	 * Exports the data into the output file.
-	 * @throws IOException If something goes wrong.
+	 * 
+	 * @throws IOException
+	 *             If something goes wrong.
 	 */
 	private void exportData() throws IOException {
 		if (outputFile != null && outputFile.exists()) {
 			FileWriter writer;
-				writer = new FileWriter(outputFile, true);
-				for (Expression query : exports) {
-					final Double val = query.value();
-					if (val != null) {
-						writer.write(nf.format(val) + ";");
-					} else {
-						writer.write("null;");
-					}
+			writer = new FileWriter(outputFile, true);
+			for (Expression query : exports) {
+				final Double val = query.value();
+				if (val != null) {
+					writer.write(nf.format(val) + ";");
+				} else {
+					writer.write("null;");
 				}
-				writer.write(rc);
-				writer.close();
+			}
+			writer.write(rc);
+			writer.close();
 		}
 	}
 
@@ -144,7 +143,7 @@ public class BasicDataManager {
 					final File parentFile = outputFile.getParentFile();
 					if (!parentFile.exists()) {
 						parentFile.mkdirs();
-					}					
+					}
 					outputFile.createNewFile();
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -156,16 +155,22 @@ public class BasicDataManager {
 			for (int i = 0; i < exportNodeList.getLength(); i++) {
 				if (exportNodeList.item(i).getNodeName().equals("data")) {
 					final Element data = (Element) exportNodeList.item(i);
-					final String query = data.getAttribute("value");
-					final Expression expression = this.macroDatabase
-							.newQuery(query);
-					this.exports.add(expression);
+					final String queryString = data.getAttribute("value");
+					Expression expression;
+					try {
+						expression = this.macroDatabase.newQuery(queryString);
+						this.exports.add(expression);
+					} catch (InitializationException e) {
+						e.printStackTrace();
+						expression = ExpressionFactory.newNullExpression("Error: " + queryString);
+						this.exports.add(expression);
+					}
 				}
 			}
 			try {
 				final FileWriter writer = new FileWriter(outputFile, true);
 				for (Expression query : exports) {
-					writer.write(query.toString() + ";");
+					writer.write(query.getQuery() + ";");
 				}
 				writer.write(rc);
 				writer.close();
@@ -198,8 +203,7 @@ public class BasicDataManager {
 				}
 			});
 		} catch (Exception e) {
-			throw new RuntimeException(
-					"Something went wrong while updating the series.", e);
+			throw new RuntimeException("Something went wrong while updating the series.", e);
 		}
 	}
 
@@ -220,19 +224,17 @@ public class BasicDataManager {
 	 *            the number of bins.
 	 * @return a new {@link DynamicHistogramDataset}.
 	 */
-	public DynamicHistogramDataset getHistogramDataset(final String sector,
-			final String valKey, String t, final String select, String bins) {
+	public DynamicHistogramDataset getHistogramDataset(final String sector, final String valKey, String t,
+			final String select, String bins) {
 		if (valKey == null) {
 			throw new IllegalArgumentException("Argument 'valKey' is null");
 		}
 		if (valKey.equals("")) {
 			throw new IllegalArgumentException("Argument 'valKey' is empty");
 		}
-		final String seriesKey = "HistogramDataset," + sector + "," + t + ","
-				+ valKey + "," + select + "," + bins;
+		final String seriesKey = "HistogramDataset," + sector + "," + t + "," + valKey + "," + select + "," + bins;
 		final DynamicHistogramDataset histogramDataset;
-		final DynamicHistogramDataset cached = (DynamicHistogramDataset) this.updatable
-				.get(seriesKey);
+		final DynamicHistogramDataset cached = (DynamicHistogramDataset) this.updatable.get(seriesKey);
 		if (cached != null) {
 			histogramDataset = cached;
 		} else {
@@ -243,8 +245,7 @@ public class BasicDataManager {
 				lag = Integer.valueOf(t.substring(2, t.length()));
 			} else {
 				lag = null;
-				throw new RuntimeException(
-						"Error while creating histogramDataset.");
+				throw new RuntimeException("Error while creating histogramDataset.");
 			}
 			final int nBins;
 			if (bins.equals("")) {
@@ -256,8 +257,7 @@ public class BasicDataManager {
 				@Override
 				public void update() {
 					final int t1 = timer.getPeriod().intValue() - lag;
-					final Double[] series = macroDatabase.getDistributionData(
-							sector, valKey, t1, select);
+					final Double[] series = macroDatabase.getDistributionData(sector, valKey, t1, select);
 					if (series != null && series.length > 0) {
 						this.addSeries(seriesKey, series, nBins);
 					} else {
@@ -298,13 +298,11 @@ public class BasicDataManager {
 	 *            sector are selected.
 	 * @return an {@link XYSeries}.
 	 */
-	public XYSeries getScatterSeries(final String sector, final String xKey,
-			final String yKey, String t, final String select) {
-		final String seriesKey = sector + "." + t + "." + xKey + "." + yKey
-				+ "." + select;
+	public XYSeries getScatterSeries(final String sector, final String xKey, final String yKey, String t,
+			final String select) {
+		final String seriesKey = sector + "." + t + "." + xKey + "." + yKey + "." + select;
 		final DynamicXYSeries scatterSeries;
-		final DynamicXYSeries result1 = (DynamicXYSeries) this.updatable
-				.get(seriesKey);
+		final DynamicXYSeries result1 = (DynamicXYSeries) this.updatable.get(seriesKey);
 		if (result1 != null) {
 			scatterSeries = result1;
 		} else {
@@ -315,16 +313,14 @@ public class BasicDataManager {
 				lag = Integer.valueOf(t.substring(2, t.length()));
 			} else {
 				lag = null;
-				throw new RuntimeException(
-						"Error while creating scatter series.");
+				throw new RuntimeException("Error while creating scatter series.");
 			}
 			scatterSeries = new DynamicXYSeries(seriesKey) {
 				@SuppressWarnings("unchecked")
 				@Override
 				public void update() {
 					final int t1 = timer.getPeriod().intValue() - lag;
-					final List<XYDataItem> newData = macroDatabase
-							.getScatterData(sector, xKey, yKey, t1, select);
+					final List<XYDataItem> newData = macroDatabase.getScatterData(sector, xKey, yKey, t1, select);
 					this.data.clear();
 					if (newData != null) {
 						this.data.addAll(newData);
@@ -348,9 +344,11 @@ public class BasicDataManager {
 	 * @param mod
 	 *            the modulus.
 	 * @return an {@link XYSeries}.
+	 * @throws InitializationException
+	 *             if something goes wrong.
 	 */
-	public XYSeries getTimeScatterSeries(final String x, final String y,
-			final String mod) {
+	public XYSeries getTimeScatterSeries(final String x, final String y, final String mod)
+			throws InitializationException {
 		final DynamicXYSeries timeScatterSeries;
 		final String key = x + " && " + y + " mod" + mod;
 		final int modulus;
@@ -359,8 +357,7 @@ public class BasicDataManager {
 		} else {
 			modulus = 1;
 		}
-		final DynamicXYSeries xySeries = (DynamicXYSeries) this.updatable
-				.get(key);
+		final DynamicXYSeries xySeries = (DynamicXYSeries) this.updatable.get(key);
 		if (xySeries == null) {
 			final Expression expressionX = macroDatabase.newQuery(x);
 			final Expression expressionY = macroDatabase.newQuery(y);
@@ -393,8 +390,10 @@ public class BasicDataManager {
 	 * @param mod
 	 *            the modulus.
 	 * @return an {@link XYSeries}.
+	 * @throws InitializationException
+	 *             if something goes wrong.
 	 */
-	public XYSeries getTimeSeries(final String seriesKey, String mod) {
+	public XYSeries getTimeSeries(final String seriesKey, String mod) throws InitializationException {
 		final DynamicXYSeries timeSeries;
 		final int modulus;
 		if (mod != "") {
@@ -402,8 +401,7 @@ public class BasicDataManager {
 		} else {
 			modulus = 1;
 		}
-		final DynamicXYSeries xySeries = (DynamicXYSeries) this.updatable
-				.get(seriesKey + ".mod" + modulus);
+		final DynamicXYSeries xySeries = (DynamicXYSeries) this.updatable.get(seriesKey + ".mod" + modulus);
 		if (xySeries != null) {
 			timeSeries = xySeries;
 		} else {
@@ -438,8 +436,7 @@ public class BasicDataManager {
 	 *            the key for the Z values.
 	 * @return an {@link XYZDataset}.
 	 */
-	public XYZDataset getXYBlockData(final String sector, final String xKey,
-			final String yKey, final String zKey) {
+	public XYZDataset getXYBlockData(final String sector, final String xKey, final String yKey, final String zKey) {
 		final BasicXYZDataset dataset;
 		final String key = sector + ".surf." + xKey + "." + yKey + "." + zKey;
 		final BasicXYZDataset cache = (BasicXYZDataset) this.updatable.get(key);
@@ -450,8 +447,7 @@ public class BasicDataManager {
 				@Override
 				public void update() {
 					final int t = timer.getPeriod().intValue();
-					final double[][] data = macroDatabase.getXYZData(sector,
-							xKey, yKey, zKey, t);
+					final double[][] data = macroDatabase.getXYZData(sector, xKey, yKey, zKey, t);
 					this.addSeries(key, data);
 				}
 			};

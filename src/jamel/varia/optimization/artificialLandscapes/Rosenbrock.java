@@ -9,7 +9,7 @@ import jamel.basic.Circuit;
  * The global minimum is inside a long, narrow, parabolic shaped flat valley. 
  * To find the valley is trivial; to converge to the global minimum, however, is difficult.<p>
  * 
- * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Rosenbrock_function.svg/400px-Rosenbrock_function.svg.png" />
+ * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/32/Rosenbrock_function.svg/400px-Rosenbrock_function.svg.png">
  */
 public class Rosenbrock extends Landscape {
 

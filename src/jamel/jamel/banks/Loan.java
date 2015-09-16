@@ -33,13 +33,6 @@ public interface Loan {
 	long getPrincipal();
 
 	/**
-	 * Return true if the debt is doubtful.
-	 * 
-	 * @return a boolean.
-	 */
-	boolean isDoubtfull();
-
-	/**
 	 * Pays back the loan.
 	 */
 	void payBack();

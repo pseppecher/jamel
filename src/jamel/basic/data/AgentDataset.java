@@ -51,7 +51,7 @@ public interface AgentDataset {
 	 * @param value a Long value to be associated with the specified key
 	 * @return the previous value associated with <code>key</code>, or <code>null</code> if there was no mapping for <code>key</code>. 
 	 */
-	public Double put(String key, Double value);
+	public Double put(String key, Number value);
 
 	/**
 	 * Copies all of the data from the specified dataset to this dataset. 

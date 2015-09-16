@@ -6,13 +6,19 @@ package jamel.jamel.widgets;
 public interface Commodities {
 
 	/**
-	 * Consumes all the commodities in the heap.
+	 * Consumes all the commodities in this heap.
 	 */
 	void consume();
 
 	/**
+	 * Consumes the specified volume of commodities in this heap.
+	 * @param volume the volume of commodities to be consumed.
+	 */
+	void consume(long volume);
+
+	/**
 	 * Creates a new heap of commodities of the specified volume by subtracting them from this heap.
-	 * @param demand the volume of commodities to detach.
+	 * @param demand the volume of commodities to be detached.
 	 * @return a new heap of commodities of the specified volume.
 	 */
 	Commodities detach(long demand);
@@ -41,6 +47,12 @@ public interface Commodities {
 	 * @param input the heap of commodities the content of which is to be appended to this heap.
 	 */
 	void put(Commodities input);
+
+	/**
+	 * Sets the total value of the commodities in the heap.
+	 * @param value the value to set.
+	 */
+	void setValue(long value);
 
 }
 

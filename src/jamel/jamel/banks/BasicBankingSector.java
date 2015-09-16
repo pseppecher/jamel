@@ -1,5 +1,18 @@
 package jamel.jamel.banks;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
+
+import org.w3c.dom.Attr;
+import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+
 import jamel.basic.Circuit;
 import jamel.basic.data.BasicSectorDataset;
 import jamel.basic.data.SectorDataset;
@@ -11,10 +24,10 @@ import jamel.basic.util.InitializationException;
 import jamel.basic.util.JamelParameters;
 import jamel.basic.util.Period;
 import jamel.basic.util.Timer;
+import jamel.jamel.capital.BasicCapitalStock;
+import jamel.jamel.capital.CapitalStock;
+import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.firms.Firm;
-import jamel.jamel.firms.capital.BasicCapitalStock;
-import jamel.jamel.firms.capital.CapitalStock;
-import jamel.jamel.firms.capital.StockCertificate;
 import jamel.jamel.roles.AccountHolder;
 import jamel.jamel.roles.Corporation;
 import jamel.jamel.roles.Shareholder;
@@ -22,104 +35,13 @@ import jamel.jamel.sectors.BankingSector;
 import jamel.jamel.sectors.CapitalistSector;
 import jamel.jamel.util.AnachronismException;
 import jamel.jamel.widgets.BankAccount;
-import jamel.jamel.widgets.Cheque;
 import jamel.jamel.widgets.Chequable;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
-
-import org.w3c.dom.Attr;
-import org.w3c.dom.Element;
-import org.w3c.dom.NamedNodeMap;
-import org.w3c.dom.Node;
+import jamel.jamel.widgets.Cheque;
 
 /**
  * A basic banking sector.
  */
 public class BasicBankingSector implements Sector, Corporation, BankingSector {
-
-	/**
-	 * An implementation of the Variable interface.
-	 */
-	private class BasicVariables extends HashMap<String, Long> implements
-			Variables {
-
-		{
-			this.put("liabilities", 0);
-			this.put("assets", 0);
-			this.put("capital", 0);
-			this.put("bankruptcies", 0);
-			this.put("interest", 0);
-			this.put("canceledDebts", 0);
-			this.put("canceledDeposits", 0);
-			this.put("dividends", 0);
-			this.put("loans.new", 0);
-			this.put("loans.repayment", 0);
-		}
-
-		@Override
-		public void add(String key, Long amount) {
-			this.put(key, get(key) + amount);
-		}
-
-		@Override
-		public Long get(String key) {
-			return super.get(key);
-		}
-
-		@Override
-		public void put(String key, long value) {
-			super.put(key, value);
-		}
-
-	}
-
-	/**
-	 * Storage of the current variables of the bank.
-	 */
-	private interface Variables {
-
-		/**
-		 * Adds the specified value with the existing value.
-		 * 
-		 * @param key
-		 *            key of the existing value with which the specified value
-		 *            is to be added.
-		 * @param value
-		 *            value to be added with the existing value.
-		 */
-		void add(String key, Long value);
-
-		/**
-		 * Returns the value to which the specified key is mapped, or null if
-		 * this map contains no mapping for the key.
-		 * 
-		 * @param key
-		 *            the key whose associated value is to be returned
-		 * @return the value to which the specified key is mapped, or null if
-		 *         this map contains no mapping for the key
-		 */
-		Long get(String key);
-
-		/**
-		 * Associates the specified value with the specified key in this map. If
-		 * the map previously contained a mapping for the key, the old value is
-		 * replaced.
-		 * 
-		 * @param key
-		 *            key with which the specified value is to be associated
-		 * @param value
-		 *            value to be associated with the specified key
-		 */
-		void put(String key, long value);
-
-	}
 
 	/**
 	 * Represents a current account.
@@ -159,37 +81,35 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 			@Override
 			public void cancel() {
 				if (this.amount > 0) {
-					BasicBankingSector.this.v.add("canceledDeposits",
-							this.amount);
-					BasicBankingSector.this.v.add("liabilities", -this.amount);
-					BasicBankingSector.this.v.add("capital", this.amount);
+					BasicBankingSector.this.canceledDeposits += this.amount;
+					BasicBankingSector.this.liabilities -= this.amount;
+					BasicBankingSector.this.capital += this.amount;
 					Account.this.canceledMoney += this.amount;
 					this.amount = 0;
 				}
 			}
 
 			@Override
-			public void credit(long creditAmount) {
-				if (creditAmount <= 0) {
-					throw new RuntimeException("Null or negative credit.");
+			public void credit(long credit) {
+				if (credit <= 0) {
+					throw new IllegalArgumentException("Null or negative credit: " + credit);
 				}
-				this.amount += creditAmount;
-				BasicBankingSector.this.v.add("liabilities", creditAmount);
-				BasicBankingSector.this.v.add("capital", -creditAmount);
+				this.amount += credit;
+				BasicBankingSector.this.liabilities += credit;
+				BasicBankingSector.this.capital -= credit;
 			}
 
 			@Override
 			public void debit(long debit) {
 				if (debit <= 0) {
-					throw new RuntimeException("Null or negative debit <"
-							+ debit + ">");
+					throw new IllegalArgumentException("Null or negative debit: " + debit + ".");
 				}
 				if (this.amount < debit) {
-					throw new RuntimeException("Not enough money.");
+					throw new IllegalArgumentException("Not enough money.");
 				}
 				this.amount -= debit;
-				v.add("liabilities", -debit);
-				v.add("capital", debit);
+				BasicBankingSector.this.liabilities -= debit;
+				BasicBankingSector.this.capital += debit;
 			}
 
 			@Override
@@ -205,11 +125,19 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		/** The interest paid. */
 		private long interestPaid = 0;
 
+		/**
+		 * A flag that indicates whether this account is doubtful or not.
+		 */
+		private boolean isDoubtful = false;
+
 		/** The list of loans for this account. */
 		private final List<Loan> loans = new LinkedList<Loan>();
 
 		/** The new debt of the period. */
 		private long newDebt = 0;
+
+		/** The list of the new loans for this account. */
+		private final List<Loan> newLoans = new LinkedList<Loan>();
 
 		/** If the account is open. */
 		private boolean open = false;
@@ -231,18 +159,15 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		}
 
 		/**
-		 * Returns the doubtful debt amount.
-		 * 
-		 * @return the doubtful debt amount.
+		 * Debt recovery (interest+principal).
 		 */
-		private long getDoubtfulDebt() {
-			long result = 0;
-			for (Loan loan : loans) {
-				if (loan.isDoubtfull()) {
-					result += loan.getPrincipal();
-				}
-			}
-			return result;
+		private void debtRecovery() {
+			this.loans.addAll(this.newLoans);
+			this.newLoans.clear();
+			this.payInterest();
+			this.payBack();
+			this.loans.addAll(this.newLoans);
+			this.newLoans.clear();
 		}
 
 		/**
@@ -254,6 +179,9 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		private boolean isConsistent() {
 			long sumDebt = 0;
 			for (Loan loan : loans) {
+				sumDebt += loan.getPrincipal();
+			}
+			for (Loan loan : newLoans) {
 				sumDebt += loan.getPrincipal();
 			}
 			return sumDebt == this.debt;
@@ -270,18 +198,101 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		}
 
 		/**
-		 * Pays interest due for each loan.
+		 * TODO: RENAME
+		 * 
+		 * @param principal
+		 *            the principal.
 		 */
-		private void payInterest() {
-			for (Loan loan : this.loans) {
-				loan.payInterest();
-			}
+		private void newSpecialLoan(long principal) {
+			Account.this.debt += principal;
+			Account.this.newDebt += principal;
+			BasicBankingSector.this.assets += principal;
+			BasicBankingSector.this.capital += principal;
+			BasicBankingSector.this.newLoansAmount += principal;
+			Account.this.deposit.credit(principal);
+			this.newLoans.add(new AbstractLoan(principal, params.get(RATE), params.get(TERM).intValue(),
+					BasicBankingSector.this.timer) {
+
+				@Override
+				public void cancel(long amount) {
+					if (amount > this.principal) {
+						throw new IllegalArgumentException(
+								"The amount to be canceled is larger than the principal of this loan.");
+					}
+					BasicBankingSector.this.assets -= amount;
+					BasicBankingSector.this.capital -= amount;
+					BasicBankingSector.this.canceledDebts += amount;
+					Account.this.canceledDebt += amount;
+					Account.this.debt -= amount;
+					this.principal -= amount;
+				}
+
+				@Override
+				public void payBack() { // FIXME : est-ce réfléchi ? à tester
+					final Period current = timer.getPeriod();
+					if (!current.isBefore(this.maturityDate)) {
+						final Long repayment = Math.min(getAmount(), this.principal);
+						if (repayment > 0) {
+							deposit.debit(repayment);
+							this.principal -= repayment;
+							debt -= repayment;
+							repaidDebt += repayment;
+							BasicBankingSector.this.assets -= repayment;
+							BasicBankingSector.this.capital -= repayment;
+							BasicBankingSector.this.loansRepayment += repayment;
+						}
+						/* FIXME
+						 * if (!current.isBefore(this.maturityDate) && this.principal != 0) {
+							bankrupt = true;
+						}*/
+					}
+				}
+
+				@Override
+				public void payInterest() {
+					/*
+					 * if (this.lastInterestPayment != null) { if
+					 * (currentPeriod<this.lastInterestPayment) { throw new
+					 * AnachronismException("Bad date."); } if
+					 * (currentPeriod==this.lastInterestPayment) { throw new
+					 * RuntimeException("It's already paid for."); } }
+					 */
+					Account.this.isDoubtful = true;
+					final long newInterest = (long) (this.principal * this.rate);
+
+					if (newInterest > 0) {
+						this.principal += newInterest;
+						Account.this.debt += newInterest;
+						Account.this.newDebt += newInterest;
+						BasicBankingSector.this.assets += newInterest;
+						BasicBankingSector.this.capital += newInterest;
+						BasicBankingSector.this.newLoansAmount += newInterest;
+						final long payment = Math.min(newInterest, deposit.getAmount());
+						if (payment < newInterest) {
+							Account.this.isDoubtful = true;
+						}
+						if (payment > 0) {
+							Account.this.deposit.debit(payment);
+							this.principal -= payment;
+							Account.this.debt -= payment;
+							Account.this.newDebt -= payment;
+							BasicBankingSector.this.assets -= payment;
+							BasicBankingSector.this.capital -= payment;
+							BasicBankingSector.this.newLoansAmount -= payment;
+						}
+						Account.this.interestPaid += newInterest;
+						BasicBankingSector.this.interest += newInterest;
+					}
+					// this.lastInterestPayment = currentPeriod;
+				}
+
+			});
 		}
 
 		/**
 		 * Recovers loans. Empty loans are removed.
 		 */
-		private void recover() {
+		private void payBack() {
 			final Iterator<Loan> itr = this.loans.iterator();
 			while (itr.hasNext()) {
 				Loan loan = itr.next();
@@ -289,6 +300,15 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 				if (loan.getPrincipal() == 0) {
 					itr.remove();
 				}
+			}
+		}
+
+		/**
+		 * Pays interest due for each loan.
+		 */
+		private void payInterest() {
+			for (Loan loan : this.loans) {
+				loan.payInterest();
 			}
 		}
 
@@ -367,19 +387,18 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		@Override
 		public long getAmount() {
 			if (cancelled && this.deposit.getAmount() != 0) {
-				throw new RuntimeException(
-						"This account is closed but the amount is not 0.");
+				throw new RuntimeException("This account is closed but the amount is not 0.");
 			}
 			return this.deposit.getAmount();
 		}
 
 		@Override
-		public double getCanceledDebt() {
+		public long getCanceledDebt() {
 			return this.canceledDebt;
 		}
 
 		@Override
-		public double getCanceledMoney() {
+		public long getCanceledMoney() {
 			return this.canceledMoney;
 		}
 
@@ -406,115 +425,6 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		@Override
 		public boolean isCancelled() {
 			return this.cancelled;
-		}
-
-		@Override
-		public void lend(final long principalAmount) {
-			if (!open) {
-				throw new RuntimeException("This account is closed.");
-			}
-			if (cancelled) {
-				throw new RuntimeException("This account is cancelled.");
-			}
-			this.loans.add(new AbstractLoan(principalAmount, params.get(RATE),
-					params.get(PENALTY_RATE), params.get(TERM).intValue(),
-					params.get(EXTENDED_TERM).intValue(),
-					BasicBankingSector.this.timer) {
-
-				{
-					Account.this.debt += this.principal;
-					Account.this.newDebt += this.principal;
-					BasicBankingSector.this.v.add("assets", this.principal);
-					BasicBankingSector.this.v.add("capital", this.principal);
-					BasicBankingSector.this.v.add("loans.new", this.principal);
-					Account.this.deposit.credit(this.principal);
-				}
-
-				@Override
-				public void cancel() {
-					cancel(this.principal);
-				}
-
-				@Override
-				public void cancel(long amount) {
-					if (amount > this.principal) {
-						throw new IllegalArgumentException(
-								"The amount to be canceled is larger than the principal of this loan.");
-					}
-					BasicBankingSector.this.v.add("assets", -amount);
-					BasicBankingSector.this.v.add("capital", -amount);
-					BasicBankingSector.this.v.add("canceledDebts", amount);
-					Account.this.canceledDebt += amount;
-					Account.this.debt -= amount;
-					this.principal -= amount;
-				}
-
-				@Override
-				public int getMaturity() {
-					return this.maturityDate.intValue();
-				}
-
-				@Override
-				public void payBack() {
-					final Period current = timer.getPeriod();
-					if (!current.isBefore(this.maturityDate)) {
-						final Long repayment = Math.min(getAmount(),
-								this.principal);
-						if (repayment > 0) {
-							deposit.debit(repayment);
-							this.principal -= repayment;
-							debt -= repayment;
-							repaidDebt += repayment;
-							v.add("assets", -repayment);
-							v.add("capital", -repayment);
-							v.add("loans.repayment", repayment);
-						}
-						if (!current.isBefore(this.extendedDate)
-								&& this.principal != 0) {
-							bankrupt = true;
-						}
-					}
-				}
-
-				@Override
-				public void payInterest() {
-					final Period currentPeriod = timer.getPeriod();
-					if (this.lastInterestPayment != null
-							&& !currentPeriod.isAfter(this.lastInterestPayment)) {
-						throw new RuntimeException("It's already paid for.");
-					}
-					final long interest;
-					if (!currentPeriod.isAfter(this.maturityDate)) {
-						interest = (long) (this.principal * this.rate);
-					} else {
-						interest = (long) (this.principal * this.penaltyRate);
-					}
-					if (interest > 0) {
-						this.principal += interest;
-						debt += interest;
-						newDebt += interest;
-						BasicBankingSector.this.v.add("assets", +interest);
-						BasicBankingSector.this.v.add("capital", +interest);
-						BasicBankingSector.this.v.add("loans.new", +interest);
-						final long payment = Math.min(interest,
-								deposit.getAmount());
-						if (payment > 0) {
-							Account.this.deposit.debit(payment);
-							this.principal -= payment;
-							debt -= payment;
-							newDebt -= payment;
-							BasicBankingSector.this.v.add("assets", -payment);
-							BasicBankingSector.this.v.add("capital", -payment);
-							BasicBankingSector.this.v
-									.add("loans.new", -payment);
-						}
-						Account.this.interestPaid += interest;
-						v.add("interest", +interest);
-					}
-					this.lastInterestPayment = currentPeriod;
-				}
-
-			});
 		}
 
 		@Override
@@ -548,17 +458,227 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 					} else {
 						result = false;
 						throw new RuntimeException(
-								"Bad cheque: Non-sufficient funds.");
+								"Bad cheque: " + amount + "; Non-sufficient funds: " + Account.this.getAmount());
 					}
 					return result;
 				}
 
 				@Override
 				public String toString() {
-					return "Drawer: " + accountHolder.getName() + ", amount: "
-							+ amount;
+					return "Drawer: " + accountHolder.getName() + ", amount: " + amount;
 				}
 			};
+		}
+
+		@Override
+		public void newLongTermLoan(long principal) {
+			if (!open) {
+				throw new RuntimeException("This account is closed.");
+			}
+			if (cancelled) {
+				throw new RuntimeException("This account is cancelled.");
+			}
+			Account.this.debt += principal;
+			Account.this.newDebt += principal;
+			BasicBankingSector.this.assets += principal;
+			BasicBankingSector.this.capital += principal;
+			BasicBankingSector.this.newLoansAmount += principal;
+			Account.this.deposit.credit(principal);
+
+			final float longTermRate = params.get(RATE);
+			// TODO: prévoir un paramètre spécifique.
+
+			final int longTerm = 120;
+			// TODO: should be a parameter.
+
+			final long initialAmount = principal;
+
+			final Loan newLongTermLoan = new AbstractLoan(principal, longTermRate, longTerm,
+					BasicBankingSector.this.timer) {
+
+				@Override
+				public void cancel(long amount) {
+					if (amount > this.principal) {
+						throw new IllegalArgumentException(
+								"The amount to be canceled is larger than the principal of this loan.");
+					}
+					BasicBankingSector.this.assets -= amount;
+					BasicBankingSector.this.capital -= amount;
+					BasicBankingSector.this.canceledDebts += amount;
+					Account.this.canceledDebt += amount;
+					Account.this.debt -= amount;
+					this.principal -= amount;
+				}
+
+				@Override
+				public void payBack() {
+
+					// TODO WORK IN PROGRESS 11-09-2015
+
+					if (currentPeriod > this.maturityDate) {
+						System.out.println(initialAmount + "," + this.principal);
+						throw new RuntimeException("Not yet implemented");
+					}
+					final int remainingTerm = 1 + this.maturityDate - currentPeriod;
+					final long installment = this.principal / remainingTerm;
+
+					if (installment > 0) {
+						if (getAmount() < installment) {
+							Account.this.isDoubtful = true;
+							newSpecialLoan(installment - getAmount());
+						}
+						deposit.debit(installment);
+						this.principal -= installment;
+						debt -= installment;
+						repaidDebt += installment;
+						BasicBankingSector.this.assets -= installment;
+						BasicBankingSector.this.capital -= installment;
+						BasicBankingSector.this.loansRepayment += installment;
+					}
+
+				}
+
+				@Override
+				public void payInterest() {
+					/*
+					 * FIXME: revoir ces controles. if (this.lastInterestPayment
+					 * != null) { if (currentPeriod<this.lastInterestPayment) {
+					 * throw new AnachronismException("Bad date."); } if
+					 * (currentPeriod==this.lastInterestPayment) { throw new
+					 * RuntimeException("It's already paid for."); } }
+					 */
+					final long newInterest = (long) (this.principal * this.rate);
+					if (newInterest > 0) {
+						this.principal += newInterest;
+						debt += newInterest;
+						newDebt += newInterest;
+						BasicBankingSector.this.assets += newInterest;
+						BasicBankingSector.this.capital += newInterest;
+						BasicBankingSector.this.newLoansAmount += newInterest;
+						final long payment = Math.min(newInterest, deposit.getAmount());
+						if (payment > 0) {
+							Account.this.deposit.debit(payment);
+							this.principal -= payment;
+							debt -= payment;
+							newDebt -= payment;
+							BasicBankingSector.this.assets -= payment;
+							BasicBankingSector.this.capital -= payment;
+							BasicBankingSector.this.newLoansAmount -= payment;
+						}
+						Account.this.interestPaid += newInterest;
+						BasicBankingSector.this.interest += newInterest;
+					}
+					// this.lastInterestPayment = currentPeriod;
+				}
+
+			};
+			this.newLoans.add(newLongTermLoan);
+		}
+
+		@Override
+		public void newShortTermLoan(final long principal) {
+			if (!open) {
+				throw new RuntimeException("This account is closed.");
+			}
+			if (cancelled) {
+				throw new RuntimeException("This account is cancelled.");
+			}
+			Account.this.debt += principal;
+			Account.this.newDebt += principal;
+			BasicBankingSector.this.assets += principal;
+			BasicBankingSector.this.capital += principal;
+			BasicBankingSector.this.newLoansAmount += principal;
+			Account.this.deposit.credit(principal);
+
+			// TODO: work in progress:
+			final float penaltyRate = params.get(PENALTY_RATE);
+			final int extendedDate = timer.getPeriod().intValue() + params.get(EXTENDED_TERM).intValue();
+			// FIXME: Why not used ???
+
+			this.newLoans.add(new AbstractLoan(principal, params.get(RATE), params.get(TERM).intValue(),
+					BasicBankingSector.this.timer) {
+
+				@Override
+				public void cancel(long amount) {
+					if (amount > this.principal) {
+						throw new IllegalArgumentException(
+								"The amount to be canceled is larger than the principal of this loan.");
+					}
+					BasicBankingSector.this.assets -= amount;
+					BasicBankingSector.this.capital -= amount;
+					BasicBankingSector.this.canceledDebts += amount;
+					Account.this.canceledDebt += amount;
+					Account.this.debt -= amount;
+					this.principal -= amount;
+				}
+
+				@Override
+				public void payBack() {
+					final Period current = timer.getPeriod();
+					if (!current.isBefore(this.maturityDate)) {
+						final Long repayment = Math.min(getAmount(), this.principal);
+						if (repayment > 0) {
+							deposit.debit(repayment);
+							this.principal -= repayment;
+							debt -= repayment;
+							repaidDebt += repayment;
+							BasicBankingSector.this.assets -= repayment;
+							BasicBankingSector.this.capital -= repayment;
+							BasicBankingSector.this.loansRepayment += repayment;
+						}
+						if (this.principal != 0) {
+							Account.this.isDoubtful = true;
+						}
+						/* TODO: FIXME
+						 * if (!current.isBefore(extendedDate) && this.principal != 0) {
+							bankrupt = true;
+						}*/
+					}
+				}
+
+				@Override
+				public void payInterest() {
+					/*
+					 * if (this.lastInterestPayment != null) { if
+					 * (currentPeriod<this.lastInterestPayment) { throw new
+					 * AnachronismException("Bad date."); } if
+					 * (currentPeriod==this.lastInterestPayment) { throw new
+					 * RuntimeException("It's already paid for."); } }
+					 */
+					final long newInterest;
+					if (currentPeriod <= this.maturityDate) {
+						newInterest = (long) (this.principal * this.rate);
+					} else {
+						newInterest = (long) (this.principal * penaltyRate);
+						Account.this.isDoubtful = true;
+					}
+					if (newInterest > 0) {
+						this.principal += newInterest;
+						debt += newInterest;
+						newDebt += newInterest;
+						BasicBankingSector.this.assets += newInterest;
+						BasicBankingSector.this.capital += newInterest;
+						BasicBankingSector.this.newLoansAmount += newInterest;
+						final long payment = Math.min(newInterest, deposit.getAmount());
+						if (payment < newInterest) {
+							Account.this.isDoubtful = true;
+						}
+						if (payment > 0) {
+							Account.this.deposit.debit(payment);
+							this.principal -= payment;
+							debt -= payment;
+							newDebt -= payment;
+							BasicBankingSector.this.assets -= payment;
+							BasicBankingSector.this.capital -= payment;
+							BasicBankingSector.this.newLoansAmount -= payment;
+						}
+						Account.this.interestPaid += newInterest;
+						BasicBankingSector.this.interest += newInterest;
+					}
+					// this.lastInterestPayment = currentPeriod;
+				}
+
+			});
 		}
 
 		/**
@@ -579,6 +699,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 					throw new AnachronismException();
 				}
 			}
+			this.isDoubtful = false;
 			this.open = true;
 			this.repaidDebt = 0;
 			this.interestPaid = 0;
@@ -639,7 +760,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	};
 
 	@SuppressWarnings("javadoc")
-	private final static String EXTENDED_TERM = "term.extended";
+	private final static String EXTENDED_TERM = "term.extended"; // FIXME:  why not used ?
 
 	@SuppressWarnings("javadoc")
 	private final static String PATIENCE = "patience";
@@ -674,11 +795,21 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	/** The list of customers accounts. */
 	private final List<Account> accounts = new ArrayList<Account>(1000);
 
+	/**
+	 * The capitalist sector. Used to select the initial owner of the bank.
+	 */
+	private CapitalistSector capitalistSector = null;
+
 	/** The capital stock. */
 	private CapitalStock capitalStock;
 
 	/** The circuit. */
 	private final Circuit circuit;
+
+	/**
+	 * The current period.
+	 */
+	private Integer currentPeriod = null;
 
 	/** The data. */
 	private SectorDataset dataset;
@@ -687,8 +818,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	private final String name;
 
 	/**
-	 * A flag that indicates whether the ownership of the firm is distributed or
-	 * not.
+	 * A flag that indicates whether the ownership of this bank is distributed
+	 * or not.
 	 */
 	private boolean ownership = false;
 
@@ -698,13 +829,55 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	/** The timer. */
 	private final Timer timer;
 
-	/** The variables of the sector. */
-	private final Variables v = new BasicVariables();
+	/**
+	 * The total assets of this bank.
+	 */
+	protected long assets;
 
 	/**
-	 * The capitalist sector. Used to select the initial owner of the bank.
+	 * The number of bankruptcies for the current period.
 	 */
-	protected CapitalistSector capitalistSector = null;
+	protected long bankruptcies;
+
+	/**
+	 * The amount of debt cancelled for the current period.
+	 */
+	protected long canceledDebts;
+
+	/**
+	 * The amount of deposits cancelled for the current period.
+	 */
+	protected long canceledDeposits;
+
+	/**
+	 * The amount of capital of this bank.
+	 */
+	protected long capital;
+
+	/**
+	 * The amount of dividends paid by this bank for the current period.
+	 */
+	protected long dividends;
+
+	/**
+	 * The amount of interests paid to this bank for the current period.
+	 */
+	protected long interest;
+
+	/**
+	 * The total amount of liabilities of this bank.
+	 */
+	protected long liabilities;
+
+	/**
+	 * The amount of loans repaid to this bank for the current period.
+	 */
+	protected long loansRepayment;
+
+	/**
+	 * The amount of new loans issued by this bank for the current period.
+	 */
+	protected long newLoansAmount;
 
 	/** The parameters of this sector. */
 	protected final JamelParameters params = new BasicParameters();
@@ -746,10 +919,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 			}
 		}
 		if (result == true) {
-			if (sumDeposit != v.get("liabilities")
-					|| sumDebt != v.get("assets")
-					|| v.get("assets") - v.get("liabilities") != v
-							.get("capital")) {
+			if (sumDeposit != this.liabilities || sumDebt != this.assets
+					|| this.assets - this.liabilities != this.capital) {
 				result = false;
 			}
 		}
@@ -783,18 +954,24 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		while (iterAccount.hasNext()) {
 			Account account = iterAccount.next();
 			if (account.getDebt() > 0) {
-				account.payInterest();
-				account.recover();
+				account.debtRecovery();
 				if (!account.isSolvent()) {
 					if (now - account.creation > this.params.get(PATIENCE)) {
 						account.bankrupt = true;
 					}
 				}
 				if (account.bankrupt) {
+					if (account.isSolvent()) {
+						throw new RuntimeException("This account is solvent.");
+						// TODO: en fait il pourrait y avoir faillite d'un agent
+						// solvable, s'il n'est pas liquide.
+						// On implémentera ça plus tard.
+					}
 					foreclosure(account);
+					this.bankruptcies += 1l;
 					if (account.bankrupt) {
 						iterAccount.remove();
-						this.v.add("bankruptcies", 1l);
+						throw new RuntimeException("Not yet implemented.");
 					}
 				}
 			}
@@ -807,8 +984,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	 * lender by forcing the sale of the asset used as the collateral for the
 	 * loan."
 	 * 
-	 * (ref: <a
-	 * href="https://en.wikipedia.org/wiki/Foreclosure">wikipedia.org</a>)
+	 * (ref:
+	 * <a href="https://en.wikipedia.org/wiki/Foreclosure">wikipedia.org</a>)
 	 * 
 	 * @param account
 	 *            the bankrupted account.
@@ -816,18 +993,17 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	private void foreclosure(Account account) {
 		final AccountHolder accountHolder = account.getAccountHolder();
 		if (!(accountHolder instanceof Firm)) {
-			throw new RuntimeException(
-					"The account holder must be a firm, because only firms are indebted.");
+			throw new RuntimeException("The account holder should be a firm.");
 		}
 		final Firm firm = (Firm) accountHolder;
-		final long assets = firm.getValueOfAssets();
-		final long targetedLiabilites = (long) (0.8f * assets);
+		final long firmAssets = firm.getValueOfAssets();
+		final long targetedLiabilites = (long) (0.8f * firmAssets);
 		// TODO: 0.8 should be a parameter;
-		final long debtToBeCancelled = firm.getValueOfLiabilities()
-				- targetedLiabilites;
+		final long debtToBeCancelled = firm.getValueOfLiabilities() - targetedLiabilites;
 		account.cancelDebt(debtToBeCancelled);
 		final Cheque[] cheques = this.capitalistSector.sellFim(firm);
 		double foreclosures = this.dataset.getSectorialValue("foreclosures");
+		// TODO: foreclosures should be a field.
 		for (Cheque cheque : cheques) {
 			foreclosures += cheque.getAmount();
 			cheque.payment();
@@ -844,7 +1020,9 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	private long getDoubtfulDebt() {
 		long result = 0;
 		for (Account account : accounts) {
-			result += account.getDoubtfulDebt();
+			if (account.isDoubtful) {
+				result += account.debt;
+			}
 		}
 		return result;
 	}
@@ -873,8 +1051,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 					@Override
 					public boolean payment() {
 						final boolean result;
-						if (!paid
-								&& BasicBankingSector.this.v.get("capital") >= amount) {
+						if (!paid && BasicBankingSector.this.capital >= amount) {
 							this.paid = true;
 							result = true;
 							// In this case, there is no deposit to debit:
@@ -897,16 +1074,22 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	 * Opens the sector.
 	 */
 	private void open() {
+		if (this.currentPeriod == null) {
+			this.currentPeriod = this.timer.getPeriod().intValue();
+		} else {
+			this.currentPeriod++;
+		}
 		updateOwnership();
 		this.capitalStock.open();
+		this.bankruptcies = 0;
+		this.canceledDebts = 0;
+		this.canceledDeposits = 0;
+		this.dividends = 0;
+		this.interest = 0;
+		this.loansRepayment = 0;
+		this.newLoansAmount = 0;
 		this.dataset = new BasicSectorDataset();
 		this.dataset.putSectorialValue("foreclosures", 0d);
-		this.v.put("bankruptcies", 0);
-		this.v.put("interest", 0);
-		this.v.put("canceledDebts", 0);
-		this.v.put("canceledDeposits", 0);
-		this.v.put("loans.new", 0);
-		this.v.put("loans.repayment", 0);
 		for (Account account : this.accounts) {
 			account.open();
 		}
@@ -916,40 +1099,29 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	 * Pays the dividend to its owner.
 	 */
 	private void payDividend() {
-		final long requiredCapital = (long) (v.get("assets") * params
-				.get(CAPITAL_RATIO));
-		final long excedentCapital = Math.max(0, v.get("capital")
-				- requiredCapital);
-		final long dividend = (long) (excedentCapital * params
-				.get(CAPITAL_PROP_TO_DISTRIBUTE));
+		final long requiredCapital = (long) (this.assets * params.get(CAPITAL_RATIO));
+		final long excedentCapital = Math.max(0, this.capital - requiredCapital);
+		final long dividend = (long) (excedentCapital * params.get(CAPITAL_PROP_TO_DISTRIBUTE));
 
 		capitalStock.setDividend(dividend);
-		v.put("dividends", dividend);
+		this.dividends = dividend;
 	}
 
 	/**
 	 * Updates the dataset.
 	 */
 	private void updateDataset() {
-		this.dataset.putSectorialValue("doubtfulDebt",
-				(double) getDoubtfulDebt());
-		this.dataset
-				.putSectorialValue("dividends", (double) v.get("dividends"));
-		this.dataset.putSectorialValue("capital", (double) v.get("capital"));
-		this.dataset.putSectorialValue("liabilities",
-				(double) v.get("liabilities"));
-		this.dataset.putSectorialValue("assets", (double) v.get("assets"));
-		this.dataset.putSectorialValue("bankruptcies",
-				(double) v.get("bankruptcies"));
-		this.dataset.putSectorialValue("interest", (double) v.get("interest"));
-		this.dataset.putSectorialValue("canceledDebts",
-				(double) v.get("canceledDebts"));
-		this.dataset.putSectorialValue("canceledDeposits",
-				(double) v.get("canceledDeposits"));
-		this.dataset
-				.putSectorialValue("loans.new", (double) v.get("loans.new"));
-		this.dataset.putSectorialValue("loans.repayment",
-				(double) v.get("loans.repayment"));
+		this.dataset.putSectorialValue("doubtfulDebt", (double) getDoubtfulDebt());
+		this.dataset.putSectorialValue("dividends", (double) this.dividends);
+		this.dataset.putSectorialValue("capital", (double) this.capital);
+		this.dataset.putSectorialValue("liabilities", (double) this.liabilities);
+		this.dataset.putSectorialValue("assets", (double) this.assets);
+		this.dataset.putSectorialValue("bankruptcies", (double) this.bankruptcies);
+		this.dataset.putSectorialValue("interest", (double) this.interest);
+		this.dataset.putSectorialValue("canceledDebts", (double) this.canceledDebts);
+		this.dataset.putSectorialValue("canceledDeposits", (double) this.canceledDeposits);
+		this.dataset.putSectorialValue("loans.new", (double) this.newLoansAmount);
+		this.dataset.putSectorialValue("loans.repayment", (double) this.loansRepayment);
 	}
 
 	/**
@@ -957,12 +1129,10 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	 */
 	private void updateOwnership() {
 		if (!ownership) {
-			final List<Shareholder> shareHolders = this.capitalistSector
-					.selectRandomCapitalOwners(10);
+			final List<Shareholder> shareHolders = this.capitalistSector.selectRandomCapitalOwners(10);
 			if (shareHolders.size() > 0) {
 				this.capitalStock = getNewCapitalStock(shareHolders.size());
-				List<StockCertificate> truc = this.capitalStock
-						.getCertificates();
+				List<StockCertificate> truc = this.capitalStock.getCertificates();
 				for (int id = 0; id < shareHolders.size(); id++) {
 					final StockCertificate certif = truc.get(id);
 					final Shareholder shareHolder = shareHolders.get(id);
@@ -981,7 +1151,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 
 	@Override
 	public Long getBookValue() {
-		return v.get("capital");
+		return this.capital;
 	}
 
 	@Override
@@ -1050,41 +1220,33 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		if (element == null) {
 			throw new IllegalArgumentException("Element is null");
 		}
-		final Element refElement = (Element) element.getElementsByTagName(
-				DEPENDENCIES).item(0);
+		final Element refElement = (Element) element.getElementsByTagName(DEPENDENCIES).item(0);
 		if (refElement == null) {
-			throw new InitializationException("Element not found: "
-					+ DEPENDENCIES);
+			throw new InitializationException("Element not found: " + DEPENDENCIES);
 		}
 		final String key1 = "CapitalistSector";
-		final Element capitalistSectorElement = (Element) refElement
-				.getElementsByTagName(key1).item(0);
+		final Element capitalistSectorElement = (Element) refElement.getElementsByTagName(key1).item(0);
 		if (capitalistSectorElement == null) {
 			throw new InitializationException("Element not found: " + key1);
 		}
-		final String capitalists = capitalistSectorElement
-				.getAttribute("value");
+		final String capitalists = capitalistSectorElement.getAttribute("value");
 		if (capitalists == "") {
 			throw new InitializationException("Missing attribute: value");
 		}
-		this.capitalistSector = (CapitalistSector) circuit
-				.getSector(capitalists);
+		this.capitalistSector = (CapitalistSector) circuit.getSector(capitalists);
 
 		// Initialization of the parameters:
-		final Element settingsElement = (Element) element.getElementsByTagName(
-				"settings").item(0);
+		final Element settingsElement = (Element) element.getElementsByTagName("settings").item(0);
 		final NamedNodeMap attributes = settingsElement.getAttributes();
 		for (int i = 0; i < attributes.getLength(); i++) {
 			final Node node = attributes.item(i);
 			if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
 				final Attr attr = (Attr) node;
 				try {
-					this.params.put(attr.getName(),
-							Float.parseFloat(attr.getValue()));
+					this.params.put(attr.getName(), Float.parseFloat(attr.getValue()));
 				} catch (NumberFormatException e) {
 					throw new InitializationException(
-							"For settings attribute: " + attr.getName() + "=\""
-									+ attr.getValue() + "\"", e);
+							"For settings attribute: " + attr.getName() + "=\"" + attr.getValue() + "\"", e);
 				}
 			}
 		}

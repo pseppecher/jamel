@@ -3,12 +3,225 @@
 <charts title="Baseline panels" date="27-08-2015"
 	content="Configuration of the panels for the baseline scenario.">
 
+	<panel title="Firm 1: dividends">
+
+		<col>
+			<html>
+				<h3>Firm 1 - capital Manager.payDividend()</h3>
+
+				payDividend.cash:
+				<data value="agentValue(Industry,payDividend.cash,t,Firm1)" />
+				<br />
+				payDividend.assets:
+				<data value="agentValue(Industry,payDividend.assets,t,Firm1)" />
+				<br />
+				payDividend.capital:
+				<data value="agentValue(Industry,payDividend.capital,t,Firm1)" />
+				<br />
+				payDividend.capitalTarget:
+				<data value="agentValue(Industry,payDividend.capitalTarget,t,Firm1)" />
+				<br />
+				capital ratio:
+				<data
+					value="agentValue(Industry,payDividend.capital,t,Firm1):agentValue(Industry,payDividend.capitalTarget,t,Firm1)" />
+				<br />
+				payDividend.averageIncome:
+				<data value="agentValue(Industry,payDividend.averageIncome,t,Firm1)" />
+				<br />
+				<b>
+					payDividend.dividend:
+					<data value="agentValue(Industry,payDividend.dividend,t,Firm1)" />
+				</b>
+				<br />
+
+			</html>
+			<chart title="Capital Ratio" type="time chart">
+				<series value="sum(Industry, capital, t) : sum(Industry, assets, t)"
+					color="blue" label="Average" />
+				<series
+					value="agentValue(Industry, capital, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
+					color="red" label="Firm 1" />
+			</chart>
+			<chart title="Dividends" type="time chart">
+				<series
+					value="agentValue(Industry, dividends, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
+					color="red" label="dividends" />
+				<series
+					value="agentValue(Industry, grossProfit, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
+					color="green" label="profits" />
+			</chart>
+			<chart />
+		</col>
+		<col>
+			<html>
+				<style type="text/css">.boldtable, .boldtable td, .boldtable th
+					{font-family:sans-serif;font-size:10pt;}
+				</style>
+				<br />
+				<table border="0" align="center" class="boldtable"
+					cellspacing="10">
+					<caption>
+						Firm 1 Balance Sheet
+					</caption>
+					<tr>
+						<td colspan="4">
+							<hr />
+						</td>
+					</tr>
+					<tr>
+						<th colspan="2">Assets</th>
+						<th colspan="2">Liabilities</th>
+					</tr>
+					<tr>
+						<td>
+							Cash
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,cash,t,Firm1)" />
+						</td>
+						<td>
+							Debt
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,liabilities,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Work In Progress
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,inventories.inProcess.val,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Finished Goods
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,inventories.fg.val,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Equipment
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,machinery.val,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<th colspan="2"></th>
+						<th colspan="2">Owners' equity</th>
+					</tr>
+					<tr>
+						<td />
+						<td />
+						<td>
+							Capital Stock
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,capital,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td colspan="4">
+							<hr />
+						</td>
+					</tr>
+					<tr>
+
+						<td>Total</td>
+						<td align="right">
+							<data
+								value="agentValue(Industry,cash,t,Firm1)+agentValue(Industry,inventories.inProcess.val,t,Firm1)+agentValue(Industry,inventories.fg.val,t,Firm1)+agentValue(Industry,machinery.val,t,Firm1)" />
+						</td>
+						<td>
+							Total
+						</td>
+						<td align="right">
+							<data
+								value="agentValue(Industry,liabilities,t,Firm1)+agentValue(Industry,capital,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td colspan="4">
+							<hr />
+						</td>
+					</tr>
+				</table>
+			</html>
+			<chart />
+		</col>
+
+	</panel>
+	<panel title="Investment">
+		<col>
+			<chart title="Demand/Potential Output" type="time chart">
+				<subplot>
+					<series
+						value="sum(Industry, demand12, t):sum(Industry, production.vol.atFullCapacity, t)"
+						label="Demand/Potential Output" color="green" />
+				</subplot>
+				<subplot>
+					<series
+						value="sum(Industry, production.vol.atFullCapacity, t) : sum(Industry, production.vol.atFullCapacity, t-11)-1"
+						label="Potential Output Growth" color="red" />
+				</subplot>
+			</chart>
+
+			<chart title="Firms Sizes" type="histogram">
+				<series sector="Industry" value="capacity" bin="10"
+					color="transparentRed" label="Firms Sizes" />
+			</chart>
+
+		</col>
+		<col>
+			<chart title="Animal spirits" type="time chart">
+				<series value="mean(Industry,animalSpirit,t)" color="veryLightRed"
+					label="Mean" />
+			</chart>
+			<chart title="Capacity" type="time chart">
+				<subplot>
+					<series value="sum(Industry, capacity, t)" label="Capacity"
+						color="green" />
+				</subplot>
+				<subplot>
+					<series value="sum(Industry, investment.size, t)" label="New machines"
+						color="red" />
+				</subplot>
+			</chart>
+			<chart title="Bankruptcies" type="time chart">
+				<series value="val(Banks, bankruptcies, t)" label="Bankruptcies"
+					color="red" />
+			</chart>
+
+		</col>
+		<col>
+			
+			<chart title="Capital and Animal Spirit" type="scatter chart">
+				<series sector="Industry" x="capital" y="animalSpirit" color="transparentRed" label="Firms (x=capacity, y=animal spirit" />
+			</chart>
+			
+			<chart title="Size and profitability" type="scatter chart">
+				<series sector="Industry" x="capacity" y="returnOnEquity"
+					color="transparentRed" label="Firms (x=capacity, y=return on equity" />
+			</chart>
+			
+			
+		<chart title="Size and profitability" type="scatter chart">
+				<series sector="Industry" x="capacity" y="returnOnAssets"
+					color="transparentRed" label="Firms (x=capacity, y=return on assets" />
+			</chart>
+		</col>
+	</panel>
+
 	<panel title="Main">
 
 		<col>
 
 			<chart title="Prices" type="time chart">
-				<series value="mean(Industry,prices,t)" color="red" label="Mean" />
+				<series value="mean(Industry,prices, t)" color="red" label="Mean" />
 				<series value="max(Industry,prices,t)" color="veryLightRed"
 					label="Max" />
 				<series value="min(Industry,prices,t)" color="veryLightRed"
@@ -20,6 +233,8 @@
 					label="Production" />
 				<series value="sum(Households,consumption.vol,t)" color="blue"
 					label="Consumption" />
+				<series value="sum(Industry, investment.vol,t)" color="green"
+					label="Investment" />
 			</chart>
 
 			<chart title="Inventories" type="time chart">
@@ -132,11 +347,12 @@
 				</center>
 				Inflation:
 				<data
-					value="100*(sum(Industry, sales.val,t)*sum(Industry,sales.vol,t-12):(sum(Industry, sales.vol,t)*sum(Industry, sales.val,t-12))-1)" />
+					value="100*(sum(Industry, sales.val, t)*sum(Industry,sales.vol,t-12):(sum(Industry, sales.vol,t)*sum(Industry, sales.val,t-12))-1)" />
 				%
 				<br />
 				Unemployment:
-				<data value="100*sum(Households, unemployed,t):sum(Households, agents,t)" />
+				<data
+					value="100*sum(Households, unemployed, t) : sum(Households, agents, t)" />
 				%
 			</html>
 		</col>
@@ -256,16 +472,6 @@
 
 	</panel>
 
-	<!-- panel title="Investment">
-		<chart title="Sales on Production Capacity" type="time chart">
-			<series value="agentValue(Industry,sales.ratio.long,t,Firm1)"
-				color="red" label="Firm1 (moving average 12)" />
-			<series value="mean(Industry,sales.ratio.long,t)" color="blue"
-				label="Sector" />
-			<series value="0.8" color="orange" label="Normal level" />
-		</chart>
-	</panel-->
-
 	<panel title="Firm 1">
 
 		<col>
@@ -324,7 +530,125 @@
 			</chart>
 		</col>
 
-		<col />
+		<col>
+			<chart title="Capital Ratio" type="time chart">
+				<series value="sum(Industry, capital, t) : sum(Industry, assets, t)"
+					color="blue" label="Average" />
+				<series
+					value="agentValue(Industry, capital, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
+					color="red" label="Firm 1" />
+			</chart>
+			<chart title="Dividends" type="time chart">
+				<series
+					value="agentValue(Industry, dividends, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
+					color="red" label="dividends" />
+				<series
+					value="agentValue(Industry, grossProfit, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
+					color="green" label="profits" />
+			</chart>
+			<chart />
+		</col>
+		<col>
+			<html>
+				<style type="text/css">.boldtable, .boldtable td, .boldtable th
+					{font-family:sans-serif;font-size:10pt;}
+				</style>
+				<br />
+				<table border="0" align="center" class="boldtable"
+					cellspacing="10">
+					<caption>
+						Firm 1 Balance Sheet
+					</caption>
+					<tr>
+						<td colspan="4">
+							<hr />
+						</td>
+					</tr>
+					<tr>
+						<th colspan="2">Assets</th>
+						<th colspan="2">Liabilities</th>
+					</tr>
+					<tr>
+						<td>
+							Cash
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,cash,t,Firm1)" />
+						</td>
+						<td>
+							Debt
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,liabilities,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Work In Progress
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,inventories.inProcess.val,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Finished Goods
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,inventories.fg.val,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Equipment
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,machinery.val,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<th colspan="2"></th>
+						<th colspan="2">Owners' equity</th>
+					</tr>
+					<tr>
+						<td />
+						<td />
+						<td>
+							Capital Stock
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,capital,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td colspan="4">
+							<hr />
+						</td>
+					</tr>
+					<tr>
+
+						<td>Total</td>
+						<td align="right">
+							<data
+								value="agentValue(Industry,cash,t,Firm1)+agentValue(Industry,inventories.inProcess.val,t,Firm1)+agentValue(Industry,inventories.fg.val,t,Firm1)+agentValue(Industry,machinery.val,t,Firm1)" />
+						</td>
+						<td>
+							Total
+						</td>
+						<td align="right">
+							<data
+								value="agentValue(Industry,liabilities,t,Firm1)+agentValue(Industry,capital,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td colspan="4">
+							<hr />
+						</td>
+					</tr>
+				</table>
+			</html>
+			<chart />
+		</col>
 
 	</panel>
 
@@ -474,139 +798,148 @@
 
 	<panel title="Balance Sheet">
 
-<html>
-	<style type="text/css">.boldtable, .boldtable td, .boldtable th
-		{font-family:sans-serif;font-size:12pt;}
-	</style>
+		<html>
+			<style type="text/css">.boldtable, .boldtable td, .boldtable th
+				{font-family:sans-serif;font-size:12pt;}
+			</style>
 
+			<br />
+			<br />
+			<br />
+			<br />
+			<table border="0" align="center" class="boldtable" cellspacing="10">
+				<caption>
+					Balance Sheet Matrix (period
+					<data value="time()" />
+					)
+				</caption>
+				<tr>
+					<td colspan="5">
+						<hr />
+					</td>
+				</tr>
+				<tr>
+					<th WIDTH="120" align="center" />
+					<th WIDTH="110" align="center">Households</th>
+					<th WIDTH="110" align="center">Firms</th>
+					<th WIDTH="110" align="center">Banks</th>
+					<th WIDTH="110" align="center">Sum</th>
+				</tr>
+				<tr>
+					<td colspan="5">
+						<hr />
+					</td>
+				</tr>
+				<tr align="right">
+					<th>In Process</th>
+					<td />
+					<td>
+						<data value="sum(Industry,inventories.inProcess.val,t)" />
+					</td>
+					<td />
+					<td>
+						<data value="sum(Industry,inventories.inProcess.val,t)" />
+					</td>
+				</tr>
+				<tr align="right">
+					<th>Finished Goods</th>
+					<td />
+					<td>
+						<data value="sum(Industry,inventories.fg.val,t)" />
+					</td>
+					<td />
+					<td>
+						<data value="sum(Industry,inventories.fg.val,t)" />
+					</td>
+				</tr>
+				<tr align="right">
+					<th>Equipment</th>
+					<td />
+					<td>
+						<data value="sum(Industry,machinery.val,t)" />
+					</td>
+					<td />
+					<td>
+						<data value="sum(Industry,machinery.val,t)" />
+					</td>
+				</tr>
+				<tr align="right">
+					<th>Deposits</th>
+					<td>
+						<data value="sum(Households,cash,t)" />
+					</td>
+					<td>
+						<data value="sum(Industry,cash,t)" />
+					</td>
+					<td>
+						<data value="-val(Banks,liabilities,t)" />
+					</td>
+					<td>
+						<data
+							value="sum(Households,cash,t)+sum(Industry,cash,t)-val(Banks,liabilities,t)" />
+					</td>
+				</tr>
+				<tr align="right">
+					<th>Loans</th>
+					<td />
+					<td>
+						<data value="-sum(Industry,liabilities,t)" />
+					</td>
+					<td>
+						<data value="val(Banks,assets,t)" />
+					</td>
+					<td>
+						<data value="val(Banks,assets,t)-sum(Industry,liabilities,t)" />
+					</td>
+				</tr>
+				<tr align="right">
+					<th>Capital</th>
+					<td>
+						<data value="sum(Households,capital,t)" />
+					</td>
+					<td>
+						<data value="-sum(Industry,capital,t)" />
+					</td>
+					<td>
+						<data value="-val(Banks,capital,t)" />
+					</td>
+					<td>
+						<data
+							value="sum(Households,capital,t)-sum(Industry,capital,t)-val(Banks,capital,t)" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="5">
+						<hr />
+					</td>
+				</tr>
+				<tr align="right">
+					<th>Sum</th>
+					<td>
+						<data value="sum(Households,cash,t)+sum(Households,capital,t)" />
+					</td>
+					<td>
+						<data
+							value="sum(Industry,inventories.inProcess.val,t)+sum(Industry,inventories.fg.val,t)+sum(Industry,machinery.val,t)+sum(Industry,cash,t)-sum(Industry,liabilities,t)-sum(Industry,capital,t)" />
+					</td>
+					<td>
+						<data
+							value="-val(Banks,liabilities,t)+val(Banks,assets,t)-val(Banks,capital,t)" />
+					</td>
+					<td>
+						<data
+							value="sum(Industry,inventories.inProcess.val,t)+sum(Industry,inventories.fg.val,t)+sum(Industry,machinery.val,t)" />
+					</td>
+				</tr>
+				<tr>
+					<td colspan="5">
+						<hr />
+					</td>
+				</tr>
 
+			</table>
 
-	<br />
-	<br />
-	<br />
-	<br />
-	<table border="0" align="center" class="boldtable" cellspacing="10">
-		<caption>
-			Balance Sheet Matrix (period
-			<data value="time()" />
-			)
-		</caption>
-		<tr>
-			<td colspan="5">
-				<hr />
-			</td>
-		</tr>
-		<tr>
-			<th WIDTH="120" align="center" />
-			<th WIDTH="110" align="center">Households</th>
-			<th WIDTH="110" align="center">Firms</th>
-			<th WIDTH="110" align="center">Banks</th>
-			<th WIDTH="110" align="center">Sum</th>
-		</tr>
-		<tr>
-			<td colspan="5">
-				<hr />
-			</td>
-		</tr>
-		<tr align="right">
-			<th>In Process</th>
-			<td />
-			<td>
-				<data value="sum(Industry,inventories.inProcess.val,t)" />
-			</td>
-			<td />
-			<td>
-				<data value="sum(Industry,inventories.inProcess.val,t)" />
-			</td>
-		</tr>
-		<tr align="right">
-			<th>Finished Goods</th>
-			<td />
-			<td>
-				<data value="sum(Industry,inventories.fg.val,t)" />
-			</td>
-			<td />
-			<td>
-				<data value="sum(Industry,inventories.fg.val,t)" />
-			</td>
-		</tr>
-		<tr align="right">
-			<th>Deposits</th>
-			<td>
-				<data value="sum(Households,cash,t)" />
-			</td>
-			<td>
-				<data value="sum(Industry,cash,t)" />
-			</td>
-			<td>
-				<data value="-val(Banks,liabilities,t)" />
-			</td>
-			<td>
-				<data
-					value="sum(Households,cash,t)+sum(Industry,cash,t)-val(Banks,liabilities,t)" />
-			</td>
-		</tr>
-		<tr align="right">
-			<th>Loans</th>
-			<td />
-			<td>
-				<data value="-sum(Industry,liabilities,t)" />
-			</td>
-			<td>
-				<data value="val(Banks,assets,t)" />
-			</td>
-			<td>
-				<data value="val(Banks,assets,t)-sum(Industry,liabilities,t)" />
-			</td>
-		</tr>
-		<tr align="right">
-			<th>Capital</th>
-			<td>
-				<data value="sum(Households,capital,t)" />
-			</td>
-			<td>
-				<data value="-sum(Industry,capital,t)" />
-			</td>
-			<td>
-				<data value="-val(Banks,capital,t)" />
-			</td>
-			<td>
-				<data
-					value="sum(Households,capital,t)-sum(Industry,capital,t)-val(Banks,capital,t)" />
-			</td>
-		</tr>
-		<tr>
-			<td colspan="5">
-				<hr />
-			</td>
-		</tr>
-		<tr align="right">
-			<th>Sum</th>
-			<td>
-				<data value="sum(Households,cash,t)+sum(Households,capital,t)" />
-			</td>
-			<td>
-				<data
-					value="sum(Industry,inventories.inProcess.val,t)+sum(Industry,inventories.fg.val,t)+sum(Industry,cash,t)-sum(Industry,liabilities,t)-sum(Industry,capital,t)" />
-			</td>
-			<td>
-				<data
-					value="-val(Banks,liabilities,t)+val(Banks,assets,t)-val(Banks,capital,t)" />
-			</td>
-			<td>
-				<data
-					value="sum(Industry,inventories.inProcess.val,t)+sum(Industry,inventories.fg.val,t)" />
-			</td>
-		</tr>
-		<tr>
-			<td colspan="5">
-				<hr />
-			</td>
-		</tr>
-
-	</table>
-
-</html>
+		</html>
 
 	</panel>
 
@@ -619,7 +952,7 @@
 			<test label="Sector: Households"
 				val1="sum(Households, cash, t) + sum(Households, capital, t)" val2="sum(Households, netWorth, t)" />
 			<test label="Sector: Industry"
-				val1="sum(Industry, inventories.inProcess.val, t) + sum(Industry, inventories.fg.val, t) + sum(Industry, cash, t)"
+				val1="sum(Industry, inventories.inProcess.val, t) + sum(Industry, inventories.fg.val, t) + sum(Industry, machinery.val, t) + sum(Industry, cash, t)"
 				val2="sum(Industry, liabilities, t) + sum(Industry, capital, t)" />
 			<test label="Sector: Banks" val1="val(Banks, assets, t)"
 				val2="val(Banks, liabilities, t) + val(Banks, capital, t)" />
@@ -635,7 +968,7 @@
 				val2="sum(Industry, capital, t) + val(Banks, capital, t)" />
 
 			<test label="Cross-sectoral: Net Worth" val1="sum(Households, netWorth, t)"
-				val2="sum(Industry, inventories.inProcess.val, t) + sum(Industry, inventories.fg.val, t)" />
+				val2="sum(Industry, inventories.inProcess.val, t) + sum(Industry, inventories.fg.val, t) + sum(Industry, machinery.val, t)" />
 
 			Stock - flow consistency:
 
@@ -648,11 +981,11 @@
 
 			<test label="Stocks and flows: Households Capital"
 				val1="sum(Households, capital, t) - sum(Households, capital, t-1)"
-				val2="sum(Industry, grossProfit, t) - sum(Industry, dividends, t) - sum(Industry, inventories.losses.val, t) - val(Banks, dividends, t) + val(Banks, foreclosures, t)" />
+				val2="sum(Industry, grossProfit, t) - sum(Industry, dividends, t) - sum(Industry, depreciation, t) - sum(Industry, inventories.losses.val, t) - val(Banks, dividends, t) + val(Banks, foreclosures, t)" />
 
 			<test label="Stocks and flows: Households Net Worth"
 				val1="sum(Households, netWorth, t) - sum(Households, netWorth, t-1)"
-				val2="sum(Industry, wageBill, t) - sum(Industry, sales.cost, t) - sum(Industry, inventories.inProcess.losses, t) - sum(Industry, inventories.fg.losses, t)" />
+				val2="sum(Industry, wageBill, t) + sum(Industry, investment.val, t) - sum(Industry, depreciation, t) - sum(Industry, sales.cost, t) - sum(Industry, inventories.inProcess.losses, t) - sum(Industry, inventories.fg.losses, t)" />
 
 			<test label="Stocks and flows: Firms Inventories (Work In Progress)"
 				val1="sum(Industry, inventories.inProcess.val, t) - sum(Industry, inventories.inProcess.val, t-1)"
@@ -662,8 +995,12 @@
 				val1="sum(Industry, inventories.fg.val, t) - sum(Industry, inventories.fg.val, t-1)"
 				val2="sum(Industry, production.val, t) - sum(Industry, sales.cost, t) - sum(Industry, inventories.fg.losses, t)" />
 
+			<test label="Stocks and flows: Firms Equipment"
+				val1="sum(Industry, machinery.val, t) - sum(Industry, machinery.val, t-1)"
+				val2="sum(Industry, investment.val, t)  - sum(Industry, depreciation, t)" />
+
 			<test label="Stocks and flows: Firms Deposits" val1="sum(Industry, cash, t) - sum(Industry, cash, t-1)"
-				val2="sum(Industry, liabilities.new, t) - sum(Industry, liabilities.repayment, t) + sum(Industry, sales.val, t) - sum(Industry, wageBill, t) - sum(Industry, dividends, t) - sum(Industry, interest, t) - sum(Industry, canceledDeposits, t)" />
+				val2="sum(Industry, liabilities.new, t) - sum(Industry, liabilities.repayment, t) + sum(Industry, sales.val, t) - sum(Industry, wageBill, t) - sum(Industry, investment.val, t) - sum(Industry, dividends, t) - sum(Industry, interest, t) - sum(Industry, canceledDeposits, t)" />
 
 			<test label="Stocks and flows: Firms Debts"
 				val1="sum(Industry, liabilities, t) - sum(Industry, liabilities, t-1)"
@@ -671,7 +1008,7 @@
 
 			<test label="Stocks and flows: Firms Capital"
 				val1="sum(Industry, capital, t) - sum(Industry, capital, t-1)"
-				val2="sum(Industry, grossProfit, t) - sum(Industry, dividends, t) - sum(Industry, interest, t) - sum(Industry, inventories.losses.val, t) - sum(Industry, canceledDeposits, t) + sum(Industry, canceledDebts, t)" />
+				val2="sum(Industry, grossProfit, t) - sum(Industry, dividends, t) - sum(Industry, depreciation, t) - sum(Industry, interest, t) - sum(Industry, inventories.losses.val, t) - sum(Industry, canceledDeposits, t) + sum(Industry, canceledDebts, t)" />
 
 			<test label="Stocks and flows: Banks Deposits"
 				val1="val(Banks, liabilities, t) - val(Banks, liabilities, t-1)"
@@ -690,7 +1027,7 @@
 				val2="sum(Industry, production.vol, t) - sum(Industry, sales.vol, t) - sum(Industry, inventories.fg.losses.vol, t)" />
 
 			<test label="Volume: Sales" val1="sum(Industry, sales.vol, t)"
-				val2="sum(Households, consumption.vol, t)" />
+				val2="sum(Households, consumption.vol, t) + sum(Industry, investment.vol, t)" />
 
 		</validation>
 	</panel>
@@ -703,16 +1040,16 @@
 				</h3>
 				By
 				<a href="http://p.seppecher.free.fr/">Dr P. Seppecher</a>
-				(original author, U. of Paris 13 and U. of Nice Sophia Antipolis), 
+				(original author, U. of Paris 13 and U. of Nice Sophia Antipolis),
 				<a
 					href="http://www.uva.nl/en/about-the-uva/organisation/staff-members/content/s/a/i.l.salle/i.l.salle.html">
 					Dr I. Salle
 				</a>
-				(U. of Amsterdam) and 
-				<a
-					href="http://www.austrian-models.net/">
+				(U. of Amsterdam) and
+				<a href="http://www.austrian-models.net/">
 					Dr H. Hagedorn
-				</a>  (Business and Information Technology School, Berlin, Germany).
+				</a>
+				(Business and Information Technology School, Berlin, Germany).
 				<h1>Java Agent-based MacroEconomic Laboratory</h1>
 				&#169; 2007-2015, P. Seppecher and Contributors.
 				<br />
