@@ -263,7 +263,8 @@ public class BasicFactory extends AbstractManager implements Factory {
 			}
 		}
 		this.machinery.removeAll(cancelled);
-		this.dataset.put("depreciation", (double) depreciation);
+		this.dataset.put("machines.deleted", cancelled.size());
+		this.dataset.put("depreciation", depreciation);
 	}
 
 	/**
@@ -328,7 +329,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 	}
 
 	@Override
-	public void bankrupt() {
+	public void delete() {
 		checkConsistency();
 		this.dataset.put("inventories.losses.val", (double) this.getValue());
 		this.dataset.put("inventories.fg.losses", (double) this.finishedGoods.getValue());
@@ -336,7 +337,9 @@ public class BasicFactory extends AbstractManager implements Factory {
 		this.dataset.put("inventories.fg.losses.vol", (double) this.finishedGoods.getVolume());
 		this.finishedGoods.consume();
 		this.workInProgress.delete();
-		this.canceled = true;
+		if (this.machinery.size()>0) {
+			throw new RuntimeException("The destruction of the machinery is not yet implemented.");
+		}
 	}
 
 	@Override
@@ -379,11 +382,8 @@ public class BasicFactory extends AbstractManager implements Factory {
 
 	@Override
 	public long getInventoryLosses() {
-		checkConsistency();
-		return this.dataset.get("inventories.losses.val").longValue(); // TODO
-																		// use
-																		// askable
-																		// ?
+		return this.dataset.get("inventories.losses.val").longValue();
+		// TODO use askable ?
 	}
 
 	@Override
@@ -418,7 +418,6 @@ public class BasicFactory extends AbstractManager implements Factory {
 
 	@Override
 	public long getValue() {
-		checkConsistency();
 		return this.workInProgress.getBookValue() + this.finishedGoods.getValue() + getMachineryValue();
 	}
 
@@ -476,7 +475,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 		this.dataset.put("production.vol", (double) production.getVolume());
 		this.dataset.put("production.val", (double) production.getValue());
 		if (this.getProductivity() != null) {
-			// This happens when the machinery is empty.
+			// Productivity is null when the machinery is empty.
 			this.dataset.put("productivity", (double) this.getProductivity());
 		}
 		this.dataset.put("capacity", (double) this.machinery.size());
@@ -490,6 +489,11 @@ public class BasicFactory extends AbstractManager implements Factory {
 	@Override
 	public void scrap(double threshold) {
 		throw new RuntimeException("Not yet implemented"); // TODO: IMPLEMENT ME
+	}
+
+	@Override
+	public void cancel() {
+		this.canceled=true;
 	}
 
 }

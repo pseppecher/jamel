@@ -120,7 +120,20 @@ public class BasicMacroDatabase implements MacroDatabase {
 		if (sectorDataset != null) {
 			result = sectorDataset.getField(key, select);
 		} else {
-			result = null;
+			result = null;// TODO générer une erreur ?
+		}
+		return result;
+	}
+
+	@Override
+	public String getMessage(String sector, String agent, String key, int lag) {
+		final String result;
+		final int t=timer.getPeriod().intValue()-lag;
+		final SectorDataset sectorDataset = getSectorDataset(sector, t);
+		if (sectorDataset != null) {
+			result = sectorDataset.getAgentInfo(agent, key);
+		} else {
+			result = null;// TODO générer une erreur ?
 		}
 		return result;
 	}

@@ -13,6 +13,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
+import jamel.Jamel;
 import jamel.basic.Circuit;
 import jamel.basic.data.BasicSectorDataset;
 import jamel.basic.data.SectorDataset;
@@ -22,7 +23,6 @@ import jamel.basic.sector.Sector;
 import jamel.basic.util.BasicParameters;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.JamelParameters;
-import jamel.basic.util.Period;
 import jamel.basic.util.Timer;
 import jamel.jamel.capital.BasicCapitalStock;
 import jamel.jamel.capital.CapitalStock;
@@ -46,10 +46,287 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	/**
 	 * Represents a current account.
 	 */
-	public class Account implements BankAccount {
+	private class Account implements BankAccount {
+
+		/**
+		 * An abstract loan.
+		 */
+		private abstract class AbstractLoan implements Loan {
+
+			/** The maturity date. */
+			protected final int maturityDate;
+
+			/**
+			 * The period when the principal was taken out.
+			 */
+			protected final int origin;
+
+			/** The remaining principal. */
+			protected long principal = 0;
+
+			/** The interest rate. */
+			protected final double rate;
+
+			/**
+			 * The remainder of the interest.
+			 */
+			private double remainder = 0;
+
+			/**
+			 * Creates a new loan.
+			 * 
+			 * @param principal
+			 *            the principal.
+			 * @param rate
+			 *            the normal rate of interest.
+			 * @param normalTerm
+			 *            the normal term.
+			 */
+			public AbstractLoan(long principal, double rate, int normalTerm) {
+
+				if (!open) {
+					throw new RuntimeException("This account is closed.");
+				}
+				if (cancelled) {
+					throw new RuntimeException("This account is cancelled.");
+				}
+
+				this.origin = timer.getPeriod().intValue();
+				this.rate = rate;
+				this.maturityDate = timer.getPeriod().intValue() + normalTerm;
+
+				Account.this.deposit.credit(principal);
+				this.newDebt(principal);
+			}
+
+			/**
+			 * Adds the specified amount to the principal of this loan.
+			 * 
+			 * @param amount
+			 *            the amount to be added.
+			 */
+			private void newDebt(long amount) {
+				this.principal += amount;
+				Account.this.debt += amount;
+				Account.this.newDebt += amount;
+				BasicBankingSector.this.assets += amount;
+				BasicBankingSector.this.capital += amount;
+				BasicBankingSector.this.newLoansAmount += amount;
+			}
+
+			/**
+			 * Increases the principal of this loan by the interest due.
+			 * 
+			 * @return the amount of the interest due.
+			 */
+			protected long newInterest() {
+				final double newInterest0 = this.principal * this.rate + remainder;
+				final long newInterest = (long) newInterest0;
+				this.remainder = newInterest - newInterest0;
+				this.newDebt(newInterest);
+				BasicBankingSector.this.interest += newInterest;
+				Account.this.interestPaid += newInterest;
+				return newInterest;
+			}
+
+			/**
+			 * Pays back the specified amount.
+			 * 
+			 * @param installment
+			 *            the amount to be paid.
+			 */
+			protected void payBack(long installment) {
+				if (this.principal < installment) {
+					throw new RuntimeException("Inconstency");
+				}
+				this.principal -= installment;
+				Account.this.deposit.debit(installment);
+				Account.this.debt -= installment;
+				Account.this.repaidDebt += installment;
+				BasicBankingSector.this.assets -= installment;
+				BasicBankingSector.this.capital -= installment;
+				BasicBankingSector.this.loansRepayment += installment;
+			}
+
+			@Override
+			public void cancel() {
+				cancel(this.principal);
+			}
+
+			@Override
+			public void cancel(long amount) {
+				if (amount > this.principal) {
+					throw new IllegalArgumentException(
+							"The amount to be canceled is larger than the principal of this loan.");
+				}
+				this.principal -= amount;
+				Account.this.canceledDebt += amount;
+				Account.this.debt -= amount;
+				BasicBankingSector.this.assets -= amount;
+				BasicBankingSector.this.capital -= amount;
+				BasicBankingSector.this.canceledDebts += amount;
+			}
+
+			@Override
+			public int getMaturity() {
+				return this.maturityDate;
+			}
+
+			@Override
+			public int getOrigin() {
+				return this.origin;
+			}
+
+			@Override
+			public long getPrincipal() {
+				return this.principal;
+			}
+
+		}
+
+		/**
+		 * A loan with scheduled periodic payments of both principal and
+		 * interest.
+		 */
+		private class AmortizingLoan extends AbstractLoan {
+
+			/**
+			 * Creates a new loan.
+			 * 
+			 * @param principal
+			 *            the principal.
+			 * @param rate
+			 *            the rate of interest.
+			 * @param term
+			 *            the term.
+			 */
+			public AmortizingLoan(long principal, double rate, int term) {
+				super(principal, rate, term);
+			}
+
+			@Override
+			public void payBack() {
+
+				if (currentPeriod > this.maturityDate) {
+					throw new RuntimeException("Non-performing loan.");
+				}
+
+				final long newInterest = newInterest();
+
+				final int remainingTerm = 1 + this.maturityDate - currentPeriod;
+				final long installment = newInterest + (this.principal - newInterest) / remainingTerm;
+
+				if (installment > 0) {
+					if (getAmount() < installment) {
+						Account.this.isDoubtful = true;
+						newNonPerformingLoan(installment - getAmount());
+					}
+					payBack(installment);
+				}
+
+			}
+
+		}
+
+		/**
+		 * A type of loan in which payments on the principal are not made, while
+		 * interest payments are made regularly.
+		 * <p>
+		 * As a result, the value of principal does not decrease at all over the
+		 * life of the loan. The principal is then paid as a lump sum at the
+		 * maturity of the loan.
+		 * <p>
+		 * Source: http://www.investopedia.com/terms/n/nonamortizing.asp
+		 */
+		private class NonAmortizingLoan extends AbstractLoan {
+
+			/**
+			 * Creates a new loan.
+			 * 
+			 * @param principal
+			 *            the principal.
+			 * @param rate
+			 *            the rate of interest.
+			 * @param term
+			 *            the term.
+			 */
+			public NonAmortizingLoan(long principal, double rate, int term) {
+				super(principal, rate, term);
+			}
+
+			@Override
+			public void payBack() {
+
+				if (currentPeriod > this.maturityDate) {
+					throw new RuntimeException("Non-performing loan.");
+				}
+
+				final long newInterest = newInterest();
+
+				final long installment;
+				if (currentPeriod < this.maturityDate) {
+					installment = newInterest;
+				} else {
+					installment = this.principal;
+				}
+
+				if (installment > 0) {
+					if (getAmount() < installment) {
+						Account.this.isDoubtful = true;
+						newNonPerformingLoan(installment - getAmount());
+					}
+					this.payBack(installment);
+				}
+			}
+		}
+
+		/**
+		 * A loan close to being in default.
+		 */
+		private class NonPerformingLoan extends AbstractLoan {
+
+			/**
+			 * Creates a new loan.
+			 * 
+			 * @param principal
+			 *            the principal.
+			 * @param rate
+			 *            the rate of interest.
+			 * @param term
+			 *            the term.
+			 */
+			public NonPerformingLoan(long principal, double rate, int term) {
+				super(principal, rate, term);
+			}
+
+			@Override
+			public void payBack() {
+
+				newInterest();
+
+				final long installment = Math.min(getAmount(), this.principal);
+				if (installment > 0) {
+					payBack(installment);
+				}
+
+				if (this.principal > 0) {
+					isDoubtful = true;
+				}
+
+				/*
+				 * FIXME: what if maturityDate>currentPeriod ? ILLIQUIDITY final
+				 * Period current = timer.getPeriod(); if
+				 * (!current.isBefore(this.maturityDate) && this.principal != 0)
+				 * { bankrupt = true; }
+				 */
+			}
+
+		}
 
 		/** The account holder. */
 		private final AccountHolder accountHolder;
+
+		private StringBuilder accountInfo;
 
 		/** A flag that indicates if the account holder is bankrupt or not. */
 		private boolean bankrupt = false;
@@ -66,10 +343,6 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		/** Date of creation. */
 		private final int creation = timer.getPeriod().intValue();
 
-		/**
-		 * The total debt of the account (equals the sum of the principal of the
-		 * loans).
-		 */
 		private long debt = 0;
 
 		/** The deposit. */
@@ -133,6 +406,12 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		/** The list of loans for this account. */
 		private final List<Loan> loans = new LinkedList<Loan>();
 
+		/**
+		 * The total debt of the account (equals the sum of the principal of the
+		 * loans).
+		 */
+		private Long longTermDebt = null;
+
 		/** The new debt of the period. */
 		private long newDebt = 0;
 
@@ -148,6 +427,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		/** The repaid debt. */
 		private long repaidDebt = 0;
 
+		private Long shortTermDebt = null;
+
 		/**
 		 * Creates a new account.
 		 * 
@@ -159,15 +440,72 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		}
 
 		/**
+		 * Definitely closes the account. Cancels all the loans associated with
+		 * this account. Called in case of a bankruptcy.
+		 */
+		private void cancel() {
+			if (cancelled) {
+				throw new RuntimeException("This account is already cancelled.");
+			}
+			this.deposit.cancel();
+			for (Loan loan : loans) {
+				loan.cancel();
+			}
+			this.longTermDebt = 0l;
+			this.shortTermDebt = 0l;
+			this.loans.clear();
+			this.cancelled = true;
+		}
+
+		/**
+		 * Cancels the specified amount of debt.
+		 * 
+		 * @param amount
+		 *            the amount of debt to be canceled.
+		 */
+		private void cancelDebt(final long amount) {
+			if (!open) {
+				throw new RuntimeException("This account is closed.");
+			}
+			this.longTermDebt = 0l;
+			this.shortTermDebt = 0l;
+			Collections.sort(loans, compareMaturity);
+			long remainder = amount;
+			for (Loan loan : loans) {
+				if (loan.getPrincipal() <= remainder) {
+					remainder -= loan.getPrincipal();
+					loan.cancel();
+				} else {
+					loan.cancel(remainder);
+					remainder = 0;
+					// break;
+				}
+				if (loan.getMaturity() - period > 12) {
+					this.longTermDebt += loan.getPrincipal();
+				} else {
+					this.shortTermDebt += loan.getPrincipal();
+				}
+			}
+		}
+
+		/**
+		 * Closes the account at the end of the period.
+		 */
+		private void close() {
+			if (!open) {
+				throw new RuntimeException("This account is already closed.");
+			}
+			open = false;
+		}
+
+		/**
 		 * Debt recovery (interest+principal).
 		 */
 		private void debtRecovery() {
 			this.loans.addAll(this.newLoans);
 			this.newLoans.clear();
-			this.payInterest();
+			// this.payInterest();
 			this.payBack();
-			this.loans.addAll(this.newLoans);
-			this.newLoans.clear();
 		}
 
 		/**
@@ -194,7 +532,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		 * @return a boolean.
 		 */
 		private boolean isSolvent() {
-			return this.accountHolder.isSolvent();
+			return (this.debt == 0 || this.accountHolder.isSolvent());
 		}
 
 		/**
@@ -203,163 +541,86 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		 * @param principal
 		 *            the principal.
 		 */
-		private void newSpecialLoan(long principal) {
-			Account.this.debt += principal;
-			Account.this.newDebt += principal;
-			BasicBankingSector.this.assets += principal;
-			BasicBankingSector.this.capital += principal;
-			BasicBankingSector.this.newLoansAmount += principal;
-			Account.this.deposit.credit(principal);
-			this.newLoans.add(new AbstractLoan(principal, params.get(RATE), params.get(TERM).intValue(),
-					BasicBankingSector.this.timer) {
+		private void newNonPerformingLoan(long principal) {
+			this.newLoans.add(new NonPerformingLoan(principal, params.get(PENALTY_RATE), params.get(TERM).intValue()));
+			// TODO: change parameter : NPL_TERM ?
+		}
 
-				@Override
-				public void cancel(long amount) {
-					if (amount > this.principal) {
-						throw new IllegalArgumentException(
-								"The amount to be canceled is larger than the principal of this loan.");
-					}
-					BasicBankingSector.this.assets -= amount;
-					BasicBankingSector.this.capital -= amount;
-					BasicBankingSector.this.canceledDebts += amount;
-					Account.this.canceledDebt += amount;
-					Account.this.debt -= amount;
-					this.principal -= amount;
+		/**
+		 * Called at the beginning of the period.
+		 */
+		private void open() {
+			if (this.open) {
+				throw new RuntimeException("This account is already open.");
+			}
+			if (this.cancelled) {
+				throw new RuntimeException("This account is cancelled.");
+			}
+			if (this.period == null) {
+				this.period = timer.getPeriod().intValue();
+			} else {
+				this.period++;
+				if (this.period != timer.getPeriod().intValue()) {
+					throw new AnachronismException();
 				}
-
-				@Override
-				public void payBack() { // FIXME : est-ce réfléchi ? à tester
-					final Period current = timer.getPeriod();
-					if (!current.isBefore(this.maturityDate)) {
-						final Long repayment = Math.min(getAmount(), this.principal);
-						if (repayment > 0) {
-							deposit.debit(repayment);
-							this.principal -= repayment;
-							debt -= repayment;
-							repaidDebt += repayment;
-							BasicBankingSector.this.assets -= repayment;
-							BasicBankingSector.this.capital -= repayment;
-							BasicBankingSector.this.loansRepayment += repayment;
-						}
-						/* FIXME
-						 * if (!current.isBefore(this.maturityDate) && this.principal != 0) {
-							bankrupt = true;
-						}*/
-					}
-				}
-
-				@Override
-				public void payInterest() {
-					/*
-					 * if (this.lastInterestPayment != null) { if
-					 * (currentPeriod<this.lastInterestPayment) { throw new
-					 * AnachronismException("Bad date."); } if
-					 * (currentPeriod==this.lastInterestPayment) { throw new
-					 * RuntimeException("It's already paid for."); } }
-					 */
-					Account.this.isDoubtful = true;
-					final long newInterest = (long) (this.principal * this.rate);
-
-					if (newInterest > 0) {
-						this.principal += newInterest;
-						Account.this.debt += newInterest;
-						Account.this.newDebt += newInterest;
-						BasicBankingSector.this.assets += newInterest;
-						BasicBankingSector.this.capital += newInterest;
-						BasicBankingSector.this.newLoansAmount += newInterest;
-						final long payment = Math.min(newInterest, deposit.getAmount());
-						if (payment < newInterest) {
-							Account.this.isDoubtful = true;
-						}
-						if (payment > 0) {
-							Account.this.deposit.debit(payment);
-							this.principal -= payment;
-							Account.this.debt -= payment;
-							Account.this.newDebt -= payment;
-							BasicBankingSector.this.assets -= payment;
-							BasicBankingSector.this.capital -= payment;
-							BasicBankingSector.this.newLoansAmount -= payment;
-						}
-						Account.this.interestPaid += newInterest;
-						BasicBankingSector.this.interest += newInterest;
-					}
-					// this.lastInterestPayment = currentPeriod;
-				}
-
-			});
+			}
+			this.isDoubtful = false;
+			this.open = true;
+			this.repaidDebt = 0;
+			this.interestPaid = 0;
+			this.newDebt = 0;
+			this.canceledDebt = 0;
+			this.canceledMoney = 0;
+			this.longTermDebt = null;
+			this.shortTermDebt = null;
+			this.accountInfo = new StringBuilder();
+			this.accountInfo.append("Account info, period " + timer.getPeriod().intValue() + "<br/>");
 		}
 
 		/**
 		 * Recovers loans. Empty loans are removed.
 		 */
 		private void payBack() {
+			this.shortTermDebt = 0l;
+			this.longTermDebt = 0l;
 			final Iterator<Loan> itr = this.loans.iterator();
 			while (itr.hasNext()) {
 				Loan loan = itr.next();
 				loan.payBack();
+				if (loan.getMaturity() - period > 12) {
+					this.longTermDebt += loan.getPrincipal();
+				} else {
+					this.shortTermDebt += loan.getPrincipal();
+				}
 				if (loan.getPrincipal() == 0) {
 					itr.remove();
 				}
 			}
-		}
-
-		/**
-		 * Pays interest due for each loan.
-		 */
-		private void payInterest() {
-			for (Loan loan : this.loans) {
-				loan.payInterest();
-			}
-		}
-
-		/**
-		 * Definitely closes the account. Cancels all the loans associated with
-		 * this account. Called in case of a bankruptcy.
-		 */
-		public void cancel() {
-			if (cancelled) {
-				throw new RuntimeException("This account is already cancelled.");
-			}
-			this.deposit.cancel();
-			for (Loan loan : loans) {
-				loan.cancel();
-			}
-			this.loans.clear();
-			this.cancelled = true;
-		}
-
-		/**
-		 * Cancels the specified amount of debt.
-		 * 
-		 * @param amount
-		 *            the amount of debt to be canceled.
-		 */
-		public void cancelDebt(final long amount) {
-			if (!open) {
-				throw new RuntimeException("This account is closed.");
-			}
-			Collections.sort(loans, compareMaturity);
-			long remainder = amount;
-			for (Loan loan : loans) {
-				if (loan.getPrincipal() <= remainder) {
-					remainder -= loan.getPrincipal();
-					loan.cancel();
+			for (Loan loan : this.newLoans) {
+				if (loan.getMaturity() - period > 12) {
+					this.longTermDebt += loan.getPrincipal();
 				} else {
-					loan.cancel(remainder);
-					remainder = 0;
-					break;
+					this.shortTermDebt += loan.getPrincipal();
 				}
+				this.loans.add(loan);
 			}
+			this.newLoans.clear();
+			if (this.longTermDebt + this.shortTermDebt != this.debt) {
+				throw new RuntimeException("Inconstistency.");
+			}
+			this.accountInfo.append("Pay back loans: end<br/>");
+			this.accountInfo.append("Is doubtfull: " + this.isDoubtful + "<br/>");
+			this.accountInfo.append("Account balance: " + this.getAmount());
 		}
 
 		/**
-		 * Closes the account at the end of the period.
+		 * Sets the account bankrupt or not.
+		 * 
+		 * @param b
+		 *            a boolean.
 		 */
-		public void close() {
-			if (!open) {
-				throw new RuntimeException("This account is already closed.");
-			}
-			open = false;
+		private void setBankrupt(boolean b) {
+			this.bankrupt = b;
 		}
 
 		@Override
@@ -408,18 +669,37 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		}
 
 		@Override
+		public String getInfo() {
+			return this.accountInfo.toString();
+		}
+
+		@Override
 		public long getInterest() {
 			return this.interestPaid;
 		}
 
 		@Override
-		public double getNewDebt() {
+		public long getLongTermDebt() {
+			return this.longTermDebt;
+		}
+
+		@Override
+		public long getNewDebt() {
 			return this.newDebt;
 		}
 
 		@Override
-		public double getRepaidDebt() {
+		public long getRepaidDebt() {
 			return this.repaidDebt;
+		}
+
+		@Override
+		public long getShortTermDebt() {
+			if (this.shortTermDebt == null) {
+				Jamel.println(timer.getPeriod().intValue(), "this.shortTermDebt", "null");
+				throw new NullPointerException();
+			}
+			return this.shortTermDebt;
 		}
 
 		@Override
@@ -472,250 +752,15 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 
 		@Override
 		public void newLongTermLoan(long principal) {
-			if (!open) {
-				throw new RuntimeException("This account is closed.");
-			}
-			if (cancelled) {
-				throw new RuntimeException("This account is cancelled.");
-			}
-			Account.this.debt += principal;
-			Account.this.newDebt += principal;
-			BasicBankingSector.this.assets += principal;
-			BasicBankingSector.this.capital += principal;
-			BasicBankingSector.this.newLoansAmount += principal;
-			Account.this.deposit.credit(principal);
-
-			final float longTermRate = params.get(RATE);
-			// TODO: prévoir un paramètre spécifique.
-
-			final int longTerm = 120;
-			// TODO: should be a parameter.
-
-			final long initialAmount = principal;
-
-			final Loan newLongTermLoan = new AbstractLoan(principal, longTermRate, longTerm,
-					BasicBankingSector.this.timer) {
-
-				@Override
-				public void cancel(long amount) {
-					if (amount > this.principal) {
-						throw new IllegalArgumentException(
-								"The amount to be canceled is larger than the principal of this loan.");
-					}
-					BasicBankingSector.this.assets -= amount;
-					BasicBankingSector.this.capital -= amount;
-					BasicBankingSector.this.canceledDebts += amount;
-					Account.this.canceledDebt += amount;
-					Account.this.debt -= amount;
-					this.principal -= amount;
-				}
-
-				@Override
-				public void payBack() {
-
-					// TODO WORK IN PROGRESS 11-09-2015
-
-					if (currentPeriod > this.maturityDate) {
-						System.out.println(initialAmount + "," + this.principal);
-						throw new RuntimeException("Not yet implemented");
-					}
-					final int remainingTerm = 1 + this.maturityDate - currentPeriod;
-					final long installment = this.principal / remainingTerm;
-
-					if (installment > 0) {
-						if (getAmount() < installment) {
-							Account.this.isDoubtful = true;
-							newSpecialLoan(installment - getAmount());
-						}
-						deposit.debit(installment);
-						this.principal -= installment;
-						debt -= installment;
-						repaidDebt += installment;
-						BasicBankingSector.this.assets -= installment;
-						BasicBankingSector.this.capital -= installment;
-						BasicBankingSector.this.loansRepayment += installment;
-					}
-
-				}
-
-				@Override
-				public void payInterest() {
-					/*
-					 * FIXME: revoir ces controles. if (this.lastInterestPayment
-					 * != null) { if (currentPeriod<this.lastInterestPayment) {
-					 * throw new AnachronismException("Bad date."); } if
-					 * (currentPeriod==this.lastInterestPayment) { throw new
-					 * RuntimeException("It's already paid for."); } }
-					 */
-					final long newInterest = (long) (this.principal * this.rate);
-					if (newInterest > 0) {
-						this.principal += newInterest;
-						debt += newInterest;
-						newDebt += newInterest;
-						BasicBankingSector.this.assets += newInterest;
-						BasicBankingSector.this.capital += newInterest;
-						BasicBankingSector.this.newLoansAmount += newInterest;
-						final long payment = Math.min(newInterest, deposit.getAmount());
-						if (payment > 0) {
-							Account.this.deposit.debit(payment);
-							this.principal -= payment;
-							debt -= payment;
-							newDebt -= payment;
-							BasicBankingSector.this.assets -= payment;
-							BasicBankingSector.this.capital -= payment;
-							BasicBankingSector.this.newLoansAmount -= payment;
-						}
-						Account.this.interestPaid += newInterest;
-						BasicBankingSector.this.interest += newInterest;
-					}
-					// this.lastInterestPayment = currentPeriod;
-				}
-
-			};
-			this.newLoans.add(newLongTermLoan);
+			this.newLoans.add(new AmortizingLoan(principal, params.get(RATE), 120));
+			// TODO: should be : params.get(LONG_TERM_INTEREST_RATE)
+			// TODO: 120 should be a parameter : LONG_TERM
 		}
 
 		@Override
 		public void newShortTermLoan(final long principal) {
-			if (!open) {
-				throw new RuntimeException("This account is closed.");
-			}
-			if (cancelled) {
-				throw new RuntimeException("This account is cancelled.");
-			}
-			Account.this.debt += principal;
-			Account.this.newDebt += principal;
-			BasicBankingSector.this.assets += principal;
-			BasicBankingSector.this.capital += principal;
-			BasicBankingSector.this.newLoansAmount += principal;
-			Account.this.deposit.credit(principal);
-
-			// TODO: work in progress:
-			final float penaltyRate = params.get(PENALTY_RATE);
-			final int extendedDate = timer.getPeriod().intValue() + params.get(EXTENDED_TERM).intValue();
-			// FIXME: Why not used ???
-
-			this.newLoans.add(new AbstractLoan(principal, params.get(RATE), params.get(TERM).intValue(),
-					BasicBankingSector.this.timer) {
-
-				@Override
-				public void cancel(long amount) {
-					if (amount > this.principal) {
-						throw new IllegalArgumentException(
-								"The amount to be canceled is larger than the principal of this loan.");
-					}
-					BasicBankingSector.this.assets -= amount;
-					BasicBankingSector.this.capital -= amount;
-					BasicBankingSector.this.canceledDebts += amount;
-					Account.this.canceledDebt += amount;
-					Account.this.debt -= amount;
-					this.principal -= amount;
-				}
-
-				@Override
-				public void payBack() {
-					final Period current = timer.getPeriod();
-					if (!current.isBefore(this.maturityDate)) {
-						final Long repayment = Math.min(getAmount(), this.principal);
-						if (repayment > 0) {
-							deposit.debit(repayment);
-							this.principal -= repayment;
-							debt -= repayment;
-							repaidDebt += repayment;
-							BasicBankingSector.this.assets -= repayment;
-							BasicBankingSector.this.capital -= repayment;
-							BasicBankingSector.this.loansRepayment += repayment;
-						}
-						if (this.principal != 0) {
-							Account.this.isDoubtful = true;
-						}
-						/* TODO: FIXME
-						 * if (!current.isBefore(extendedDate) && this.principal != 0) {
-							bankrupt = true;
-						}*/
-					}
-				}
-
-				@Override
-				public void payInterest() {
-					/*
-					 * if (this.lastInterestPayment != null) { if
-					 * (currentPeriod<this.lastInterestPayment) { throw new
-					 * AnachronismException("Bad date."); } if
-					 * (currentPeriod==this.lastInterestPayment) { throw new
-					 * RuntimeException("It's already paid for."); } }
-					 */
-					final long newInterest;
-					if (currentPeriod <= this.maturityDate) {
-						newInterest = (long) (this.principal * this.rate);
-					} else {
-						newInterest = (long) (this.principal * penaltyRate);
-						Account.this.isDoubtful = true;
-					}
-					if (newInterest > 0) {
-						this.principal += newInterest;
-						debt += newInterest;
-						newDebt += newInterest;
-						BasicBankingSector.this.assets += newInterest;
-						BasicBankingSector.this.capital += newInterest;
-						BasicBankingSector.this.newLoansAmount += newInterest;
-						final long payment = Math.min(newInterest, deposit.getAmount());
-						if (payment < newInterest) {
-							Account.this.isDoubtful = true;
-						}
-						if (payment > 0) {
-							Account.this.deposit.debit(payment);
-							this.principal -= payment;
-							debt -= payment;
-							newDebt -= payment;
-							BasicBankingSector.this.assets -= payment;
-							BasicBankingSector.this.capital -= payment;
-							BasicBankingSector.this.newLoansAmount -= payment;
-						}
-						Account.this.interestPaid += newInterest;
-						BasicBankingSector.this.interest += newInterest;
-					}
-					// this.lastInterestPayment = currentPeriod;
-				}
-
-			});
-		}
-
-		/**
-		 * Called at the beginning of the period.
-		 */
-		public void open() {
-			if (this.open) {
-				throw new RuntimeException("This account is already open.");
-			}
-			if (this.cancelled) {
-				throw new RuntimeException("This account is cancelled.");
-			}
-			if (this.period == null) {
-				this.period = timer.getPeriod().intValue();
-			} else {
-				this.period++;
-				if (this.period != timer.getPeriod().intValue()) {
-					throw new AnachronismException();
-				}
-			}
-			this.isDoubtful = false;
-			this.open = true;
-			this.repaidDebt = 0;
-			this.interestPaid = 0;
-			this.newDebt = 0;
-			this.canceledDebt = 0;
-			this.canceledMoney = 0;
-		}
-
-		/**
-		 * Sets the account bankrupt or not.
-		 * 
-		 * @param b
-		 *            a boolean.
-		 */
-		public void setBankrupt(boolean b) {
-			this.bankrupt = b;
+			this.newLoans.add(new NonAmortizingLoan(principal, params.get(RATE), params.get(TERM).intValue()));
+			// TODO: rename parameters: SHORT_TERM_RATE, SHORT_TERM
 		}
 
 		@Override
@@ -760,7 +805,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	};
 
 	@SuppressWarnings("javadoc")
-	private final static String EXTENDED_TERM = "term.extended"; // FIXME:  why not used ?
+	private final static String EXTENDED_TERM = "term.extended";
+	// FIXME: why not used ?
 
 	@SuppressWarnings("javadoc")
 	private final static String PATIENCE = "patience";
@@ -814,6 +860,13 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	/** The data. */
 	private SectorDataset dataset;
 
+	/**
+	 * The total amount of long term loans.
+	 */
+	// private long longTermLoans = 0;
+
+	private Long longTermLoans = null;
+
 	/** The sector name. */
 	private final String name;
 
@@ -825,6 +878,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 
 	/** The random. */
 	private final Random random;
+
+	private Long shortTermLoans = null;
 
 	/** The timer. */
 	private final Timer timer;
@@ -951,31 +1006,69 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		Collections.shuffle(accounts, this.random);
 		final Iterator<Account> iterAccount = accounts.iterator();
 		final int now = this.timer.getPeriod().intValue();
+
+		this.shortTermLoans = 0l;
+		this.longTermLoans = 0l;
+		long totalDebt = 0;
+
 		while (iterAccount.hasNext()) {
 			Account account = iterAccount.next();
-			if (account.getDebt() > 0) {
-				account.debtRecovery();
-				if (!account.isSolvent()) {
-					if (now - account.creation > this.params.get(PATIENCE)) {
-						account.bankrupt = true;
-					}
-				}
-				if (account.bankrupt) {
-					if (account.isSolvent()) {
-						throw new RuntimeException("This account is solvent.");
-						// TODO: en fait il pourrait y avoir faillite d'un agent
-						// solvable, s'il n'est pas liquide.
-						// On implémentera ça plus tard.
-					}
-					foreclosure(account);
-					this.bankruptcies += 1l;
-					if (account.bankrupt) {
-						iterAccount.remove();
-						throw new RuntimeException("Not yet implemented.");
-					}
+			// if (account.getDebt() > 0) {
+			account.debtRecovery();
+			if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
+				throw new RuntimeException("Inconsistency");
+			}
+			if (!account.isSolvent()) {
+				if (now - account.creation > this.params.get(PATIENCE)) {
+					account.bankrupt = true;
 				}
 			}
+			if (account.bankrupt) {
+				if (account.isSolvent()) {
+					throw new RuntimeException("This account is solvent.");
+					// TODO: en fait il pourrait y avoir faillite d'un agent
+					// solvable, s'il n'est pas liquide.
+					// TO IMPLEMENT LATER
+				}
+				this.bankruptcies += 1l;
+				foreclosure(account);
+				if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
+					throw new RuntimeException("Inconsistency");
+				}
+				if (account.bankrupt) {
+					iterAccount.remove();
+					// throw new RuntimeException("Not yet implemented.");
+				}
+				if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
+					throw new RuntimeException("Inconsistency");
+				}
+			}
+			this.shortTermLoans += account.getShortTermDebt();
+			this.longTermLoans += account.getLongTermDebt();
+			totalDebt += account.getDebt();
+			if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
+				throw new RuntimeException("Inconsistency");
+			}
 		}
+		// }
+
+		if (totalDebt != this.assets) {
+			Jamel.println("shortTermLoans: ", this.shortTermLoans);
+			Jamel.println("longTermLoans: ", this.longTermLoans);
+			Jamel.println("shortTermLoans+longTermLoans: ", this.shortTermLoans + this.longTermLoans);
+			Jamel.println("assets: ", this.assets);
+			Jamel.println("totalDebt: ", totalDebt);
+			throw new RuntimeException("Inconsistency");
+		}
+		if (this.shortTermLoans + this.longTermLoans != this.assets) {
+			Jamel.println("shortTermLoans: ", this.shortTermLoans);
+			Jamel.println("longTermLoans: ", this.longTermLoans);
+			Jamel.println("shortTermLoans+longTermLoans: ", this.shortTermLoans + this.longTermLoans);
+			Jamel.println("assets: ", this.assets);
+			Jamel.println("totalDebt: ", totalDebt);
+			throw new RuntimeException("Inconsistency");
+		}
+
 	}
 
 	/**
@@ -996,20 +1089,34 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 			throw new RuntimeException("The account holder should be a firm.");
 		}
 		final Firm firm = (Firm) accountHolder;
-		final long firmAssets = firm.getValueOfAssets();
-		final long targetedLiabilites = (long) (0.8f * firmAssets);
-		// TODO: 0.8 should be a parameter;
-		final long debtToBeCancelled = firm.getValueOfLiabilities() - targetedLiabilites;
-		account.cancelDebt(debtToBeCancelled);
-		final Cheque[] cheques = this.capitalistSector.sellFim(firm);
-		double foreclosures = this.dataset.getSectorialValue("foreclosures");
-		// TODO: foreclosures should be a field.
-		for (Cheque cheque : cheques) {
-			foreclosures += cheque.getAmount();
-			cheque.payment();
+		if (firm.getSize() > 0) {
+			final long firmAssets = firm.getValueOfAssets();
+			final long targetedLiabilites = (long) (0.8f * firmAssets);
+			// TODO: 0.8 should be a parameter;
+			final long debtToBeCancelled = firm.getValueOfLiabilities() - targetedLiabilites;
+			account.cancelDebt(debtToBeCancelled);
+			final Cheque[] cheques = this.capitalistSector.sellFim(firm);
+			double foreclosures = this.dataset.getSectorialValue("foreclosures");
+			// TODO: foreclosures should be a field.
+			for (Cheque cheque : cheques) {
+				foreclosures += cheque.getAmount();
+				cheque.payment();
+			}
+			this.dataset.putSectorialValue("foreclosures", foreclosures);
+			account.setBankrupt(false);
+			if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
+				throw new RuntimeException("Inconsistency");
+			}
+		} else {
+			account.cancel();
+			firm.goBankrupt();
+			if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
+				throw new RuntimeException("Inconsistency");
+			}
 		}
-		this.dataset.putSectorialValue("foreclosures", foreclosures);
-		account.setBankrupt(false);
+		if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
+			throw new RuntimeException("Inconsistency");
+		}
 	}
 
 	/**
@@ -1021,7 +1128,7 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		long result = 0;
 		for (Account account : accounts) {
 			if (account.isDoubtful) {
-				result += account.debt;
+				result += account.getDebt();
 			}
 		}
 		return result;
@@ -1088,6 +1195,8 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 		this.interest = 0;
 		this.loansRepayment = 0;
 		this.newLoansAmount = 0;
+		this.shortTermLoans = null;
+		this.longTermLoans = null;
 		this.dataset = new BasicSectorDataset();
 		this.dataset.putSectorialValue("foreclosures", 0d);
 		for (Account account : this.accounts) {
@@ -1111,17 +1220,19 @@ public class BasicBankingSector implements Sector, Corporation, BankingSector {
 	 * Updates the dataset.
 	 */
 	private void updateDataset() {
-		this.dataset.putSectorialValue("doubtfulDebt", (double) getDoubtfulDebt());
-		this.dataset.putSectorialValue("dividends", (double) this.dividends);
-		this.dataset.putSectorialValue("capital", (double) this.capital);
-		this.dataset.putSectorialValue("liabilities", (double) this.liabilities);
-		this.dataset.putSectorialValue("assets", (double) this.assets);
-		this.dataset.putSectorialValue("bankruptcies", (double) this.bankruptcies);
-		this.dataset.putSectorialValue("interest", (double) this.interest);
-		this.dataset.putSectorialValue("canceledDebts", (double) this.canceledDebts);
-		this.dataset.putSectorialValue("canceledDeposits", (double) this.canceledDeposits);
-		this.dataset.putSectorialValue("loans.new", (double) this.newLoansAmount);
-		this.dataset.putSectorialValue("loans.repayment", (double) this.loansRepayment);
+		this.dataset.putSectorialValue("doubtfulDebt", getDoubtfulDebt());
+		this.dataset.putSectorialValue("dividends", this.dividends);
+		this.dataset.putSectorialValue("capital", this.capital);
+		this.dataset.putSectorialValue("liabilities", this.liabilities);
+		this.dataset.putSectorialValue("assets", this.assets);
+		this.dataset.putSectorialValue("loans.longTerm", this.longTermLoans);
+		this.dataset.putSectorialValue("loans.shortTerm", this.shortTermLoans);
+		this.dataset.putSectorialValue("bankruptcies", this.bankruptcies);
+		this.dataset.putSectorialValue("interest", this.interest);
+		this.dataset.putSectorialValue("canceledDebts", this.canceledDebts);
+		this.dataset.putSectorialValue("canceledDeposits", this.canceledDeposits);
+		this.dataset.putSectorialValue("loans.new", this.newLoansAmount);
+		this.dataset.putSectorialValue("loans.repayment", this.loansRepayment);
 	}
 
 	/**

@@ -261,8 +261,8 @@ public abstract class AbstractFirm implements Firm {
 	 */
 	protected void updateData() {
 
-		this.data.put("firms", 1.);
-		this.data.put("age", (double) getAge());
+		this.data.put("firms", 1);
+		this.data.put("age", getAge());
 
 		this.data.putAll(this.workforceManager.getData());
 		this.data.putAll(this.pricingManager.getData());
@@ -271,10 +271,13 @@ public abstract class AbstractFirm implements Firm {
 		this.data.putAll(this.salesManager.getData());
 
 		if (bankrupted) {
-			this.data.put("bankruptcies", 1.);
+			this.data.put("bankruptcies", 1);
 		} else {
-			this.data.put("bankruptcies", 0.);
+			this.data.put("bankruptcies", 0);
 		}
+		
+		this.data.putMessage("name", this.name);
+		this.data.putMessage("account", this.account.getInfo());
 
 	}
 
@@ -344,7 +347,7 @@ public abstract class AbstractFirm implements Firm {
 	@Override
 	public void goBankrupt() {
 		this.bankrupted = true;
-		this.factory.bankrupt();
+		this.factory.delete();
 	}
 
 	@Override
@@ -377,11 +380,11 @@ public abstract class AbstractFirm implements Firm {
 			}
 		}
 		this.data = getNewDataset();
+		this.openManagers();
 		if (this.bankrupted) {
 			this.capitalManager.bankrupt();
 			this.workforceManager.layoff();
-		} else {
-			this.openManagers();
+			this.factory.cancel();
 		}
 	}
 

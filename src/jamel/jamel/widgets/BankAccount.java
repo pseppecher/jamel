@@ -5,7 +5,7 @@ import jamel.jamel.roles.AccountHolder;
 /**
  * Represents a bank account.
  */
-public interface BankAccount extends Chequable{
+public interface BankAccount extends Chequable {
 
 	/**
 	 * Deposits the cheque on this account.
@@ -55,11 +55,25 @@ public interface BankAccount extends Chequable{
 	long getDebt();
 
 	/**
+	 * Returns some informations about this account.
+	 * 
+	 * @return a string that contains some informations about this account.
+	 */
+	String getInfo();
+
+	/**
 	 * Returns the amount paid as interest for the current period.
 	 * 
 	 * @return the amount paid as interest for the current period.
 	 */
 	long getInterest();
+
+	/**
+	 * Returns the long term debt.
+	 * 
+	 * @return the long term debt.
+	 */
+	long getLongTermDebt();
 
 	/**
 	 * Returns the amount of the new loans for this account for the current
@@ -68,7 +82,7 @@ public interface BankAccount extends Chequable{
 	 * @return the amount of the new loans for this account for the current
 	 *         period.
 	 */
-	double getNewDebt();
+	long getNewDebt();
 
 	/**
 	 * Returns the amount of the loans repaid for this account for the current
@@ -77,7 +91,14 @@ public interface BankAccount extends Chequable{
 	 * @return the amount of the loans repaid for this account for the current
 	 *         period.
 	 */
-	double getRepaidDebt();
+	long getRepaidDebt();
+
+	/**
+	 * Returns the short term debt.
+	 * 
+	 * @return the short term debt.
+	 */
+	long getShortTermDebt();
 
 	/**
 	 * Returns <code>true</code> if the account is cancelled, <code>false</code>
@@ -88,8 +109,8 @@ public interface BankAccount extends Chequable{
 	boolean isCancelled();
 
 	/**
-	 * Creates a new long-term loan. The principal of the new loan is credited to this
-	 * account.
+	 * Creates a new long-term loan. The principal of the new loan is credited
+	 * to this account.
 	 * 
 	 * @param principal
 	 *            the amount of the new loan.

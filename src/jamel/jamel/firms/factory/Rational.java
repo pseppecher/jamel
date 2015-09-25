@@ -1,5 +1,7 @@
 package jamel.jamel.firms.factory;
 
+import jamel.Jamel;
+
 /**
  * Represents one rational number.
  * <p>
@@ -62,15 +64,15 @@ public class Rational {
 	public static void main(String[] args) {
 		Rational q1 = new Rational(1, 1);
 		Rational q2 = new Rational(2, 2);
-		System.out.println(q1 + "=" + q2);
+		Jamel.println(q1 + "=" + q2);
 		Rational q3 = new Rational(1, 2);
 		Rational q4 = new Rational(2, 5);
-		System.out.println(q4 + "=" + q4.doubleValue());
-		System.out.println(q3.add(q4));
-		System.out.println(q3.multiply(q4));
-		System.out.println(q3.divide(q4));
-		System.out.println(q3.subtract(q4));
-		System.out.println(new Rational(4, 2).equals(3));
+		Jamel.println(q4 + "=" + q4.doubleValue());
+		Jamel.println(q3.add(q4).toString());
+		Jamel.println(q3.multiply(q4).toString());
+		Jamel.println(q3.divide(q4).toString());
+		Jamel.println(q3.subtract(q4).toString());
+		Jamel.println(""+new Rational(4, 2).equals(3));
 	}
 
 	/** The denominator */

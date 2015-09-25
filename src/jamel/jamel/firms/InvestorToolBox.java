@@ -310,11 +310,11 @@ public class InvestorToolBox {
 		truc[2] = new MySupply(12, 3001);
 		final Long[] prices = getPrices(truc, 1000);
 		for (int i = 0; i < prices.length; i++) {
-			System.out.print(i + " machines = " + prices[i] + "; ");
+			Jamel.println(i + " machines = " + prices[i] + "; ");
 			if (i != 0) {
-				System.out.println(prices[i] / i + " for one machine.");
+				Jamel.println(prices[i] / i + " for one machine.");
 			} else {
-				System.out.println();
+				Jamel.println();
 			}
 		}
 	}

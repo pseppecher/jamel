@@ -6,7 +6,7 @@ package jamel.jamel.banks;
 public interface Deposit {
 
 	/**
-	 * Credits the deposit with the specified amount.
+	 * Credits this deposit with the specified amount.
 	 * @param creditAmount the amount to be credited.
 	 */
 	void credit(long creditAmount);
@@ -18,13 +18,13 @@ public interface Deposit {
 	void debit(long debit);
 
 	/**
-	 * Returns the available amount.
-	 * @return a long integer.
+	 * Returns the available amount on this deposit.
+	 * @return the available amount.
 	 */
 	long getAmount();
 
 	/**
-	 * Cancels the deposit.
+	 * Cancels this deposit.
 	 */
 	void cancel();
 

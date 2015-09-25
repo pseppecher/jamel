@@ -3,15 +3,27 @@ package jamel.basic.data;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A basic dataset implementing the {@link AgentDataset} interface.
  */
-public class BasicAgentDataset extends TreeMap<String,Double> implements AgentDataset {
+public class BasicAgentDataset implements AgentDataset {
 		
 	/** The name of the agent. */
 	final private String name;
+	
+	/**
+	 * A map containing the numerical data.
+	 */
+	final private Map<String,Double> data = new HashMap<String,Double>();
+	
+	/**
+	 * A map containing the string data.
+	 */
+	final private Map<String,String> messages = new HashMap<String,String>();
 	
 	/**
 	 * Creates a new BasicAgentDataset.
@@ -44,7 +56,7 @@ public class BasicAgentDataset extends TreeMap<String,Double> implements AgentDa
 
 	@Override
 	public Double get(String key) {
-		return super.get(key);
+		return this.data.get(key);
 	}
 
 	@Override
@@ -57,6 +69,9 @@ public class BasicAgentDataset extends TreeMap<String,Double> implements AgentDa
 		for(String key:data.keySet()) {
 			this.put(key, data.get(key));
 		}
+		for(String key:messages.keySet()) {
+			this.putMessage(key, messages.get(key));
+		}
 	}
 
 	@Override
@@ -67,7 +82,27 @@ public class BasicAgentDataset extends TreeMap<String,Double> implements AgentDa
 		} else {
 			d=value.doubleValue();
 		}
-		return super.put(key, d);
+		return this.data.put(key, d);
+	}
+
+	@Override
+	public void putMessage(String key, String message) {
+		this.messages.put(key, message);
+	}
+
+	@Override
+	public Set<String> keySet() {
+		return this.data.keySet();
+	}
+
+	@Override
+	public boolean containsKey(String key) {
+		return this.data.containsKey(key);
+	}
+
+	@Override
+	public String getMessage(String key) {
+		return this.messages.get(key);
 	}
 
 }

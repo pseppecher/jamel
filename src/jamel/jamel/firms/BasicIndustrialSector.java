@@ -197,7 +197,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 			firm.open();
 			if (firm.isBankrupted()) {
 				bankrupted.add(firm);
-				prepareRegeneration();
+				//prepareRegeneration();
 			}
 		}
 		this.firms.removeAll(bankrupted);

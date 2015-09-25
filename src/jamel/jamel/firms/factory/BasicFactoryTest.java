@@ -1,6 +1,8 @@
 package jamel.jamel.firms.factory;
 
 import static org.junit.Assert.*;
+
+import jamel.Jamel;
 import jamel.basic.data.AgentDataset;
 import jamel.basic.util.BasicTimer;
 import jamel.basic.util.Timer;
@@ -170,7 +172,7 @@ public class BasicFactoryTest {
 			factory.process(laborPowers);
 			factory.close();
 			final AgentDataset data = factory.getData();
-			System.out.println(data.get("production.vol")+", "+data.get("production.vol.atFullCapacity"));
+			Jamel.println(data.get("production.vol")+", "+data.get("production.vol.atFullCapacity"));
 			timer.next();
 		}
 	}

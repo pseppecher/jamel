@@ -50,17 +50,32 @@ public class BasicCapitalStockTest {
 			}
 
 			@Override
+			public String getInfo() {
+				throw new RuntimeException("Not yet implemented.");
+			}
+
+			@Override
 			public long getInterest() {
 				throw new RuntimeException("Not yet implemented.");
 			}
 
 			@Override
-			public double getNewDebt() {
+			public long getLongTermDebt() {
 				throw new RuntimeException("Not yet implemented.");
 			}
 
 			@Override
-			public double getRepaidDebt() {
+			public long getNewDebt() {
+				throw new RuntimeException("Not yet implemented.");
+			}
+
+			@Override
+			public long getRepaidDebt() {
+				throw new RuntimeException("Not yet implemented.");
+			}
+
+			@Override
+			public long getShortTermDebt() {
 				throw new RuntimeException("Not yet implemented.");
 			}
 
@@ -88,7 +103,7 @@ public class BasicCapitalStockTest {
 
 			@Override
 			public void newLongTermLoan(long principal) {
-				throw new RuntimeException("Not yet implemented.");				
+				throw new RuntimeException("Not yet implemented.");
 			}
 
 			@Override
@@ -107,12 +122,12 @@ public class BasicCapitalStockTest {
 			}
 
 			@Override
-			public boolean isCancelled() {
+			public String getName() {
 				throw new RuntimeException("Not used.");
 			}
 
 			@Override
-			public String getName() {
+			public boolean isCancelled() {
 				throw new RuntimeException("Not used.");
 			}
 
@@ -125,8 +140,7 @@ public class BasicCapitalStockTest {
 		final Corporation corporation = getNewCorporation(100000);
 		final int shareholders = 10;
 		final BankAccount account = getNewAccount();
-		final BasicCapitalStock stock = new BasicCapitalStock(corporation,
-				shareholders, account, timer);
+		final BasicCapitalStock stock = new BasicCapitalStock(corporation, shareholders, account, timer);
 
 		timer.next();
 		stock.open();
@@ -153,8 +167,7 @@ public class BasicCapitalStockTest {
 		final Corporation corporation = getNewCorporation(capital);
 		final int shareholders = 3;
 		final BankAccount account = getNewAccount();
-		final BasicCapitalStock stock = new BasicCapitalStock(corporation,
-				shareholders, account, timer);
+		final BasicCapitalStock stock = new BasicCapitalStock(corporation, shareholders, account, timer);
 
 		timer.next();
 		stock.open();
@@ -176,11 +189,8 @@ public class BasicCapitalStockTest {
 		assertEquals("Book value ", 33000, certif2.getBookValue(), 0);
 		assertNull(certif2.getDividend());
 
-		assertEquals(
-				"Book value ",
-				capital,
-				certif0.getBookValue() + certif1.getBookValue()
-						+ certif2.getBookValue(), 0);
+		assertEquals("Book value ", capital, certif0.getBookValue() + certif1.getBookValue() + certif2.getBookValue(),
+				0);
 
 		long dividend = 700;
 
@@ -232,8 +242,7 @@ public class BasicCapitalStockTest {
 		final Corporation corporation = getNewCorporation(capital);
 		final int shareholders = 3;
 		final BankAccount account = getNewAccount();
-		final BasicCapitalStock stock = new BasicCapitalStock(corporation,
-				shareholders, account, timer);
+		final BasicCapitalStock stock = new BasicCapitalStock(corporation, shareholders, account, timer);
 
 		timer.next();
 		stock.open();
@@ -255,11 +264,8 @@ public class BasicCapitalStockTest {
 		assertEquals("Book value ", 1352, certif2.getBookValue(), 0);
 		assertNull(certif2.getDividend());
 
-		assertEquals(
-				"Book value ",
-				capital,
-				certif0.getBookValue() + certif1.getBookValue()
-						+ certif2.getBookValue(), 0);
+		assertEquals("Book value ", capital, certif0.getBookValue() + certif1.getBookValue() + certif2.getBookValue(),
+				0);
 
 		long dividend = 700;
 

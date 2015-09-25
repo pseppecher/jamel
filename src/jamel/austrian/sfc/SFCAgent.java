@@ -15,7 +15,7 @@ public abstract class SFCAgent extends SFCObject implements AccountHolder{
 	protected SFCSector sector;
 		
 	/** The data set. */
-	protected BasicAgentDataset data;
+	protected AgentDataset data;
 	
 	
 	/**

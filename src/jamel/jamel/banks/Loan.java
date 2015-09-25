@@ -26,6 +26,13 @@ public interface Loan {
 	int getMaturity();
 
 	/**
+	 * Returns the period when the loan was taken out.
+	 * 
+	 * @return the period when the loan was taken out.
+	 */
+	int getOrigin();
+
+	/**
 	 * Returns the principal.
 	 * 
 	 * @return the principal.
@@ -36,11 +43,6 @@ public interface Loan {
 	 * Pays back the loan.
 	 */
 	void payBack();
-
-	/**
-	 * Pays the interest due.
-	 */
-	void payInterest();
 
 }
 

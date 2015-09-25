@@ -3,158 +3,7 @@
 <charts title="Baseline panels" date="27-08-2015"
 	content="Configuration of the panels for the baseline scenario.">
 
-	<panel title="Firm 1: dividends">
 
-		<col>
-			<html>
-				<h3>Firm 1 - capital Manager.payDividend()</h3>
-
-				payDividend.cash:
-				<data value="agentValue(Industry,payDividend.cash,t,Firm1)" />
-				<br />
-				payDividend.assets:
-				<data value="agentValue(Industry,payDividend.assets,t,Firm1)" />
-				<br />
-				payDividend.capital:
-				<data value="agentValue(Industry,payDividend.capital,t,Firm1)" />
-				<br />
-				payDividend.capitalTarget:
-				<data value="agentValue(Industry,payDividend.capitalTarget,t,Firm1)" />
-				<br />
-				capital ratio:
-				<data
-					value="agentValue(Industry,payDividend.capital,t,Firm1):agentValue(Industry,payDividend.capitalTarget,t,Firm1)" />
-				<br />
-				payDividend.averageIncome:
-				<data value="agentValue(Industry,payDividend.averageIncome,t,Firm1)" />
-				<br />
-				<b>
-					payDividend.dividend:
-					<data value="agentValue(Industry,payDividend.dividend,t,Firm1)" />
-				</b>
-				<br />
-
-			</html>
-			<chart title="Capital Ratio" type="time chart">
-				<series value="sum(Industry, capital, t) : sum(Industry, assets, t)"
-					color="blue" label="Average" />
-				<series
-					value="agentValue(Industry, capital, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
-					color="red" label="Firm 1" />
-			</chart>
-			<chart title="Dividends" type="time chart">
-				<series
-					value="agentValue(Industry, dividends, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
-					color="red" label="dividends" />
-				<series
-					value="agentValue(Industry, grossProfit, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
-					color="green" label="profits" />
-			</chart>
-			<chart />
-		</col>
-		<col>
-			<html>
-				<style type="text/css">.boldtable, .boldtable td, .boldtable th
-					{font-family:sans-serif;font-size:10pt;}
-				</style>
-				<br />
-				<table border="0" align="center" class="boldtable"
-					cellspacing="10">
-					<caption>
-						Firm 1 Balance Sheet
-					</caption>
-					<tr>
-						<td colspan="4">
-							<hr />
-						</td>
-					</tr>
-					<tr>
-						<th colspan="2">Assets</th>
-						<th colspan="2">Liabilities</th>
-					</tr>
-					<tr>
-						<td>
-							Cash
-						</td>
-						<td align="right">
-							<data value="agentValue(Industry,cash,t,Firm1)" />
-						</td>
-						<td>
-							Debt
-						</td>
-						<td align="right">
-							<data value="agentValue(Industry,liabilities,t,Firm1)" />
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Work In Progress
-						</td>
-						<td align="right">
-							<data value="agentValue(Industry,inventories.inProcess.val,t,Firm1)" />
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Finished Goods
-						</td>
-						<td align="right">
-							<data value="agentValue(Industry,inventories.fg.val,t,Firm1)" />
-						</td>
-					</tr>
-					<tr>
-						<td>
-							Equipment
-						</td>
-						<td align="right">
-							<data value="agentValue(Industry,machinery.val,t,Firm1)" />
-						</td>
-					</tr>
-					<tr>
-						<th colspan="2"></th>
-						<th colspan="2">Owners' equity</th>
-					</tr>
-					<tr>
-						<td />
-						<td />
-						<td>
-							Capital Stock
-						</td>
-						<td align="right">
-							<data value="agentValue(Industry,capital,t,Firm1)" />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="4">
-							<hr />
-						</td>
-					</tr>
-					<tr>
-
-						<td>Total</td>
-						<td align="right">
-							<data
-								value="agentValue(Industry,cash,t,Firm1)+agentValue(Industry,inventories.inProcess.val,t,Firm1)+agentValue(Industry,inventories.fg.val,t,Firm1)+agentValue(Industry,machinery.val,t,Firm1)" />
-						</td>
-						<td>
-							Total
-						</td>
-						<td align="right">
-							<data
-								value="agentValue(Industry,liabilities,t,Firm1)+agentValue(Industry,capital,t,Firm1)" />
-						</td>
-					</tr>
-					<tr>
-						<td colspan="4">
-							<hr />
-						</td>
-					</tr>
-				</table>
-			</html>
-			<chart />
-		</col>
-
-	</panel>
 	<panel title="Investment">
 		<col>
 			<chart title="Demand/Potential Output" type="time chart">
@@ -170,6 +19,11 @@
 				</subplot>
 			</chart>
 
+			<chart title="Labor Market" type="time chart">
+				<series value="sum(Industry,workforceTarget,t)" color="red"
+					label="Labor Demand" />
+				<series value="sum(Households,agents,t)" color="green" label="Labor Supply" />
+			</chart>
 			<chart title="Firms Sizes" type="histogram">
 				<series sector="Industry" value="capacity" bin="10"
 					color="transparentRed" label="Firms Sizes" />
@@ -178,8 +32,11 @@
 		</col>
 		<col>
 			<chart title="Animal spirits" type="time chart">
-				<series value="mean(Industry,animalSpirit,t)" color="veryLightRed"
+				<series value="mean(Industry,animalSpirit,t)" color="red"
 					label="Mean" />
+				<series
+					value="sum(Industry,animalSpirit.weighted,t) : sum(Industry,capital,t)"
+					color="blue" label="Mean, Weighted by Capital" />
 			</chart>
 			<chart title="Capacity" type="time chart">
 				<subplot>
@@ -188,6 +45,8 @@
 				</subplot>
 				<subplot>
 					<series value="sum(Industry, investment.size, t)" label="New machines"
+						color="blue" />
+					<series value="sum(Industry, machines.deleted, t)" label="Deleted machines"
 						color="red" />
 				</subplot>
 			</chart>
@@ -198,18 +57,18 @@
 
 		</col>
 		<col>
-			
+
+			<chart title="Discount Rates and Animal Spirits" type="scatter chart">
+				<series sector="Industry" x="discountRate" y="animalSpirit"
+					color="transparentRed" label="Firms (x=discount rate, y=animal spirit" />
+			</chart>
+
 			<chart title="Capital and Animal Spirit" type="scatter chart">
-				<series sector="Industry" x="capital" y="animalSpirit" color="transparentRed" label="Firms (x=capacity, y=animal spirit" />
+				<series sector="Industry" x="capital" y="animalSpirit" color="transparentRed"
+					label="Firms (x=capacity, y=animal spirit" />
 			</chart>
-			
+
 			<chart title="Size and profitability" type="scatter chart">
-				<series sector="Industry" x="capacity" y="returnOnEquity"
-					color="transparentRed" label="Firms (x=capacity, y=return on equity" />
-			</chart>
-			
-			
-		<chart title="Size and profitability" type="scatter chart">
 				<series sector="Industry" x="capacity" y="returnOnAssets"
 					color="transparentRed" label="Firms (x=capacity, y=return on assets" />
 			</chart>
@@ -651,6 +510,158 @@
 		</col>
 
 	</panel>
+	<panel title="Firm 1: dividends">
+
+		<col>
+			<html>
+				<h3>Firm 1 - capital Manager.payDividend()</h3>
+
+				payDividend.cash:
+				<data value="agentValue(Industry,payDividend.cash,t,Firm1)" />
+				<br />
+				payDividend.assets:
+				<data value="agentValue(Industry,payDividend.assets,t,Firm1)" />
+				<br />
+				payDividend.capital:
+				<data value="agentValue(Industry,payDividend.capital,t,Firm1)" />
+				<br />
+				payDividend.capitalTarget:
+				<data value="agentValue(Industry,payDividend.capitalTarget,t,Firm1)" />
+				<br />
+				capital ratio:
+				<data
+					value="agentValue(Industry,payDividend.capital,t,Firm1):agentValue(Industry,payDividend.capitalTarget,t,Firm1)" />
+				<br />
+				payDividend.averageIncome:
+				<data value="agentValue(Industry,payDividend.averageIncome,t,Firm1)" />
+				<br />
+				<b>
+					payDividend.dividend:
+					<data value="agentValue(Industry,payDividend.dividend,t,Firm1)" />
+				</b>
+				<br />
+
+			</html>
+			<chart title="Capital Ratio" type="time chart">
+				<series value="sum(Industry, capital, t) : sum(Industry, assets, t)"
+					color="blue" label="Average" />
+				<series
+					value="agentValue(Industry, capital, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
+					color="red" label="Firm 1" />
+			</chart>
+			<chart title="Dividends" type="time chart">
+				<series
+					value="agentValue(Industry, dividends, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
+					color="red" label="dividends" />
+				<series
+					value="agentValue(Industry, grossProfit, t, Firm1) : agentValue(Industry, assets, t, Firm1)"
+					color="green" label="profits" />
+			</chart>
+			<chart />
+		</col>
+		<col>
+			<html>
+				<style type="text/css">.boldtable, .boldtable td, .boldtable th
+					{font-family:sans-serif;font-size:10pt;}
+				</style>
+				<br />
+				<table border="0" align="center" class="boldtable"
+					cellspacing="10">
+					<caption>
+						Firm 1 Balance Sheet
+					</caption>
+					<tr>
+						<td colspan="4">
+							<hr />
+						</td>
+					</tr>
+					<tr>
+						<th colspan="2">Assets</th>
+						<th colspan="2">Liabilities</th>
+					</tr>
+					<tr>
+						<td>
+							Cash
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,cash,t,Firm1)" />
+						</td>
+						<td>
+							Debt
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,liabilities,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Work In Progress
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,inventories.inProcess.val,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Finished Goods
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,inventories.fg.val,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td>
+							Equipment
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,machinery.val,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<th colspan="2"></th>
+						<th colspan="2">Owners' equity</th>
+					</tr>
+					<tr>
+						<td />
+						<td />
+						<td>
+							Capital Stock
+						</td>
+						<td align="right">
+							<data value="agentValue(Industry,capital,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td colspan="4">
+							<hr />
+						</td>
+					</tr>
+					<tr>
+
+						<td>Total</td>
+						<td align="right">
+							<data
+								value="agentValue(Industry,cash,t,Firm1)+agentValue(Industry,inventories.inProcess.val,t,Firm1)+agentValue(Industry,inventories.fg.val,t,Firm1)+agentValue(Industry,machinery.val,t,Firm1)" />
+						</td>
+						<td>
+							Total
+						</td>
+						<td align="right">
+							<data
+								value="agentValue(Industry,liabilities,t,Firm1)+agentValue(Industry,capital,t,Firm1)" />
+						</td>
+					</tr>
+					<tr>
+						<td colspan="4">
+							<hr />
+						</td>
+					</tr>
+				</table>
+			</html>
+			<chart />
+		</col>
+
+	</panel>
 
 	<panel title="Bank">
 
@@ -700,7 +711,32 @@
 
 		</col>
 
-		<col />
+		<col>
+
+			<chart title="Loan types" type="time chart">
+				<series value="val(Banks, loans.shortTerm, t):val(Banks, assets, t)"
+					color="red" label="Short Term Loans" />
+				<series value="val(Banks, loans.longTerm, t):val(Banks, assets, t)"
+					color="green" label="Long Term Loans" />
+			</chart>
+
+			<chart title="Long Term Debt" type="time chart">
+				<series value="val(Banks, loans.longTerm, t):mean(Industry, prices, t)"
+					color="green" label="Long Term Loans" />
+				<series value="sum(Industry, machinery.val, t):mean(Industry, prices, t)"
+					color="red" label="Fixed Capital" />
+			</chart>
+
+			<chart title="Short Term Debt" type="time chart">
+				<series
+					value="val(Banks, loans.shortTerm, t)*sum(Industry, inventories.fg.vol, t):sum(Industry, inventories.fg.val, t)"
+					color="green" label="Short Term Loans" />
+				<series
+					value="(sum(Industry, inventories.inProcess.val, t)+sum(Industry, inventories.fg.val, t))*sum(Industry, inventories.fg.vol, t):sum(Industry, inventories.fg.val, t)"
+					color="red" label="Circulating Capital" />
+			</chart>
+
+		</col>
 
 	</panel>
 

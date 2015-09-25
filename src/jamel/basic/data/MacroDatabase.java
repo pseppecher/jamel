@@ -107,6 +107,8 @@ public interface MacroDatabase {
 	 */
 	public void putData(String sector, SectorDataset sectorDataset);
 
+	public String getMessage(String sector, String agent, String key, int lag);
+
 }
 
 // ***

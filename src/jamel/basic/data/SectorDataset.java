@@ -154,7 +154,9 @@ public interface SectorDataset {
 	 * @param value
 	 *            the value to be added.
 	 */
-	void putSectorialValue(String key, Double value);
+	void putSectorialValue(String key, Number value);
+
+	String getAgentInfo(String agent, String key);
 
 }
 

@@ -60,6 +60,12 @@ public interface AgentDataset {
 	 */
 	public void putAll(AgentDataset dataset);
 
+	public void putMessage(String key, String message);
+
+	public boolean containsKey(String key);
+
+	public String getMessage(String key);
+
 }
 
 // ***

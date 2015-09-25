@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import jamel.Jamel;
 import jamel.jamel.capital.BasicCapitalStock;
 import jamel.jamel.capital.CapitalStock;
 import jamel.jamel.capital.StockCertificate;
@@ -30,11 +31,13 @@ public class Firm150908 extends BasicFirm implements Investor {
 	private Memory<Integer> workforceMemory = new Memory<Integer>(12);
 
 	private float animalSpirit = 0;
+	
+	final private static float discountRate = 0.005f; // Should be a parameter.
 
 	public Firm150908(String name, IndustrialSector sector) {
 		super(name, sector);
 	}
-
+	
 	/**
 	 * Returns an array of supplies, sorted by price in ascending order.
 	 * 
@@ -168,7 +171,8 @@ public class Firm150908 extends BasicFirm implements Investor {
 
 			@Override
 			public void clearOwnership() {
-				Firm150908.this.animalSpirit=0;
+				List<Firm> sample = sector.getSimpleRandomSample(1);
+				Firm150908.this.animalSpirit = (Float) sample.get(0).askFor("animalSpirit");
 				checkConsistency();
 				final boolean isOpen = capitalStock.isOpen();
 				this.capitalStock.cancel();
@@ -192,14 +196,20 @@ public class Firm150908 extends BasicFirm implements Investor {
 				final long liabilities = account.getDebt();
 				final long capital = assets - liabilities;
 				final boolean insolvent = (timer.getPeriod().intValue() - creation > 12 && capital < 0);
+				// TODO: 12 should be a parameter
+				
 				this.income.add(capital - initialCapital + this.dividend);
 
-				// TODO: 12 should be a parameter
+				final long shortTermDebt = account.getShortTermDebt();
+				final long longTermDebt = account.getLongTermDebt();
 
 				this.dataset.put("cash", (double) cash);
 				this.dataset.put("assets", (double) assets);
 				this.dataset.put("liabilities", (double) liabilities);
 				this.dataset.put("capital", (double) capital);
+
+				this.dataset.put("debt.shortTerm", shortTermDebt);
+				this.dataset.put("debt.longTerm", longTermDebt);
 
 				this.dataset.put("dividends", (double) this.dividend);
 				this.dataset.put("interest", (double) account.getInterest());
@@ -213,14 +223,14 @@ public class Firm150908 extends BasicFirm implements Investor {
 				this.dataset.put("canceledDebts", (double) account.getCanceledDebt());
 				this.dataset.put("canceledDeposits", (double) account.getCanceledMoney());
 
-				final long netProfit = capital-initialCapital+dividend;
-				
+				final long netProfit = capital - initialCapital + dividend;
+
 				this.netProfitMemory.add(netProfit);
-				final double returnOnEquity = this.netProfitMemory.getSum()/capital;
-				final double returnOnAssets = this.netProfitMemory.getSum()/assets;
+				final double returnOnEquity = this.netProfitMemory.getSum() / capital;
+				final double returnOnAssets = this.netProfitMemory.getSum() / assets;
 				this.dataset.put("returnOnEquity", returnOnEquity);
 				this.dataset.put("returnOnAssets", returnOnAssets);
-				
+
 				if (insolvent) {
 					this.dataset.put("insolvents", 1.);
 				} else {
@@ -247,12 +257,12 @@ public class Firm150908 extends BasicFirm implements Investor {
 				isConsistent = (capital == this.initialCapital + grossProfit - (this.dividend + interest + bankruptcy));
 				if (!isConsistent) {
 					if (this.capitalStock.getDistributedDividends() != this.dividend) {
-						System.out.println("distributed dividend = " + this.capitalStock.getDistributedDividends());
-						System.out.println("expected = " + this.dividend);
+						Jamel.println("distributed dividend = " + this.capitalStock.getDistributedDividends());
+						Jamel.println("expected = " + this.dividend);
 						// throw new RuntimeException("Inconsistency");
 					}
-					System.out.println("capital = " + capital);
-					System.out.println("expected = " + (this.initialCapital + grossProfit
+					Jamel.println("capital = " + capital);
+					Jamel.println("expected = " + (this.initialCapital + grossProfit
 							- (this.capitalStock.getDistributedDividends() + interest + bankruptcy)));
 					throw new RuntimeException("Inconsistency: " + Firm150908.this.name);
 				}
@@ -297,7 +307,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 				}
 				dividend = newDividend;
 				capitalStock.setDividend(dividend);
-				
+
 				this.dataset.put("payDividend.cash", cash);
 				this.dataset.put("payDividend.assets", assets);
 				this.dataset.put("payDividend.capital", capital);
@@ -305,7 +315,6 @@ public class Firm150908 extends BasicFirm implements Investor {
 				this.dataset.put("payDividend.averageIncome", averageIncome);
 				this.dataset.put("payDividend.dividend", dividend);
 
-				
 				this.dataset.put("debt2target.ratio", (account.getDebt()) / getLiabilitiesTarget());
 			}
 
@@ -357,12 +366,12 @@ public class Firm150908 extends BasicFirm implements Investor {
 		int investmentSize = 0;
 		long investmentCost = 0;
 		long investmentVolume = 0;
-		
-		final float alea = random.nextFloat();
-		if (alea>0.95) {
-			animalSpirit+=4f*(random.nextFloat()-0.5f);
+
+		final float firmness = 0.95f; // TODO firmness should be a parameter.
+		final float change = random.nextFloat();
+		if (change > firmness) {
+			animalSpirit += 4f * (random.nextFloat() - 0.5f);
 		}
-		
 
 		if (capital > capitalTarget) {
 
@@ -416,22 +425,21 @@ public class Firm150908 extends BasicFirm implements Investor {
 						final Long[] machinePrices = InvestorToolBox.getPrices(supplies, input);
 
 						final long[] machinery = (long[]) this.factory.askFor("machinery");
-						final double anticipedDemand = this.salesVolumeMemory.getMean() * (1.+animalSpirit/100);// 1.1;
+						final double anticipedDemand = this.salesVolumeMemory.getMean() * (1. + animalSpirit / 100);// 1.1;
 						// TODO: il faut intégrer ici un facteur indiquant la
 						// tendance et/ou l'esprit animal de l'entrepreneur
 
-						final float rate = 0.004f;
 						// TODO: Il faudrait demander à la banque son taux +
 						// tenir
 						// compte de l'inflation + aversion au risque
 
 						final int time = 120;
 						investmentSize = InvestorToolBox.getOptimumSize(machinePrices, productivity, machinery,
-								anticipedDemand, price, wage, rate, time);
+								anticipedDemand, price, wage, discountRate, time);
 						investmentCost = machinePrices[investmentSize];
 
 						if (investmentSize > 0) {
-							// System.out.println("investmentCost: " +
+							// Jamel.println("investmentCost: " +
 							// investmentCost);
 							final long newLongTermLoan = (long) (0.5 + investmentCost * 1.001
 									- this.account.getAmount());
@@ -440,14 +448,14 @@ public class Firm150908 extends BasicFirm implements Investor {
 
 							if (newLongTermLoan > 0) {
 								this.account.newLongTermLoan(newLongTermLoan);
-								// System.out.println("new loan: " +
+								// Jamel.println("new loan: " +
 								// newLongTermLoan);
 							}
-							// System.out.println("this.account.getAmount(): " +
+							// Jamel.println("this.account.getAmount(): " +
 							// this.account.getAmount());
 
 							long requiredVolume = investmentSize * input;
-							// System.out.println("requiredVolume: " +
+							// Jamel.println("requiredVolume: " +
 							// requiredVolume);
 
 							final Commodities stuff = new FinishedGoods();
@@ -495,6 +503,20 @@ public class Firm150908 extends BasicFirm implements Investor {
 		this.data.put("investment.vol", investmentVolume);
 		this.data.put("investment.val", investmentCost);
 		this.data.put("animalSpirit", animalSpirit);
+		this.data.put("animalSpirit.weighted", animalSpirit * (Long) this.capitalManager.askFor("capital"));
+		this.data.put("discountRate", discountRate);
+		this.data.put("discountRate.weighted", discountRate * (Long) this.capitalManager.askFor("capital"));
+	}
+
+	@Override
+	public Object askFor(String key) {
+		final Object result;
+		if ("animalSpirit".equals(key)) {
+			result = this.animalSpirit;
+		} else {
+			result = null;
+		}
+		return result;
 	}
 
 }

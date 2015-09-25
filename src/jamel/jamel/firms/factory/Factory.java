@@ -11,14 +11,20 @@ import jamel.jamel.widgets.LaborPower;
 public interface Factory extends Askable {
 
 	/**
-	 * Definitively closes the factory.
+	 * Cancels this factory.
 	 */
-	void bankrupt();
+	void cancel();
 
 	/**
 	 * Closes the factory.
 	 */
 	void close();
+
+	/**
+	 * Deletes the inventories and the machinery of this factory. The value of
+	 * the factory will be zero.
+	 */
+	void delete();
 
 	/**
 	 * Expands the capacity of this factory by adding the specified machines to
@@ -30,7 +36,8 @@ public interface Factory extends Askable {
 	void expandCapacity(Machine[] machines);
 
 	/**
-	 * Returns the capacity of the factory, i.e. its maximum number of workers.
+	 * Returns the capacity of the factory, i.e. its maximum number of workers,
+	 * i.e its number of machines.
 	 * 
 	 * @return the capacity.
 	 */

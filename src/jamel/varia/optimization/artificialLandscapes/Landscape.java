@@ -52,6 +52,12 @@ public abstract class Landscape implements Sector {
 		return new SectorDataset(){
 
 			@Override
+			public String getAgentInfo(String agent, String key) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
 			public Double getAgentValue(String string1, String string2) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
@@ -119,7 +125,7 @@ public abstract class Landscape implements Sector {
 			}
 
 			@Override
-			public void putSectorialValue(String string, Double d) {
+			public void putSectorialValue(String string, Number n) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
 			}

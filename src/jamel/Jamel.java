@@ -312,7 +312,7 @@ public class Jamel {
 		/*
 		 * TODO: desactiver ce bloc pour envoyer les messages vers la console
 		 * d'Eclipse plutot que dans le fichier log.
-		 */
+		 *
 		{
 			try {
 				out = new PrintStream(new FileOutputStream("jamel.log"));
@@ -325,14 +325,14 @@ public class Jamel {
 		/**/
 		final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d HH:mm:ss", Locale.US);
 		final String dateStr = simpleDateFormat.format(new Date());
-		System.out.println(dateStr);
-		System.out.println(getVersion());
+		Jamel.println(dateStr);
+		Jamel.println(getVersion());
 
 		// if (!updateVersion())
 		{
 			final File file = selectScenario();
 			if (file != null) {
-				System.out.println("run " + file.getPath());
+				Jamel.println("run " + file.getPath());
 				final String path = file.getParent();
 				final String name = file.getName();
 				Document scenario = null;
@@ -426,6 +426,22 @@ public class Jamel {
 		for (int i = 0; i < strings.length; i++) {
 			System.out.print(strings[i]);
 			if (i < strings.length - 1) {
+				System.out.print(", ");
+			}
+		}
+		System.out.println();
+	}
+
+	public static void println(Object... objects) {
+		for (int i = 0; i < objects.length; i++) {
+			final String string;
+			if (objects[i]==null) {
+				string = "null";
+			} else {
+				string = objects[i].toString();				
+			}
+			System.out.print(string);
+			if (i < objects.length - 1) {
 				System.out.print(", ");
 			}
 		}

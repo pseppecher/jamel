@@ -315,6 +315,18 @@ public class BasicSectorDataset implements SectorDataset {
 	}
 
 	@Override
+	public String getAgentInfo(String agentName, String key) {
+		final String result;
+		final AgentDataset data = this.agentsData.get(agentName);
+		if (data != null) {
+			result = data.getMessage(key);
+		} else {
+			result = null;
+		}
+		return result;
+	}
+
+	@Override
 	public Double[] getField(String key, String select) {
 		final Map<String, AgentDataset> selection = select(this.agentsData, select);
 		final Double[] result;
@@ -426,8 +438,14 @@ public class BasicSectorDataset implements SectorDataset {
 	}
 
 	@Override
-	public void putSectorialValue(String key, Double value) {
-		this.sectorialData.put(key, value);
+	public void putSectorialValue(String key, Number value) {
+		final Double d;
+		if (value==null) {
+			d=null;
+		} else {
+			d=value.doubleValue();
+		}
+		this.sectorialData.put(key, d);
 	}
 
 }

@@ -231,10 +231,11 @@ public class BasicMachine implements Machine {
 	@Override
 	public long depreciate() {
 		final double age = timer.getPeriod().intValue() - startDate;// TODO FIXME
-		final double cancellationProbability = Math.pow((age-100)/100,3); 
+		final double cancellationProbability = Math.pow((age-50)/150,3); 
 		//final double cancellationProbability = Math.pow((age)/180,5); 
 		if (this.random.nextFloat() < cancellationProbability) {
 			this.cancelled = true;
+			//Jamel.println(age);
 		}
 		final long depreciation;
 		if (this.cancelled) {

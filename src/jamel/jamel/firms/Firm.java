@@ -1,6 +1,7 @@
 package jamel.jamel.firms;
 
 import jamel.jamel.capital.StockCertificate;
+import jamel.jamel.firms.managers.Askable;
 import jamel.jamel.roles.AccountHolder;
 import jamel.jamel.roles.Corporation;
 import jamel.jamel.roles.Supplier;
@@ -9,7 +10,7 @@ import jamel.jamel.widgets.JobOffer;
 /**
  * Represents an individual firm.
  */
-public interface Firm extends AccountHolder, Corporation, Supplier {
+public interface Firm extends AccountHolder, Corporation, Supplier, Askable {
 
 	/**
 	 * Clears the ownership of the firm.
@@ -38,6 +39,12 @@ public interface Firm extends AccountHolder, Corporation, Supplier {
 	 * @return a {@link StockCertificate} that encapsulates the new shares.
 	 */
 	StockCertificate getNewShares(Integer n);
+
+	/**
+	 * Returns the size of this firm (the number of machines).
+	 * @return the size of this firm (the number of machines).
+	 */
+	int getSize();
 
 	/**
 	 * Returns the total value of the assets of this firm.

@@ -2,6 +2,7 @@ package jamel.jamel.firms;
 
 import java.util.List;
 
+import jamel.Jamel;
 import jamel.basic.util.Timer;
 import jamel.jamel.capital.BasicCapitalStock;
 import jamel.jamel.capital.CapitalStock;
@@ -168,8 +169,8 @@ public class BasicFirm extends AbstractFirm {
 			}
 
 			/**
-			 * Determines and returns the amount that will be paid as dividend for the
-			 * current period.
+			 * Determines and returns the amount that will be paid as dividend
+			 * for the current period.
 			 * 
 			 * @return the amount of the dividend for the current period.
 			 */
@@ -242,14 +243,20 @@ public class BasicFirm extends AbstractFirm {
 				final long capital = assets - liabilities;
 				final boolean insolvent = (timer.getPeriod().intValue() - creation > 12 && capital < 0);
 				// TODO: 12 should be a parameter
+				
+				final long shortTermDebt = account.getShortTermDebt();
+				final long longTermDebt = account.getLongTermDebt();
 
-				this.dataset.put("cash", (double) cash);
-				this.dataset.put("assets", (double) assets);
-				this.dataset.put("liabilities", (double) liabilities);
-				this.dataset.put("capital", (double) capital);
+				this.dataset.put("cash", cash);
+				this.dataset.put("assets", assets);
+				this.dataset.put("liabilities", liabilities);
+				this.dataset.put("capital", capital);
 
-				this.dataset.put("dividends", (double) this.dividend);
-				this.dataset.put("interest", (double) account.getInterest());
+				this.dataset.put("debt.shortTerm", shortTermDebt);
+				this.dataset.put("debt.longTerm", longTermDebt);
+
+				this.dataset.put("dividends", this.dividend);
+				this.dataset.put("interest", account.getInterest());
 
 				this.dataset.put("liabilities.target", getLiabilitiesTarget());
 				this.dataset.put("liabilities.excess", getLiabilitiesExcess());
@@ -257,15 +264,16 @@ public class BasicFirm extends AbstractFirm {
 				this.dataset.put("liabilities.new", account.getNewDebt());
 				this.dataset.put("liabilities.repayment", account.getRepaidDebt());
 
-				this.dataset.put("canceledDebts", (double) account.getCanceledDebt());
-				this.dataset.put("canceledDeposits", (double) account.getCanceledMoney());
-				
-				// TODO: alimenter les statistiques avec quelques ratios financiers.
+				this.dataset.put("canceledDebts", account.getCanceledDebt());
+				this.dataset.put("canceledDeposits", account.getCanceledMoney());
 
-				//final long netProfit = capital-initialCapital+dividend;
-				//final float returnOnEquity = netProfit/capital;
-				//this.dataset.put("returnOnEquity", (double) 1);
-				
+				// TODO: alimenter les statistiques avec quelques ratios
+				// financiers.
+
+				// final long netProfit = capital-initialCapital+dividend;
+				// final float returnOnEquity = netProfit/capital;
+				// this.dataset.put("returnOnEquity", (double) 1);
+
 				if (insolvent) {
 					this.dataset.put("insolvents", 1.);
 				} else {
@@ -285,14 +293,14 @@ public class BasicFirm extends AbstractFirm {
 				final boolean isConsistent;
 				final long grossProfit = (Long) salesManager.askFor("grossProfit");
 				final long interest = account.getInterest();
-				final long bankruptcy = account.getCanceledMoney()
-						+ factory.getInventoryLosses() - account.getCanceledDebt();
+				final long bankruptcy = account.getCanceledMoney() + factory.getInventoryLosses()
+						- account.getCanceledDebt();
 				final long capital = this.getCapital();
 				isConsistent = (capital == this.initialCapital + grossProfit
 						- (this.capitalStock.getDistributedDividends() + interest + bankruptcy));
 				if (!isConsistent) {
-					System.out.println("capital = " + capital);
-					System.out.println("expected = "
+					Jamel.println("capital = " + capital);
+					Jamel.println("expected = "
 							+ (this.initialCapital + grossProfit - (this.dividend + interest + bankruptcy)));
 					throw new RuntimeException("Inconsistency");
 				}
@@ -954,6 +962,16 @@ public class BasicFirm extends AbstractFirm {
 			}
 
 		};
+	}
+
+	@Override
+	public Object askFor(String key) {
+		return null;
+	}
+
+	@Override
+	public int getSize() {
+		return this.factory.getCapacity();
 	}
 
 }
