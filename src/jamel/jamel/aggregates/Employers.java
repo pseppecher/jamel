@@ -1,11 +1,11 @@
-package jamel.jamel.sectors;
+package jamel.jamel.aggregates;
 
 import jamel.jamel.widgets.JobOffer;
 
 /**
  * The employer sector.
  */
-public interface EmployerSector {
+public interface Employers {
 
 	/**
 	 * Returns a sample of job offers.

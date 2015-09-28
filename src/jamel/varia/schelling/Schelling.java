@@ -66,6 +66,9 @@ public class Schelling implements Sector {
 	/** The random. */
 	private final Random random;
 
+	/** The number of spontaneous moves by turn. */
+	private int spontaneous;
+
 	/** The tolerance of the agents. */
 	private int tolerance;
 
@@ -74,9 +77,6 @@ public class Schelling implements Sector {
 
 	/** The width. */
 	private int width=200;
-
-	/** The number of spontaneous moves by turn. */
-	private int spontaneous;
 
 	/**
 	 * Creates a new sector.
@@ -202,6 +202,12 @@ public class Schelling implements Sector {
 	@Override
 	public String getName() {
 		return this.name;
+	}
+
+	@Override
+	public Float getParam(String key) {
+		// Not used.
+		throw new RuntimeException("Not used.");
 	}
 
 	@Override

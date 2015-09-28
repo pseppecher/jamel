@@ -1,13 +1,12 @@
-package jamel.jamel.sectors;
+package jamel.jamel.aggregates;
 
 import jamel.jamel.roles.AccountHolder;
 import jamel.jamel.widgets.BankAccount;
 
 /**
- * A sector that contains (potential) shareholders.
- * Used to initialize the ownership of corporations.
+ * Represents the banking sector.
  */
-public interface BankingSector {
+public interface Banks {
 
 	/**
 	 * Creates and returns a new account for the specified {@link AccountHolder}. 

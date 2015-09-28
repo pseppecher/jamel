@@ -26,7 +26,7 @@ public class Simplex implements Sector {
 
 	/** The <code>dependencies</code> element. */
 	private static final String DEPENDENCIES = "dependencies";
-	
+
 	@SuppressWarnings("javadoc")
 	public static final String birthEnergy = "birthEnergy";
 
@@ -36,11 +36,12 @@ public class Simplex implements Sector {
 	@SuppressWarnings("javadoc")
 	public static final String eatVolume = "eatVolume";
 
-	/** 
-	 * The fitness comparator.<p>
+	/**
+	 * The fitness comparator.
+	 * <p>
 	 * To compare vertices according to their fitness.
 	 */
-	public static final Comparator<Vertex>fitnessComparator = new Comparator<Vertex>() {
+	public static final Comparator<Vertex> fitnessComparator = new Comparator<Vertex>() {
 		@Override
 		public int compare(Vertex pod1, Vertex pod2) {
 			return (new Double(pod2.getFitness()).compareTo(pod1.getFitness()));
@@ -76,14 +77,18 @@ public class Simplex implements Sector {
 
 	/**
 	 * Creates a new sector.
-	 * @param name the name of the sector.
-	 * @param circuit the circuit.
-	 * @throws InitializationException If something goes wrong.
+	 * 
+	 * @param name
+	 *            the name of the sector.
+	 * @param circuit
+	 *            the circuit.
+	 * @throws InitializationException
+	 *             If something goes wrong.
 	 */
 	public Simplex(String name, Circuit circuit) throws InitializationException {
-		this.name=name;
-		this.circuit=circuit;
-		this.vertices=new BasicAgentSet<Vertex>(null);
+		this.name = name;
+		this.circuit = circuit;
+		this.vertices = new BasicAgentSet<Vertex>(null);
 	}
 
 	@Override
@@ -98,9 +103,12 @@ public class Simplex implements Sector {
 
 	/**
 	 * Return the fitness of the specified point.
-	 * @param x  the x coordinate.
-	 * @param y  the y coordinate.
-	 * @return  the fitness of the specified point.
+	 * 
+	 * @param x
+	 *            the x coordinate.
+	 * @param y
+	 *            the y coordinate.
+	 * @return the fitness of the specified point.
 	 */
 	public double getFitness(double x, double y) {
 		return this.landscape.getZValue(x, y);
@@ -113,9 +121,12 @@ public class Simplex implements Sector {
 
 	/**
 	 * Returns the double value of the specified parameter.
-	 * @param key the key of the parameter to be returned.
+	 * 
+	 * @param key
+	 *            the key of the parameter to be returned.
 	 * @return the double value of the specified parameter.
 	 */
+	@Override
 	public Float getParam(String key) {
 		return this.params.get(key);
 	}
@@ -124,9 +135,10 @@ public class Simplex implements Sector {
 	public Phase getPhase(final String phaseName) {
 		Phase result = null;
 		if (phaseName.equals("move")) {
-			result = new AbstractPhase(phaseName, this){
+			result = new AbstractPhase(phaseName, this) {
 				/**
-				 *  Implements the downhill simplex method.
+				 * Implements the downhill simplex method.
+				 * 
 				 * @see jamel.basic.sector.Phase#run()
 				 */
 				@Override
@@ -136,79 +148,76 @@ public class Simplex implements Sector {
 					final Vertex first = list.get(0);
 					final Vertex second = list.get(1);
 					final Vertex third = list.get(2);
-					final double firstFitness = first.getFitness(); 
-					final double xG = second.getX() + (third.getX()-second.getX())/2;
-					final double yG = second.getY() + (third.getY()-second.getY())/2;
-					final double xV = xG-first.getX();
-					final double yV = yG-first.getY();
-					double xN = xG+xV;
-					double yN = yG+yV;
-					if (getFitness(xN, yN)<firstFitness) {
-						double xNN = xG+2.*xV;
-						double yNN = yG+2.*yV;
-						if (getFitness(xNN, yNN)<getFitness(xN, yN)) {
+					final double firstFitness = first.getFitness();
+					final double xG = second.getX() + (third.getX() - second.getX()) / 2;
+					final double yG = second.getY() + (third.getY() - second.getY()) / 2;
+					final double xV = xG - first.getX();
+					final double yV = yG - first.getY();
+					double xN = xG + xV;
+					double yN = yG + yV;
+					if (getFitness(xN, yN) < firstFitness) {
+						double xNN = xG + 2. * xV;
+						double yNN = yG + 2. * yV;
+						if (getFitness(xNN, yNN) < getFitness(xN, yN)) {
 							// expansion
-							first.moveTo(xNN,yNN);							
-						}
-						else {
+							first.moveTo(xNN, yNN);
+						} else {
 							// reflexion
-							first.moveTo(xN,yN);							
-						}						
-					}
-					else {
-						xN = xG+xV/2;
-						yN = yG+yV/2;				
-						if (getFitness(xN, yN)<firstFitness) {
+							first.moveTo(xN, yN);
+						}
+					} else {
+						xN = xG + xV / 2;
+						yN = yG + yV / 2;
+						if (getFitness(xN, yN) < firstFitness) {
 							// contraction
-							first.moveTo(xN,yN);						
-						}
-						else {
+							first.moveTo(xN, yN);
+						} else {
 							// shrink
-							xN = (first.getX()+third.getX())/2;
-							yN = (first.getY()+third.getY())/2;				
-							first.moveTo(xN,yN);
-							second.moveTo(xG,yG);
+							xN = (first.getX() + third.getX()) / 2;
+							yN = (first.getY() + third.getY()) / 2;
+							first.moveTo(xN, yN);
+							second.moveTo(xG, yG);
 						}
 					}
-				}				
-			};			
+				}
+			};
 		}
 		return result;
 	}
 
 	@Override
 	public void init(Element element) throws InitializationException {
-		if (element==null) {
-			throw new IllegalArgumentException("Element is null");			
+		if (element == null) {
+			throw new IllegalArgumentException("Element is null");
 		}
-		
+
 		// Looking for dependencies.
 		final Element refElement = (Element) element.getElementsByTagName(DEPENDENCIES).item(0);
-		if (refElement==null) {
-			throw new InitializationException("Element not found: "+DEPENDENCIES);
+		if (refElement == null) {
+			throw new InitializationException("Element not found: " + DEPENDENCIES);
 		}
-		
+
 		// Looking for the landscape sector.
 		final Element landscapeElement = (Element) refElement.getElementsByTagName("landscape").item(0);
-		if (landscapeElement==null) {
+		if (landscapeElement == null) {
 			throw new InitializationException("Element not found: landscape");
 		}
 		final String landscapeName = landscapeElement.getAttribute("value");
-		if (landscapeName=="") {
+		if (landscapeName == "") {
 			throw new InitializationException("Attribute not found: value");
 		}
 		this.landscape = (Landscape) circuit.getSector(landscapeName);
-		
-		// Looking for the vertices of the simplex. 
+
+		// Looking for the vertices of the simplex.
 		final NodeList verticesNodeList = element.getElementsByTagName("vertex");
-		for (int i=0;i<3;i++) {
+		for (int i = 0; i < 3; i++) {
 			final Element elem = (Element) verticesNodeList.item(i);
 			final float x = Float.parseFloat(elem.getAttribute("x"));
 			final float y = Float.parseFloat(elem.getAttribute("y"));
-			final Vertex vertex = new Vertex(this,x,y);
+			final Vertex vertex = new Vertex(this, x, y);
 			this.vertices.put(vertex);
 		}
-		
+
 	}
 
 }

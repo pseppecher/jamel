@@ -12,7 +12,7 @@ public class BasicParameters extends HashMap<String, Float> implements
 	public Float get(String key) {
 		final Float result = super.get(key);
 		if (result==null) {
-			throw new ParameterNotFoundException(key);
+			throw new ParameterNotFoundException("Missing parameter: "+key);
 		}
 		return result;
 	}

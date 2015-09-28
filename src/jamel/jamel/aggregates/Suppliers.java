@@ -1,11 +1,11 @@
-package jamel.jamel.sectors;
+package jamel.jamel.aggregates;
 
 import jamel.jamel.widgets.Supply;
 
 /**
  * A sector that provides supplies.
  */
-public interface SupplierSector {
+public interface Suppliers {
 
 	/**
 	 * Returns a sample of supplies.

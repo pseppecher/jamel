@@ -1,5 +1,7 @@
 package jamel.jamel.firms.managers;
 
+import java.util.List;
+
 import jamel.basic.util.Timer;
 import jamel.jamel.capital.StockCertificate;
 
@@ -10,8 +12,11 @@ public abstract class CapitalManager extends AbstractManager implements Askable 
 
 	/**
 	 * Creates a new capital manager.
-	 * @param name the name of the manager.
-	 * @param timer the timer.
+	 * 
+	 * @param name
+	 *            the name of the manager.
+	 * @param timer
+	 *            the timer.
 	 */
 	public CapitalManager(String name, Timer timer) {
 		super(name, timer);
@@ -30,13 +35,14 @@ public abstract class CapitalManager extends AbstractManager implements Askable 
 	public abstract void clearOwnership();
 
 	/**
-	 * Issues the specified number of new shares.
+	 * Clears the ownership of this firm, and shares the capital between the new
+	 * owners.
 	 * 
-	 * @param n
-	 *            the number of new shares to be issued.
-	 * @return a {@link StockCertificate} that encapsulates the new shares.
+	 * @param shares
+	 *            the number of shares for each owner.
+	 * @return the stock certificates for each new owner.
 	 */
-	public abstract StockCertificate getNewShares(Integer n);
+	public abstract StockCertificate[] getNewShares(List<Integer> shares);
 
 	/**
 	 * Returns <code>true</code> if the firm accounting is consistent,

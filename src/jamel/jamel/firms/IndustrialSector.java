@@ -1,5 +1,6 @@
 package jamel.jamel.firms;
 
+import jamel.basic.sector.Sector;
 import jamel.basic.util.Timer;
 import jamel.jamel.roles.Shareholder;
 import jamel.jamel.widgets.BankAccount;
@@ -11,7 +12,7 @@ import java.util.Random;
  * Represents the industrial sector.
  * The sector must be populated with agents implementing the {@link Firm} interface.
  */
-public interface IndustrialSector {
+interface IndustrialSector extends Sector {
 	
 	/**
 	 * Returns a new {@link BankAccount} for the specified {@link Firm}.
@@ -19,13 +20,6 @@ public interface IndustrialSector {
 	 * @return a new {@link BankAccount}.
 	 */
 	BankAccount getNewAccount(Firm firm);
-
-	/**
-	 * Returns the float value of the specified parameter.  
-	 * @param key the key of the parameter.
-	 * @return  the float value of the specified parameter.
-	 */
-	float getParam(String key);
 
 	/**
 	 * Returns the random.

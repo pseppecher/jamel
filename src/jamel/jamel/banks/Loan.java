@@ -3,7 +3,7 @@ package jamel.jamel.banks;
 /**
  * Represents a loan.
  */
-public interface Loan {
+interface Loan {
 
 	/**
 	 * Cancels the loan.

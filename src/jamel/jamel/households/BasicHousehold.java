@@ -4,7 +4,6 @@ import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Timer;
 import jamel.jamel.capital.StockCertificate;
-import jamel.jamel.sectors.HouseholdSector;
 import jamel.jamel.util.AnachronismException;
 import jamel.jamel.util.ConsistencyException;
 import jamel.jamel.util.Memory;

@@ -1,8 +1,8 @@
-package jamel.jamel.sectors;
+package jamel.jamel.aggregates;
 
 import java.util.List;
 
-import jamel.jamel.firms.Firm;
+import jamel.jamel.roles.Corporation;
 import jamel.jamel.roles.Shareholder;
 import jamel.jamel.widgets.Cheque;
 
@@ -11,7 +11,7 @@ import jamel.jamel.widgets.Cheque;
  * <p>
  * A capitalist sector is a sector composed of {@link Shareholder}.
  */
-public interface CapitalistSector {
+public interface Capitalists {
 
 	/**
 	 * Returns the list of all the {@link Shareholder} in the sector, sorted in
@@ -43,13 +43,13 @@ public interface CapitalistSector {
 	List<Shareholder> selectRandomCapitalOwners(int n);
 
 	/**
-	 * Vends une firme d'occasion.
+	 * Achète une entreprise d'occasion.
 	 * 
-	 * @param firm
+	 * @param corporation
 	 *            la firme mise en vente.
-	 * @return la liste des cheques de paiements.
+	 * @return an array that contains the cheques for the payment.
 	 */
-	Cheque[] sellFim(Firm firm);
+	Cheque[] buyCorporation(Corporation corporation);
 
 }
 

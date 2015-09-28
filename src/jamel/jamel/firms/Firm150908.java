@@ -238,12 +238,28 @@ public class Firm150908 extends BasicFirm implements Investor {
 				}
 			}
 
-			@Override
-			public StockCertificate getNewShares(Integer nShares) {
+			/**
+			 * Issues the specified number of new shares.
+			 * 
+			 * @param nShares
+			 *            the number of new shares to be issued.
+			 * @return a {@link StockCertificate} that encapsulates the new shares.
+			 */
+			private StockCertificate getNewShares(Integer nShares) {
 				checkConsistency();
 				return this.capitalStock.issueNewShares(nShares);
 			}
 
+			@Override
+			public StockCertificate[] getNewShares(List<Integer> shares) {
+				this.clearOwnership();
+				final StockCertificate[] newShares = new StockCertificate[shares.size()];
+				for (int i = 0; i < shares.size(); i++) {
+					newShares[i] = this.getNewShares(shares.get(i));
+				}
+				return newShares;
+			}
+			
 			@Override
 			public boolean isConsistent() {
 				checkConsistency();

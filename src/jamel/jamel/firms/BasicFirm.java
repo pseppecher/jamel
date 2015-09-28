@@ -32,7 +32,7 @@ import jamel.jamel.widgets.Supply;
  * <p>
  * The ownership of the firm is shared by several shareholders.
  */
-public class BasicFirm extends AbstractFirm {
+class BasicFirm extends AbstractFirm {
 
 	@SuppressWarnings("javadoc")
 	protected static final String JOB_OPENINGS = "jobOpenings";
@@ -281,11 +281,19 @@ public class BasicFirm extends AbstractFirm {
 				}
 			}
 
-			@Override
-			public StockCertificate getNewShares(Integer nShares) {
+			/**
+			 * Issues the specified number of new shares.
+			 * 
+			 * @param nShares
+			 *            the number of new shares to be issued.
+			 * @return a {@link StockCertificate} that encapsulates the new shares.
+			 */
+			private StockCertificate getNewShares(Integer nShares) {
 				checkConsistency();
 				return this.capitalStock.issueNewShares(nShares);
 			}
+			
+			
 
 			@Override
 			public boolean isConsistent() {
@@ -362,6 +370,17 @@ public class BasicFirm extends AbstractFirm {
 					throw new RuntimeException("No shareholder.");
 				}
 			}
+
+			@Override
+			public StockCertificate[] getNewShares(List<Integer> shares) {
+				this.clearOwnership();
+				final StockCertificate[] newShares = new StockCertificate[shares.size()];
+				for (int i = 0; i < shares.size(); i++) {
+					newShares[i] = this.getNewShares(shares.get(i));
+				}
+				return newShares;
+			}
+			
 		};
 		newCapitalManager.updateOwnership();
 		return newCapitalManager;
@@ -374,8 +393,8 @@ public class BasicFirm extends AbstractFirm {
 	 */
 	@Override
 	protected Factory getNewFactory() {
-		return new BasicFactory((int) sector.getParam(PRODUCTION_TIME), (int) sector.getParam(PRODUCTION_CAPACITY),
-				(long) sector.getParam(PRODUCTIVITY), timer, random);
+		return new BasicFactory(sector.getParam(PRODUCTION_TIME).intValue(), sector.getParam(PRODUCTION_CAPACITY).intValue(),
+				sector.getParam(PRODUCTIVITY).longValue(), timer, random);
 	}
 
 	/**
@@ -610,10 +629,9 @@ public class BasicFirm extends AbstractFirm {
 						(long) (sector.getParam(SELLING_CAPACITY) * factory.getMaxUtilAverageProduction()));
 
 				if (pricingManager.getPrice() == null) {
-					pricingManager.updatePrice();// TODO: combien de fois update
-					// price est-il appel� ? ne
-					// peut-il �tre appel� q'une
-					// fois, ici ?
+					pricingManager.updatePrice();
+					// TODO: combien de fois updatePrice() est-il appel� ? 
+					// ne peut-il �tre appel� q'une fois, ici ?
 				}
 				final Double price = pricingManager.getPrice();
 

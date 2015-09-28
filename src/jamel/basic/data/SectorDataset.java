@@ -10,6 +10,14 @@ import org.jfree.data.xy.XYDataItem;
 public interface SectorDataset {
 
 	/**
+	 * Returns the specified info about the specified agent.
+	 * @param agent the name of the agent.
+	 * @param key the key of the info to be returned.
+	 * @return the specified info about the specified agent.
+	 */
+	String getAgentInfo(String agent, String key);
+
+	/**
 	 * Returns the specified value for the specified agent.
 	 * 
 	 * @param dataKey
@@ -155,8 +163,6 @@ public interface SectorDataset {
 	 *            the value to be added.
 	 */
 	void putSectorialValue(String key, Number value);
-
-	String getAgentInfo(String agent, String key);
 
 }
 

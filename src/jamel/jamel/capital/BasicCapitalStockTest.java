@@ -131,6 +131,11 @@ public class BasicCapitalStockTest {
 				throw new RuntimeException("Not used.");
 			}
 
+			@Override
+			public StockCertificate[] getNewShares(List<Integer> shares) {
+				throw new RuntimeException("Not used.");
+			}
+
 		};
 	}
 

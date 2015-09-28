@@ -11,6 +11,14 @@ import jamel.basic.sector.Phase;
  */
 public class Sector150908 extends BasicIndustrialSector {
 
+	/**
+	 * Creates a new industrial sector.
+	 * 
+	 * @param name
+	 *            the name of the sector.
+	 * @param circuit
+	 *            the circuit.
+	 */
 	public Sector150908(String name, Circuit circuit) {
 		super(name, circuit);
 	}

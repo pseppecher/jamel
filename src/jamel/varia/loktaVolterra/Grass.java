@@ -20,13 +20,13 @@ import org.w3c.dom.Node;
 public class Grass implements Sector, LandSector {
 
 	@SuppressWarnings("javadoc")
-	public static final String growth = "growth"; 
+	public static final String growth = "growth";
 
 	@SuppressWarnings("javadoc")
 	public static final String lim = "lim";
 
 	/** The height of the grass. */
-	private Integer height=null;
+	private Integer height = null;
 
 	/** The name of the sector. */
 	private final String name;
@@ -38,15 +38,18 @@ public class Grass implements Sector, LandSector {
 	private LandSquare[][] squares = null;
 
 	/** The width of the grass. */
-	private Integer width=null;
+	private Integer width = null;
 
 	/**
 	 * Creates a new sector.
-	 * @param name the name of the sector.
-	 * @param circuit the circuit.
+	 * 
+	 * @param name
+	 *            the name of the sector.
+	 * @param circuit
+	 *            the circuit.
 	 */
 	public Grass(String name, Circuit circuit) {
-		this.name=name;
+		this.name = name;
 	}
 
 	@Override
@@ -62,12 +65,12 @@ public class Grass implements Sector, LandSector {
 	@Override
 	public SectorDataset getDataset() {
 		final SectorDataset sectorDataset = new BasicSectorDataset();
-		for (int x=0;x<width;x++) {
-			for (int y=0;y<height;y++) {
-				sectorDataset.putIndividualData(squares[x][y].getData());						
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				sectorDataset.putIndividualData(squares[x][y].getData());
 			}
 		}
-		return sectorDataset;	
+		return sectorDataset;
 	}
 
 	@Override
@@ -85,12 +88,14 @@ public class Grass implements Sector, LandSector {
 		return this.name;
 	}
 
-
 	/**
 	 * Returns the double value of the specified parameter.
-	 * @param key the key of the parameter to be returned.
+	 * 
+	 * @param key
+	 *            the key of the parameter to be returned.
 	 * @return the double value of the specified parameter.
 	 */
+	@Override
 	public Float getParam(String key) {
 		return this.params.get(key);
 	}
@@ -99,16 +104,16 @@ public class Grass implements Sector, LandSector {
 	public Phase getPhase(final String phaseName) {
 		Phase result = null;
 		if (phaseName.equals("grow")) {
-			result = new AbstractPhase(phaseName, this){
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
-					for (int x=0;x<width;x++) {
-						for (int y=0;y<height;y++) {
-							squares[x][y].grow();						
+					for (int x = 0; x < width; x++) {
+						for (int y = 0; y < height; y++) {
+							squares[x][y].grow();
 						}
 					}
-				}				
-			};			
+				}
+			};
 		}
 		return result;
 	}
@@ -117,22 +122,22 @@ public class Grass implements Sector, LandSector {
 	public void init(Element element) {
 		final Element settingsElement = (Element) element.getElementsByTagName("settings").item(0);
 		final NamedNodeMap attributes = settingsElement.getAttributes();
-		for (int i=0; i< attributes.getLength(); i++) {
+		for (int i = 0; i < attributes.getLength(); i++) {
 			final Node node = attributes.item(i);
-			if (node.getNodeType()==Node.ATTRIBUTE_NODE) {
+			if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
 				final Attr attr = (Attr) node;
 				this.params.put(attr.getName(), Float.parseFloat(attr.getValue()));
 			}
 		}
-		this.width=this.params.get("width").intValue();
-		this.height=this.params.get("height").intValue();
+		this.width = this.params.get("width").intValue();
+		this.height = this.params.get("height").intValue();
 		this.squares = new LandSquare[width][height];
-		for (int x=0;x<width;x++) {
-			for (int y=0;y<height;y++) {
-				LandSquare landSquare = new LandSquare(Grass.this,x,y);
-				this.squares[x][y]=landSquare;				
+		for (int x = 0; x < width; x++) {
+			for (int y = 0; y < height; y++) {
+				LandSquare landSquare = new LandSquare(Grass.this, x, y);
+				this.squares[x][y] = landSquare;
 			}
-		}				
+		}
 	}
 
 }

@@ -47,8 +47,23 @@ public interface MacroDatabase {
 	public Expression getFunction(String query) throws InitializationException;
 
 	/**
-	 * Returns a list of {@link XYDataItem} that contains the specified values for each
-	 * agent selected.
+	 * Returns the specified message.
+	 * 
+	 * @param sector
+	 *            the sector of the agent.
+	 * @param agent
+	 *            the name of the agent.
+	 * @param key
+	 *            the key of the message.
+	 * @param lag
+	 *            the lag (0=current period, 1=t-1, ...).
+	 * @return the specified message.
+	 */
+	public String getMessage(String sector, String agent, String key, int lag);
+
+	/**
+	 * Returns a list of {@link XYDataItem} that contains the specified values
+	 * for each agent selected.
 	 * 
 	 * @param sector
 	 *            the name of the sector.
@@ -65,9 +80,9 @@ public interface MacroDatabase {
 	public List<XYDataItem> getScatterData(String sector, String xKey, String yKey, int t, String select);
 
 	/**
-	 * Returns the specified xyz data (an array with length 3, containing three arrays of
-	 * equal length, the first containing the x-values, the second containing
-	 * the y-values and the third containing the z-values).
+	 * Returns the specified xyz data (an array with length 3, containing three
+	 * arrays of equal length, the first containing the x-values, the second
+	 * containing the y-values and the third containing the z-values).
 	 * 
 	 * @param sector
 	 *            the sector.
@@ -95,19 +110,18 @@ public interface MacroDatabase {
 	public Expression newQuery(String query) throws InitializationException;
 
 	/**
-	 * Associates the specified {@link SectorDataset} with the specified sector in this
-	 * database. If the database previously contained a dataset for the sector,
-	 * the old dataset is replaced.
+	 * Associates the specified {@link SectorDataset} with the specified sector
+	 * in this database. If the database previously contained a dataset for the
+	 * sector, the old dataset is replaced.
 	 * 
 	 * @param sector
 	 *            the name of the sector with which the specified value is to be
 	 *            associated.
 	 * @param sectorDataset
-	 *            {@link SectorDataset} to be associated with the specified sector.
+	 *            {@link SectorDataset} to be associated with the specified
+	 *            sector.
 	 */
 	public void putData(String sector, SectorDataset sectorDataset);
-
-	public String getMessage(String sector, String agent, String key, int lag);
 
 }
 

@@ -23,7 +23,7 @@ import org.w3c.dom.Node;
  * The Prey sector.
  */
 public class Predators implements Sector {
-	
+
 	/** The <code>dependencies</code> element. */
 	protected static final String DEPENDENCIES = "dependencies";
 
@@ -56,7 +56,7 @@ public class Predators implements Sector {
 
 	/** The name of the sector. */
 	private final String name;
-	
+
 	/** The parameters of the sector. */
 	private final JamelParameters params = new BasicParameters();
 
@@ -68,17 +68,21 @@ public class Predators implements Sector {
 
 	/**
 	 * Creates a new sector.
-	 * @param name the name of the sector.
-	 * @param circuit the circuit.
-	 * @throws InitializationException If something goes wrong.
+	 * 
+	 * @param name
+	 *            the name of the sector.
+	 * @param circuit
+	 *            the circuit.
+	 * @throws InitializationException
+	 *             If something goes wrong.
 	 */
 	public Predators(String name, Circuit circuit) throws InitializationException {
-		this.name=name;
-		this.circuit=circuit;
-		this.random=circuit.getRandom();
-		this.agents=new BasicAgentSet<Predator>(random);
+		this.name = name;
+		this.circuit = circuit;
+		this.random = circuit.getRandom();
+		this.agents = new BasicAgentSet<Predator>(random);
 	}
-	
+
 	@Override
 	public void doEvent(Element event) {
 		throw new RuntimeException("Not yet implemented");
@@ -86,13 +90,17 @@ public class Predators implements Sector {
 
 	/**
 	 * Eats a prey.
-	 * @param x the X coordinate.
-	 * @param y the Y coordinate.
-	 * @param eatVol the volume of grass to eat.
+	 * 
+	 * @param x
+	 *            the X coordinate.
+	 * @param y
+	 *            the Y coordinate.
+	 * @param eatVol
+	 *            the volume of grass to eat.
 	 * @return the energy.
 	 */
 	public double eatPrey(double x, double y, double eatVol) {
-		return this.preys.eat(x,y,eatVol);
+		return this.preys.eat(x, y, eatVol);
 	}
 
 	@Override
@@ -107,9 +115,12 @@ public class Predators implements Sector {
 
 	/**
 	 * Returns the double value of the specified parameter.
-	 * @param key the key of the parameter to be returned.
+	 * 
+	 * @param key
+	 *            the key of the parameter to be returned.
 	 * @return the double value of the specified parameter.
 	 */
+	@Override
 	public Float getParam(String key) {
 		return this.params.get(key);
 	}
@@ -118,85 +129,86 @@ public class Predators implements Sector {
 	public Phase getPhase(final String phaseName) {
 		Phase result = null;
 		if (phaseName.equals("move")) {
-			result = new AbstractPhase(phaseName, this){
+			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
 					final float spontaneous = params.get("spontaneous");
-					if(spontaneous<1) {
-						if(spontaneous>random.nextFloat()) {
-							final Predator predator = new Predator(Predators.this,random,1);
-							agents.put(predator);							
+					if (spontaneous < 1) {
+						if (spontaneous > random.nextFloat()) {
+							final Predator predator = new Predator(Predators.this, random, 1);
+							agents.put(predator);
 						}
-					}
-					else {
-						for(int i=0;i<spontaneous;i++) {
-							final Predator predator = new Predator(Predators.this,random,1);
-							agents.put(predator);								
+					} else {
+						for (int i = 0; i < spontaneous; i++) {
+							final Predator predator = new Predator(Predators.this, random, 1);
+							agents.put(predator);
 						}
 					}
 					final List<Predator> list = agents.getList();
-					for (Predator predator:list) {
+					for (Predator predator : list) {
 						predator.move();
 					}
-				}				
-			};			
+				}
+			};
 		}
 		return result;
 	}
 
 	@Override
 	public void init(Element element) throws InitializationException {
-		if (element==null) {
-			throw new IllegalArgumentException("Element is null");			
+		if (element == null) {
+			throw new IllegalArgumentException("Element is null");
 		}
-		
+
 		// Looking for dependencies.
 		final Element refElement = (Element) element.getElementsByTagName(DEPENDENCIES).item(0);
-		if (refElement==null) {
-			throw new InitializationException("Element not found: "+DEPENDENCIES);
+		if (refElement == null) {
+			throw new InitializationException("Element not found: " + DEPENDENCIES);
 		}
 		final Element preysSectorElement = (Element) refElement.getElementsByTagName("preySector").item(0);
-		if (preysSectorElement==null) {
+		if (preysSectorElement == null) {
 			throw new InitializationException("Dependencies: Element not found: preySector");
 		}
 		final String preysKey = preysSectorElement.getAttribute("value");
-		if (preysKey=="") {
+		if (preysKey == "") {
 			throw new InitializationException("Attribute not found: value");
 		}
 		this.preys = (Preys) circuit.getSector(preysKey);
 
 		// Looking for the land sector.
 		final Element landSectorElement = (Element) refElement.getElementsByTagName("landSector").item(0);
-		if (landSectorElement==null) {
+		if (landSectorElement == null) {
 			throw new InitializationException("Dependencies: Element not found: landSector");
 		}
 		final String grass = landSectorElement.getAttribute("value");
-		if (grass=="") {
+		if (grass == "") {
 			throw new InitializationException("Attribute not found: value");
 		}
 		final LandSector landSector = (LandSector) circuit.getSector(grass);
-		this.params.put(landHeight,landSector.getLandHeight().floatValue());
-		this.params.put(landWidth,landSector.getLandWidth().floatValue());		
-		
+		this.params.put(landHeight, landSector.getLandHeight().floatValue());
+		this.params.put(landWidth, landSector.getLandWidth().floatValue());
+
 		// Looking for settings.
 		final Element settingsElement = (Element) element.getElementsByTagName("settings").item(0);
 		final NamedNodeMap attributes = settingsElement.getAttributes();
-		for (int i=0; i< attributes.getLength(); i++) {
+		for (int i = 0; i < attributes.getLength(); i++) {
 			final Node node = attributes.item(i);
-			if (node.getNodeType()==Node.ATTRIBUTE_NODE) {
+			if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
 				final Attr attr = (Attr) node;
 				this.params.put(attr.getName(), Float.parseFloat(attr.getValue()));
 			}
 		}
-		for (int i=0;i<100;i++) {
-			final Predator predator = new Predator(this, this.random,10);
+		for (int i = 0; i < 100; i++) {
+			final Predator predator = new Predator(this, this.random, 10);
 			this.agents.put(predator);
 		}
 	}
 
 	/**
 	 * Adds the given predator to the sector.
-	 * @param predator the predator to be added.
+	 * 
+	 * @param predator
+	 *            the predator to be added.
 	 */
 	public void newPredator(Predator predator) {
 		this.agents.put(predator);
@@ -204,7 +216,9 @@ public class Predators implements Sector {
 
 	/**
 	 * Removes the given predator from the sector.
-	 * @param predator the predator to be removed.
+	 * 
+	 * @param predator
+	 *            the predator to be removed.
 	 */
 	public void remove(Predator predator) {
 		this.agents.remove(predator);

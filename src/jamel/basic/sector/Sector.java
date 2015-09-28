@@ -29,6 +29,13 @@ public interface Sector {
 	String getName();
 
 	/**
+	 * Returns the float value of the specified parameter.  
+	 * @param key the key of the parameter.
+	 * @return  the float value of the specified parameter.
+	 */
+	Float getParam(String key);
+
+	/**
 	 * Returns the specified phase.
 	 * @param phaseName the name of the phase.
 	 * @return a phase.
@@ -43,6 +50,7 @@ public interface Sector {
 	 * @throws InitializationException if something goes wrong.
 	 */
 	void init(Element element) throws InitializationException;
+
 	
 }
 

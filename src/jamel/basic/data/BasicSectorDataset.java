@@ -319,7 +319,7 @@ public class BasicSectorDataset implements SectorDataset {
 		final String result;
 		final AgentDataset data = this.agentsData.get(agentName);
 		if (data != null) {
-			result = data.getMessage(key);
+			result = data.getInfo(key);
 		} else {
 			result = null;
 		}

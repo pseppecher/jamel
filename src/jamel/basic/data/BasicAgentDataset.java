@@ -23,7 +23,7 @@ public class BasicAgentDataset implements AgentDataset {
 	/**
 	 * A map containing the string data.
 	 */
-	final private Map<String,String> messages = new HashMap<String,String>();
+	final private Map<String,String> infos = new HashMap<String,String>();
 	
 	/**
 	 * Creates a new BasicAgentDataset.
@@ -65,12 +65,12 @@ public class BasicAgentDataset implements AgentDataset {
 	}
 
 	@Override
-	public void putAll(AgentDataset data) {
-		for(String key:data.keySet()) {
-			this.put(key, data.get(key));
+	public void putAll(AgentDataset agentDataset) {
+		for(String key:agentDataset.keySet()) {
+			this.put(key, agentDataset.get(key));
 		}
-		for(String key:messages.keySet()) {
-			this.putMessage(key, messages.get(key));
+		for(String key:infos.keySet()) {
+			this.putInfo(key, infos.get(key));
 		}
 	}
 
@@ -86,8 +86,8 @@ public class BasicAgentDataset implements AgentDataset {
 	}
 
 	@Override
-	public void putMessage(String key, String message) {
-		this.messages.put(key, message);
+	public void putInfo(String key, String message) {
+		this.infos.put(key, message);
 	}
 
 	@Override
@@ -101,8 +101,8 @@ public class BasicAgentDataset implements AgentDataset {
 	}
 
 	@Override
-	public String getMessage(String key) {
-		return this.messages.get(key);
+	public String getInfo(String key) {
+		return this.infos.get(key);
 	}
 
 }

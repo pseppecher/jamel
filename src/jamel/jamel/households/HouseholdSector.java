@@ -1,9 +1,9 @@
-package jamel.jamel.sectors;
+package jamel.jamel.households;
 
 import java.util.Random;
 
+import jamel.basic.sector.Sector;
 import jamel.basic.util.Timer;
-import jamel.jamel.households.Household;
 import jamel.jamel.widgets.BankAccount;
 import jamel.jamel.widgets.JobOffer;
 import jamel.jamel.widgets.Supply;
@@ -11,7 +11,8 @@ import jamel.jamel.widgets.Supply;
 /**
  * Represents the sector of the households.
  */
-public interface HouseholdSector {
+
+interface HouseholdSector extends Sector {
 
 	/**
 	 * Returns an array of job offers.
@@ -26,13 +27,6 @@ public interface HouseholdSector {
 	 * @return a new bank account.
 	 */
 	BankAccount getNewAccount(Household Household);
-
-	/**
-	 * Returns the float value of the specified parameter.  
-	 * @param key the key of the parameter.
-	 * @return a Float.
-	 */
-	Float getParam(String key);
 
 	/**
 	 * Returns the random.

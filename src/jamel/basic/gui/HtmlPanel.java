@@ -32,23 +32,9 @@ import jamel.basic.util.InitializationException;
  */
 public class HtmlPanel extends JScrollPane implements Updatable {
 
-	/**
-	 * Represents a HTML element.
-	 */
-	public interface HtmlElement {
-
-		/**
-		 * Returns the content of this element as a HTML text.
-		 * 
-		 * @return the content of this element as a HTML text.
-		 */
-		String getText();
-
-	}
-
 	/** The number format. */
 	final private static NumberFormat nf = getNumberFormat();
-
+	
 	/**
 	 * Creates and returns a new {@link HtmlElement} that provides a dynamic
 	 * access to a value of the specified database.
@@ -85,18 +71,11 @@ public class HtmlPanel extends JScrollPane implements Updatable {
 			};
 		} catch (Exception e) {
 			try {
-				throw new InitializationException("Something went wrong while parsing the query: "+query,e);
+				throw new InitializationException("Something went wrong while parsing the query: " + query, e);
 			} catch (InitializationException e1) {
 				e1.printStackTrace();
 			}
-			newDataElement = new HtmlElement() {
-
-				@Override
-				public String getText() {
-					return "<font color=\"red\">Error</font>";
-				}
-
-			};
+			newDataElement = new ErrorElement();
 		}
 		return newDataElement;
 	}
@@ -109,9 +88,8 @@ public class HtmlPanel extends JScrollPane implements Updatable {
 	 * @param macroDatabase
 	 *            the database.
 	 * @return a new {@link HtmlElement}.
-	 * @throws InitializationException 
 	 */
-	private static HtmlElement getNewHtmlElement(Element elem, MacroDatabase macroDatabase) throws InitializationException {
+	private static HtmlElement getNewHtmlElement(Element elem, MacroDatabase macroDatabase) {
 
 		final String tagName = elem.getTagName();
 		final NodeList list = elem.getChildNodes();
@@ -147,6 +125,52 @@ public class HtmlPanel extends JScrollPane implements Updatable {
 			}
 
 		};
+	}
+
+	/**
+	 * Creates and returns a new {@link HtmlElement} that provides a dynamic
+	 * access to an info of the specified database.
+	 * 
+	 * @param elem
+	 *            an XML element that contains the name of the requested value.
+	 * @param macroDatabase
+	 *            the database.
+	 * @return a new {@link HtmlElement} that provides a dynamic access to a
+	 *         value of the specified database.
+	 */
+	private static HtmlElement getNewInfoElement(Element elem, final MacroDatabase macroDatabase) {
+		final String sector = elem.getAttribute("sector");
+		final String agent = elem.getAttribute("agent");
+		final String period = elem.getAttribute("period");
+		final String key = elem.getAttribute("key");
+
+		final int lag;
+		if (period.equals("t")) {
+			lag = 0;
+		} else if (period.startsWith("t-")) {
+			lag = Integer.parseInt(period.substring(2));
+		} else {
+			try {
+				throw new InitializationException("This period attribute is malformed: " + period);
+			} catch (InitializationException e) {
+				e.printStackTrace();
+				return new ErrorElement();
+			}
+		}
+		
+		final HtmlElement newInfoElement = new HtmlElement() {
+
+			@Override
+			public String getText() {
+				final String result;
+				result = macroDatabase.getMessage(sector, agent, key, lag);
+
+				return result;
+			}
+
+		};
+
+		return newInfoElement;
 	}
 
 	/**
@@ -205,10 +229,9 @@ public class HtmlPanel extends JScrollPane implements Updatable {
 	 * @param macroDatabase
 	 *            the database.
 	 * @return a new {@link HtmlElement}.
-	 * @throws InitializationException 
 	 */
-	private static HtmlElement parseNode(final Node node, MacroDatabase macroDatabase) throws InitializationException {
-		HtmlElement result;
+	private static HtmlElement parseNode(final Node node, MacroDatabase macroDatabase) {
+		final HtmlElement result;
 		if (node.getNodeType() == Node.ELEMENT_NODE) {
 			final Element elem = (Element) node;
 			if (elem.getNodeName().equals("data")) {
@@ -278,9 +301,8 @@ public class HtmlPanel extends JScrollPane implements Updatable {
 	 *            be displayed by the panel.
 	 * @param database
 	 *            the database that contains the data to be displayed.
-	 * @throws InitializationException 
 	 */
-	public HtmlPanel(Element elem, MacroDatabase database) throws InitializationException {
+	public HtmlPanel(Element elem, MacroDatabase database) {
 		this(parseNode(elem, database));
 	}
 
@@ -303,57 +325,13 @@ public class HtmlPanel extends JScrollPane implements Updatable {
 
 	@Override
 	public void update() {
-		final String text = htmlElement.getText();		
+		final String text = htmlElement.getText();
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override
 			public void run() {
 				jEditorPane.setText(text);
 			}
 		});
-	}
-
-	/**
-	 * Creates and returns a new {@link HtmlElement} that provides a dynamic
-	 * access to an info of the specified database.
-	 * 
-	 * @param elem
-	 *            an XML element that contains the name of the requested value.
-	 * @param macroDatabase
-	 *            the database.
-	 * @return a new {@link HtmlElement} that provides a dynamic access to a
-	 *         value of the specified database.
-	 * @throws InitializationException 
-	 */
-	private static HtmlElement getNewInfoElement(Element elem, final MacroDatabase macroDatabase) throws InitializationException {
-		final String sector = elem.getAttribute("sector");
-		final String agent = elem.getAttribute("agent");
-		final String period = elem.getAttribute("period");
-		final String key = elem.getAttribute("key");
-		
-		final int lag;
-		if (period.equals("t")) {
-			lag=0;
-		} else if (period.startsWith("t-")){
-			lag = Integer.parseInt(period.substring(2));
-		} else {
-			throw new InitializationException("This period attribute is malformed: "+period);
-		}
-		//<info sector="Industry" agent="Firm1" period="t" key="name" />
-		HtmlElement newInfoElement;
-	
-			newInfoElement = new HtmlElement() {
-	
-				@Override
-				public String getText() {
-					final String result;
-					result = macroDatabase.getMessage(sector,agent,key,lag);
-					
-					return result;
-				}
-	
-			};
-			
-		return newInfoElement;
 	}
 }
 

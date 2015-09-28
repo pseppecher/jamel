@@ -3,7 +3,7 @@ package jamel.jamel.banks;
 /**
  * Represents a deposit.
  */
-public interface Deposit {
+interface Deposit {
 
 	/**
 	 * Credits this deposit with the specified amount.

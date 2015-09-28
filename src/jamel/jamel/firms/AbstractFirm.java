@@ -17,6 +17,7 @@ import jamel.jamel.widgets.Supply;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Random;
 
 /**
@@ -276,8 +277,8 @@ public abstract class AbstractFirm implements Firm {
 			this.data.put("bankruptcies", 0);
 		}
 		
-		this.data.putMessage("name", this.name);
-		this.data.putMessage("account", this.account.getInfo());
+		this.data.putInfo("name", this.name);
+		this.data.putInfo("account", this.account.getInfo());
 
 	}
 
@@ -324,11 +325,18 @@ public abstract class AbstractFirm implements Firm {
 		return this.name;
 	}
 
+	/**
+	 * Issues the specified number of new shares.
+	 * 
+	 * @param shares
+	 *            the number of new shares to be issued.
+	 * @return a {@link StockCertificate} that encapsulates the new shares.
+	 */
 	@Override
-	public StockCertificate getNewShares(Integer nShares) {
-		return this.capitalManager.getNewShares(nShares);
+	public 	StockCertificate[] getNewShares(List<Integer> shares) {
+		return this.capitalManager.getNewShares(shares);
 	}
-
+	
 	@Override
 	public Supply getSupply() {
 		return this.salesManager.getSupply();

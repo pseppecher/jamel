@@ -6,16 +6,15 @@ import jamel.basic.sector.AbstractPhase;
 import jamel.basic.sector.AgentSet;
 import jamel.basic.sector.BasicAgentSet;
 import jamel.basic.sector.Phase;
-import jamel.basic.sector.Sector;
 import jamel.basic.util.BasicParameters;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.JamelParameters;
 import jamel.basic.util.Timer;
+import jamel.jamel.aggregates.Banks;
+import jamel.jamel.aggregates.Capitalists;
+import jamel.jamel.aggregates.Employers;
+import jamel.jamel.aggregates.Suppliers;
 import jamel.jamel.roles.Shareholder;
-import jamel.jamel.sectors.BankingSector;
-import jamel.jamel.sectors.CapitalistSector;
-import jamel.jamel.sectors.EmployerSector;
-import jamel.jamel.sectors.SupplierSector;
 import jamel.jamel.widgets.BankAccount;
 import jamel.jamel.widgets.JobOffer;
 import jamel.jamel.widgets.Supply;
@@ -36,8 +35,7 @@ import org.w3c.dom.NodeList;
 /**
  * A basic industrial sector.
  */
-public class BasicIndustrialSector implements Sector, IndustrialSector,
-		SupplierSector, EmployerSector {
+public class BasicIndustrialSector implements IndustrialSector, Suppliers, Employers {
 
 	/** The <code>dependencies</code> element. */
 	private static final String ELEM_DEPENDENCIES = "dependencies";
@@ -73,10 +71,10 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 	private String agentType = null;
 
 	/** The banking sector. */
-	private BankingSector banks;
+	private Banks banks;
 
 	/** The capitalist sector. */
-	private CapitalistSector capitalists;
+	private Capitalists capitalists;
 
 	/** The macroeconomic circuit. */
 	private final Circuit circuit;
@@ -96,7 +94,9 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 	/** The timer. */
 	final private Timer timer;
 
-	/** To count the number of firms created since the start of the simulation. */
+	/**
+	 * To count the number of firms created since the start of the simulation.
+	 */
 	protected int countFirms;
 
 	/** The collection of firms. */
@@ -106,7 +106,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 	protected final JamelParameters parameters = new BasicParameters();
 
 	/**
-	 * Creates a new banking sector.
+	 * Creates a new industrial sector.
 	 * 
 	 * @param name
 	 *            the name of the sector.
@@ -174,11 +174,8 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 			for (int index = 0; index < lim; index++) {
 				this.countFirms++;
 				final String firmName = "Firm" + this.countFirms;
-				final Firm firm = (Firm) Class
-						.forName(type, false,
-								ClassLoader.getSystemClassLoader())
-						.getConstructor(String.class, IndustrialSector.class)
-						.newInstance(firmName, this);
+				final Firm firm = (Firm) Class.forName(type, false, ClassLoader.getSystemClassLoader())
+						.getConstructor(String.class, IndustrialSector.class).newInstance(firmName, this);
 				result.add(firm);
 			}
 		} catch (Exception e) {
@@ -197,7 +194,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 			firm.open();
 			if (firm.isBankrupted()) {
 				bankrupted.add(firm);
-				//prepareRegeneration();
+				// prepareRegeneration();
 			}
 		}
 		this.firms.removeAll(bankrupted);
@@ -215,15 +212,13 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 					final Element elem = (Element) nodes.item(i);
 					if (elem.getNodeName().equals("param")) {
 						final String key = elem.getAttribute("key");
-						final float val = Float.parseFloat(elem
-								.getAttribute("value"));
+						final float val = Float.parseFloat(elem.getAttribute("value"));
 						this.parameters.put(key, val);
 					}
 				}
 			}
 		} else {
-			throw new RuntimeException("Unknown event or not yet implemented: "
-					+ event.getNodeName());
+			throw new RuntimeException("Unknown event or not yet implemented: " + event.getNodeName());
 		}
 	}
 
@@ -260,7 +255,7 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 	}
 
 	@Override
-	public float getParam(String key) {
+	public Float getParam(String key) {
 		return this.parameters.get(key);
 	}
 
@@ -319,9 +314,9 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 				}
 			};
 		}
-		
+
 		else {
-			result=null;
+			result = null;
 		}
 
 		return result;
@@ -392,31 +387,26 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 		this.agentType = agentAttribute;
 
 		// Initialization of the dependencies:
-		final Element refElement = (Element) element.getElementsByTagName(
-				ELEM_DEPENDENCIES).item(0);
+		final Element refElement = (Element) element.getElementsByTagName(ELEM_DEPENDENCIES).item(0);
 		if (refElement == null) {
-			throw new InitializationException("Element not found: "
-					+ ELEM_DEPENDENCIES);
+			throw new InitializationException("Element not found: " + ELEM_DEPENDENCIES);
 		}
 
 		// Looking for the capitalist sector.
 		final String key1 = "CapitalistSector";
-		final Element capitalistSectorElement = (Element) refElement
-				.getElementsByTagName(key1).item(0);
+		final Element capitalistSectorElement = (Element) refElement.getElementsByTagName(key1).item(0);
 		if (capitalistSectorElement == null) {
 			throw new InitializationException("Element not found: " + key1);
 		}
-		final String capitalistsKey = capitalistSectorElement
-				.getAttribute("value");
+		final String capitalistsKey = capitalistSectorElement.getAttribute("value");
 		if (capitalistsKey == "") {
 			throw new InitializationException("Missing attribute: value");
 		}
-		this.capitalists = (CapitalistSector) circuit.getSector(capitalistsKey);
+		this.capitalists = (Capitalists) circuit.getSector(capitalistsKey);
 
 		// Looking for the banking sector.
 		final String key3 = "Banks";
-		final Element banksElement = (Element) refElement.getElementsByTagName(
-				key3).item(0);
+		final Element banksElement = (Element) refElement.getElementsByTagName(key3).item(0);
 		if (banksElement == null) {
 			throw new InitializationException("Element not found: " + key3);
 		}
@@ -424,18 +414,16 @@ public class BasicIndustrialSector implements Sector, IndustrialSector,
 		if (banksKey == "") {
 			throw new InitializationException("Missing attribute: value");
 		}
-		this.banks = (BankingSector) circuit.getSector(banksKey);
+		this.banks = (Banks) circuit.getSector(banksKey);
 
 		// Initialization of the parameters:
-		final Element settingsElement = (Element) element.getElementsByTagName(
-				"settings").item(0);
+		final Element settingsElement = (Element) element.getElementsByTagName("settings").item(0);
 		final NamedNodeMap attributes = settingsElement.getAttributes();
 		for (int i = 0; i < attributes.getLength(); i++) {
 			final Node node = attributes.item(i);
 			if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
 				final Attr attr = (Attr) node;
-				this.parameters.put(attr.getName(),
-						Float.parseFloat(attr.getValue()));
+				this.parameters.put(attr.getName(), Float.parseFloat(attr.getValue()));
 			}
 		}
 

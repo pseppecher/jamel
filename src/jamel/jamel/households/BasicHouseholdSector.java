@@ -7,17 +7,15 @@ import jamel.basic.sector.AbstractPhase;
 import jamel.basic.sector.AgentSet;
 import jamel.basic.sector.BasicAgentSet;
 import jamel.basic.sector.Phase;
-import jamel.basic.sector.Sector;
 import jamel.basic.util.InitializationException;
 import jamel.basic.util.Timer;
+import jamel.jamel.aggregates.Banks;
+import jamel.jamel.aggregates.Capitalists;
+import jamel.jamel.aggregates.Employers;
+import jamel.jamel.aggregates.Suppliers;
 import jamel.jamel.capital.StockCertificate;
-import jamel.jamel.firms.Firm;
+import jamel.jamel.roles.Corporation;
 import jamel.jamel.roles.Shareholder;
-import jamel.jamel.sectors.BankingSector;
-import jamel.jamel.sectors.CapitalistSector;
-import jamel.jamel.sectors.EmployerSector;
-import jamel.jamel.sectors.HouseholdSector;
-import jamel.jamel.sectors.SupplierSector;
 import jamel.jamel.widgets.BankAccount;
 import jamel.jamel.widgets.Cheque;
 import jamel.jamel.widgets.JobOffer;
@@ -39,8 +37,7 @@ import org.w3c.dom.NodeList;
 /**
  * A basic household sector.
  */
-public class BasicHouseholdSector implements Sector, HouseholdSector,
-CapitalistSector {
+public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 
 	/** The key word for the "closure" phase. */
 	private static final String PHASE_CLOSURE = "closure";
@@ -67,7 +64,7 @@ CapitalistSector {
 	 * The banking sector. The banking sector provides new accounts to
 	 * households.
 	 */
-	protected BankingSector banks = null;
+	protected Banks banks = null;
 
 	/** The circuit. */
 	protected final Circuit circuit;
@@ -76,7 +73,7 @@ CapitalistSector {
 	protected int countAgents;
 
 	/** The employers. */
-	protected EmployerSector employers;
+	protected Employers employers;
 
 	/** The collection of agents. */
 	protected final AgentSet<Household> households;
@@ -94,7 +91,7 @@ CapitalistSector {
 	 * The supplier sector. The supplier sector supplies commodities to
 	 * households.
 	 */
-	protected SupplierSector suppliers = null;
+	protected Suppliers suppliers = null;
 
 	/** The timer. */
 	protected Timer timer;
@@ -139,14 +136,10 @@ CapitalistSector {
 			this.countAgents++;
 			final String householdName = this.name + "-" + this.countAgents;
 			try {
-				list.add((Household) Class
-						.forName(type, false,
-								ClassLoader.getSystemClassLoader())
-						.getConstructor(String.class, HouseholdSector.class)
-						.newInstance(householdName, this));
+				list.add((Household) Class.forName(type, false, ClassLoader.getSystemClassLoader())
+						.getConstructor(String.class, HouseholdSector.class).newInstance(householdName, this));
 			} catch (Exception e) {
-				throw new RuntimeException(
-						"Something goes wrong while creating households.", e);
+				throw new RuntimeException("Something goes wrong while creating households.", e);
 			}
 		}
 		return list;
@@ -164,15 +157,13 @@ CapitalistSector {
 					final Element elem = (Element) nodes.item(i);
 					if (elem.getNodeName().equals("param")) {
 						final String key = elem.getAttribute("key");
-						final float val = Float.parseFloat(elem
-								.getAttribute("value"));
+						final float val = Float.parseFloat(elem.getAttribute("value"));
 						this.parameters.put(key, val);
 					}
 				}
 			}
 		} else {
-			throw new RuntimeException("Unknown event or not yet implemented: "
-					+ event.getNodeName());
+			throw new RuntimeException("Unknown event or not yet implemented: " + event.getNodeName());
 		}
 	}
 
@@ -236,8 +227,7 @@ CapitalistSector {
 			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
-					for (final Household household : households
-							.getShuffledList()) {
+					for (final Household household : households.getShuffledList()) {
 						household.jobSearch();
 					}
 				}
@@ -248,8 +238,7 @@ CapitalistSector {
 			result = new AbstractPhase(phaseName, this) {
 				@Override
 				public void run() {
-					for (final Household household : households
-							.getShuffledList()) {
+					for (final Household household : households.getShuffledList()) {
 						household.consumption();
 					}
 				}
@@ -267,8 +256,7 @@ CapitalistSector {
 
 		else {
 			result = null;
-			throw new InitializationException("Unknown phase: \"" + phaseName
-					+ "\".");
+			throw new InitializationException("Unknown phase: \"" + phaseName + "\".");
 		}
 
 		return result;
@@ -304,17 +292,14 @@ CapitalistSector {
 		}
 		this.agentType = agentAttribute;
 
-		final Element refElement = (Element) element.getElementsByTagName(
-				DEPENDENCIES).item(0);
+		final Element refElement = (Element) element.getElementsByTagName(DEPENDENCIES).item(0);
 		if (refElement == null) {
-			throw new InitializationException("Element not found: "
-					+ DEPENDENCIES);
+			throw new InitializationException("Element not found: " + DEPENDENCIES);
 		}
 
 		// Looking for the supplier sector.
 		final String key1 = "Suppliers";
-		final Element suppliersElement = (Element) refElement
-				.getElementsByTagName(key1).item(0);
+		final Element suppliersElement = (Element) refElement.getElementsByTagName(key1).item(0);
 		if (suppliersElement == null) {
 			throw new InitializationException("Element not found: " + key1);
 		}
@@ -322,12 +307,11 @@ CapitalistSector {
 		if (suppliersKey == "") {
 			throw new InitializationException("Missing attribute: value");
 		}
-		this.suppliers = (SupplierSector) circuit.getSector(suppliersKey);
+		this.suppliers = (Suppliers) circuit.getSector(suppliersKey);
 
 		// Looking for the employer sector.
 		final String key2 = "Employers";
-		final Element employersElement = (Element) refElement
-				.getElementsByTagName(key2).item(0);
+		final Element employersElement = (Element) refElement.getElementsByTagName(key2).item(0);
 		if (employersElement == null) {
 			throw new InitializationException("Element not found: " + key2);
 		}
@@ -335,12 +319,11 @@ CapitalistSector {
 		if (employersKey == "") {
 			throw new InitializationException("Missing attribute: value");
 		}
-		this.employers = (EmployerSector) circuit.getSector(employersKey);
+		this.employers = (Employers) circuit.getSector(employersKey);
 
 		// Looking for the banking sector.
 		final String key3 = "Banks";
-		final Element banksElement = (Element) refElement.getElementsByTagName(
-				key3).item(0);
+		final Element banksElement = (Element) refElement.getElementsByTagName(key3).item(0);
 		if (banksElement == null) {
 			throw new InitializationException("Element not found: " + key3);
 		}
@@ -348,18 +331,16 @@ CapitalistSector {
 		if (banksKey == "") {
 			throw new InitializationException("Missing attribute: value");
 		}
-		this.banks = (BankingSector) circuit.getSector(banksKey);
+		this.banks = (Banks) circuit.getSector(banksKey);
 
 		// Initialization of the parameters:
-		final Element settingsElement = (Element) element.getElementsByTagName(
-				"settings").item(0);
+		final Element settingsElement = (Element) element.getElementsByTagName("settings").item(0);
 		final NamedNodeMap attributes = settingsElement.getAttributes();
 		for (int i = 0; i < attributes.getLength(); i++) {
 			final Node node = attributes.item(i);
 			if (node.getNodeType() == Node.ATTRIBUTE_NODE) {
 				final Attr attr = (Attr) node;
-				this.parameters.put(attr.getName(),
-						Float.parseFloat(attr.getValue()));
+				this.parameters.put(attr.getName(), Float.parseFloat(attr.getValue()));
 			}
 		}
 	}
@@ -380,28 +361,27 @@ CapitalistSector {
 	}
 
 	@Override
-	public Cheque[] sellFim(Firm firm) {
+	public Cheque[] buyCorporation(Corporation firm) {
 		final long firmValue = firm.getBookValue();
-		final List<Shareholder> all = new LinkedList<Shareholder>(
-				this.households.getShuffledList());
+		final List<Shareholder> all = new LinkedList<Shareholder>(this.households.getShuffledList());
 		final List<Shareholder> buyers = new ArrayList<Shareholder>(10);
 		final List<Long> prices = new ArrayList<Long>(10);
 		final List<Integer> shares = new ArrayList<Integer>(10);
-		final long priceOfOneShare = firmValue/100;
-		if (priceOfOneShare<2) {
-			throw new RuntimeException("priceOfOneShare: "+2);
+		final long priceOfOneShare = firmValue / 100;
+		if (priceOfOneShare < 2) {
+			throw new RuntimeException("priceOfOneShare: " + priceOfOneShare);
 			// FIXME
 		}
-		
+
 		class Auctioneer {
-			// TODO: It is not really an auctioneer. To be renamed. 
+			// TODO: It is not really an auctioneer. To be renamed.
 			int auction(long minimalFinancialCapacity) {
 				int nonIssuedShares = 100;
 				for (Shareholder shareholder : all) {
 					final long shareholderFinancialCapacity = shareholder.getFinancialCapacity();
 					if (shareholderFinancialCapacity > minimalFinancialCapacity) {
 
-						final int nShares0 = (int) (shareholderFinancialCapacity/priceOfOneShare);
+						final int nShares0 = (int) (shareholderFinancialCapacity / priceOfOneShare);
 						final int nShares = Math.min(nShares0, nonIssuedShares);
 						final long priceOfTheShares = priceOfOneShare * nShares;
 						buyers.add(shareholder);
@@ -416,44 +396,40 @@ CapitalistSector {
 				return nonIssuedShares;
 			}
 		}
-		
+
 		final Auctioneer auctioneer = new Auctioneer();
-		
-		int nonIssuedShares = auctioneer.auction(priceOfOneShare*10);
-		if (nonIssuedShares>0) {
+
+		int nonIssuedShares = auctioneer.auction(priceOfOneShare * 10);
+		if (nonIssuedShares > 0) {
 			buyers.clear();
 			prices.clear();
 			shares.clear();
-			nonIssuedShares = auctioneer.auction(priceOfOneShare*5);
-			if (nonIssuedShares>0) {
+			nonIssuedShares = auctioneer.auction(priceOfOneShare * 5);
+			if (nonIssuedShares > 0) {
 				buyers.clear();
 				prices.clear();
 				shares.clear();
-				nonIssuedShares = auctioneer.auction(priceOfOneShare*2);
-				if (nonIssuedShares>0) {
+				nonIssuedShares = auctioneer.auction(priceOfOneShare * 2);
+				if (nonIssuedShares > 0) {
 					buyers.clear();
 					prices.clear();
 					shares.clear();
 					nonIssuedShares = auctioneer.auction(priceOfOneShare);
 					if (nonIssuedShares != 0) {
-						Jamel.println("minimalPrice: "+priceOfOneShare);
-						throw new RuntimeException("Non issued shares: "+nonIssuedShares);
+						Jamel.println("minimalPrice: " + priceOfOneShare);
+						throw new RuntimeException("Non issued shares: " + nonIssuedShares);
 					}
 				}
 			}
 		}
 
-		if (buyers.size()==0) {
-			throw new RuntimeException("Buyers list is empty: "+firm.getName()+", period "+timer.getPeriod().intValue());			
+		if (buyers.size() == 0) {
+			throw new RuntimeException(
+					"Buyers list is empty: " + firm.getName() + ", period " + timer.getPeriod().intValue());
 		}
 
-		firm.clearOwnership();
-		final StockCertificate[] newShares = new StockCertificate[buyers.size()];
-		for (int i = 0; i < buyers.size(); i++) {
-			newShares[i] = firm.getNewShares(shares.get(i));
-		}
-
-		// Tout le capital est maintenant partag� proportionnellement aux
+		final StockCertificate[] newShares = firm.getNewShares(shares);
+		// Tout le capital est maintenant partagé proportionnellement aux
 		// contributions de chacun.
 
 		final Cheque[] cheques = new Cheque[buyers.size()];

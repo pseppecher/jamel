@@ -63,7 +63,7 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 	};
 
 	/** A string buffer to store test failure declarations. */
-	final private StringBuffer failures = new StringBuffer("Failure Trace:<br>" + rc);
+	final private StringBuilder failures = new StringBuilder("Failure Trace:<br>" + rc);
 
 	/** An array to store the labels of the tests. */
 	final private String[] labels;

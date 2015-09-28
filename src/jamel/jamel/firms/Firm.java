@@ -1,6 +1,5 @@
 package jamel.jamel.firms;
 
-import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.firms.managers.Askable;
 import jamel.jamel.roles.AccountHolder;
 import jamel.jamel.roles.Corporation;
@@ -8,7 +7,7 @@ import jamel.jamel.roles.Supplier;
 import jamel.jamel.widgets.JobOffer;
 
 /**
- * Represents an individual firm.
+ * Represents an individual firm. TODO: modifier should be package
  */
 public interface Firm extends AccountHolder, Corporation, Supplier, Askable {
 
@@ -32,16 +31,8 @@ public interface Firm extends AccountHolder, Corporation, Supplier, Askable {
 	JobOffer getJobOffer();
 
 	/**
-	 * Issues the specified number of new shares.
-	 * 
-	 * @param n
-	 *            the number of new shares to be issued.
-	 * @return a {@link StockCertificate} that encapsulates the new shares.
-	 */
-	StockCertificate getNewShares(Integer n);
-
-	/**
 	 * Returns the size of this firm (the number of machines).
+	 * 
 	 * @return the size of this firm (the number of machines).
 	 */
 	int getSize();
