@@ -1,5 +1,6 @@
 package jamel.jamel.firms.factory;
 
+import jamel.Jamel;
 import jamel.jamel.widgets.Commodities;
 
 /**
@@ -31,6 +32,12 @@ public class FinishedGoods implements Materials, Commodities {
 	 *            the value of the heap of finished goods to be created.
 	 */
 	public FinishedGoods(long volume, long value) {
+		if (volume<0) {
+			throw new IllegalArgumentException("Volume: "+volume);
+		}
+		if (value<0) {
+			throw new IllegalArgumentException("Value: "+value);
+		}
 		this.volume = volume;
 		this.value = value;
 	}
@@ -48,6 +55,9 @@ public class FinishedGoods implements Materials, Commodities {
 
 	@Override
 	public void consume(long consumption) {
+		if (consumption < 0) {
+			throw new IllegalArgumentException("Consumption: "+consumption);
+		}
 		if (consumption > this.volume) {
 			throw new RuntimeException("Overconsumption.");
 		}
@@ -75,7 +85,18 @@ public class FinishedGoods implements Materials, Commodities {
 		if (demand > this.volume) {
 			throw new IllegalArgumentException("Demand cannot exceed supply.");
 		}
-		final Commodities result = new FinishedGoods(demand, demand * this.value / this.volume);
+		if (demand < 0) {
+			throw new IllegalArgumentException("Bad volume: "+demand);
+		}
+		final double demand2 = demand;
+		final long newValue = (long) (demand2 * this.value / this.volume);
+		if (newValue < 0) {
+			Jamel.println("demand",demand);
+			Jamel.println("value",value);
+			Jamel.println("volume",volume);
+			throw new IllegalArgumentException("Bad value: "+newValue);
+		}
+		final Commodities result = new FinishedGoods(demand, newValue);
 		this.volume -= result.getVolume();
 		this.value -= result.getValue();
 		return result;
@@ -103,6 +124,9 @@ public class FinishedGoods implements Materials, Commodities {
 
 	@Override
 	public long getValue() {
+		if (this.value<0) {
+			throw new RuntimeException("Illegal value: "+this.value);
+		}
 		return this.value;
 	}
 
@@ -125,6 +149,9 @@ public class FinishedGoods implements Materials, Commodities {
 
 	@Override
 	public void setValue(long value) {
+		if (value<0) {
+			throw new IllegalArgumentException("Value: "+value);
+		}
 		this.value = value;
 	}
 

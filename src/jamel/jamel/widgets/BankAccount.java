@@ -109,23 +109,18 @@ public interface BankAccount extends Chequable {
 	boolean isCancelled();
 
 	/**
-	 * Creates a new long-term loan. The principal of the new loan is credited
+	 * Creates a new amortizing loan. The principal of the new loan is credited
 	 * to this account.
 	 * 
 	 * @param principal
 	 *            the amount of the new loan.
+	 * @param term
+	 *            the term of the new loan.
+	 * @param amortized
+	 *            a flag specifying whether or not the loan will be amortized.
 	 */
-	void newLongTermLoan(long principal);
-
-	/**
-	 * Creates a new short-term loan. The principal of the new loan is credited
-	 * to this account.
-	 * 
-	 * @param principal
-	 *            the amount of the new loan.
-	 */
-	void newShortTermLoan(long principal);
-
+	void newLoan(long principal, int term, boolean amortized);
+	
 }
 
 // ***

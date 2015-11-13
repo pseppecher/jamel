@@ -123,6 +123,8 @@ public interface MacroDatabase {
 	 */
 	public void putData(String sector, SectorDataset sectorDataset);
 
+	public Object[][] getData(String sector, String keys, int t, String select);
+
 }
 
 // ***

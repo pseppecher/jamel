@@ -30,9 +30,18 @@ public interface Machine extends Asset {
 
 	/**
 	 * Depreciates this machine.
+	 * 
 	 * @return the depreciation amount.
 	 */
 	public long depreciate();
+
+	/**
+	 * Removes this machine from service so as to convert it to scrap metal.
+	 * 
+	 * @return a heap of finished goods representing the scrap value of this
+	 *         machine.
+	 */
+	public FinishedGoods scrap();
 
 }
 

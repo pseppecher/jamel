@@ -32,7 +32,7 @@ import jamel.jamel.widgets.Supply;
  * <p>
  * The ownership of the firm is shared by several shareholders.
  */
-class BasicFirm extends AbstractFirm {
+public class BasicFirm extends AbstractFirm {
 
 	@SuppressWarnings("javadoc")
 	protected static final String JOB_OPENINGS = "jobOpenings";
@@ -65,7 +65,7 @@ class BasicFirm extends AbstractFirm {
 	 *            the timer.
 	 * @return a new {@link JobContract}.
 	 */
-	private static JobContract newJobContract(final Worker worker, final long wage, final int term, final Timer timer) {
+	protected static JobContract newJobContract(final Worker worker, final long wage, final int term, final Timer timer) {
 		final JobContract jobContract = new JobContract() {
 
 			private int end = timer.getPeriod().intValue() + term;
@@ -169,6 +169,19 @@ class BasicFirm extends AbstractFirm {
 			}
 
 			/**
+			 * Issues the specified number of new shares.
+			 * 
+			 * @param nShares
+			 *            the number of new shares to be issued.
+			 * @return a {@link StockCertificate} that encapsulates the new
+			 *         shares.
+			 */
+			private StockCertificate getNewShares(Integer nShares) {
+				checkConsistency();
+				return this.capitalStock.issueNewShares(nShares);
+			}
+
+			/**
 			 * Determines and returns the amount that will be paid as dividend
 			 * for the current period.
 			 * 
@@ -243,7 +256,7 @@ class BasicFirm extends AbstractFirm {
 				final long capital = assets - liabilities;
 				final boolean insolvent = (timer.getPeriod().intValue() - creation > 12 && capital < 0);
 				// TODO: 12 should be a parameter
-				
+
 				final long shortTermDebt = account.getShortTermDebt();
 				final long longTermDebt = account.getLongTermDebt();
 
@@ -281,19 +294,15 @@ class BasicFirm extends AbstractFirm {
 				}
 			}
 
-			/**
-			 * Issues the specified number of new shares.
-			 * 
-			 * @param nShares
-			 *            the number of new shares to be issued.
-			 * @return a {@link StockCertificate} that encapsulates the new shares.
-			 */
-			private StockCertificate getNewShares(Integer nShares) {
-				checkConsistency();
-				return this.capitalStock.issueNewShares(nShares);
+			@Override
+			public StockCertificate[] getNewShares(List<Integer> shares) {
+				this.clearOwnership();
+				final StockCertificate[] newShares = new StockCertificate[shares.size()];
+				for (int i = 0; i < shares.size(); i++) {
+					newShares[i] = this.getNewShares(shares.get(i));
+				}
+				return newShares;
 			}
-			
-			
 
 			@Override
 			public boolean isConsistent() {
@@ -343,7 +352,8 @@ class BasicFirm extends AbstractFirm {
 			public void secureFinancing(long amount) {
 				checkConsistency();
 				if (amount > account.getAmount()) {
-					account.newShortTermLoan(amount - account.getAmount());
+					account.newLoan(amount - account.getAmount(), 12, false);
+					// TODO 12 should be a parameter (SHORT_TERM)
 				}
 				if (account.getAmount() < amount) {
 					throw new RuntimeException("Production is not financed.");
@@ -371,16 +381,6 @@ class BasicFirm extends AbstractFirm {
 				}
 			}
 
-			@Override
-			public StockCertificate[] getNewShares(List<Integer> shares) {
-				this.clearOwnership();
-				final StockCertificate[] newShares = new StockCertificate[shares.size()];
-				for (int i = 0; i < shares.size(); i++) {
-					newShares[i] = this.getNewShares(shares.get(i));
-				}
-				return newShares;
-			}
-			
 		};
 		newCapitalManager.updateOwnership();
 		return newCapitalManager;
@@ -393,8 +393,9 @@ class BasicFirm extends AbstractFirm {
 	 */
 	@Override
 	protected Factory getNewFactory() {
-		return new BasicFactory(sector.getParam(PRODUCTION_TIME).intValue(), sector.getParam(PRODUCTION_CAPACITY).intValue(),
-				sector.getParam(PRODUCTIVITY).longValue(), timer, random);
+		return new BasicFactory(sector.getParam(PRODUCTION_TIME).intValue(),
+				sector.getParam(PRODUCTION_CAPACITY).intValue(), sector.getParam(PRODUCTIVITY).longValue(), timer,
+				random);
 	}
 
 	/**
@@ -455,7 +456,7 @@ class BasicFirm extends AbstractFirm {
 				if (supplyVolume > 0) {
 					this.salesRatio = salesVolume / supplyVolume;
 				} else {
-					this.salesRatio = 0d;
+					this.salesRatio = null;
 				}
 			}
 
@@ -468,27 +469,53 @@ class BasicFirm extends AbstractFirm {
 			@Override
 			public void updatePrice() {
 				checkConsistency();
-				final double inventoryRatio = factory.getInventoryRatio(sector.getParam(INVENTORY_NORMAL_LEVEL));
+				final StringBuilder info = new StringBuilder();
 				if (this.price == null) {
 					this.setUnitCostPrice();
+					info.append("Price is null: using the unit cost.<br>");
 				}
+				final float priceFlexibility = sector.getParam(PRICE_FLEXIBILITY);
 				if (this.price != null && salesRatio != null) {
-					final float priceFlexibility = sector.getParam(PRICE_FLEXIBILITY);
-					if ((salesRatio == 1)) {
+					final double inventoryRatio = factory.getInventoryRatio(sector.getParam(INVENTORY_NORMAL_LEVEL));
+					if ((salesRatio >= 1)) {
+						info.append("Sales level: high.<br>");
 						this.lowPrice = this.price;
 						if (inventoryRatio < 1) {
+							info.append("Inventory level: low.<br>");
+							info.append("Price: raising.<br>");
 							this.price = getNewPrice(this.lowPrice, this.highPrice);
+						} else {
+							info.append("Inventory level: high.<br>");
+							info.append("Price: unchanged<br>");
 						}
 						this.highPrice = this.highPrice * (1f + priceFlexibility);
 					} else {
+						info.append("Sales level: low.<br>");
 						this.highPrice = this.price;
 						if (inventoryRatio > 1) {
+							info.append("Inventory level: high.<br>");
+							info.append("Price: lowering.<br>");
 							this.price = getNewPrice(this.lowPrice, this.highPrice);
+						} else {
+							info.append("Inventory level: low.<br>");
+							info.append("Price: unchanged<br>");
 						}
 						this.lowPrice = this.lowPrice * (1f - priceFlexibility);
 					}
+				} else if (this.price!=null) {
+					info.append("Sales level: null.<br>");
+					this.highPrice = this.highPrice * (1f + priceFlexibility);
+					this.lowPrice = this.lowPrice * (1f - priceFlexibility);	
 				}
 				this.dataset.put("prices", this.price);
+				this.dataset.put("price.low", this.lowPrice);
+				this.dataset.put("price.high", this.highPrice);
+				info.append("New price: " + this.price + "<br>");
+				this.dataset.putInfo("updatePrice", info.toString());
+				
+				if (timer.getPeriod().intValue()>600&&timer.getPeriod().intValue()<610&&this.price>20000) {
+					Jamel.println("BasicFirm.pricingManager.updatePrice()",name,this.price);
+				}// TODO REMOVE ME */
 			}
 
 		};
@@ -565,6 +592,8 @@ class BasicFirm extends AbstractFirm {
 	protected SalesManager getNewSalesManager() {
 		return new SalesManager("SalesManager", timer) {
 
+			private int countGetSupply = 0;// TODO REMOVE
+
 			/**
 			 * The gross profit of the period.
 			 * <p>
@@ -613,12 +642,14 @@ class BasicFirm extends AbstractFirm {
 			@Override
 			public void close() {
 				checkConsistency();
-				dataset.put("supply.vol", (double) supplyVolume);
-				dataset.put("supply.val", (double) supplyValue);
-				dataset.put("sales.vol", (double) salesVolume);
-				dataset.put("sales.val", (double) salesValue);
-				dataset.put("sales.cost", (double) salesValueAtCost);
-				dataset.put("grossProfit", (double) grossProfit);
+				dataset.put("supply.vol", supplyVolume);
+				dataset.put("supply.val", supplyValue);
+				dataset.put("sales.vol", salesVolume);
+				dataset.put("sales.val", salesValue);
+				dataset.put("sales.cost", salesValueAtCost);
+				dataset.put("grossProfit", grossProfit);
+				dataset.put("grossProfit", grossProfit);
+				dataset.put("countGetSupply", this.countGetSupply);// TODO REMOVE
 			}
 
 			@Override
@@ -627,10 +658,17 @@ class BasicFirm extends AbstractFirm {
 				final int validPeriod = timer.getPeriod().intValue();
 				supplyVolume = Math.min((long) (sector.getParam(PROPENSITY2SELL) * factory.getFinishedGoodsVolume()),
 						(long) (sector.getParam(SELLING_CAPACITY) * factory.getMaxUtilAverageProduction()));
+				
+				if (supplyVolume==0 && factory.getFinishedGoodsVolume()!=0) {
+					supplyVolume=factory.getFinishedGoodsVolume();
+					if (factory.getMaxUtilAverageProduction()!=0 && factory.getFinishedGoodsVolume()!=1 ) {
+						throw new RuntimeException("Why is it possible?");
+					}
+				}
 
 				if (pricingManager.getPrice() == null) {
 					pricingManager.updatePrice();
-					// TODO: combien de fois updatePrice() est-il appel� ? 
+					// TODO: combien de fois updatePrice() est-il appel� ?
 					// ne peut-il �tre appel� q'une fois, ici ?
 				}
 				final Double price = pricingManager.getPrice();
@@ -640,7 +678,15 @@ class BasicFirm extends AbstractFirm {
 				} else {
 					supplyValue = 0;
 				}
-
+				
+				/*if (name.equals("Firm23") && supplyVolume==0 && factory.getFinishedGoodsVolume()!=0) {
+					Jamel.println("BasicFirm.createSupply()");
+					Jamel.println("factory.getMaxUtilAverageProduction()=="+factory.getMaxUtilAverageProduction());
+					Jamel.println("supplyVolume==0","factory.getFinishedGoodsVolume()=="+factory.getFinishedGoodsVolume());
+					Jamel.println();
+					// TODO REMOVE
+				}*/
+				
 				supply = new Supply() {
 
 					private long volume = supplyVolume;
@@ -714,6 +760,7 @@ class BasicFirm extends AbstractFirm {
 				} else {
 					result = null;
 				}
+				this.countGetSupply++;// TODO REMOVE
 				return result;
 			}
 
@@ -727,6 +774,7 @@ class BasicFirm extends AbstractFirm {
 				this.salesVolume = 0;
 				this.supplyValue = 0;
 				this.supplyVolume = 0;
+				this.countGetSupply = 0; // TODO REMOVE
 			}
 
 		};
@@ -779,11 +827,12 @@ class BasicFirm extends AbstractFirm {
 				final Double result;
 				final double sumVacancies = recentVacancies.getSum();
 				final double sumJobs = recentJobOpenings.getSum();
-				if (sumVacancies == 0) {
+				result = sumVacancies / sumJobs;
+				// FIXME must return null if sumJobs==0
+				/*if (sumVacancies == 0) {
 					result = 0d;
 				} else {
-					result = sumVacancies / sumJobs;
-				}
+				}*/
 				return result;
 			}
 
@@ -858,7 +907,7 @@ class BasicFirm extends AbstractFirm {
 			public void close() {
 				checkConsistency();
 				recentVacancies.add(this.vacancies);
-				this.dataset.put(JOB_VACANCIES, (double) this.vacancies);
+				this.dataset.put(JOB_VACANCIES, this.vacancies);
 			}
 
 			@Override
@@ -972,9 +1021,9 @@ class BasicFirm extends AbstractFirm {
 					jobOpenings = manpowerTarget - workforce.size();
 					payroll = workforce.getPayroll() + jobOpenings * (long) ((double) this.wage);
 				}
-				this.dataset.put(JOB_OPENINGS, (double) jobOpenings);
+				this.dataset.put(JOB_OPENINGS, jobOpenings);
 				this.recentJobOpenings.add(jobOpenings);
-				this.dataset.put(WORKFORCE_TARGET, (double) manpowerTarget);
+				this.dataset.put(WORKFORCE_TARGET, manpowerTarget);
 				this.vacancies = jobOpenings;
 				this.newJobOffer();
 			}

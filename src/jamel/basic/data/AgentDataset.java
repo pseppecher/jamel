@@ -70,6 +70,13 @@ public interface AgentDataset {
 	public String getName();
 
 	/**
+	 * Returns a <code>Set</code> view of the info keys contained in this dataset.
+	 * 
+	 * @return a <code>Set</code> view of the info keys contained in this dataset.
+	 */
+	public Set<String> infoKeySet();
+
+	/**
 	 * Returns a <code>Set</code> view of the keys contained in this dataset.
 	 * 
 	 * @return a <code>Set</code> view of the keys contained in this dataset.

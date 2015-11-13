@@ -137,13 +137,12 @@ public interface Factory extends Askable {
 	void process(LaborPower... laborPowers);
 
 	/**
-	 * Scraps the machines under the specified productivity threshold.
+	 * Scraps the specified number of machines.
 	 * 
-	 * @param threshold
-	 *            productivity threshold under which the machines are to be
-	 *            scraped.
+	 * @param nMachine
+	 *            the number of machines to be scrapped.
 	 */
-	void scrap(double threshold);
+	void scrap(double nMachine);
 
 }
 

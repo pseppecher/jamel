@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<circuit
+	type="jamel.basic.BasicCircuit"
+	date="28-10-2015"
+	title="Endogenous Cycles"
+	content="Evolutionary model"
+>
+
+	<settings
+		randomSeed="1"
+		chartsConfigFile="config/panels2.xml" />
+
+	<sectors>
+
+		<Households
+			type="jamel.jamel.households.BasicHouseholdSector"
+			agent="jamel.jamel.households.BasicHousehold"
+		>
+			<settings
+				savings.propensityToSave="0.2"
+				savings.ratioTarget="0.2"
+				savings.propensityToConsumeExcess="0.5"
+				wage.resistance="6"
+				wage.flexibility="0.4"
+				jobs.selection="10"
+				supplies.selection="10" />
+			<dependencies>
+				<Suppliers value="Industry" />
+				<Employers value="Industry" />
+				<Banks value="Banks" />
+			</dependencies>
+		</Households>
+
+		<Banks type="jamel.jamel.banks.BasicBankingSector">
+			<settings
+				rate.normal="0.004"
+				rate.penalty="0.008"
+				capital.targetedRatio="0.1"
+				capital.propensityToDistributeExcess="1."
+				term.normal="12"
+				term.extended="24"
+				accommodating="0"
+				patience="12" />
+			<dependencies>
+				<CapitalistSector value="Households" />
+			</dependencies>
+		</Banks>
+
+		<Industry
+			type="jamel.jamel.firms.Sector150908"
+			agent="jamel.jamel.firms.Firm150908"
+		>
+			<settings
+				mutation.strenght="0.5"
+				mutation.probability="0.1"
+				animalSpirits="0.75"
+				capitalTargetRatio.initialValue.min="0.6"
+				capitalTargetRatio.initialValue.max="1"
+				capital.propensityToDistribute="1"
+				inventory.normalLevel="2"
+				inventory.propensity2sell="0.5"
+				sales.capacity="2"
+				labourContract.max="18"
+				labourContract.min="6"
+				price.flexibility="0.02"
+				production.capacity="20"
+				production.time="6"
+				production.productivity="100"
+				utilizationRate.flexibility="0.1"
+				utilizationRate.initialValue="0.75"
+				vacancy.normalRate="0.03"
+				wage.initialValue="3000"
+				wage.flexibility.downward="0.06"
+				wage.flexibility.upward="0.06"
+				wage.minimum="0"
+				regenerationLapse.min="12"
+				regenerationLapse.max="24" />
+			<dependencies>
+				<CapitalistSector value="Households" />
+				<Banks value="Banks" />
+			</dependencies>
+		</Industry>
+	</sectors>
+
+	<phases>
+		<Banks action="opening" />
+		<Industry action="opening" />
+		<Households action="opening" />
+		<Banks action="pay_dividend" />
+		<Industry action="pay_dividend" />
+		<Households action="take_dividends" />
+		<Industry action="plan_production" />
+		<Households action="job_search" />
+		<Industry action="production" />
+		<Industry action="investment" />
+		<Households action="consumption" />
+		<Banks action="debt_recovery" />
+		<Banks action="closure" />
+		<Industry action="closure" />
+		<Households action="closure" />
+	</phases>
+
+	<events>
+
+		<pause period="1" />
+
+		<new
+			period="0"
+			sector="Households"
+			size="10000" />
+
+		<new
+			period="0"
+			sector="Industry"
+			size="500" />
+
+		<pause
+			period="600"
+			comment="50 years" />
+
+		<pause
+			period="1200"
+			comment="100 years" />
+
+		<pause
+			period="2400"
+			comment="200 years" />
+
+		<export
+			period="1712"
+			file="exports/debugHouseholds.csv"
+		>
+
+			<comment>
+				On cherche à identifier une incohérence dans le calcul de la
+				richesse net des ménages.
+			</comment>
+
+			<forEach_DELETE
+				sector="Households"
+				data="name,cash,capital,netWorth" />
+
+		</export>
+
+	</events>
+
+	<export_DELETE_ME file="exports/baseline.csv">
+		<data value="time()" />
+
+		<data value="sum(Households, dividends, t)" />
+		<data value="sum(Industry, dividends, t)" />
+		<data value="sum(Banks, dividends, t)" />
+
+		<data value="sum(Households, capital, t)" />
+		<data value="sum(Banks, capital, t)" />
+		<data value="sum(Industry, capital, t)" />
+	</export_DELETE_ME>
+
+</circuit>

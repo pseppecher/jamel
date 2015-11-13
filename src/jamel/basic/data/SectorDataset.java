@@ -11,8 +11,11 @@ public interface SectorDataset {
 
 	/**
 	 * Returns the specified info about the specified agent.
-	 * @param agent the name of the agent.
-	 * @param key the key of the info to be returned.
+	 * 
+	 * @param agent
+	 *            the name of the agent.
+	 * @param key
+	 *            the key of the info to be returned.
 	 * @return the specified info about the specified agent.
 	 */
 	String getAgentInfo(String agent, String key);
@@ -34,10 +37,25 @@ public interface SectorDataset {
 	 * @param key
 	 *            the key.
 	 * @param select
-	 *            how to select the values.
+	 *            a String that describes the elements to be selected (
+	 *            <code>null</code> not permitted). If select is empty, all
+	 *            elements are selected.
 	 * @return an array of values for the specified key.
 	 */
 	Double[] getField(String key, String select);
+
+	/**
+	 * Returns the Gini index of the specified field in a selection of individual
+	 * datasets.
+	 * 
+	 * @param data
+	 *            the name of the field.
+	 * @param select
+	 *            specifies how to select the individual datasets.
+	 * @return the Gini index of the specified field in a selection of individual
+	 *         datasets.
+	 */
+	Double getGini(String data, String select);
 
 	/**
 	 * Returns the max of the specified field in a selection of individual
@@ -163,6 +181,8 @@ public interface SectorDataset {
 	 *            the value to be added.
 	 */
 	void putSectorialValue(String key, Number value);
+
+	Object[][] getData(String keys, String select);
 
 }
 

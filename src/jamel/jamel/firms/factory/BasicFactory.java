@@ -1,5 +1,6 @@
 package jamel.jamel.firms.factory;
 
+import jamel.Jamel;
 import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Timer;
@@ -38,7 +39,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 		 *            production process).
 		 */
 		public BasicWorkInProgress(int productionTime) {
-			super();
+			super(productionTime);
 			for (int i = 1; i < productionTime; i++) {
 				final Rational completion = new Rational(i, productionTime);
 				final Materials materials = new BasicMaterials(0, 0, completion, timer);
@@ -243,8 +244,6 @@ public class BasicFactory extends AbstractManager implements Factory {
 			this.machinery.add(new BasicMachine(productionTime, productivity, 0, timer, random));
 		}
 
-		// FIXME: les machines n'ont pas de valeur...
-
 		this.workInProgress = new BasicWorkInProgress(productionTime);
 		this.finishedGoods = new FinishedGoods();
 
@@ -276,6 +275,9 @@ public class BasicFactory extends AbstractManager implements Factory {
 		long value = 0;
 		for (Machine machine : machinery) {
 			value += machine.getBookValue();
+		}
+		if (value < 0) {
+			throw new RuntimeException("Illegal value: " + value);
 		}
 		return value;
 	}
@@ -322,10 +324,26 @@ public class BasicFactory extends AbstractManager implements Factory {
 				index++;
 			}
 			result = productivities;
+		} else if ("capacity".equals(key)) {
+			result = this.machinery.size();
 		} else {
 			result = null;
 		}
 		return result;
+	}
+
+	@Override
+	public void cancel() {
+		this.canceled = true;
+	}
+
+	@Override
+	public void close() {
+		checkConsistency();
+		this.dataset.put("machinery.val", (double) this.getMachineryValue());
+		this.dataset.put("inventories.inProcess.val", (double) this.workInProgress.getBookValue());
+		this.dataset.put("inventories.fg.val", (double) this.finishedGoods.getValue());
+		this.dataset.put("inventories.fg.vol", (double) this.finishedGoods.getVolume());
 	}
 
 	@Override
@@ -337,18 +355,9 @@ public class BasicFactory extends AbstractManager implements Factory {
 		this.dataset.put("inventories.fg.losses.vol", (double) this.finishedGoods.getVolume());
 		this.finishedGoods.consume();
 		this.workInProgress.delete();
-		if (this.machinery.size()>0) {
+		if (this.machinery.size() > 0) {
 			throw new RuntimeException("The destruction of the machinery is not yet implemented.");
 		}
-	}
-
-	@Override
-	public void close() {
-		checkConsistency();
-		this.dataset.put("machinery.val", (double) this.getMachineryValue());
-		this.dataset.put("inventories.inProcess.val", (double) this.workInProgress.getBookValue());
-		this.dataset.put("inventories.fg.val", (double) this.finishedGoods.getValue());
-		this.dataset.put("inventories.fg.vol", (double) this.finishedGoods.getVolume());
 	}
 
 	@Override
@@ -418,17 +427,27 @@ public class BasicFactory extends AbstractManager implements Factory {
 
 	@Override
 	public long getValue() {
-		return this.workInProgress.getBookValue() + this.finishedGoods.getValue() + getMachineryValue();
+		final long val = this.workInProgress.getBookValue() + this.finishedGoods.getValue() + getMachineryValue();
+		if (val < 0) {
+			Jamel.println("this.workInProgress.getBookValue()", this.workInProgress.getBookValue());
+			Jamel.println("this.finishedGoods.getValue()", this.finishedGoods.getValue());
+			Jamel.println("getMachineryValue()", getMachineryValue());
+			throw new RuntimeException("A factory cannot have a negative value.");
+		}
+		return val;
 	}
 
 	@Override
 	public void open() {
 		super.open();
 		this.dataset = new BasicAgentDataset("Factory");
-		this.dataset.put("inventories.losses.val", 0d);
-		this.dataset.put("inventories.fg.losses", 0d);
-		this.dataset.put("inventories.inProcess.losses", 0d);
-		this.dataset.put("inventories.fg.losses.vol", 0d);
+		this.dataset.put("inventories.losses.val", 0);
+		this.dataset.put("inventories.fg.losses", 0);
+		this.dataset.put("inventories.inProcess.losses", 0);
+		this.dataset.put("inventories.fg.losses.vol", 0);
+		this.dataset.put("desinvestment.val", 0);
+		this.dataset.put("scrap.val", 0);
+		this.dataset.put("scrap.vol", 0);
 		depreciation();
 	}
 
@@ -487,13 +506,35 @@ public class BasicFactory extends AbstractManager implements Factory {
 	}
 
 	@Override
-	public void scrap(double threshold) {
-		throw new RuntimeException("Not yet implemented"); // TODO: IMPLEMENT ME
-	}
+	public void scrap(double nMachines) {
+		long desinvestmentValue = 0;
+		long scrapValue = 0;
+		long scrapVolume = 0;
+		if (nMachines <= 0) {
+			throw new IllegalArgumentException("Bad number of machines to be scraped: " + nMachines);
+		}
+		if (nMachines > this.machinery.size()) {
+			throw new IllegalArgumentException("The number of machines to be scraped is " + nMachines
+					+ ", but the machinery size is " + this.machinery.size());
+		}
+		final double unitCost = this.finishedGoods.getUnitCost();
+		Collections.sort(this.machinery, productivityComparator);
+		for (int i = 0; i < nMachines; i++) {
+			// On supprime la dernière machine de la liste.
+			final Machine machine = this.machinery.remove(this.machinery.size() - 1);
+			desinvestmentValue += machine.getBookValue();
+			final FinishedGoods scrap = machine.scrap();
+			scrap.setValue((long) (unitCost * scrap.getVolume()));
+			scrapValue += scrap.getBookValue();
+			scrapVolume += scrap.getVolume();
+			this.finishedGoods.put(scrap);
+		}
+		this.dataset.put("desinvestment.val", desinvestmentValue);
+		this.dataset.put("scrap.val", scrapValue);
+		this.dataset.put("scrap.vol", scrapVolume);
+		// this.dataset.put("machines.deleted", cancelled.size());
+		// this.dataset.put("depreciation", depreciation);
 
-	@Override
-	public void cancel() {
-		this.canceled=true;
 	}
 
 }

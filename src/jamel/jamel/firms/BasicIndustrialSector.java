@@ -1,5 +1,6 @@
 package jamel.jamel.firms;
 
+import jamel.Jamel;
 import jamel.basic.Circuit;
 import jamel.basic.data.SectorDataset;
 import jamel.basic.sector.AbstractPhase;
@@ -130,6 +131,19 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 			firm.close();
 		}
 		this.dataset = this.firms.collectData();
+		final Double[] truc = this.dataset.getField("capacity", "");
+		if (truc.length>0) {
+			// Herfindahl–Hirschman Index
+			double sum=0;
+			for (double d:truc) {
+				sum+=d;
+			}
+			double hhi=0;
+			for (double d:truc) {
+				hhi+=Math.pow(d/sum,2);
+			}
+			this.dataset.putSectorialValue("hhi", hhi);
+		}
 	}
 
 	/**

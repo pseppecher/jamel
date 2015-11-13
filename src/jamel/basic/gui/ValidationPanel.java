@@ -225,10 +225,17 @@ public class ValidationPanel extends JSplitPane implements Updatable {
 				final Double a = tests[i][0].value();
 				final Double b = tests[i][1].value();
 				final boolean singleTestResult;
-				if ((a != null && !a.equals(b)) || a == null || b == null) {
+				final Integer error;
+				if (a != null && b != null) {
+					error=(int) Math.abs(a - b);
+				} else {
+					error=null;
+				}
+				
+				if ( a == null || b == null || Math.abs(a)<100000000000l*error) {
 					singleTestResult = false;
-					failures.append("Period " + timer.getPeriod().intValue() + ", test " + i + ": failure (" + a + ", "
-							+ b + ")<br>" + rc);
+					failures.append("Period " + timer.getPeriod().intValue() + ", test " + i + ": failure (" + a
+							+ ", " + b + ", " + (a - b) + ")<br>" + rc);
 					SwingUtilities.invokeLater(new Runnable() {
 						@Override
 						public void run() {

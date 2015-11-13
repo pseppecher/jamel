@@ -363,11 +363,14 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 	@Override
 	public Cheque[] buyCorporation(Corporation firm) {
 		final long firmValue = firm.getBookValue();
+		if (firmValue <= 0) {
+			throw new RuntimeException("firmValue: " + firmValue);
+		}
 		final List<Shareholder> all = new LinkedList<Shareholder>(this.households.getShuffledList());
 		final List<Shareholder> buyers = new ArrayList<Shareholder>(10);
 		final List<Long> prices = new ArrayList<Long>(10);
 		final List<Integer> shares = new ArrayList<Integer>(10);
-		final long priceOfOneShare = firmValue / 100;
+		long priceOfOneShare = firmValue / 100;
 		if (priceOfOneShare < 2) {
 			throw new RuntimeException("priceOfOneShare: " + priceOfOneShare);
 			// FIXME
@@ -375,15 +378,15 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 
 		class Auctioneer {
 			// TODO: It is not really an auctioneer. To be renamed.
-			int auction(long minimalFinancialCapacity) {
+			int auction(long sharePrice, long minimalFinancialCapacity) {
 				int nonIssuedShares = 100;
 				for (Shareholder shareholder : all) {
 					final long shareholderFinancialCapacity = shareholder.getFinancialCapacity();
 					if (shareholderFinancialCapacity > minimalFinancialCapacity) {
 
-						final int nShares0 = (int) (shareholderFinancialCapacity / priceOfOneShare);
+						final int nShares0 = (int) (shareholderFinancialCapacity / sharePrice);
 						final int nShares = Math.min(nShares0, nonIssuedShares);
-						final long priceOfTheShares = priceOfOneShare * nShares;
+						final long priceOfTheShares = sharePrice * nShares;
 						buyers.add(shareholder);
 						prices.add(priceOfTheShares);
 						shares.add(nShares);
@@ -399,25 +402,35 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 
 		final Auctioneer auctioneer = new Auctioneer();
 
-		int nonIssuedShares = auctioneer.auction(priceOfOneShare * 10);
+		int nonIssuedShares = auctioneer.auction(priceOfOneShare,priceOfOneShare * 10);
 		if (nonIssuedShares > 0) {
 			buyers.clear();
 			prices.clear();
 			shares.clear();
-			nonIssuedShares = auctioneer.auction(priceOfOneShare * 5);
+			nonIssuedShares = auctioneer.auction(priceOfOneShare,priceOfOneShare * 5);
 			if (nonIssuedShares > 0) {
 				buyers.clear();
 				prices.clear();
 				shares.clear();
-				nonIssuedShares = auctioneer.auction(priceOfOneShare * 2);
+				nonIssuedShares = auctioneer.auction(priceOfOneShare,priceOfOneShare * 2);
 				if (nonIssuedShares > 0) {
-					buyers.clear();
-					prices.clear();
-					shares.clear();
-					nonIssuedShares = auctioneer.auction(priceOfOneShare);
-					if (nonIssuedShares != 0) {
-						Jamel.println("minimalPrice: " + priceOfOneShare);
-						throw new RuntimeException("Non issued shares: " + nonIssuedShares);
+					int count = 0;
+					while(true) {
+						buyers.clear();
+						prices.clear();
+						shares.clear();
+						nonIssuedShares = auctioneer.auction(priceOfOneShare,priceOfOneShare);
+						if (nonIssuedShares == 0) {
+							break;
+						}
+						priceOfOneShare-=0.1*priceOfOneShare;
+						if (count>10 || priceOfOneShare==0) {
+							// On n'a pas réussi à vendre tout le capital de la firme !!!
+							// Pourtant on a baissé le prix 10 fois.
+							Jamel.println("priceOfOneShare: " + priceOfOneShare);
+							throw new RuntimeException("Non issued shares: " + nonIssuedShares);
+							// FIXME: il faut implémenter une solution à ce cas.							
+						}
 					}
 				}
 			}

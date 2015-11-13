@@ -9,7 +9,7 @@ import org.jfree.chart.ChartColor;
  * Enumerates the colors used by the charts.
  */
 public enum JamelColor {
-
+	
 	/** black */
 	black(Color.black),
 
@@ -61,6 +61,9 @@ public enum JamelColor {
 	/** very light red */
 	veryLightRed(ChartColor.VERY_LIGHT_RED),
 
+	/** very light red */
+	pink(Color.pink),
+
 	/** white */
 	white(Color.white),
 
@@ -106,7 +109,7 @@ public enum JamelColor {
 
 	/** The color. */
 	private final Color color;
-
+	
 	/**
 	 * Creates a color.
 	 * 

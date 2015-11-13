@@ -313,16 +313,10 @@ public class Jamel {
 		 * TODO: desactiver ce bloc pour envoyer les messages vers la console
 		 * d'Eclipse plutot que dans le fichier log.
 		 *
-		{
-			try {
-				out = new PrintStream(new FileOutputStream("jamel.log"));
-				System.setOut(out);
-				System.setErr(out);
-			} catch (FileNotFoundException e1) {
-				e1.printStackTrace();
-			}
-		}
-		/**/
+		 * { try { out = new PrintStream(new FileOutputStream("jamel.log"));
+		 * System.setOut(out); System.setErr(out); } catch
+		 * (FileNotFoundException e1) { e1.printStackTrace(); } } /
+		 **/
 		final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d HH:mm:ss", Locale.US);
 		final String dateStr = simpleDateFormat.format(new Date());
 		Jamel.println(dateStr);
@@ -370,19 +364,31 @@ public class Jamel {
 				} catch (RuntimeException e) {
 					final String message = e.getMessage() + "<br>";
 					final String cause;
+					final String where;
 					if (e.getCause() != null) {
-						cause = tab + "Cause: '" + e.getCause().getMessage() + "'.<br>" + tab + "Where: "
-								+ e.getCause().getStackTrace()[0].toString() + "<br>";
+						if (e.getCause().getMessage() == null) {
+							if (e.getCause().getCause() != null && e.getCause().getCause().getMessage()!=null) {
+								cause = tab + "Cause: " + e.getCause().getCause().getMessage() + "<br>";								
+								where = tab + "Where: " + e.getCause().getCause().getStackTrace()[0].toString() + "<br>";
+							} else {
+								cause = tab + "Cause: " + e.getCause().toString() + "<br>";								
+								where = tab + "Where: " + e.getCause().getStackTrace()[0].toString() + "<br>";
+							}
+						} else {
+							cause = tab + "Cause: " + e.getCause().getMessage() + "<br>";
+							where = tab + "Where: " + e.getCause().getStackTrace()[0].toString() + "<br>";
+						}
 					} else {
-						cause = "";
+						cause = tab + "Cause: unknown.<br>";
+						where = "";
 					}
-					JOptionPane.showMessageDialog(null, "<html>" + message + cause + seeLogFile + "</html>",
+					JOptionPane.showMessageDialog(null, "<html>" + message + cause + where +seeLogFile + "</html>",
 							"Runtime Error", JOptionPane.ERROR_MESSAGE);
 					e.printStackTrace();
 					if (out != null) {
 						out.close();
 					}
-					System.exit(0);
+					// System.exit(0);
 				}
 			}
 		}
@@ -435,10 +441,10 @@ public class Jamel {
 	public static void println(Object... objects) {
 		for (int i = 0; i < objects.length; i++) {
 			final String string;
-			if (objects[i]==null) {
+			if (objects[i] == null) {
 				string = "null";
 			} else {
-				string = objects[i].toString();				
+				string = objects[i].toString();
 			}
 			System.out.print(string);
 			if (i < objects.length - 1) {

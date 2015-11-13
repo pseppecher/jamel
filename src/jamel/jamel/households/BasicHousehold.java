@@ -76,8 +76,7 @@ public class BasicHousehold implements Household {
 	public static final Comparator<Supply> supplyComparator = new Comparator<Supply>() {
 		@Override
 		public int compare(Supply offer1, Supply offer2) {
-			return (-(new Double(offer2.getPrice())).compareTo(offer1
-					.getPrice()));
+			return (-(new Double(offer2.getPrice())).compareTo(offer1.getPrice()));
 		}
 	};
 
@@ -99,7 +98,10 @@ public class BasicHousehold implements Household {
 	/** The households sector. */
 	private final HouseholdSector sector;
 
-	/** A map that stores the variables of the household. */
+	/** 
+	 * A map that stores the variables of the household.
+	 * TODO: remplacer par des champs. 
+	 */
 	private final Map<String, Number> variables = new HashMap<String, Number>();
 
 	/** The memory. */
@@ -137,7 +139,7 @@ public class BasicHousehold implements Household {
 	private void updateData() {
 		this.data.put("cash", (double) account.getAmount());
 		this.data.put("wages", variables.get("wage").doubleValue());
-		this.data.put("dividend", variables.get("dividend").doubleValue());
+		this.data.put("dividends", variables.get("dividends").doubleValue());
 		final long capital = assetPortfolio.getNetValue();
 		this.data.put("capital", (double) capital);
 		this.data.put("netWorth", (double) capital + account.getAmount());
@@ -152,15 +154,17 @@ public class BasicHousehold implements Household {
 	@Override
 	public Cheque buy(StockCertificate shares, long price) {
 		if (price > getFinancialCapacity()) {
-			throw new IllegalArgumentException(
-					"Price of shares exceeds the financial capacity of this household.");
+			throw new IllegalArgumentException("Price of shares exceeds the financial capacity of this household.");
 		}
 		if (price > shares.getBookValue()) {
-			throw new IllegalArgumentException("Price of shares is <" + price
-					+ "> but the book value is <" + shares.getBookValue() + ">");
+			final long error=price-shares.getBookValue();
+			if (error>1) {
+			throw new IllegalArgumentException(
+					"Price of shares is <" + price + "> but the book value is <" + shares.getBookValue() + ">");
+			}
 		}
 		this.assetPortfolio.add(shares);
-		this.data.put("sharePurchase", this.data.get("sharePurchase")+price);
+		this.data.put("sharePurchase", this.data.get("sharePurchase") + price);
 		return this.account.newCheque(price);
 	}
 
@@ -171,37 +175,31 @@ public class BasicHousehold implements Household {
 
 	@Override
 	public void consumption() {
-		this.recentIncome.add(this.variables.get("wage").longValue()
-				+ this.variables.get("dividend").longValue());
-		
+		this.recentIncome.add(this.variables.get("wage").longValue() + this.variables.get("dividends").longValue());
+
 		final double averageIncome;
-		
-		if (this.recentIncome.getSize()==0) {
-			averageIncome=0;
+
+		if (this.recentIncome.getSize() == 0) {
+			averageIncome = 0;
+		} else {
+			averageIncome = this.recentIncome.getSum() / this.recentIncome.getSize();
 		}
-		else {
-			averageIncome=this.recentIncome.getSum()/this.recentIncome.getSize();
-		}
-		final long savingsTarget = (long) (12 * averageIncome * this.sector
-				.getParam(SAV_TARGET));
+		final long savingsTarget = (long) (12 * averageIncome * this.sector.getParam(SAV_TARGET));
 		final long savings = (long) (this.account.getAmount() - averageIncome);
 		long consumptionBudget;
 		if (savings < savingsTarget) {
-			consumptionBudget = Math
-					.min(this.account.getAmount(),
-							(long) ((1. - this.sector.getParam(SAV_PROP)) * averageIncome));
+			consumptionBudget = Math.min(this.account.getAmount(),
+					(long) ((1. - this.sector.getParam(SAV_PROP)) * averageIncome));
 		} else {
 			consumptionBudget = Math.min(this.account.getAmount(),
-					(long) (averageIncome + (savings - savingsTarget)
-							* this.sector.getParam(SAV_PROP2_CONSUM_EXCESS)));
+					(long) (averageIncome + (savings - savingsTarget) * this.sector.getParam(SAV_PROP2_CONSUM_EXCESS)));
 		}
 
 		this.data.put("consumption.budget", (double) consumptionBudget);
 		long consumptionValue = 0;
 		long consumptionVolume = 0;
 		if (consumptionBudget > 0) {
-			final Supply[] supplies = this.sector.getSupplies(sector.getParam(
-					N_SUPPLIES).intValue());
+			final Supply[] supplies = this.sector.getSupplies(sector.getParam(N_SUPPLIES).intValue());
 			if (supplies.length > 0) {
 				Arrays.sort(supplies, supplyComparator);
 				for (Supply supply : supplies) {
@@ -215,13 +213,10 @@ public class BasicHousehold implements Household {
 						volume = supply.getVolume();
 					}
 					final long value = (long) (volume * supply.getPrice());
-					final Commodities truc = supply.buy(volume,
-							this.account.newCheque(value));
+					final Commodities truc = supply.buy(volume, this.account.newCheque(value));
 					if (truc.getVolume() != volume) {
 						throw new RuntimeException(
-								"Consumption volume expected <" + volume
-										+ "> but was <" + truc.getVolume()
-										+ ">");
+								"Consumption volume expected <" + volume + "> but was <" + truc.getVolume() + ">");
 					}
 					truc.consume();
 					consumptionBudget -= value;
@@ -248,8 +243,7 @@ public class BasicHousehold implements Household {
 		if (paycheck.getAmount() != this.jobContract.getWage()) {
 			throw new ConsistencyException("Bad cheque amount.");
 		}
-		this.variables.put("wage", this.variables.get("wage").longValue()
-				+ paycheck.getAmount());
+		this.variables.put("wage", this.variables.get("wage").longValue() + paycheck.getAmount());
 		this.account.deposit(paycheck);
 	}
 
@@ -279,7 +273,7 @@ public class BasicHousehold implements Household {
 		}
 		this.variables.put("worked", 1);
 		return new LaborPower() {
-			
+
 			final private int date = timer.getPeriod().intValue();
 
 			private boolean exhausted = false;
@@ -343,8 +337,7 @@ public class BasicHousehold implements Household {
 
 		// Updates the status.
 
-		Integer unempDuration = (Integer) this.variables
-				.get("unemployement duration");
+		Integer unempDuration = (Integer) this.variables.get("unemployement duration");
 		if ((this.jobContract == null) || !(this.jobContract.isValid())) {
 			this.variables.put("status", UNEMPLOYED);
 			if (unempDuration < 0) {
@@ -367,19 +360,16 @@ public class BasicHousehold implements Household {
 		case UNEMPLOYED:
 			// Attention, c'est un peu plus compliqu� dans les derni�res
 			// versions de Jamel1.
-			Double reservationWage = (Double) this.variables
-					.get("reservationWage");
+			Double reservationWage = (Double) this.variables.get("reservationWage");
 			if (reservationWage == null) {
 				reservationWage = 0d;
 				this.variables.put("reservationWage", reservationWage);
 			}
 			if (unempDuration > this.sector.getParam(WAGE_RESIST)) {
-				reservationWage = (reservationWage * (1f - this.sector
-						.getParam(WAGE_FLEX) * this.random.nextFloat()));
+				reservationWage = (reservationWage * (1f - this.sector.getParam(WAGE_FLEX) * this.random.nextFloat()));
 				this.variables.put("reservationWage", reservationWage);
 			}
-			final JobOffer[] jobOffers = this.sector.getJobOffers(sector
-					.getParam(N_JOB_OFFERS).intValue());
+			final JobOffer[] jobOffers = this.sector.getJobOffers(sector.getParam(N_JOB_OFFERS).intValue());
 			if (jobOffers.length > 0) {
 				Arrays.sort(jobOffers, jobComparator);
 				if (jobOffers[0].getWage() >= reservationWage) {
@@ -390,22 +380,20 @@ public class BasicHousehold implements Household {
 			}
 			break;
 		case EMPLOYED:
-			this.variables.put("reservationWage",
-					(double) this.jobContract.getWage());
+			this.variables.put("reservationWage", (double) this.jobContract.getWage());
 			break;
 		default:
 			throw new RuntimeException("Unexpected status.");
 		}
 
-		this.data.put("unemployed", 1d - this.variables.get("status")
-				.doubleValue());
+		this.data.put("unemployed", 1d - this.variables.get("status").doubleValue());
 		this.data.put("employed", this.variables.get("status").doubleValue());
 		this.variables.put("unemployment duration", unempDuration);
 	}
 
 	@Override
 	public void open() {
-		this.variables.put("dividend", 0l);
+		this.variables.put("dividends", 0l);
 		this.variables.put("worked", 0);
 		this.variables.put("wage", 0l);
 		this.data = new BasicAgentDataset(this.name);
@@ -429,7 +417,7 @@ public class BasicHousehold implements Household {
 				this.account.deposit(cheque);
 			}
 		}
-		this.variables.put("dividend", dividend);
+		this.variables.put("dividends", dividend);
 	}
 
 }

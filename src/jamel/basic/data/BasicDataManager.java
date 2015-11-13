@@ -1,5 +1,6 @@
 package jamel.basic.data;
 
+import jamel.Jamel;
 import jamel.basic.gui.BasicXYZDataset;
 import jamel.basic.gui.DynamicHistogramDataset;
 import jamel.basic.gui.Updatable;
@@ -57,6 +58,9 @@ public class BasicDataManager {
 	/** List of the data to be exported. */
 	private final List<Expression> exports = new LinkedList<Expression>();
 
+	/** List of the export events for the current period. */
+	private final List<Element> exportEvents = new LinkedList<Element>();
+
 	/** The output file. */
 	private File outputFile = null;
 
@@ -104,8 +108,7 @@ public class BasicDataManager {
 	 */
 	private void exportData() throws IOException {
 		if (outputFile != null && outputFile.exists()) {
-			FileWriter writer;
-			writer = new FileWriter(outputFile, true);
+			FileWriter writer = new FileWriter(outputFile, true);
 			for (Expression query : exports) {
 				final Double val = query.value();
 				if (val != null) {
@@ -138,7 +141,6 @@ public class BasicDataManager {
 				if (this.outputFile.exists()) {
 					this.outputFile.delete();
 				}
-				exportNodeList = export.getChildNodes();
 				try {
 					final File parentFile = outputFile.getParentFile();
 					if (!parentFile.exists()) {
@@ -146,8 +148,9 @@ public class BasicDataManager {
 					}
 					outputFile.createNewFile();
 				} catch (IOException e) {
-					e.printStackTrace();
+					throw new RuntimeException("Unable to create the file: "+fileName,e);
 				}
+				exportNodeList = export.getChildNodes();
 				break;
 			}
 		}
@@ -412,7 +415,7 @@ public class BasicDataManager {
 					final int period = timer.getPeriod().intValue();
 					if (period % modulus == 0) {
 						final Double value = expression.value();
-						if (value != null) {
+						if (value != null && !value.isNaN() && !value.isInfinite()) {
 							this.add(period, value);
 						}
 					}
@@ -478,6 +481,64 @@ public class BasicDataManager {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		for (Element event:exportEvents) {
+			try {
+				truc(event);
+			} catch (IOException e) {
+				throw new RuntimeException("Something went wrong while exporting data.",e);
+			}
+		}
+		exportEvents.clear();
+	}
+	
+	 void truc(Element event) throws IOException {
+		
+		final int period = Integer.parseInt(event.getAttribute("period"));
+		if (period!=this.timer.getPeriod().intValue()) {
+			throw new IllegalArgumentException("Bad period: "+period);
+		}
+		final String fileName = event.getAttribute("file");
+		final File exportFile = new File(fileName);
+		if (exportFile.exists()) {
+			exportFile.delete();
+		}
+		try {
+			final File parentFile = exportFile.getParentFile();
+			if (!parentFile.exists()) {
+				parentFile.mkdirs();
+			}
+			exportFile.createNewFile();
+		} catch (IOException e) {
+			throw new RuntimeException("Something went wrong while creating the file: "+fileName,e);
+		}
+		final NodeList nodes = event.getChildNodes();
+		final FileWriter writer = new FileWriter(exportFile, true);
+		for(int i=0; i<nodes.getLength(); i++) {
+			final String nodeName = nodes.item(i).getNodeName();
+			if (nodeName.equals("forEach")) {
+				Element elem = (Element) nodes.item(i);
+				final String sector = elem.getAttribute("sector");
+				final String keys = elem.getAttribute("data");
+				final String select = elem.getAttribute("select");
+				Object[][] data = this.macroDatabase.getData(sector, keys, timer.getPeriod().intValue(), select);
+				if (data==null) {
+					writer.close();
+					throw new RuntimeException("Something went wrong while exporting data.");
+				}
+				for (int j=0; j<data.length; j++) {
+					for (int k=0; k<data[j].length; k++) {
+						writer.write(data[j][k].toString() + ";");
+					}
+					writer.write(rc);
+				}
+			}
+		}
+		writer.write(rc);
+		writer.close();
+	}
+
+	public void export(Element event) {		
+		this.exportEvents.add(event);
 	}
 
 }

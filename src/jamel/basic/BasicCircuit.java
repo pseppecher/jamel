@@ -1,5 +1,6 @@
 package jamel.basic;
 
+import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -356,8 +357,10 @@ public class BasicCircuit implements Circuit {
 	private void doEvents(Element event) {
 		if (event.getNodeName().equals("pause")) {
 			setPause(true);
+		} else if (event.getNodeName().equals("export")) {
+			this.dataManager.export(event);
 		} else {
-			throw new RuntimeException("Not yet implemented.");
+			throw new RuntimeException("Unknown event: "+event.getNodeName());
 		}
 	}
 
@@ -394,9 +397,9 @@ public class BasicCircuit implements Circuit {
 		for (Phase phase : phases) {
 			try {
 				phase.run();
-			}
-			catch (Exception e) {
-				throw new RuntimeException("Something went wrong while running the phase: '"+phase.getName()+"', sector: '"+phase.getSector().getName()+"'.",e);
+			} catch (Exception e) {
+				throw new RuntimeException("Something went wrong while running the phase: '" + phase.getName()
+						+ "', sector: '" + phase.getSector().getName() + "'.", e);
 			}
 		}
 	}
@@ -492,7 +495,7 @@ public class BasicCircuit implements Circuit {
 
 	@Override
 	public void warning(String message, String toolTipText) {
-		//this.controlPanel.warning(message, toolTipText);
+		// this.controlPanel.warning(message, toolTipText);
 		// FIXME: never called.
 	}
 

@@ -19,6 +19,9 @@ public class BasicMacroDatabase implements MacroDatabase {
 	private static final String AGENT_VALUE = "agentValue";
 
 	@SuppressWarnings("javadoc")
+	private static final String GINI = "gini";
+
+	@SuppressWarnings("javadoc")
 	private static final String MAX = "max";
 
 	@SuppressWarnings("javadoc")
@@ -126,6 +129,18 @@ public class BasicMacroDatabase implements MacroDatabase {
 	}
 
 	@Override
+	public Object[][] getData(String sector, String keys, int t, String select) {
+		final Object[][] result;
+		final SectorDataset sectorDataset = getSectorDataset(sector, t);
+		if (sectorDataset != null) {
+			result = sectorDataset.getData(keys, select);
+		} else {
+			result = null;
+		}
+		return result;
+	}
+
+	@Override
 	public String getMessage(String sector, String agent, String key, int lag) {
 		final String result;
 		final int t=timer.getPeriod().intValue()-lag;
@@ -157,8 +172,8 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 			};
 		} else {
-			
-			
+
+
 			final String[] word = query.substring(0, query.length() - 1).split("\\(", 2);
 			final String[] arg = word[1].split(",", 4);
 			if (arg.length < 3) {
@@ -394,13 +409,13 @@ public class BasicMacroDatabase implements MacroDatabase {
 			else if (word[0].equals(AGENT_VALUE)) {
 
 				// On r�cup�re une valeur donn�e pour un agent donn�.
-				
+
 				if (arg.length!=4) {
 					throw new InitializationException("Malformed query: "+query);
 				}
-				
+
 				final String agentName = arg[3];
-				
+
 				result = new Expression() {
 
 					@Override
@@ -419,6 +434,36 @@ public class BasicMacroDatabase implements MacroDatabase {
 							value = null;
 						}
 						return value;
+					}
+				};
+			}
+
+			else if (word[0].equals(GINI)) {
+
+				result = new Expression() {
+
+					@Override
+					public String getQuery() {
+						return formated;
+					}
+
+					@Override
+					public Double value() {
+						final int t = timer.getPeriod().intValue() - lag0;
+						final Double gini;
+						final String key = word[0] + "(" + sector + "," + data + "," + t + "," + select + ")";
+						if (cache.containsKey(key)) {
+							gini = cache.get(key);
+						} else {
+							final SectorDataset sectorData = getSectorDataset(sector, t);
+							if (sectorData != null) {
+								gini = sectorData.getGini(data, select);
+							} else {
+								gini = null;
+							}
+							cache.put(key, gini);
+						}
+						return gini;
 					}
 				};
 			}

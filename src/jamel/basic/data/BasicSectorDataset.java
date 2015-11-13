@@ -1,9 +1,11 @@
 package jamel.basic.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.jfree.data.xy.XYDataItem;
 
@@ -20,6 +22,9 @@ public class BasicSectorDataset implements SectorDataset {
 
 	@SuppressWarnings("javadoc")
 	private static final int MIN = 3;
+
+	@SuppressWarnings("javadoc")
+	private static final String GINI = "gini";
 
 	@SuppressWarnings("javadoc")
 	private static final int SUM = 0;
@@ -344,6 +349,27 @@ public class BasicSectorDataset implements SectorDataset {
 	}
 
 	@Override
+	public Object[][] getData(String keys, String select) {
+		final Map<String, AgentDataset> selection = select(this.agentsData, select);
+		final String[] dataKeys = keys.split(",");
+		final Object[][] result = new Object[selection.size()][dataKeys.length];
+		int i=0;
+		for(Entry<String, AgentDataset> entry: selection.entrySet()) {
+			int j=0;
+			for(String dataKey:dataKeys) {
+				if (dataKey.trim().equals("name")) {
+					result[i][j]=entry.getKey();
+				} else {
+					result[i][j]=entry.getValue().get(dataKey.trim());
+				}
+				j++;
+			}
+			i++;
+		}
+		return result;
+	}
+
+	@Override
 	public Double getMax(String data, String select) {
 		final Double result;
 		final String key = MAX + "(" + data + "," + select + ")";
@@ -375,6 +401,32 @@ public class BasicSectorDataset implements SectorDataset {
 			result = this.cache.get(key);
 		} else {
 			result = this.getStats(data, select)[MIN];
+		}
+		return result;
+	}
+
+	@Override
+	public Double getGini(String key, String select) {
+		final Double result;
+		final String query = GINI + "(" + key + "," + select + ")";
+		if (this.cache.containsKey(query)) {
+			result = this.cache.get(query);
+		} else {
+			final Double total = this.getSum(key, select);
+			if (total!=null) {
+				Double[] values = this.getField(key, select);
+				Arrays.sort(values);
+				double sum1 = 0;
+				double sum2 = 0;
+				final int n = values.length;
+				for (Double value:values) {
+					sum1 += sum1+total/n;
+					sum2 += sum2+value;
+				}
+				result=(sum1-sum2)/sum1;
+			} else {
+				result = null;
+			}
 		}
 		return result;
 	}

@@ -1,5 +1,6 @@
 package jamel.jamel.capital;
 
+import jamel.Jamel;
 import jamel.basic.util.Timer;
 import jamel.jamel.roles.Corporation;
 import jamel.jamel.util.AnachronismException;
@@ -224,6 +225,50 @@ public class BasicCapitalStock implements CapitalStock {
 	 * The book value of each share is updated.
 	 */
 	private void updateBookValue() {
+		
+		if (canceled) {
+			throw new RuntimeException("This capital stock is canceled.");
+		}
+		
+		if (this.issuedShares != this.sharesAuthorised) {
+			throw new RuntimeException("The distribution of this capital stock is not completed.");
+		}
+		
+		if (this.corporation.getBookValue() != this.bookValue) {
+			
+			// On n'ajuste que si la valeur de la companie a changé. 
+			
+			this.bookValue = this.corporation.getBookValue();
+			long residualValue = this.bookValue;
+			int residualShares = this.issuedShares;
+			for (int id = 0; id < this.bookValues.size(); id++) {
+				final long newBookValue;
+				final int myShares = this.shares.get(id).getShares(); 
+				if (myShares==residualShares) {
+					newBookValue=residualValue;
+				} else {
+					final double fraction = 1d*myShares/residualShares;
+					newBookValue= (long) (fraction*residualValue);
+				}
+				this.bookValues.set(id, newBookValue);
+				residualValue -= newBookValue;
+				residualShares -= myShares;
+			}			
+			
+			if (residualValue != 0) {
+				throw new RuntimeException("Something went wrong while updating the book value.");
+			}
+			
+		}
+		
+	}
+
+	/**
+	 * Updates the book value of this stock.
+	 * <p>
+	 * The book value of each share is updated.
+	 */
+	private void updateBookValue_BAK() {
 		if (canceled) {
 			throw new RuntimeException("This capital stock is canceled.");
 		}
@@ -234,7 +279,7 @@ public class BasicCapitalStock implements CapitalStock {
 			this.bookValue = this.corporation.getBookValue();
 			long remainder = this.bookValue;
 			for (int id = 0; id < this.bookValues.size(); id++) {
-				final long newBookValue = this.bookValue * this.shares.get(id).getShares() / this.sharesAuthorised;
+				final long newBookValue = (long) (1d * this.bookValue * this.shares.get(id).getShares() / this.sharesAuthorised);
 				this.bookValues.set(id, newBookValue);
 				remainder -= newBookValue;
 			}

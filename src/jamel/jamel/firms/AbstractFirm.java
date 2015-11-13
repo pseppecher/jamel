@@ -24,7 +24,7 @@ import java.util.Random;
  * An abstract firm.
  */
 public abstract class AbstractFirm implements Firm {
-
+	
 	@SuppressWarnings("javadoc")
 	public final static String CAPITAL_PROPENSITY2DISTRIBUTE = "capital.propensityToDistribute";
 
@@ -276,15 +276,10 @@ public abstract class AbstractFirm implements Firm {
 		} else {
 			this.data.put("bankruptcies", 0);
 		}
-		
+
 		this.data.putInfo("name", this.name);
 		this.data.putInfo("account", this.account.getInfo());
 
-	}
-
-	@Override
-	public void clearOwnership() {
-		this.capitalManager.clearOwnership();
 	}
 
 	@Override
@@ -336,7 +331,7 @@ public abstract class AbstractFirm implements Firm {
 	public 	StockCertificate[] getNewShares(List<Integer> shares) {
 		return this.capitalManager.getNewShares(shares);
 	}
-	
+
 	@Override
 	public Supply getSupply() {
 		return this.salesManager.getSupply();

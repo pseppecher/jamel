@@ -73,6 +73,12 @@ public abstract class Landscape implements Sector {
 			}
 
 			@Override
+			public Double getGini(String data, String select) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
 			public Double getMax(String data, String select) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
@@ -127,6 +133,12 @@ public abstract class Landscape implements Sector {
 
 			@Override
 			public void putSectorialValue(String string, Number n) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
+			public Object[][] getData(String keys, String select) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
 			}

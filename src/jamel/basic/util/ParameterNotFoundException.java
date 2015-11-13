@@ -10,7 +10,7 @@ public class ParameterNotFoundException extends RuntimeException {
 	 * @param message  the detail message.
 	 */
 	public ParameterNotFoundException(String message) {
-		super("\""+message+"\".");
+		super(message);
 	}
 
 }

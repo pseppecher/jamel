@@ -746,17 +746,14 @@ class BasicBank implements Bank, Corporation {
 		}
 
 		@Override
-		public void newLongTermLoan(long principal) {
-			this.newLoans.add(new AmortizingLoan(principal, bankingSector.getParam(RATE), 120));
-			// TODO: should be : params.get(LONG_TERM_RATE)
-			// TODO: 120 should be a parameter : LONG_TERM
-		}
-
-		@Override
-		public void newShortTermLoan(final long principal) {
-			this.newLoans.add(new NonAmortizingLoan(principal, bankingSector.getParam(RATE),
-					bankingSector.getParam(TERM).intValue()));
-			// TODO: rename parameters: SHORT_TERM_RATE, SHORT_TERM
+		public void newLoan(long principal,int term, boolean amortized) {
+			final Loan newLoan;
+			if (amortized) {
+				newLoan = new AmortizingLoan(principal, bankingSector.getParam(RATE), term);				
+			} else {
+				newLoan = new NonAmortizingLoan(principal, bankingSector.getParam(RATE),term);				
+			}
+			this.newLoans.add(newLoan);
 		}
 
 		@Override
@@ -812,8 +809,10 @@ class BasicBank implements Bank, Corporation {
 	@SuppressWarnings("javadoc")
 	private final static String RATE = "rate.normal";
 
-	@SuppressWarnings("javadoc")
-	private final static String TERM = "term.normal";
+	/**
+	 * The max value of liabilities (to avoid overflow).
+	 */
+	private static final long MAX_VALUE = (long) (0.95f*Long.MAX_VALUE);
 
 	/** The list of customers accounts. */
 	private final List<Account> accounts = new ArrayList<Account>(1000);
@@ -939,6 +938,9 @@ class BasicBank implements Bank, Corporation {
 	 *         <code>false</code> otherwise.
 	 */
 	private boolean checkConsistency() {
+		if (this.liabilities>MAX_VALUE) {
+			throw new RuntimeException("The total amount of liabilities exceeds the max value.");
+		}
 		boolean result = true;
 		long sumDeposit = 0;
 		long sumDebt = 0;
@@ -980,11 +982,19 @@ class BasicBank implements Bank, Corporation {
 		final Firm firm = (Firm) accountHolder;
 		if (firm.getSize() > 0) {
 			final long firmAssets = firm.getValueOfAssets();
-			final long targetedLiabilites = (long) (0.8f * firmAssets);
+			final long targetedLiabilites = (long) (0.8 * firmAssets);
 			// TODO: 0.8 should be a parameter;
 			final long debtToBeCancelled = firm.getValueOfLiabilities() - targetedLiabilites;
 			account.cancelDebt(debtToBeCancelled);
-			final Cheque[] cheques = this.bankingSector.sellCorporation(firm);
+			final Cheque[] cheques;
+			try {
+				cheques = this.bankingSector.sellCorporation(firm);
+			} catch (Exception e) {
+				Jamel.println("firmAssets= "+firmAssets);
+				Jamel.println("targetedLiabilites"+targetedLiabilites);
+				Jamel.println("debtToBeCancelled"+debtToBeCancelled);
+				throw new RuntimeException("Something went wrong while selling the firm.",e);
+			}
 			double foreclosures = this.dataset.get("foreclosures");
 			// TODO: foreclosures should be a field.
 			for (Cheque cheque : cheques) {
@@ -1154,7 +1164,7 @@ class BasicBank implements Bank, Corporation {
 					// solvable, s'il n'est pas liquide.
 					// TO IMPLEMENT LATER
 				}
-				this.bankruptcies += 1l;
+				this.bankruptcies++;
 				foreclosure(account);
 				if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
 					throw new RuntimeException("Inconsistency");
@@ -1254,6 +1264,9 @@ class BasicBank implements Bank, Corporation {
 	 */
 	@Override
 	public void payDividend() {
+		if (this.assets<0) {
+			throw new RuntimeException("Bad assets value: "+this.assets);
+		}
 		final long requiredCapital = (long) (this.assets * bankingSector.getParam(CAPITAL_RATIO));
 		final long excedentCapital = Math.max(0, this.capital - requiredCapital);
 		final long dividend = (long) (excedentCapital * bankingSector.getParam(CAPITAL_PROP_TO_DISTRIBUTE));

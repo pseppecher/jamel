@@ -16,6 +16,11 @@ import jamel.jamel.widgets.LaborPower;
 public class BasicMachine implements Machine {
 
 	/**
+	 * TODO: Should be a field.
+	 */
+	private static final long scrap = 100;
+
+	/**
 	 * Creates and returns the specified materials.
 	 * 
 	 * @param volume
@@ -30,6 +35,12 @@ public class BasicMachine implements Machine {
 	 */
 	private static Materials getNewMaterials(final long volume, final long value, final Rational completion,
 			final Timer timer) {
+		if (volume<0) {
+			throw new IllegalArgumentException("Bad volume: "+volume);
+		}		
+		if (value<0) {
+			throw new IllegalArgumentException("Bad value: "+value);
+		}		
 		final Materials result;
 		if (completion.equals(1)) {
 			result = new FinishedGoods(volume, value);
@@ -38,6 +49,11 @@ public class BasicMachine implements Machine {
 		}
 		return result;
 	}
+
+	/**
+	 * The book value of this machine.
+	 */
+	private long bookValue;
 
 	/**
 	 * A flag that indicates whether this machine is cancelled or not.
@@ -61,8 +77,10 @@ public class BasicMachine implements Machine {
 	 */
 	private double productivity;
 
-	/** The timer. */
-	private final Timer timer;
+	/**
+	 * The random.
+	 */
+	private final Random random;
 
 	/**
 	 * The date when this machine was created. The start of its depreciation
@@ -70,15 +88,8 @@ public class BasicMachine implements Machine {
 	 */
 	private final int startDate;
 
-	/**
-	 * The book value of this machine.
-	 */
-	private long bookValue;
-
-	/**
-	 * The random.
-	 */
-	private final Random random;
+	/** The timer. */
+	private final Timer timer;
 
 	/**
 	 * Constructs a new basic machine.
@@ -99,12 +110,15 @@ public class BasicMachine implements Machine {
 		this.productionTime = productionTime;
 		this.productivity = productivity;
 		this.increment = new Rational(1, productionTime);
+		if (acquisitionCost<0) {
+			throw new IllegalArgumentException("Illegal value: "+acquisitionCost);
+		}
 		this.bookValue = acquisitionCost;
 		this.timer = timer;
-		if (timer.getPeriod().intValue()==0) {
-			this.startDate = timer.getPeriod().intValue()-random.nextInt(100);			
+		if (timer.getPeriod().intValue() == 0) {
+			this.startDate = timer.getPeriod().intValue() - random.nextInt(100);
 		} else {
-			this.startDate = timer.getPeriod().intValue();			
+			this.startDate = timer.getPeriod().intValue();
 		}
 		this.cancelled = false;
 	}
@@ -134,9 +148,41 @@ public class BasicMachine implements Machine {
 	}
 
 	@Override
+	public long depreciate() {
+		final double age = timer.getPeriod().intValue() - startDate;// TODO
+																	// FIXME
+		final double cancellationProbability = Math.pow((age - 50) / 150, 3);
+		// final double cancellationProbability = Math.pow((age)/180,5);
+		if (this.random.nextFloat() < cancellationProbability) {
+			this.cancelled = true;
+			// Jamel.println(age);
+		}
+		final long depreciation;
+		if (this.cancelled) {
+			depreciation = this.bookValue;
+			this.bookValue = 0;
+		} else {
+			final int cancellationDate = this.startDate + 120;
+			final int remainingTime = cancellationDate - timer.getPeriod().intValue();
+			if (remainingTime > 0) {
+				depreciation = this.bookValue / remainingTime;
+				this.bookValue -= depreciation;
+			} else {
+				if (this.bookValue > 0) {
+					throw new RuntimeException("Expected book value: 0 but was: " + this.bookValue + ".");
+				}
+				depreciation = 0;
+			}
+		}
+		return depreciation;
+	}
+
+	@Override
 	public Long getBookValue() {
+		if (this.bookValue<0) {
+			throw new RuntimeException("Illegal value: "+this.bookValue);
+		}
 		return this.bookValue;
-		// TODO: DEPRECIATION OVER TIME
 	}
 
 	@Override
@@ -147,6 +193,17 @@ public class BasicMachine implements Machine {
 	@Override
 	public boolean isCancelled() {
 		return this.cancelled;
+	}
+
+	@Override
+	public FinishedGoods scrap() {
+		if (isCancelled()) {
+			throw new RuntimeException("This machine is already cancelled.");
+		}
+		final FinishedGoods result = new FinishedGoods(scrap, 0);
+		this.cancelled = true;
+		this.bookValue = 0;
+		return result;
 	}
 
 	/**
@@ -195,7 +252,7 @@ public class BasicMachine implements Machine {
 					result.add(output);
 					break;
 				} else if (inputVolume > newVolume) {
-					final long inputValue = input.getBookValue() * newVolume / inputVolume;
+					final long inputValue = (long) (1d * input.getBookValue() * newVolume / inputVolume);
 					output = getNewMaterials(newVolume, inputValue + wageCost, outputCompletion, timer);
 					input.delete(newVolume, inputValue);
 					newVolume = 0;
@@ -226,35 +283,6 @@ public class BasicMachine implements Machine {
 		 * (this.random.nextFloat() > 0.995) { this.cancelled = true; } }
 		 */
 		return result;
-	}
-
-	@Override
-	public long depreciate() {
-		final double age = timer.getPeriod().intValue() - startDate;// TODO FIXME
-		final double cancellationProbability = Math.pow((age-50)/150,3); 
-		//final double cancellationProbability = Math.pow((age)/180,5); 
-		if (this.random.nextFloat() < cancellationProbability) {
-			this.cancelled = true;
-			//Jamel.println(age);
-		}
-		final long depreciation;
-		if (this.cancelled) {
-			depreciation = this.bookValue;
-			this.bookValue = 0;
-		} else {
-			final int cancellationDate = this.startDate + 120;
-			final int remainingTime = cancellationDate - timer.getPeriod().intValue();
-			if (remainingTime > 0) {
-				depreciation = this.bookValue / remainingTime;
-				this.bookValue -= depreciation;
-			} else {
-				if (this.bookValue > 0) {
-					throw new RuntimeException("Expected book value: 0 but was: " + this.bookValue + ".");
-				}
-				depreciation = 0;
-			}
-		}
-		return depreciation;
 	}
 
 }

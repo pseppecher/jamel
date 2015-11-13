@@ -12,13 +12,6 @@ import jamel.jamel.widgets.JobOffer;
 public interface Firm extends AccountHolder, Corporation, Supplier, Askable {
 
 	/**
-	 * Clears the ownership of the firm.
-	 * <p>
-	 * Each share is cancelled.
-	 */
-	void clearOwnership();
-
-	/**
 	 * Closes the firm at the end of the period.
 	 */
 	void close();

@@ -102,12 +102,12 @@ public class BasicCapitalStockTest {
 			}
 
 			@Override
-			public void newLongTermLoan(long principal) {
+			public void newAmortizingLoan(long principal) {
 				throw new RuntimeException("Not yet implemented.");
 			}
 
 			@Override
-			public void newShortTermLoan(long principal) {
+			public void newNonAmortizingLoan(long principal) {
 				throw new RuntimeException("Not yet implemented.");
 			}
 		};

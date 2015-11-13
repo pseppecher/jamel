@@ -589,7 +589,7 @@ public class ChartFactory {
 			for (int i = 0; i < items.getLength(); i++) {
 				final Element item = (Element) items.item(i);
 				final String tooltip = item.getAttribute("series");
-				final String legendLabel = item.getAttribute("value");
+				final String legendLabel = item.getAttribute("label");
 				final Paint paint = JamelColor.getColor(item.getAttribute("color"));
 				final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, line, basicStroke,
 						paint);
