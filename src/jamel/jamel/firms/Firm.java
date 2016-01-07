@@ -45,6 +45,11 @@ public interface Firm extends AccountHolder, Corporation, Supplier, Askable {
 	long getValueOfLiabilities();
 
 	/**
+	 * Buys the inputs for the production process.
+	 */
+	void inputsPurchase();
+
+	/**
 	 * Opens the firm at the beginning of the period.
 	 */
 	void open();

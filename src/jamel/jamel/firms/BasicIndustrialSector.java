@@ -1,6 +1,5 @@
 package jamel.jamel.firms;
 
-import jamel.Jamel;
 import jamel.basic.Circuit;
 import jamel.basic.data.SectorDataset;
 import jamel.basic.sector.AbstractPhase;
@@ -22,6 +21,7 @@ import jamel.jamel.widgets.Supply;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +41,9 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	/** The <code>dependencies</code> element. */
 	private static final String ELEM_DEPENDENCIES = "dependencies";
 
+	/** The <code>technology</code> element. */
+	private static final String ELEM_TECHNOLOGY = "technology";
+
 	/**
 	 * Key word ford the parameter fixing maximum lapse between the disparition
 	 * of a firm and its regeneration.
@@ -56,6 +59,9 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	/** Key word for the "closure" phase. */
 	private static final String PHASE_CLOSURE = "closure";
 
+	/** Key word for the "input purchase" phase. */
+	private static final String PHASE_INPUTS_PURCHASE = "inputs_purchase";
+
 	/** Key word for the "opening" phase. */
 	private static final String PHASE_OPENING = "opening";
 
@@ -67,6 +73,79 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 
 	/** Key word for the "production" phase. */
 	private static final String PHASE_PRODUCTION = "production";
+
+	/**
+	 * Creates and returns a new technology.
+	 * 
+	 * @param element
+	 *            the XML description of the new technology.
+	 * @return a new technology.
+	 * @throws InitializationException
+	 *             if something goes wrong.
+	 */
+	private static Technology getNewTechnology(final Element element) throws InitializationException {
+		final long inputVolumeForANewMachine = Long.parseLong(element.getAttribute("machine.creation.input.volume"));
+		final String typeOfInputForMachineCreation = element.getAttribute("machine.creation.input.type");
+		final int timelifeMean = Integer.parseInt(element.getAttribute("machine.timelife.mean"));
+		final int timelifeStDev = Integer.parseInt(element.getAttribute("machine.timelife.stDev"));
+		final String typeOfProduction = element.getAttribute("production.type");
+		final int productionTime = Integer.parseInt(element.getAttribute("production.time"));
+		final long productivity = Long.parseLong(element.getAttribute("production.productivity"));
+		final Map<String, Float> techCoefs = new HashMap<String, Float>();
+		final Element techCoeficients = (Element) element.getElementsByTagName("techCoeficients").item(0);
+		if (techCoeficients!=null) {
+			final NodeList nodeList = techCoeficients.getElementsByTagName("input");
+			for (int i = 0; i < nodeList.getLength(); i++) {
+				final Element elem = (Element) nodeList.item(i);
+				final String type = elem.getAttribute("type");
+				final Float value = Float.parseFloat(elem.getAttribute("coef"));
+				techCoefs.put(type, value);
+			}			
+		}
+		return new Technology() {
+
+			@Override
+			public Map<String, Float> get(String string) {
+				return techCoefs;
+			}
+
+			@Override
+			public long getInputVolumeForANewMachine() {
+				return inputVolumeForANewMachine;
+			}
+
+			@Override
+			public int getProductionTime() {
+				return productionTime;
+			}
+
+			@Override
+			public long getProductivity() {
+				return productivity;
+			}
+
+			@Override
+			public double getTimelifeMean() {
+				return timelifeMean;
+			}
+
+			@Override
+			public double getTimelifeStDev() {
+				return timelifeStDev;
+			}
+
+			@Override
+			public String getTypeOfProduction() {
+				return typeOfProduction;
+			}
+
+			@Override
+			public String getTypeOfInputForMachineCreation() {
+				return typeOfInputForMachineCreation;
+			}
+
+		};
+	}
 
 	/** The type of the firms populating this sector. */
 	private String agentType = null;
@@ -91,6 +170,21 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 
 	/** A scheduler for the regeneration of firms. */
 	private final Map<Integer, Integer> regeneration = new HashMap<Integer, Integer>();
+
+	/**
+	 * The size of the sector, <i>ie</i> the sum of the workforce of each firm.
+	 */
+	private int size = 0;
+
+	/**
+	 * The suppliers of inputs.
+	 */
+	final private Map<String, Suppliers> suppliers = new LinkedHashMap<String, Suppliers>();
+
+	/**
+	 * The current technology.
+	 */
+	private Technology technology;
 
 	/** The timer. */
 	final private Timer timer;
@@ -124,31 +218,9 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	}
 
 	/**
-	 * Closes the sector at the end of the period.
-	 */
-	private void close() {
-		for (final Firm firm : firms.getList()) {
-			firm.close();
-		}
-		this.dataset = this.firms.collectData();
-		final Double[] truc = this.dataset.getField("capacity", "");
-		if (truc.length>0) {
-			// Herfindahl–Hirschman Index
-			double sum=0;
-			for (double d:truc) {
-				sum+=d;
-			}
-			double hhi=0;
-			for (double d:truc) {
-				hhi+=Math.pow(d/sum,2);
-			}
-			this.dataset.putSectorialValue("hhi", hhi);
-		}
-	}
-
-	/**
 	 * Prepares the regeneration of a firm some periods later.
 	 */
+	@SuppressWarnings("unused")
 	private void prepareRegeneration() {
 		final int min = parameters.get(PARAM_REGENERATION_MIN).intValue();
 		final int max = parameters.get(PARAM_REGENERATION_MAX).intValue();
@@ -170,6 +242,29 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 		final Integer lim = this.regeneration.get(timer.getPeriod().intValue());
 		if (lim != null) {
 			this.firms.putAll(this.createFirms(this.agentType, lim));
+		}
+	}
+
+	/**
+	 * Closes the sector at the end of the period.
+	 */
+	protected void close() {
+		for (final Firm firm : firms.getList()) {
+			firm.close();
+		}
+		this.dataset = this.firms.collectData();
+		final Double[] truc = this.dataset.getField("capacity", "");
+		if (truc.length > 0) {
+			// Herfindahl–Hirschman Index
+			double sum = 0;
+			for (double d : truc) {
+				sum += d;
+			}
+			double hhi = 0;
+			for (double d : truc) {
+				hhi += Math.pow(d / sum, 2);
+			}
+			this.dataset.putSectorialValue("hhi", hhi);
 		}
 	}
 
@@ -199,9 +294,38 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	}
 
 	/**
+	 * Initializes the suppliers sectors.
+	 * 
+	 * @param list
+	 *            list of the supplier sectors.
+	 * @throws InitializationException
+	 *             if something goes wrong.
+	 */
+	protected void initSuppliers(final NodeList list) throws InitializationException {
+		for (int i = 0; i < list.getLength(); i++) {
+			final Element elem = (Element) list.item(i);
+			final String sector = elem.getAttribute("sector");
+			final String supply = elem.getAttribute("supply");
+			final Suppliers supplier = (Suppliers) circuit.getSector(sector);
+			if (supplier == null) {
+				throw new InitializationException("Supplier sector not found: " + sector);
+			}
+			this.suppliers.put(supply, supplier);
+		}
+	}
+
+	/**
+	 * The inputs purchase phase: when firms buy raw materials and other inputs.
+	 */
+	protected void inputsPurchase() {
+		throw new RuntimeException("Not used.");
+	}
+
+	/**
 	 * Opens each firm in the sector.
 	 */
 	protected void open() {
+		this.size = 0;
 		regenerate();
 		final List<Firm> bankrupted = new LinkedList<Firm>();
 		for (final Firm firm : firms.getShuffledList()) {
@@ -210,6 +334,9 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 				bankrupted.add(firm);
 				// prepareRegeneration();
 			}
+			else {
+				this.size += firm.getSize();				
+			}
 		}
 		this.firms.removeAll(bankrupted);
 	}
@@ -217,8 +344,8 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	@Override
 	public void doEvent(Element event) {
 		if (event.getNodeName().equals("new")) {
-			final int size = Integer.parseInt(event.getAttribute("size"));
-			this.firms.putAll(this.createFirms(this.agentType, size));
+			final int newFirms = Integer.parseInt(event.getAttribute("size"));
+			this.firms.putAll(this.createFirms(this.agentType, newFirms));
 		} else if (event.getNodeName().equals("shock")) {
 			final NodeList nodes = event.getChildNodes();
 			for (int i = 0; i < nodes.getLength(); i++) {
@@ -242,9 +369,9 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	}
 
 	@Override
-	public JobOffer[] getJobOffers(int size) {
-		final ArrayList<JobOffer> jobOffersList = new ArrayList<JobOffer>(size);
-		for (final Firm firm : firms.getSimpleRandomSample(size)) {
+	public JobOffer[] getJobOffers(int nOffers) {
+		final ArrayList<JobOffer> jobOffersList = new ArrayList<JobOffer>(nOffers);
+		for (final Firm firm : firms.getSimpleRandomSample(nOffers)) {
 			final JobOffer jobOffer = firm.getJobOffer();
 			if (jobOffer != null) {
 				jobOffersList.add(jobOffer);
@@ -282,6 +409,15 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 				@Override
 				public void run() {
 					BasicIndustrialSector.this.open();
+				}
+			};
+		}
+
+		else if (phaseName.equals(PHASE_INPUTS_PURCHASE)) {
+			result = new AbstractPhase(phaseName, this) {
+				@Override
+				public void run() {
+					BasicIndustrialSector.this.inputsPurchase();
 				}
 			};
 		}
@@ -364,8 +500,8 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	}
 
 	@Override
-	public List<Firm> getSimpleRandomSample(int size) {
-		return this.firms.getSimpleRandomSample(size);
+	public List<Firm> getSimpleRandomSample(int nFirm) {
+		return this.firms.getSimpleRandomSample(nFirm);
 	}
 
 	@Override
@@ -374,15 +510,34 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	}
 
 	@Override
-	public Supply[] getSupplies(int size) {
-		final ArrayList<Supply> list = new ArrayList<Supply>(size);
-		for (final Firm firm : firms.getSimpleRandomSample(size)) {
+	public int getSize() {
+		return this.size;
+	}
+
+	@Override
+	public Supply[] getSupplies(int nSupply) {
+		final ArrayList<Supply> list = new ArrayList<Supply>(nSupply);
+		for (final Firm firm : firms.getSimpleRandomSample(nSupply)) {
 			final Supply supply = firm.getSupply();
 			if (supply != null) {
 				list.add(supply);
 			}
 		}
 		return list.toArray(new Supply[list.size()]);
+	}
+
+	@Override
+	public Supply[] getSupplies(String type, int n) {
+		final Suppliers sup = this.suppliers.get(type);
+		if (sup == null) {
+			throw new RuntimeException("No suppliers found for this type of input: " + type);
+		}
+		return sup.getSupplies(n);
+	}
+
+	@Override
+	public Technology getTechnology() {
+		return this.technology;
 	}
 
 	@Override
@@ -397,28 +552,46 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 		}
 
 		// Initialization of the agent type:
+
 		final String agentAttribute = element.getAttribute("agent");
 		this.agentType = agentAttribute;
 
+		// Initialization of the technology:
+
+		final Element technologyElement = (Element) element.getElementsByTagName(ELEM_TECHNOLOGY).item(0);
+		if (technologyElement == null) {
+			throw new InitializationException("Element not found: " + ELEM_TECHNOLOGY);
+		}
+		this.technology = getNewTechnology(technologyElement);
+
 		// Initialization of the dependencies:
+
 		final Element refElement = (Element) element.getElementsByTagName(ELEM_DEPENDENCIES).item(0);
 		if (refElement == null) {
 			throw new InitializationException("Element not found: " + ELEM_DEPENDENCIES);
 		}
 
 		// Looking for the capitalist sector.
-		final String key1 = "CapitalistSector";
-		final Element capitalistSectorElement = (Element) refElement.getElementsByTagName(key1).item(0);
-		if (capitalistSectorElement == null) {
-			throw new InitializationException("Element not found: " + key1);
+
+		{
+			final String key1 = "CapitalistSector";
+			final Element capitalistSectorElement = (Element) refElement.getElementsByTagName(key1).item(0);
+			if (capitalistSectorElement == null) {
+				throw new InitializationException("Element not found: " + key1);
+			}
+			final String capitalistsKey = capitalistSectorElement.getAttribute("value");
+			if (capitalistsKey == "") {
+				throw new InitializationException("Missing attribute: value");
+			}
+			this.capitalists = (Capitalists) circuit.getSector(capitalistsKey);
 		}
-		final String capitalistsKey = capitalistSectorElement.getAttribute("value");
-		if (capitalistsKey == "") {
-			throw new InitializationException("Missing attribute: value");
-		}
-		this.capitalists = (Capitalists) circuit.getSector(capitalistsKey);
+
+		// Initialization of the suppliers sectors.
+
+		this.initSuppliers(refElement.getElementsByTagName("Suppliers"));
 
 		// Looking for the banking sector.
+
 		final String key3 = "Banks";
 		final Element banksElement = (Element) refElement.getElementsByTagName(key3).item(0);
 		if (banksElement == null) {
@@ -431,6 +604,7 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 		this.banks = (Banks) circuit.getSector(banksKey);
 
 		// Initialization of the parameters:
+
 		final Element settingsElement = (Element) element.getElementsByTagName("settings").item(0);
 		final NamedNodeMap attributes = settingsElement.getAttributes();
 		for (int i = 0; i < attributes.getLength(); i++) {

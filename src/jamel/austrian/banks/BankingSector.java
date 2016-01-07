@@ -33,6 +33,8 @@ public class BankingSector extends SFCSector {
 	/** The number of newly created banks. */
 	private int  newBanks;
 
+	protected String typeOfTheCommercialBank;
+
 	
 	/**
 	 * Creates a new sector for banks.
@@ -115,7 +117,7 @@ public class BankingSector extends SFCSector {
 							CommercialBank newBank;
 							try {
 								
-								newBank = (CommercialBank) Class.forName("jamel.austrian.banks.CommercialBank",false,ClassLoader.getSystemClassLoader()).getConstructor(
+								newBank = (CommercialBank) Class.forName(BankingSector.this.typeOfTheCommercialBank,false,ClassLoader.getSystemClassLoader()).getConstructor(
 										InvestmentProject.class,Circuit.class,BankingSector.class,Float.class,Float.class).
 										newInstance(project, circuit, BankingSector.this, lendingRate, savingsRate);
 								

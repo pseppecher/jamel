@@ -89,7 +89,7 @@ public class BasicFactoryTest {
 		machinery.add(new BasicMachine(1, 9, 0, timer, random));
 		machinery.add(new BasicMachine(1, 2, 0, timer, random));
 		machinery.add(new BasicMachine(1, 50, 0, timer, random));
-		Collections.sort(machinery, BasicFactory.productivityComparator);
+		Collections.sort(machinery, OldBasicFactory.productivityComparator);
 		assertEquals("machinery.get(0).getProductivity()", 100, machinery
 				.get(0).getProductivity());
 		assertEquals("machinery.get(1).getProductivity()", 50, machinery.get(1)
@@ -108,7 +108,7 @@ public class BasicFactoryTest {
 	public void test2() {
 		final Timer timer = new BasicTimer(0);
 		final Random random = new Random();
-		final Factory factory = new BasicFactory(6, 10, 100, timer, random);
+		final Factory factory = new OldBasicFactory(6, 10, 100, timer, random);
 		LaborPower[] laborPowers = getLaborPowers(5, 7, timer);
 		factory.open();
 		factory.process(laborPowers);
@@ -133,7 +133,7 @@ public class BasicFactoryTest {
 	public void test3() {
 		final BasicTimer timer = new BasicTimer(0);
 		final Random random = new Random();
-		final Factory factory = new BasicFactory(6, 10, 100, timer, random);
+		final Factory factory = new OldBasicFactory(6, 10, 100, timer, random);
 
 		for (int i = 0; i < 6; i++) {
 			timer.next();
@@ -163,7 +163,7 @@ public class BasicFactoryTest {
 	public void test4() {
 		final BasicTimer timer = new BasicTimer(0);
 		final Random random = new Random();
-		final Factory factory = new BasicFactory(6, 10, 100, timer, random);
+		final Factory factory = new OldBasicFactory(6, 10, 100, timer, random);
 
 		for (int i = 0; i < 100; i++) {
 			factory.open();

@@ -23,11 +23,13 @@ public interface Commodities {
 	 */
 	Commodities detach(long demand);
 
+	String getType();
+
 	/**
 	 * Returns the unit cost of the commodities in this heap.
 	 * @return the unit cost.
 	 */
-	double getUnitCost();
+	Double getUnitCost();
 
 	/**
 	 * Returns the total value of the commodities in the heap.

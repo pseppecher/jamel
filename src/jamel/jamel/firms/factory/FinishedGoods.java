@@ -11,6 +11,11 @@ public class FinishedGoods implements Materials, Commodities {
 	/** Finished goods are completed. */
 	private final static Rational completion = new Rational(1, 1);
 
+	/**
+	 * The type of goods.
+	 */
+	private final String type;
+
 	/** The value of the goods. */
 	private long value = 0;
 
@@ -19,25 +24,32 @@ public class FinishedGoods implements Materials, Commodities {
 
 	/**
 	 * Creates an empty heap of finished goods.
+	 * 
+	 * @param type
+	 *            the type of finished goods.
 	 */
-	public FinishedGoods() {
+	public FinishedGoods(String type) {
+		this.type = type;
 	}
 
 	/**
 	 * Creates a new heap of finished goods.
 	 * 
+	 * @param type
+	 *            the type of finished goods.
 	 * @param volume
 	 *            the volume of the heap of finished goods to be created.
 	 * @param value
 	 *            the value of the heap of finished goods to be created.
 	 */
-	public FinishedGoods(long volume, long value) {
-		if (volume<0) {
-			throw new IllegalArgumentException("Volume: "+volume);
+	public FinishedGoods(String type, long volume, long value) {
+		if (volume < 0) {
+			throw new IllegalArgumentException("Volume: " + volume);
 		}
-		if (value<0) {
-			throw new IllegalArgumentException("Value: "+value);
+		if (value < 0) {
+			throw new IllegalArgumentException("Value: " + value);
 		}
+		this.type = type;
 		this.volume = volume;
 		this.value = value;
 	}
@@ -56,7 +68,7 @@ public class FinishedGoods implements Materials, Commodities {
 	@Override
 	public void consume(long consumption) {
 		if (consumption < 0) {
-			throw new IllegalArgumentException("Consumption: "+consumption);
+			throw new IllegalArgumentException("Consumption: " + consumption);
 		}
 		if (consumption > this.volume) {
 			throw new RuntimeException("Overconsumption.");
@@ -86,17 +98,17 @@ public class FinishedGoods implements Materials, Commodities {
 			throw new IllegalArgumentException("Demand cannot exceed supply.");
 		}
 		if (demand < 0) {
-			throw new IllegalArgumentException("Bad volume: "+demand);
+			throw new IllegalArgumentException("Bad volume: " + demand);
 		}
 		final double demand2 = demand;
 		final long newValue = (long) (demand2 * this.value / this.volume);
 		if (newValue < 0) {
-			Jamel.println("demand",demand);
-			Jamel.println("value",value);
-			Jamel.println("volume",volume);
-			throw new IllegalArgumentException("Bad value: "+newValue);
+			Jamel.println("demand", demand);
+			Jamel.println("value", value);
+			Jamel.println("volume", volume);
+			throw new IllegalArgumentException("Bad value: " + newValue);
 		}
-		final Commodities result = new FinishedGoods(demand, newValue);
+		final Commodities result = new FinishedGoods(this.type, demand, newValue);
 		this.volume -= result.getVolume();
 		this.value -= result.getValue();
 		return result;
@@ -118,14 +130,26 @@ public class FinishedGoods implements Materials, Commodities {
 	}
 
 	@Override
-	public double getUnitCost() {
-		return ((double) this.value) / this.volume;
+	public String getType() {
+		return this.type;
+	}
+
+	@Override
+	public Double getUnitCost() {
+		final Double result;
+		if (volume==0) {
+			result = null;
+		}
+		else {
+			result = ((double) this.value) / this.volume; 
+		}
+		return result; 
 	}
 
 	@Override
 	public long getValue() {
-		if (this.value<0) {
-			throw new RuntimeException("Illegal value: "+this.value);
+		if (this.value < 0) {
+			throw new RuntimeException("Illegal value: " + this.value);
 		}
 		return this.value;
 	}
@@ -142,6 +166,9 @@ public class FinishedGoods implements Materials, Commodities {
 
 	@Override
 	public void put(Commodities input) {
+		if (!input.getType().equals(type)) {
+			throw new RuntimeException("Not the same type (this: "+this.type+", input: "+input.getType()+")");
+		}
 		this.value += input.getValue();
 		this.volume += input.getVolume();
 		input.consume();
@@ -149,8 +176,8 @@ public class FinishedGoods implements Materials, Commodities {
 
 	@Override
 	public void setValue(long value) {
-		if (value<0) {
-			throw new IllegalArgumentException("Value: "+value);
+		if (value < 0) {
+			throw new IllegalArgumentException("Value: " + value);
 		}
 		this.value = value;
 	}

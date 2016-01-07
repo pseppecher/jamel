@@ -1,17 +1,20 @@
 package jamel.jamel.firms;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Random;
 
 import jamel.Jamel;
+import jamel.basic.util.Timer;
 import jamel.jamel.capital.BasicCapitalStock;
 import jamel.jamel.capital.CapitalStock;
 import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.firms.factory.BasicFactory;
-import jamel.jamel.firms.factory.BasicMachine;
 import jamel.jamel.firms.factory.Factory;
+import jamel.jamel.firms.factory.FinalMachine;
 import jamel.jamel.firms.factory.FinishedGoods;
 import jamel.jamel.firms.factory.Machine;
 import jamel.jamel.firms.managers.CapitalManager;
@@ -27,10 +30,12 @@ import jamel.jamel.widgets.LaborPower;
 import jamel.jamel.widgets.Supply;
 
 /**
- * Une firme expérimentale pour préparer l'investissement.
+ * Un clone de Firm150908, mais qui utilise FinalMachine au lieu de
+ * BasicMachine. C'est donc la firme qui est destinée à devenir la BasicFirm à
+ * la place de la BasicFirm.
  */
 @SuppressWarnings("javadoc")
-public class Firm150908 extends BasicFirm implements Investor {
+public class Firm151123 extends BasicFirm implements Investor {
 
 	final private static float discountRate = 0.006f; // Should be a parameter.
 
@@ -42,9 +47,50 @@ public class Firm150908 extends BasicFirm implements Investor {
 	public static final Comparator<Supply> supplyComparator = new Comparator<Supply>() {
 		@Override
 		public int compare(Supply offer1, Supply offer2) {
-			return (-(new Double(offer2.getPrice())).compareTo(offer1.getPrice()));
+			final int result;
+			if (offer1 == null && offer2 == null) {
+				result = 0;
+			} else if (offer1 == null) {
+				result = 1;
+			} else if (offer2 == null) {
+				result = -1;
+			} else {
+				result = (-(new Double(offer2.getPrice())).compareTo(offer1.getPrice()));
+			}
+			return result;
 		}
 	};
+
+	/**
+	 * Creates and returns the specified number of new machines.
+	 * 
+	 * @param n
+	 *            the number of machines to be created.
+	 * @param stuff
+	 *            a heap of commodities that will serve as input for the
+	 *            creation of the new machines.
+	 * @param technology
+	 *            the technology that will be used to create the new machines.
+	 * @param timer
+	 *            the timer.
+	 * @param random
+	 *            the random.
+	 * @return the specified number of new machines.
+	 */
+	public static Machine[] getNewMachines(int n, Commodities stuff, Technology technology, Timer timer,
+			Random random) {
+		final Machine[] machines = new Machine[n];
+		for (int i = 0; i < n; i++) {
+			final Commodities input;
+			if (stuff == null) {
+				input = null;
+			} else {
+				input = stuff.detach(technology.getInputVolumeForANewMachine());
+			}
+			machines[i] = new FinalMachine(technology, input, timer, random);
+		}
+		return machines;
+	}
 
 	private float animalSpirit;
 
@@ -64,13 +110,13 @@ public class Firm150908 extends BasicFirm implements Investor {
 
 	private final float stability;
 
-	private final Technology technology;
+	private Technology technology = null;
 
 	private Memory<Long> wagebillMemory = new Memory<Long>(12);
 
 	private Memory<Integer> workforceMemory = new Memory<Integer>(12);
 
-	public Firm150908(String name, IndustrialSector sector) {
+	public Firm151123(String name, IndustrialSector sector) {
 		super(name, sector, false);
 		// this.animalSpirit = 0.5f + 0.5f * this.random.nextFloat();
 		this.animalSpirit = sector.getParam("animalSpirits").floatValue();
@@ -80,14 +126,14 @@ public class Firm150908 extends BasicFirm implements Investor {
 		this.mutation = sector.getParam("mutation.strenght").floatValue();
 		this.stability = 1f - sector.getParam("mutation.probability").floatValue();
 		this.technology = sector.getTechnology();
-		this.setTypeOfProduction(this.technology.getTypeOfProduction());
+		setTypeOfProduction(this.technology.getTypeOfProduction());
 		initManagers();
 	}
 
 	/**
 	 * Creates and returns a new capital manager.
 	 * 
-	 * Dividends smoothing.
+	 * Lisse la distribution des dividendes.
 	 * 
 	 * @return a new {@linkplain CapitalManager}.
 	 */
@@ -99,9 +145,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 
 			/** The dividend paid. */
 			private long dividend;
-
-			private Memory<Long> income = new Memory<Long>(12);
-
+			
 			/** The capital of the firm at the beginning of the period. */
 			private long initialCapital;
 
@@ -196,7 +240,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 				checkConsistency();
 				final boolean isOpen = capitalStock.isOpen();
 				this.capitalStock.cancel();
-				this.capitalStock = new BasicCapitalStock(Firm150908.this, account, timer);
+				this.capitalStock = new BasicCapitalStock(Firm151123.this, account, timer);
 				if (isOpen) {
 					this.capitalStock.open();
 				}
@@ -218,11 +262,6 @@ public class Firm150908 extends BasicFirm implements Investor {
 				final boolean insolvent = (timer.getPeriod().intValue() - creation > 12 && capital < 0);
 				// TODO: 12 should be a parameter
 
-				this.income.add(capital - initialCapital + this.dividend);
-
-				// final long shortTermDebt = account.getShortTermDebt();
-				// final long longTermDebt = account.getLongTermDebt();
-
 				this.dataset.put("cash", cash);
 				this.dataset.put("assets", assets);
 				this.dataset.put("liabilities", liabilities);
@@ -233,6 +272,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 
 				this.dataset.put("dividends", this.dividend);
 				this.dataset.put("interest", account.getInterest());
+				this.dataset.put("debt.repaid", account.getRepaidDebt());
 
 				this.dataset.put("liabilities.target", getLiabilitiesTarget());
 				this.dataset.put("liabilities.excess", getLiabilitiesExcess());
@@ -276,8 +316,9 @@ public class Firm150908 extends BasicFirm implements Investor {
 				 * grossProfit = (Long) salesManager.askFor("grossProfit");
 				 * final long interest = account.getInterest(); final long
 				 * bankruptcy = account.getCanceledMoney() +
-				 * factory.getInventoryLosses() - account.getCanceledDebt();
-				 * final long capital = this.getCapital();
+				 * getFactory().getInventoryLosses() -
+				 * account.getCanceledDebt(); final long capital =
+				 * this.getCapital();
 				 * 
 				 * isConsistent = (capital == this.initialCapital + grossProfit
 				 * - (this.dividend + interest + bankruptcy)); if
@@ -318,7 +359,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 				final long assets = cash + getFactory().getValue();
 				final double capital = getCapital();
 				final long capitalTarget2 = getCapitalTarget();
-				final double averageIncome = this.income.getMean();
+				final double averageIncome = this.netProfitMemory.getMean();
 				long newDividend;
 				if (capital > 0) {
 					final double ratio = capital / capitalTarget2;
@@ -328,6 +369,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 					newDividend = 0;
 				}
 				if (newDividend > cash) {
+					//account.newLoan(newDividend-cash, 4, true);
 					newDividend = cash;
 				}
 				if (newDividend < 0) {
@@ -366,7 +408,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 				}
 				final List<Shareholder> shareHolders = sector.selectCapitalOwner(10);
 				if (shareHolders.size() > 0) {
-					this.capitalStock = new BasicCapitalStock(Firm150908.this, shareHolders.size(), account, timer);
+					this.capitalStock = new BasicCapitalStock(Firm151123.this, shareHolders.size(), account, timer);
 					List<StockCertificate> certificates = this.capitalStock.getCertificates();
 					for (int id = 0; id < certificates.size(); id++) {
 						final StockCertificate certif = certificates.get(id);
@@ -390,13 +432,10 @@ public class Firm150908 extends BasicFirm implements Investor {
 	 */
 	private Factory getNewFactory() {
 		final int capacity = sector.getParam(PRODUCTION_CAPACITY).intValue();
-		final int productionTime = this.technology.getProductionTime();
-		final long productivity = this.technology.getProductivity();
-		final Machine[] machines = new Machine[capacity];
-		for (int i = 0; i < capacity; i++) {
-			machines[i] = new BasicMachine(this.getTypeOfProduction(), productionTime, productivity, 0, timer, random);
-		}
-		return new BasicFactory(productionTime, timer, random, machines);
+		final Machine[] machines = getNewMachines(capacity, null, this.technology, this.timer, this.random);
+		return new BasicFactory(this.technology.getProductionTime(), timer, random, machines);
+		// TODO la Factory devrait déduire elle-même productionTime des machines
+		// dont elle est équipée.
 	}
 
 	/**
@@ -421,10 +460,6 @@ public class Firm150908 extends BasicFirm implements Investor {
 
 			/** The payroll (= the anticipated wage bill) */
 			private Long payroll = null;
-
-			/** Memory of the recent job openings. */
-			// private final Memory<Integer> recentJobOpenings = new
-			// Memory<Integer>(3);
 
 			/** Memory of the recent vacancies. */
 			private final Memory<Integer> recentVacancies = new Memory<Integer>(3);
@@ -504,7 +539,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 						@Override
 						public Object getEmployerName() {
 							timer.checkConsistency(validPeriod);
-							return Firm150908.this.getName();
+							return Firm151123.this.getName();
 						}
 
 						@Override
@@ -640,7 +675,8 @@ public class Firm150908 extends BasicFirm implements Investor {
 			public void updateWorkforce() {
 				checkConsistency();
 				workforce.cleanUp();
-				manpowerTarget = Math.round(getFactory().getCapacity() * getProductionManager().getTarget());
+				manpowerTarget = Math.min(getFactory().getCurrentMaxCapacity(),
+						Math.round(getFactory().getCapacity() * getProductionManager().getTarget()));
 				final int jobOpenings;
 				if (manpowerTarget <= workforce.size()) {
 					if (manpowerTarget < workforce.size()) {
@@ -656,7 +692,6 @@ public class Firm150908 extends BasicFirm implements Investor {
 					payroll = workforce.getPayroll() + jobOpenings * (long) ((double) this.wage);
 				}
 				this.dataset.put(JOB_OPENINGS, jobOpenings);
-				// this.recentJobOpenings.add(jobOpenings);
 				this.recentWorkforceTarget.add(manpowerTarget);
 				this.dataset.put(WORKFORCE_TARGET, manpowerTarget);
 				this.vacancies = jobOpenings;
@@ -671,30 +706,16 @@ public class Firm150908 extends BasicFirm implements Investor {
 	 * 
 	 * @return an array of supplies, sorted by price in ascending order.
 	 */
-	private Supply[] getSupplies(int size) {
-
-		final ArrayList<Supply> listOfSupplies = new ArrayList<Supply>(size);
-		for (final Firm firm : this.sector.getSimpleRandomSample(size)) {
-			if (!firm.equals(this)) {
-				// Une firme ne peut pas être son propre fournisseur.
-
-				final Supply supply = firm.getSupply();
-				if (supply != null) {
-					listOfSupplies.add(supply);
-				}
+	private Supply[] getSupplies(String type, int i) {
+		// TODO vérifier cette méthode.
+		final Supply[] supplies = this.sector.getSupplies(type, i);
+		for (int j = 0; j < supplies.length; j++) {
+			if (supplies[j].getSupplier() == this) {
+				supplies[j] = null;
 			}
 		}
-
-		// On transforme la liste en tableau.
-		final Supply[] supplies = listOfSupplies.toArray(new Supply[listOfSupplies.size()]);
-
-		// On range les offres selon leurs prix, les moins chers d'abord.
-		if (supplies.length > 0) {
-			Arrays.sort(supplies, supplyComparator);
-		}
-
+		Arrays.sort(supplies, supplyComparator);
 		return supplies;
-
 	}
 
 	private void imitation() {
@@ -702,13 +723,13 @@ public class Firm150908 extends BasicFirm implements Investor {
 		List<Firm> sample = sector.getSimpleRandomSample(1);
 		Firm firm = sample.get(0);
 		// Firm150908.this.animalSpirit = (Float) firm.askFor("animalSpirit");
-		Firm150908.this.capitalTargetRatio = (Float) firm.askFor("capitalTargetRatio");
+		Firm151123.this.capitalTargetRatio = (Float) firm.askFor("capitalTargetRatio");
 		mutation(this.mutation);
 	}
 
 	/**
-	 * Initializes the managers. Two managers differ from the basic ones: the
-	 * CapitalManager and the WorkforceManager.
+	 * Initializes the managers. Three managers differ from the basic ones: the
+	 * CapitalManager, the WorkforceManager and the getFactory().
 	 */
 	private void initManagers() {
 		this.setCapitalManager(getNewCapitalManager());
@@ -732,24 +753,13 @@ public class Firm150908 extends BasicFirm implements Investor {
 			this.account.newLoan(newLongTermLoan, 120, true);
 		}
 		if (this.account.getAmount() < need) {
-			// final long newShortTermLoan = (need -
-			// this.account.getAmount())/3;
-			// this.account.newLoan((need - this.account.getAmount())/3, 36,
-			// true);
-			// this.account.newLoan((need - this.account.getAmount())/2, 24,
-			// true);
 			this.account.newLoan(need - this.account.getAmount(), 12, true);
 		}
-		/*
-		 * final long newLongTermLoan = (long) (0.5 + investmentCost * 1.001 -
-		 * this.account.getAmount());
-		 */
 
 		long requiredVolume = investmentSize * input;
 
-		final Commodities stuff = new FinishedGoods(getTypeOfProduction());
+		final Commodities stuff = new FinishedGoods(this.technology.getTypeOfInputForMachineCreation());
 
-		// long totalExpense = 0;
 		for (Supply supply : supplies) {
 			final long supplyVolume = supply.getVolume();
 			final long purchaseVolume;
@@ -760,7 +770,6 @@ public class Firm150908 extends BasicFirm implements Investor {
 			}
 			final long expense = supply.getPrice(purchaseVolume);
 			final Commodities purchase = supply.buy(purchaseVolume, this.account.newCheque(expense));
-			// totalExpense+=expense;
 			stuff.put(purchase);
 			requiredVolume -= purchaseVolume;
 			if (requiredVolume == 0) {
@@ -778,7 +787,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 			throw new RuntimeException("Not enough stuff.");
 		}
 		final long investmentVolume = stuff.getVolume();
-		final Machine[] newMachines = InvestorToolBox.getNewMachines(investmentSize, stuff, technology, timer, random);
+		final Machine[] newMachines = getNewMachines(investmentSize, stuff, technology, timer, random);
 		// TODO: vérifier que stuff a été consommé.
 		this.getFactory().expandCapacity(newMachines);
 		this.data.put("investment.size", investmentSize);
@@ -804,6 +813,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 		this.salesValueMemory.add((Long) this.getSalesManager().askFor("salesValue"));
 		this.wagebillMemory.add((Long) this.getWorkforceManager().askFor("wagebill"));
 		this.workforceMemory.add((Integer) this.getWorkforceManager().askFor("workforce"));
+
 		this.data.put("imitations", this.imitations);
 	}
 
@@ -816,6 +826,72 @@ public class Firm150908 extends BasicFirm implements Investor {
 			result = super.askFor(key);
 		}
 		return result;
+	}
+
+	@Override
+	public void inputsPurchase() {
+
+		// Ca c'est pour stocker les offres consultées sur le marché des inputs:
+		final Map<String, Supply[]> superSupplies = new LinkedHashMap<String, Supply[]>();
+
+		// On récupère les besoins exprimés par l'usine.
+		final Map<String, Long> needs = this.getFactory().getNeeds();
+
+		// Pour stocker la dépense effective à des fins statistiques.
+		long inputTotalValueEffective = 0;
+
+		// On calcule le besoin de financement total.
+		long inputTotalValue = 0;
+		for (String inputKey : needs.keySet()) {
+			final Supply[] supplies = this.getSupplies(inputKey, 10);
+			superSupplies.put(inputKey, supplies);
+			// TODO: 10 should be a parameter.
+			long need = needs.get(inputKey);
+			
+			if (need>0) {
+				for (Supply supply : supplies) {
+					final long volume = Math.min(need, supply.getVolume());
+					inputTotalValue += supply.getPrice(volume);
+					need -= volume;
+					if (need==0) {
+						break;
+					}
+				}				
+			}
+
+		}
+
+		// On assure le financement des inputs.
+		final long externalFunds = Math.max(0, inputTotalValue-this.account.getAmount());
+		if (externalFunds>0) {
+			this.account.newLoan(externalFunds, 12, false);
+			// TODO: 12 should be a parameter
+		}
+		
+		
+		for (String inputKey : superSupplies.keySet()) {
+
+			final Supply[] supplies = superSupplies.get(inputKey);
+			long need = needs.get(inputKey);
+			if (need>0) {
+				for (Supply supply : supplies) {
+					final long volume = Math.min(need, supply.getVolume());
+					final long amount = supply.getPrice(volume);
+					final Commodities input = supply.buy(volume, this.account.newCheque(amount));
+					inputTotalValueEffective+= amount;
+					need -= input.getVolume();
+					this.getFactory().putResources(inputKey,input);
+					if (need==0) {
+						break;
+					}
+				}				
+			}
+		}
+		
+		this.data.put("inputs.val", inputTotalValueEffective);
+
+		// TODO: Verifier cette methode.
+
 	}
 
 	@Override
@@ -855,12 +931,6 @@ public class Firm150908 extends BasicFirm implements Investor {
 
 			final long[] machinery = (long[]) this.getFactory().askFor("machinery");
 
-			// FIXME: ca ce sera vraiment a revoir quand les machines seront
-			// heterogenes.
-			// Ici elles sont rangees par productivite decroissante.
-			// Il faudrait qu'elles soient rangees par rentabilité croissante,
-			// en fonction de la structure courante des couts.
-
 			if (this.getFactory().getCapacity() == 0 || capital > capitalTarget2) {
 
 				// Il faut que le niveau de capital de la firme soit
@@ -868,7 +938,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 				// pour qu'on puisse envisager l'achat de nouvelles machines
 
 				// On récupère une liste d'offres.
-				final Supply[] supplies = getSupplies(10);
+				final Supply[] supplies = getSupplies("Production Goods",10);
 
 				if (supplies.length > 0) {
 
@@ -900,12 +970,12 @@ public class Firm150908 extends BasicFirm implements Investor {
 					if (investmentSize > 0) {
 						invest(investmentSize, machinePrices, technology.getInputVolumeForANewMachine(), supplies);
 					} /*
-						 * else if (investmentSize < 0) {
-						 * this.factory.scrap(-investmentSize);
-						 * this.data.put("desinvestment.size", -investmentSize);
-						 * investmentSize = 0; // TODO: bidouillage to be
-						 * removed. }
-						 */
+					 * else if (investmentSize < 0) {
+					 * this.getFactory().scrap(-investmentSize);
+					 * this.data.put("desinvestment.size", -investmentSize);
+					 * investmentSize = 0; // TODO: bidouillage to be
+					 * removed. }
+					 */
 
 				}
 
@@ -913,7 +983,7 @@ public class Firm150908 extends BasicFirm implements Investor {
 		}
 		// this.data.put("animalSpirit", animalSpirit);
 		// this.data.put("animalSpirit.weighted", animalSpirit * (Integer)
-		// this.factory.askFor("capacity"));
+		// this.getFactory().askFor("capacity"));
 		this.data.put("capitalTargetRatio", capitalTargetRatio);
 		this.data.put("capitalTargetRatio.weighted",
 				capitalTargetRatio * (Integer) this.getFactory().askFor("capacity"));

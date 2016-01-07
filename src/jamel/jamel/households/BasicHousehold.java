@@ -1,5 +1,6 @@
 package jamel.jamel.households;
 
+import jamel.Jamel;
 import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Timer;
@@ -98,9 +99,9 @@ public class BasicHousehold implements Household {
 	/** The households sector. */
 	private final HouseholdSector sector;
 
-	/** 
-	 * A map that stores the variables of the household.
-	 * TODO: remplacer par des champs. 
+	/**
+	 * A map that stores the variables of the household. TODO: remplacer par des
+	 * champs.
 	 */
 	private final Map<String, Number> variables = new HashMap<String, Number>();
 
@@ -112,6 +113,11 @@ public class BasicHousehold implements Household {
 
 	/** The timer. */
 	final protected Timer timer;
+
+	/**
+	 * The type of goods the household want to consume.
+	 */
+	final private String typeOfConsumptionGood;
 
 	/**
 	 * Creates a household.
@@ -126,6 +132,7 @@ public class BasicHousehold implements Household {
 		this.sector = sector;
 		this.timer = this.sector.getTimer();
 		this.random = this.sector.getRandom();
+		this.typeOfConsumptionGood = this.sector.getTypeOfConsumptionGood();
 		this.recentIncome = new Memory<Long>(12);
 		this.account = sector.getNewAccount(this);
 		this.variables.put("status", UNEMPLOYED);
@@ -157,10 +164,15 @@ public class BasicHousehold implements Household {
 			throw new IllegalArgumentException("Price of shares exceeds the financial capacity of this household.");
 		}
 		if (price > shares.getBookValue()) {
-			final long error=price-shares.getBookValue();
-			if (error>1) {
-			throw new IllegalArgumentException(
-					"Price of shares is <" + price + "> but the book value is <" + shares.getBookValue() + ">");
+			final long error = price - shares.getBookValue();
+			if (error > 1) {
+				/*
+				 * throw new IllegalArgumentException(
+				 *
+				 * "Price of shares is <" + price + "> but the book value is <"
+				 * + shares.getBookValue() + ">");
+				 */
+				// Ca c'est le cas où le prix d'une action a atteint le cours plancher de 1.
 			}
 		}
 		this.assetPortfolio.add(shares);
@@ -207,18 +219,39 @@ public class BasicHousehold implements Household {
 						break;
 					}
 					final long volume;
-					if (supply.getPrice(supply.getVolume()) >= consumptionBudget) {
+					if (supply.getPrice(supply.getVolume()) == consumptionBudget) {
+						volume = supply.getVolume();
+						//Jamel.println("Case 0: volume="+supply.getVolume());
+					} else if (supply.getPrice(supply.getVolume()) > consumptionBudget) {
 						volume = (long) (consumptionBudget / supply.getPrice());
+						//Jamel.println("Case 1");
+						//Jamel.println("supply.getPrice(supply.getVolume()): "+supply.getPrice(supply.getVolume()));
+						//Jamel.println("consumptionBudget: "+consumptionBudget);
 					} else {
 						volume = supply.getVolume();
+						//Jamel.println("Case 2: volume="+volume);
 					}
-					final long value = (long) (volume * supply.getPrice());
-					final Commodities truc = supply.buy(volume, this.account.newCheque(value));
-					if (truc.getVolume() != volume) {
+					long value = supply.getPrice(volume);//(long) (volume * supply.getPrice());
+					/*if (value==0) {
+						value=1;
+					}*/
+					if (value<=0) {
+						Jamel.println("consumptionBudget: "+consumptionBudget);
+						Jamel.println("Price: "+supply.getPrice());
+						Jamel.println("Volume: "+volume);
+						throw new RuntimeException("Negative value: " + value);						
+					}
+					final Commodities commod = supply.buy(volume, this.account.newCheque(value));
+					if (!this.typeOfConsumptionGood.equals(commod.getType())) {
+						Jamel.println("Expected: " + this.typeOfConsumptionGood);
+						Jamel.println("Found: " + commod.getType());
+						throw new RuntimeException("Bad type of commodities: " + commod.getType());
+					}
+					if (commod.getVolume() != volume) {
 						throw new RuntimeException(
-								"Consumption volume expected <" + volume + "> but was <" + truc.getVolume() + ">");
+								"Consumption volume expected <" + volume + "> but was <" + commod.getVolume() + ">");
 					}
-					truc.consume();
+					commod.consume();
 					consumptionBudget -= value;
 					consumptionValue += value;
 					consumptionVolume += volume;

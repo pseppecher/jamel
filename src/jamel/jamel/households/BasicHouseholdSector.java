@@ -39,9 +39,6 @@ import org.w3c.dom.NodeList;
  */
 public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 
-	/** The key word for the "closure" phase. */
-	private static final String PHASE_CLOSURE = "closure";
-
 	/** The key word for the "consumption" phase. */
 	private static final String PHASE_CONSUMPTION = "consumption";
 
@@ -56,6 +53,14 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 
 	/** The <code>dependencies</code> element. */
 	protected static final String DEPENDENCIES = "dependencies";
+
+	/** The key word for the "closure" phase. */
+	protected static final String PHASE_CLOSURE = "closure";
+
+	/**
+	 * The type of goods the households want to consume.
+	 */
+	private String typeOfTheConsumptionGood = null;
 
 	/** The type of the agents. */
 	protected String agentType;
@@ -73,7 +78,7 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 	protected int countAgents;
 
 	/** The employers. */
-	protected Employers employers;
+	protected Employers employers ;
 
 	/** The collection of agents. */
 	protected final AgentSet<Household> households;
@@ -113,15 +118,6 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 	}
 
 	/**
-	 * Closes the sector at the end of the period.
-	 */
-	protected void close() {
-		for (final Household household : this.households.getList()) {
-			household.close();
-		}
-	}
-
-	/**
 	 * Creates households.
 	 * 
 	 * @param type
@@ -143,6 +139,137 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 			}
 		}
 		return list;
+	}
+
+	/**
+	 * Creates and returns a closure phase.
+	 * 
+	 * @return a closure phase.
+	 */
+	protected Phase getClosurePhase() {
+		return new AbstractPhase(PHASE_CLOSURE, this) {
+			@Override
+			public void run() {
+				for (final Household household : households.getList()) {
+					household.close();
+				}
+			}
+		};
+	}
+
+	/**
+	 * Initializes the employer sector.
+	 * 
+	 * @param nodeList
+	 *            the list of the employers.
+	 * @throws InitializationException
+	 *             if something goes wrong.
+	 */
+	protected void initEmployers(NodeList nodeList) throws InitializationException {
+		final Element element = (Element) nodeList.item(0);
+		if (element == null) {
+			throw new InitializationException("Element not found: Employers");
+		}
+		final String key = element.getAttribute("value");
+		if (key == "") {
+			throw new InitializationException("Missing attribute: value");
+		}
+		this.employers = (Employers) circuit.getSector(key);
+	}
+
+	@Override
+	public Cheque[] buyCorporation(Corporation firm) {
+		final long firmValue = firm.getBookValue();
+		if (firmValue <= 0) {
+			throw new RuntimeException("firmValue: " + firmValue);
+		}
+		final List<Shareholder> all = new LinkedList<Shareholder>(this.households.getShuffledList());
+		final List<Shareholder> buyers = new ArrayList<Shareholder>(10);
+		final List<Long> prices = new ArrayList<Long>(10);
+		final List<Integer> shares = new ArrayList<Integer>(10);
+		long priceOfOneShare = firmValue / 100;
+		if (priceOfOneShare < 2) {
+			priceOfOneShare=1;
+			//throw new RuntimeException("priceOfOneShare: " + priceOfOneShare);
+			// FIXME
+		}
+
+		class Auctioneer {
+			// TODO: It is not really an auctioneer. To be renamed.
+			int auction(long sharePrice, long minimalFinancialCapacity) {
+				int nonIssuedShares = 100;
+				for (Shareholder shareholder : all) {
+					final long shareholderFinancialCapacity = shareholder.getFinancialCapacity();
+					if (shareholderFinancialCapacity > minimalFinancialCapacity) {
+
+						final int nShares0 = (int) (shareholderFinancialCapacity / sharePrice);
+						final int nShares = Math.min(nShares0, nonIssuedShares);
+						final long priceOfTheShares = sharePrice * nShares;
+						buyers.add(shareholder);
+						prices.add(priceOfTheShares);
+						shares.add(nShares);
+						nonIssuedShares -= nShares;
+					}
+					if (nonIssuedShares == 0) {
+						break;
+					}
+				}
+				return nonIssuedShares;
+			}
+		}
+
+		final Auctioneer auctioneer = new Auctioneer();
+
+		int nonIssuedShares = auctioneer.auction(priceOfOneShare, priceOfOneShare * 10);
+		if (nonIssuedShares > 0) {
+			buyers.clear();
+			prices.clear();
+			shares.clear();
+			nonIssuedShares = auctioneer.auction(priceOfOneShare, priceOfOneShare * 5);
+			if (nonIssuedShares > 0) {
+				buyers.clear();
+				prices.clear();
+				shares.clear();
+				nonIssuedShares = auctioneer.auction(priceOfOneShare, priceOfOneShare * 2);
+				if (nonIssuedShares > 0) {
+					int count = 0;
+					while (true) {
+						buyers.clear();
+						prices.clear();
+						shares.clear();
+						nonIssuedShares = auctioneer.auction(priceOfOneShare, priceOfOneShare);
+						if (nonIssuedShares == 0) {
+							break;
+						}
+						priceOfOneShare -= 0.1 * priceOfOneShare;
+						if (count > 10 || priceOfOneShare == 0) {
+							// On n'a pas réussi à vendre tout le capital de la
+							// firme !!!
+							// Pourtant on a baissé le prix 10 fois.
+							Jamel.println("priceOfOneShare: " + priceOfOneShare);
+							throw new RuntimeException("Non issued shares: " + nonIssuedShares);
+							// FIXME: il faut implémenter une solution à ce cas.
+						}
+					}
+				}
+			}
+		}
+
+		if (buyers.size() == 0) {
+			throw new RuntimeException(
+					"Buyers list is empty: " + firm.getName() + ", period " + timer.getPeriod().intValue());
+		}
+
+		final StockCertificate[] newShares = firm.getNewShares(shares);
+		// Tout le capital est maintenant partagé proportionnellement aux
+		// contributions de chacun.
+
+		final Cheque[] cheques = new Cheque[buyers.size()];
+		for (int i = 0; i < buyers.size(); i++) {
+			cheques[i] = buyers.get(i).buy(newShares[i], prices.get(i));
+		}
+
+		return cheques;
 	}
 
 	@Override
@@ -246,12 +373,7 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 		}
 
 		else if (phaseName.equals(PHASE_CLOSURE)) {
-			result = new AbstractPhase(phaseName, this) {
-				@Override
-				public void run() {
-					BasicHouseholdSector.this.close();
-				}
-			};
+			result = getClosurePhase();
 		}
 
 		else {
@@ -278,6 +400,11 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 	}
 
 	@Override
+	public String getTypeOfConsumptionGood() {
+		return this.typeOfTheConsumptionGood;
+	}
+
+	@Override
 	public void init(Element element) throws InitializationException {
 
 		// Initialization of the dependencies:
@@ -298,6 +425,7 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 		}
 
 		// Looking for the supplier sector.
+
 		final String key1 = "Suppliers";
 		final Element suppliersElement = (Element) refElement.getElementsByTagName(key1).item(0);
 		if (suppliersElement == null) {
@@ -307,19 +435,16 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 		if (suppliersKey == "") {
 			throw new InitializationException("Missing attribute: value");
 		}
-		this.suppliers = (Suppliers) circuit.getSector(suppliersKey);
+		Suppliers newSuppliers = (Suppliers) circuit.getSector(suppliersKey);
+		if (newSuppliers == null) {
+			throw new InitializationException("Suppliers sector: unknown sector: \"" + suppliersKey + "\"");
+		}
+		this.suppliers = newSuppliers;
+		this.typeOfTheConsumptionGood = suppliersElement.getAttribute("good");
 
 		// Looking for the employer sector.
-		final String key2 = "Employers";
-		final Element employersElement = (Element) refElement.getElementsByTagName(key2).item(0);
-		if (employersElement == null) {
-			throw new InitializationException("Element not found: " + key2);
-		}
-		final String employersKey = employersElement.getAttribute("value");
-		if (employersKey == "") {
-			throw new InitializationException("Missing attribute: value");
-		}
-		this.employers = (Employers) circuit.getSector(employersKey);
+
+		initEmployers(refElement.getElementsByTagName("Employers"));
 
 		// Looking for the banking sector.
 		final String key3 = "Banks";
@@ -358,99 +483,6 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 	@Override
 	public List<Shareholder> selectRandomCapitalOwners(int n) {
 		return new ArrayList<Shareholder>(households.getSimpleRandomSample(n));
-	}
-
-	@Override
-	public Cheque[] buyCorporation(Corporation firm) {
-		final long firmValue = firm.getBookValue();
-		if (firmValue <= 0) {
-			throw new RuntimeException("firmValue: " + firmValue);
-		}
-		final List<Shareholder> all = new LinkedList<Shareholder>(this.households.getShuffledList());
-		final List<Shareholder> buyers = new ArrayList<Shareholder>(10);
-		final List<Long> prices = new ArrayList<Long>(10);
-		final List<Integer> shares = new ArrayList<Integer>(10);
-		long priceOfOneShare = firmValue / 100;
-		if (priceOfOneShare < 2) {
-			throw new RuntimeException("priceOfOneShare: " + priceOfOneShare);
-			// FIXME
-		}
-
-		class Auctioneer {
-			// TODO: It is not really an auctioneer. To be renamed.
-			int auction(long sharePrice, long minimalFinancialCapacity) {
-				int nonIssuedShares = 100;
-				for (Shareholder shareholder : all) {
-					final long shareholderFinancialCapacity = shareholder.getFinancialCapacity();
-					if (shareholderFinancialCapacity > minimalFinancialCapacity) {
-
-						final int nShares0 = (int) (shareholderFinancialCapacity / sharePrice);
-						final int nShares = Math.min(nShares0, nonIssuedShares);
-						final long priceOfTheShares = sharePrice * nShares;
-						buyers.add(shareholder);
-						prices.add(priceOfTheShares);
-						shares.add(nShares);
-						nonIssuedShares -= nShares;
-					}
-					if (nonIssuedShares == 0) {
-						break;
-					}
-				}
-				return nonIssuedShares;
-			}
-		}
-
-		final Auctioneer auctioneer = new Auctioneer();
-
-		int nonIssuedShares = auctioneer.auction(priceOfOneShare,priceOfOneShare * 10);
-		if (nonIssuedShares > 0) {
-			buyers.clear();
-			prices.clear();
-			shares.clear();
-			nonIssuedShares = auctioneer.auction(priceOfOneShare,priceOfOneShare * 5);
-			if (nonIssuedShares > 0) {
-				buyers.clear();
-				prices.clear();
-				shares.clear();
-				nonIssuedShares = auctioneer.auction(priceOfOneShare,priceOfOneShare * 2);
-				if (nonIssuedShares > 0) {
-					int count = 0;
-					while(true) {
-						buyers.clear();
-						prices.clear();
-						shares.clear();
-						nonIssuedShares = auctioneer.auction(priceOfOneShare,priceOfOneShare);
-						if (nonIssuedShares == 0) {
-							break;
-						}
-						priceOfOneShare-=0.1*priceOfOneShare;
-						if (count>10 || priceOfOneShare==0) {
-							// On n'a pas réussi à vendre tout le capital de la firme !!!
-							// Pourtant on a baissé le prix 10 fois.
-							Jamel.println("priceOfOneShare: " + priceOfOneShare);
-							throw new RuntimeException("Non issued shares: " + nonIssuedShares);
-							// FIXME: il faut implémenter une solution à ce cas.							
-						}
-					}
-				}
-			}
-		}
-
-		if (buyers.size() == 0) {
-			throw new RuntimeException(
-					"Buyers list is empty: " + firm.getName() + ", period " + timer.getPeriod().intValue());
-		}
-
-		final StockCertificate[] newShares = firm.getNewShares(shares);
-		// Tout le capital est maintenant partagé proportionnellement aux
-		// contributions de chacun.
-
-		final Cheque[] cheques = new Cheque[buyers.size()];
-		for (int i = 0; i < buyers.size(); i++) {
-			cheques[i] = buyers.get(i).buy(newShares[i], prices.get(i));
-		}
-
-		return cheques;
 	}
 
 }

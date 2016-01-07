@@ -13,6 +13,11 @@ class BasicMaterials implements Materials {
 	/** When the materials were produced. */
 	private int productionPeriod;
 
+	/**
+	 * The type of the materials in this heap.
+	 */
+	final private String type;
+
 	/** The value of the materials. */
 	private long value;
 
@@ -22,6 +27,8 @@ class BasicMaterials implements Materials {
 	/**
 	 * Constructs a new heap of materials.
 	 * 
+	 * @param type
+	 *            the type of materials in this heap.
 	 * @param volume
 	 *            the volume of the materials.
 	 * @param value
@@ -31,11 +38,11 @@ class BasicMaterials implements Materials {
 	 * @param timer
 	 *            the timer.
 	 */
-	public BasicMaterials(long volume, long value, Rational completion,
-			Timer timer) {
+	public BasicMaterials(String type, long volume, long value, Rational completion, Timer timer) {
 		if (completion.doubleValue() <= 0 || completion.doubleValue() > 1) {
 			throw new IllegalArgumentException("Bad completion: " + completion);
 		}
+		this.type = type;
 		this.volume = volume;
 		this.value = value;
 		this.completion = completion;
@@ -45,11 +52,9 @@ class BasicMaterials implements Materials {
 	@Override
 	public void add(Materials stuff) {
 		if (!stuff.getCompletion().equals(this.completion)) {
-			throw new IllegalArgumentException("Bad completion: "
-					+ stuff.getCompletion());
+			throw new IllegalArgumentException("Bad completion: " + stuff.getCompletion());
 		}
-		this.productionPeriod = Math.max(this.productionPeriod,
-				stuff.getProductionPeriod());
+		this.productionPeriod = Math.max(this.productionPeriod, stuff.getProductionPeriod());
 		this.volume += stuff.getVolume();
 		this.value += stuff.getBookValue();
 		stuff.delete();
@@ -80,6 +85,11 @@ class BasicMaterials implements Materials {
 	@Override
 	public int getProductionPeriod() {
 		return this.productionPeriod;
+	}
+
+	@Override
+	public String getType() {
+		return this.type;
 	}
 
 	@Override

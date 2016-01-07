@@ -1,10 +1,578 @@
 <?xml version = "1.0" encoding = "UTF-8"?>
 
 <charts
-	title="September panels"
-	date="23-09-2015"
-	content="Configuration of the panels for the testing scenario with investment"
+	title="Two Sectors Panels"
+	date="03-01-2016"
+	content="Configuration of the panels for the testing scenario with 2 sectors"
 >
+	<panel title="Markups">
+
+
+		<col>
+			<chart
+				title="Markups"
+				type="time chart"
+			>
+				<series
+					value="mean(Industry1, markup, t)"
+					color="veryLightRed"
+					label="S1" />
+				<series
+					value="min(Industry1, markup, t)"
+					color="veryLightRed"
+					label="min" />
+				<series
+					value="max(Industry1, markup, t)"
+					color="veryLightRed"
+					label="max" />
+				<series
+					value="1 + sum(Industry1, grossProfit, t) : sum(Industry1, sales.cost, t)"
+					color="red"
+					label="S1 (Observed)" />
+				<series
+					value="mean(Industry2, markup, t)"
+					color="veryLightBlue"
+					label="S2" />
+				<series
+					value="min(Industry2, markup, t)"
+					color="veryLightBlue"
+					label="min" />
+				<series
+					value="max(Industry2, markup, t)"
+					color="veryLightBlue"
+					label="max" />
+				<series
+					value="1 + sum(Industry2, grossProfit, t) : sum(Industry2, sales.cost, t)"
+					color="blue"
+					label="S2 (Observed)" />
+				<legend>
+					<item
+						color="red"
+						label="S1" />
+					<item
+						color="blue"
+						label="S2" />
+				</legend>
+				<yAxis min="0" />
+			</chart>
+			<chart
+				title="Markups / Sales (Sector 1)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry1"
+					x="markup"
+					y="demand12"
+					color="transparentRed"
+					label="x=markup, y=sales (volume)" />
+				<xAxis
+					min="0.5"
+					max="4.5" />
+				<yAxis
+					min="0"
+					max="20000" />
+			</chart>
+			<chart
+				title="Markups / Sales (Sector 2)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry2"
+					x="markup"
+					y="demand12"
+					color="transparentBlue"
+					label="x=markup, y=sales (volume)" />
+				<xAxis
+					min="0.5"
+					max="4.5" />
+				<yAxis
+					min="0"
+					max="20000" />
+			</chart>
+		</col>
+
+		<col>
+			<chart title="Sizes" type="time chart">
+				<series value="mean(Industry1, capacity, t)" color="red" label="S1" />
+				<series value="min(Industry1, capacity, t)" color="veryLightRed" label="min" />
+				<series value="max(Industry1, capacity, t)" color="veryLightRed" label="max" />
+				<series value="mean(Industry2, capacity, t)" color="blue" label="S2" />
+				<series value="min(Industry2, capacity, t)" color="veryLightBlue" label="min" />
+				<series value="max(Industry2, capacity, t)" color="veryLightBlue" label="max" />
+				<legend>
+					<item color="red" label="S1" />
+					<item color="blue" label="S2" />
+				</legend>
+				<yAxis min="0" />
+			</chart><chart
+				title="Markups / Size (Sector 1)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry1"
+					x="markup"
+					y="capacity"
+					color="transparentRed"
+					label="x=markup, y=size" />
+				<xAxis
+					min="0.5"
+					max="4.5" />
+				<yAxis
+					min="0"
+					max="200" />
+			</chart>
+			<chart
+				title="Markups / Size (Sector 2)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry2"
+					x="markup"
+					y="capacity"
+					color="transparentBlue"
+					label="x=markup, y=size" />
+				<xAxis
+					min="0.5"
+					max="4.5" />
+				<yAxis
+					min="0"
+					max="200" />
+			</chart>
+		</col>
+		<col>
+			<chart
+				title="Return on Equity"
+				type="time chart"
+			>
+				<series
+					value="2 * (sum(Industry1, dividends, t-11...t) + sum(Industry1, capital, t) - sum(Industry1, capital, t-12)) : (sum(Industry1, capital, t-12)+sum(Industry1, capital, t))"
+					color="red"
+					label="S1" />
+				<series
+					value="2 * (sum(Industry2, dividends, t-11...t) + sum(Industry2, capital, t) - sum(Industry2, capital, t-12)) : (sum(Industry2, capital, t-12)+sum(Industry2, capital, t))"
+					color="blue"
+					label="S2" />
+				<yAxis
+					min="0"
+					max="5" />
+			</chart>
+			<chart
+				title="Markups / RoE (Sector 1)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry1"
+					x="markup"
+					y="returnOnEquity"
+					color="transparentRed"
+					label="x=markup, y=returnOnEquity" />
+				<xAxis
+					min="0.5"
+					max="5" />
+				<yAxis
+					min="0"
+					max="5" />
+			</chart>
+			<chart
+				title="Markups / RoE (Sector 2)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry2"
+					x="markup"
+					y="returnOnEquity"
+					color="transparentBlue"
+					label="x=markup, y=returnOnEquity" />
+				<xAxis
+					min="0.5"
+					max="5" />
+				<yAxis
+					min="0"
+					max="5" />
+			</chart>
+		</col>
+		<col>
+			<chart
+				title="Return on Assets"
+				type="time chart"
+			>
+				<series
+					value="2 * (sum(Industry1, dividends, t-11...t) + sum(Industry1, capital, t) - sum(Industry1, capital, t-12)) : (sum(Industry1, assets, t-12)+sum(Industry1, assets, t))"
+					color="red"
+					label="S1" />
+				<series
+					value="2 * (sum(Industry2, dividends, t-11...t) + sum(Industry2, capital, t) - sum(Industry2, capital, t-12)) : (sum(Industry2, assets, t-12)+sum(Industry2, assets, t))"
+					color="blue"
+					label="S2" />
+				<yAxis
+					min="0"
+					max="5" />
+			</chart>
+			<chart
+				title="Markups / RoA (Sector 1)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry1"
+					x="markup"
+					y="returnOnAssets"
+					color="transparentRed"
+					label="x=markup, y=returnOnAssets" />
+				<xAxis
+					min="0.5"
+					max="4.5" />
+				<yAxis
+					min="0"
+					max="5" />
+			</chart>
+			<chart
+				title="Markups / RoA (Sector 2)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry2"
+					x="markup"
+					y="returnOnAssets"
+					color="transparentBlue"
+					label="x=markup, y=returnOnAssets" />
+				<xAxis
+					min="0.5"
+					max="4.5" />
+				<yAxis
+					min="0"
+					max="5" />
+			</chart>
+		</col>
+		<col>
+			<chart
+				title="Debt Targets"
+				type="time chart"
+			>
+				<series
+					label="S1"
+					value="sum(Industry1, liabilities.target, t) : sum(Industry1, assets, t)"
+					color="red" />
+				<series
+					label="S2"
+					value="sum(Industry2, liabilities.target, t) : sum(Industry2, assets, t)"
+					color="blue" />
+				<yAxis
+					min="0"
+					max="1" />
+			</chart>
+			<chart
+				title="Markups / Leverage Target (Sector 1)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry1"
+					x="markup"
+					y="targetDebtRatio"
+					color="transparentRed"
+					label="x=markup, y=targetDebtRatio" />
+				<xAxis
+					min="0.5"
+					max="4.5" />
+				<yAxis
+					min="0"
+					max="1" />
+			</chart>
+			<chart
+				title="Markups / Leverage Target (Sector 2)"
+				type="scatter chart"
+			>
+				<series
+					sector="Industry2"
+					x="markup"
+					y="targetDebtRatio"
+					color="transparentBlue"
+					label="x=markup, y=targetDebtRatio" />
+				<xAxis
+					min="0.5"
+					max="4.5" />
+				<yAxis
+					min="0"
+					max="1" />
+			</chart>
+		</col>
+	</panel>
+	<panel title="Debt">
+		<col>
+			<chart
+				title="Debt Ratios"
+				type="time chart"
+			>
+				<series
+					label="Debt Ratio"
+					value="sum(Industry1, liabilities, t) : sum(Industry1, assets, t)"
+					color="green" />
+				<series
+					label="Target"
+					value="mean(Industry1,targetDebtRatio,t)"
+					color="red" />
+				<series
+					label="Target (Weighted by Assets)"
+					value="sum(Industry1, liabilities.target, t) : sum(Industry1, assets, t)"
+					color="blue" />
+				<yAxis
+					min="0"
+					max="1" />
+			</chart>
+		</col>
+
+		<col>
+
+			<chart
+				title="Default Rate"
+				type="time chart"
+			>
+				<series
+					label="Bankruptcies"
+					value="sum(Industry1, imitations, t-11...t):sum(Industry1, firms, t-11...t)"
+					mod="12"
+					color="red" />
+				<yAxis
+					min="0"
+					max="0.1" />
+			</chart>
+		</col>
+		<col>
+			<chart
+				title="Bank Ratios"
+				type="time chart"
+			>
+				<series
+					value="sum(Banks, capital,t):sum(Banks, liabilities,t)"
+					color="green"
+					label="Capital" />
+				<series
+					value="sum(Banks, doubtfulDebt,t):sum(Banks, liabilities,t)"
+					color="red"
+					label="Doubtful Debt" />
+			</chart>
+		</col>
+	</panel>
+
+
+	<panel title="2 Sectors">
+		<col>
+			<chart
+				title="Labor Demand"
+				type="time chart"
+			>
+				<series
+					value="sum(Industry1,workforceTarget,t)"
+					color="red"
+					label="Labor Demand S1" />
+				<series
+					value="sum(Industry1, capacity, t)"
+					label="Capacity S1"
+					color="orange" />
+				<series
+					value="sum(Industry2,workforceTarget,t)"
+					color="blue"
+					label="Labor Demand S2" />
+				<series
+					value="sum(Industry2, capacity, t)"
+					label="Capacity S2"
+					color="green" />
+			</chart>
+			<chart
+				title="Relative Price"
+				type="time chart"
+			>
+				<series
+					value="sum ( Industry1 , sales.vol , t ) * sum ( Industry2 , sales.val , t ) : ( sum ( Industry2 , sales.vol , t ) * sum ( Industry1 , sales.val , t )  ) "
+					color="red"
+					label="S2 Price/S1 Price" />
+				<series
+					value="2"
+					color="gray" />
+				<yAxis min="0" />
+			</chart>
+			
+		<chart /></col>
+		<col>
+
+			<chart
+				title="S1"
+				type="time chart"
+			>
+
+				<subplot>
+					<series
+						value="sum(Industry1, production.vol, t)"
+						color="red"
+						label="Production" />
+					<series
+						value="sum(Industry1, sales.vol, t)"
+						color="blue"
+						label="Sales" />
+					<series
+						value="sum(Industry1, production.vol.atFullCapacity, t)"
+						color="orange"
+						label="Potential Production" />
+
+				</subplot>
+				<subplot>
+					<series
+						value="sum(Industry1, inventories.fg.vol, t-2...t) : sum(Industry1, inventories.fg.vol.normal, t-2...t)"
+						color="green"
+						label="Inventories Ratio" />
+					<series
+						value="1"
+						color="orange" />
+					<yAxis
+						min="0"
+						max="3" />
+				</subplot>
+				<subplot>
+					<series
+						value="sum(Industry1, workforce, t-2...t) : sum(Industry1, capacity, t-2...t)"
+						color="blue"
+						label="Capacity utilization" />
+					<series
+						value="0.8"
+						color="orange"
+						label="0.8" />
+					<yAxis
+						min="0"
+						max="1" />
+
+				</subplot>
+				<subplot>
+					<series
+						value="sum(Industry1, capacity, t) : sum(Industry1, capacity, t-12) - 1"
+						color="red"
+						label="Capacity Variation" />
+					<series
+						value="0"
+						color="orange" />
+				</subplot>
+			</chart>
+		</col>
+		<col>
+			<chart
+				title="S2"
+				type="time chart"
+			>
+
+				<subplot>
+					<series
+						value="sum(Industry2, production.vol, t)"
+						color="red"
+						label="Production" />
+					<series
+						value="sum(Industry2, sales.vol, t)"
+						color="blue"
+						label="Sales" />
+					<series
+						value="sum(Industry2, production.vol.atFullCapacity, t)"
+						color="orange"
+						label="Potential Production" />
+
+				</subplot>
+				<subplot>
+					<series
+						value="sum(Industry2, inventories.fg.vol, t-2...t) : sum(Industry2, inventories.fg.vol.normal, t-2...t)"
+						color="green"
+						label="Inventories Ratio" />
+					<series
+						value="1"
+						color="orange" />
+					<yAxis
+						min="0"
+						max="3" />
+				</subplot>
+				<subplot>
+					<series
+						value="sum(Industry2, workforce, t-2...t) : sum(Industry2, capacity, t-2...t)"
+						color="blue"
+						label="Capacity utilization" />
+					<series
+						value="0.8"
+						color="orange"
+						label="0.8" />
+					<yAxis
+						min="0"
+						max="1" />
+
+				</subplot>
+				<subplot>
+					<series
+						value="sum(Industry2, capacity, t) : sum(Industry2, capacity, t-12) - 1"
+						color="red"
+						label="Capacity Variation" />
+					<series
+						value="0"
+						color="orange" />
+				</subplot>
+			</chart>
+		</col>
+		<col>
+
+			<chart
+				title="Relative Wages"
+				type="time chart"
+			>
+				<series
+					value="( sum ( Industry2 , wageBill , t ) * sum ( Industry1 , workforce , t ) ) : ( sum ( Industry2 , workforce , t ) * sum ( Industry1 , wageBill , t ) ) "
+					color="red"
+					label="Average Wage S2 / Average Wage S1" />
+				<series
+					value="1"
+					color="gray" />
+				<yAxis min="0" />
+			</chart>
+			<chart
+				title="Real Wages"
+				type="time chart"
+			>
+				<series
+					value="mean(Industry1,wages,t) * sum ( Industry2 , sales.vol , t ) : sum ( Industry2 , sales.val , t )"
+					color="blue"
+					label="S1 Mean" />
+				<series
+					value="max(Industry1,wages,t) * sum ( Industry2 , sales.vol , t ) : sum ( Industry2 , sales.val , t )"
+					color="veryLightBlue"
+					label="S1 Max" />
+				<series
+					value="min(Industry1,wages,t) * sum ( Industry2 , sales.vol , t ) : sum ( Industry2 , sales.val , t )"
+					color="veryLightBlue"
+					label="S1 Min" />
+				<series
+					value="mean(Industry2,wages,t) * sum ( Industry2 , sales.vol , t ) : sum ( Industry2 , sales.val , t )"
+					color="S2 red"
+					label="Mean" />
+				<series
+					value="max(Industry2,wages,t) * sum ( Industry2 , sales.vol , t ) : sum ( Industry2 , sales.val , t )"
+					color="veryLightRed"
+					label="S2 Max" />
+				<series
+					value="min(Industry2,wages,t) * sum ( Industry2 , sales.vol , t ) : sum ( Industry2 , sales.val , t )"
+					color="veryLightRed"
+					label="S2 Min" />
+			</chart>
+			<chart
+				title="Vacancies"
+				type="time chart"
+			>
+				<series
+					value="sum(Industry1, jobVacancies, t) : sum(Industry1, workforceTarget, t)"
+					color="blue"
+					label="S1" />
+				<series
+					value="sum(Industry2, jobVacancies, t) : sum(Industry2, workforceTarget, t)"
+					color="red"
+					label="S2" />
+				<yAxis
+					min="-0."
+					max="0.5"
+					label="Vacancies" />
+			</chart>
+			
+		</col>
+	</panel>
 
 	<panel title="Ponsot">
 		<col>
@@ -14,15 +582,15 @@
 			>
 				<series
 					label="Debt Ratio"
-					value="sum(Industry, liabilities, t) : sum(Industry, assets, t)"
+					value="sum(Industry1, liabilities, t) : sum(Industry1, assets, t)"
 					color="green" />
 				<series
 					label="Target"
-					value="mean(Industry,targetDebtRatio,t)"
+					value="mean(Industry1,targetDebtRatio,t)"
 					color="red" />
 				<series
 					label="Target (Weighted by Assets)"
-					value="sum(Industry, liabilities.target, t) : sum(Industry, assets, t)"
+					value="sum(Industry1, liabilities.target, t) : sum(Industry1, assets, t)"
 					color="blue" />
 				<yAxis
 					min="0"
@@ -33,7 +601,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry,workforceTarget,t)"
+					value="sum(Industry1,workforceTarget,t)+sum(Industry2,workforceTarget,t)"
 					color="red"
 					label="Labor Demand" />
 				<series
@@ -41,7 +609,7 @@
 					color="green"
 					label="Labor Supply" />
 				<series
-					value="sum(Industry, capacity, t)"
+					value="sum(Industry1, capacity, t)+sum(Industry2, capacity, t)"
 					label="Capacity"
 					color="orange" />
 				<yAxis
@@ -71,7 +639,7 @@
 			>
 				<series
 					label="Bankruptcies"
-					value="sum(Industry, imitations, t-11...t):sum(Industry, firms, t-11...t)"
+					value="sum(Industry1, imitations, t-11...t):sum(Industry1, firms, t-11...t)"
 					mod="12"
 					color="red" />
 				<yAxis
@@ -83,11 +651,11 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Households, wages,t-11...t) : (sum(Households, wages,t-11...t) + sum(Industry, grossProfit,t-11...t) )"
+					value="sum(Households, wages,t-11...t) : (sum(Households, wages,t-11...t) + sum(Industry1, grossProfit,t-11...t) + sum(Industry2, grossProfit,t-11...t) )"
 					color="blue"
 					label="Wages" />
 				<series
-					value="sum(Industry, grossProfit,t-11...t) : (sum(Households, wages,t-11...t) + sum(Industry, grossProfit,t-11...t) )"
+					value="(sum(Industry1, grossProfit,t-11...t) + sum(Industry2, grossProfit,t-11...t)) : (sum(Households, wages,t-11...t) + sum(Industry1, grossProfit,t-11...t) + sum(Industry2, grossProfit,t-11...t))"
 					color="red"
 					label="Profits" />
 				<yAxis
@@ -100,7 +668,7 @@
 			>
 				<series
 					x="sum(Households, unemployed, t-11...t) : sum(Households, agents,t-11...t)"
-					y="sum(Industry, jobVacancies, t-11...t) : sum(Industry, workforceTarget, t-11...t)"
+					y="(sum(Industry1, jobVacancies, t-11...t) + sum(Industry2, jobVacancies, t-11...t)) : (sum(Industry1, workforceTarget, t-11...t) + sum(Industry2, workforceTarget, t-11...t))"
 					mod="12"
 					color="transparentGreen" />
 				<xAxis
@@ -121,7 +689,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, production.vol.atFullCapacity, t) : sum(Industry, production.vol.atFullCapacity, t-11)-1"
+					value="sum(Industry1, production.vol.atFullCapacity, t) : sum(Industry1, production.vol.atFullCapacity, t-11)-1"
 					color="red" />
 				<series
 					value="0"
@@ -132,7 +700,7 @@
 				<legend>
 					<item
 						label="Potential Output Growth"
-						series="sum(Industry, production.vol.atFullCapacity, t) : sum(Industry, production.vol.atFullCapacity, t-11)-1"
+						series="sum(Industry1, production.vol.atFullCapacity, t) : sum(Industry1, production.vol.atFullCapacity, t-11)-1"
 						color="red" />
 				</legend>
 
@@ -181,13 +749,13 @@
 			>
 				<subplot>
 					<series
-						value="sum(Industry, demand12, t):sum(Industry, production.vol.atFullCapacity, t)"
+						value="sum(Industry1, demand12, t):sum(Industry1, production.vol.atFullCapacity, t)"
 						label="Demand/Potential Output"
 						color="green" />
 				</subplot>
 				<subplot>
 					<series
-						value="sum(Industry, production.vol.atFullCapacity, t) : sum(Industry, production.vol.atFullCapacity, t-11)-1"
+						value="sum(Industry1, production.vol.atFullCapacity, t) : sum(Industry1, production.vol.atFullCapacity, t-11)-1"
 						label="Potential Output Growth"
 						color="red" />
 				</subplot>
@@ -199,7 +767,7 @@
 				type="histogram"
 			>
 				<series
-					sector="Industry"
+					sector="Industry1"
 					value="capacity"
 					bin="10"
 					color="transparentRed"
@@ -217,7 +785,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry,workforceTarget,t)"
+					value="sum(Industry1,workforceTarget,t)"
 					color="red"
 					label="Labor Demand" />
 				<series
@@ -225,7 +793,7 @@
 					color="green"
 					label="Labor Supply" />
 				<series
-					value="sum(Industry, capacity, t)"
+					value="sum(Industry1, capacity, t)"
 					label="Capacity"
 					color="orange" />
 			</chart>
@@ -237,11 +805,11 @@
 			>
 				<subplot>
 					<series
-						value="mean(Industry,animalSpirit,t)"
+						value="mean(Industry1,animalSpirit,t)"
 						color="red"
 						label="Mean" />
 					<series
-						value="sum(Industry,animalSpirit.weighted,t) : sum(Industry,capacity,t)"
+						value="sum(Industry1,animalSpirit.weighted,t) : sum(Industry1,capacity,t)"
 						color="blue"
 						label="Mean, Weighted by Capital" />
 					<yAxis
@@ -250,19 +818,19 @@
 				</subplot>
 				<subplot>
 					<series
-						value="mean(Industry,capitalTargetRatio,t)"
+						value="mean(Industry1,capitalTargetRatio,t)"
 						color="red"
 						label="Mean" />
 					<series
-						value="max(Industry,capitalTargetRatio,t)"
+						value="max(Industry1,capitalTargetRatio,t)"
 						color="veryLightRed"
 						label="Max" />
 					<series
-						value="min(Industry,capitalTargetRatio,t)"
+						value="min(Industry1,capitalTargetRatio,t)"
 						color="veryLightRed"
 						label="Min" />
 					<series
-						value="sum(Industry,capitalTargetRatio.weighted,t) : sum(Industry,capacity,t)"
+						value="sum(Industry1,capitalTargetRatio.weighted,t) : sum(Industry1,capacity,t)"
 						color="blue"
 						label="Mean, Weighted by Capital" />
 					<yAxis
@@ -276,23 +844,23 @@
 			>
 				<subplot>
 					<series
-						value="sum(Industry, capacity, t)"
+						value="sum(Industry1, capacity, t)"
 						label="Capacity"
 						color="green" />
 				</subplot>
 				<subplot>
 					<series
-						value="sum(Industry, investment.size, t)"
+						value="sum(Industry1, investment.size, t)"
 						label="New machines"
 						color="blue" />
 					<series
-						value="sum(Industry, machines.deleted, t)"
+						value="sum(Industry1, machines.deleted, t)"
 						label="Deleted machines"
 						color="red" />
 				</subplot>
 				<subplot>
 					<series
-						value="sum(Industry, desinvestment.size, t)"
+						value="sum(Industry1, desinvestment.size, t)"
 						label="Desinvestment"
 						color="gray" />
 				</subplot>
@@ -315,7 +883,7 @@
 				type="scatter chart"
 			>
 				<series
-					sector="Industry"
+					sector="Industry1"
 					x="capitalTargetRatio"
 					y="capacity"
 					color="transparentRed"
@@ -329,7 +897,7 @@
 				type="histogram"
 			>
 				<series
-					sector="Industry"
+					sector="Industry1"
 					value="targetDebtRatio"
 					bin="10"
 					color="transparentRed"
@@ -351,7 +919,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, investment.vol,t-11...t) : sum(Industry, production.vol,t-11...t)"
+					value="sum(Industry1, investment.vol,t-11...t) : sum(Industry1, production.vol,t-11...t)"
 					color="red"
 					label="Investment to GDP" />
 			</chart>
@@ -360,11 +928,11 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, demand12, t-12)"
+					value="sum(Industry1, demand12, t-12)"
 					label="Effective"
 					color="green" />
 				<series
-					value="sum(Industry, demand.anticipated,t)"
+					value="sum(Industry1, demand.anticipated,t)"
 					label="Anticipated"
 					color="orange" />
 			</chart>
@@ -373,7 +941,7 @@
 				type="time chart"
 			>
 				<series
-					value="val(Industry, hhi,t)"
+					value="val(Industry1, hhi,t)"
 					color="red"
 					label="Herfindahl–Hirschman Index" />
 			</chart>
@@ -390,15 +958,15 @@
 				type="time chart"
 			>
 				<series
-					value="mean(Industry,prices, t)"
+					value="mean(Industry1,prices, t)"
 					color="red"
 					label="Mean" />
 				<series
-					value="max(Industry,prices,t)"
+					value="max(Industry1,prices,t)"
 					color="veryLightRed"
 					label="Max" />
 				<series
-					value="min(Industry,prices,t)"
+					value="min(Industry1,prices,t)"
 					color="veryLightRed"
 					label="Min" />
 			</chart>
@@ -408,7 +976,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, production.vol,t)"
+					value="sum(Industry1, production.vol,t)"
 					color="red"
 					label="Production" />
 				<series
@@ -416,7 +984,7 @@
 					color="blue"
 					label="Consumption" />
 				<series
-					value="sum(Industry, investment.vol,t)"
+					value="sum(Industry1, investment.vol,t)"
 					color="green"
 					label="Investment" />
 			</chart>
@@ -426,11 +994,11 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry,inventories.fg.vol,t)"
+					value="sum(Industry1,inventories.fg.vol,t)"
 					color="green"
 					label="Volume" />
 				<series
-					value="sum(Industry,inventories.fg.vol.normal,t)"
+					value="sum(Industry1,inventories.fg.vol.normal,t)"
 					color="orange"
 					label="Target" />
 			</chart>
@@ -444,15 +1012,15 @@
 				type="time chart"
 			>
 				<series
-					value="mean(Industry,wages,t)"
+					value="mean(Industry1,wages,t)"
 					color="blue"
 					label="Mean" />
 				<series
-					value="max(Industry,wages,t)"
+					value="max(Industry1,wages,t)"
 					color="veryLightBlue"
 					label="Max" />
 				<series
-					value="min(Industry,wages,t)"
+					value="min(Industry1,wages,t)"
 					color="veryLightBlue"
 					label="Min" />
 			</chart>
@@ -466,7 +1034,7 @@
 					color="blue"
 					label="Unemployment" />
 				<series
-					value="sum(Industry, sales.val,t)*sum(Industry,sales.vol,t-12):(sum(Industry, sales.vol,t)*sum(Industry, sales.val,t-12))-1"
+					value="sum(Industry1, sales.val,t)*sum(Industry1,sales.vol,t-12):(sum(Industry1, sales.vol,t)*sum(Industry1, sales.val,t-12))-1"
 					color="green"
 					label="Inflation2" />
 				<yAxis
@@ -499,11 +1067,11 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Households, wages,t-11...t) : (sum(Households, wages,t-11...t) + sum(Industry, grossProfit,t-11...t) )"
+					value="sum(Households, wages,t-11...t) : (sum(Households, wages,t-11...t) + sum(Industry1, grossProfit,t-11...t) )"
 					color="blue"
 					label="Wages" />
 				<series
-					value="sum(Industry, grossProfit,t-11...t) : (sum(Households, wages,t-11...t) + sum(Industry, grossProfit,t-11...t) )"
+					value="sum(Industry1, grossProfit,t-11...t) : (sum(Households, wages,t-11...t) + sum(Industry1, grossProfit,t-11...t) )"
 					color="red"
 					label="Profits" />
 				<yAxis
@@ -523,7 +1091,7 @@
 					label="Wages" />
 				<series
 					x="sum(Households, unemployed, t-11...t) : sum(Households, agents,t-11...t)"
-					y="(sum(Industry, sales.val,t-11...t)*sum(Industry,sales.vol,t-23...t-12)):(sum(Industry, sales.vol,t-11...t)*sum(Industry, sales.val,t-23...t-12))-1"
+					y="(sum(Industry1, sales.val,t-11...t)*sum(Industry1,sales.vol,t-23...t-12)):(sum(Industry1, sales.vol,t-11...t)*sum(Industry1, sales.val,t-23...t-12))-1"
 					mod="12"
 					color="transparentBlue"
 					label="Prices" />
@@ -543,7 +1111,7 @@
 			>
 				<series
 					x="sum(Households, unemployed, t-11...t) : sum(Households, agents,t-11...t)"
-					y="sum(Industry, jobVacancies, t-11...t) : sum(Industry, workforceTarget, t-11...t)"
+					y="sum(Industry1, jobVacancies, t-11...t) : sum(Industry1, workforceTarget, t-11...t)"
 					mod="12"
 					color="transparentGreen" />
 				<xAxis
@@ -559,14 +1127,36 @@
 		</col>
 
 		<col>
+
+
+			<chart
+				title="Return on Assets"
+				type="time chart"
+			>
+				<series
+					value="2 * (sum(Industry1, dividends, t-11...t) + sum(Industry1, capital, t) - sum(Industry1, capital, t-12)) : (sum(Industry1, assets, t-12)+sum(Industry1, assets, t))"
+					color="blue"
+					label="Industry1" />
+				<series
+					value="2 * (sum(Banks, dividends, t-11...t) + sum(Banks, capital, t) - sum(Banks, capital, t-12)) : (sum(Banks, assets, t-12)+sum(Banks, assets, t))"
+					color="red"
+					label="Banks" />
+				<series
+					value="2 * (sum(Households, dividends, t-11...t) + sum(Households, capital, t) - sum(Households, capital, t-12) ) : (sum(Industry1, assets, t-12)+sum(Industry1, assets, t)+sum(Banks, assets, t-12)+sum(Banks, assets, t))"
+					color="orange"
+					label="Average" />
+				<yAxis
+					min="0"
+					max="1" />
+			</chart>
 			<chart
 				title="Return on Equity"
 				type="time chart"
 			>
 				<series
-					value="2 * (sum(Industry, dividends, t-11...t) + sum(Industry, capital, t) - sum(Industry, capital, t-12)) : (sum(Industry, capital, t-12)+sum(Industry, capital, t))"
+					value="2 * (sum(Industry1, dividends, t-11...t) + sum(Industry1, capital, t) - sum(Industry1, capital, t-12)) : (sum(Industry1, capital, t-12)+sum(Industry1, capital, t))"
 					color="blue"
-					label="Industry" />
+					label="Industry1" />
 				<series
 					value="2 * (sum(Banks, dividends, t-11...t) + sum(Banks, capital, t) - sum(Banks, capital, t-12)) : (sum(Banks, capital, t-12)+sum(Banks, capital, t))"
 					color="red"
@@ -579,32 +1169,11 @@
 					min="0"
 					max="2" />
 			</chart>
-
-			<chart
-				title="Return on Assets"
-				type="time chart"
-			>
-				<series
-					value="2 * (sum(Industry, dividends, t-11...t) + sum(Industry, capital, t) - sum(Industry, capital, t-12)) : (sum(Industry, assets, t-12)+sum(Industry, assets, t))"
-					color="blue"
-					label="Industry" />
-				<series
-					value="2 * (sum(Banks, dividends, t-11...t) + sum(Banks, capital, t) - sum(Banks, capital, t-12)) : (sum(Banks, assets, t-12)+sum(Banks, assets, t))"
-					color="red"
-					label="Banks" />
-				<series
-					value="2 * (sum(Households, dividends, t-11...t) + sum(Households, capital, t) - sum(Households, capital, t-12) ) : (sum(Industry, assets, t-12)+sum(Industry, assets, t)+sum(Banks, assets, t-12)+sum(Banks, assets, t))"
-					color="orange"
-					label="Average" />
-				<yAxis
-					min="0"
-					max="1" />
-			</chart>
 		</col>
 
 	</panel>
 
-	<panel title="Industry">
+	<panel title="Industry1">
 
 		<col>
 
@@ -613,21 +1182,21 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, workforce, t)"
+					value="sum(Industry1, workforce, t)"
 					color="blue"
 					label="Workforce" />
 				<series
-					value="sum(Industry, capacity, t)"
+					value="sum(Industry1, capacity, t)"
 					color="orange"
 					label="Capacity" />
 			</chart>
 
 			<chart
-				title="Capacity Utilization"
+				title="Capacity Utilization S1"
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, workforce, t) : sum(Industry, capacity, t)"
+					value="sum(Industry1, workforce, t) : sum(Industry1, capacity, t)"
 					color="blue"
 					label="Capacity utilization" />
 			</chart>
@@ -637,7 +1206,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, grossProfit, t) : sum(Industry, sales.cost, t)"
+					value="sum(Industry1, grossProfit, t) : sum(Industry1, sales.cost, t)"
 					color="blue"
 					label="Mean" />
 				<yAxis min="0" />
@@ -652,7 +1221,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, grossProfit, t) : sum(Industry, sales.val, t)"
+					value="sum(Industry1, grossProfit, t) : sum(Industry1, sales.val, t)"
 					color="blue"
 					label="Mean" />
 			</chart>
@@ -662,15 +1231,15 @@
 				type="time chart"
 			>
 				<series
-					value="mean(Industry,wages, t)"
+					value="mean(Industry1,wages, t)"
 					color="blue"
 					label="Mean" />
 				<series
-					value="max(Industry,wages, t)"
+					value="max(Industry1,wages, t)"
 					color="veryLightBlue"
 					label="Max" />
 				<series
-					value="min(Industry,wages, t)"
+					value="min(Industry1,wages, t)"
 					color="veryLightBlue"
 					label="Min" />
 			</chart>
@@ -680,11 +1249,11 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, inventories.fg.vol, t)"
+					value="sum(Industry1, inventories.fg.vol, t)"
 					color="green"
 					label="Volume" />
 				<series
-					value="sum(Industry, inventories.fg.vol.normal, t)"
+					value="sum(Industry1, inventories.fg.vol.normal, t)"
 					color="orange"
 					label="Target" />
 			</chart>
@@ -698,7 +1267,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, production.vol, t)"
+					value="sum(Industry1, production.vol, t)"
 					color="red"
 					label="Production" />
 				<series
@@ -706,7 +1275,7 @@
 					color="blue"
 					label="Consumption" />
 				<series
-					value="sum(Industry, production.vol.atFullCapacity, t)"
+					value="sum(Industry1, production.vol.atFullCapacity, t)"
 					color="orange"
 					label="Max Production" />
 			</chart>
@@ -716,13 +1285,13 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, supply.val, t) : sum(Industry, supply.vol, t)"
+					value="sum(Industry1, supply.val, t) : sum(Industry1, supply.vol, t)"
 					label="Average Price (Supply)" />
 				<series
-					value="sum(Industry, sales.val, t) : sum(Industry, sales.vol, t)"
+					value="sum(Industry1, sales.val, t) : sum(Industry1, sales.vol, t)"
 					label="Average Price (Sales)" />
 				<series
-					value="sum(Industry, inventories.fg.val, t) : sum(Industry, inventories.fg.vol, t)"
+					value="sum(Industry1, inventories.fg.val, t) : sum(Industry1, inventories.fg.vol, t)"
 					label="Average Cost (Inventories)" />
 			</chart>
 
@@ -731,15 +1300,15 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, assets, t)"
+					value="sum(Industry1, assets, t)"
 					color="blue"
 					label="Assets" />
 				<series
-					value="sum(Industry, liabilities, t)"
+					value="sum(Industry1, liabilities, t)"
 					color="red"
 					label="Liabilities" />
 				<series
-					value="sum(Industry, capital, t)"
+					value="sum(Industry1, capital, t)"
 					color="green"
 					label="Capital" />
 			</chart>
@@ -753,11 +1322,11 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, liabilities, t) : sum(Industry, assets, t)"
+					value="sum(Industry1, liabilities, t) : sum(Industry1, assets, t)"
 					color="blue"
 					label="Debt Ratio" />
 				<series
-					value="sum(Industry, liabilities.target, t) : sum(Industry, assets, t)"
+					value="sum(Industry1, liabilities.target, t) : sum(Industry1, assets, t)"
 					color="orange"
 					label="Target" />
 			</chart>
@@ -767,13 +1336,13 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, cash, t) : sum(Industry, wageBill, t)"
+					value="sum(Industry1, cash, t) : sum(Industry1, wageBill, t)"
 					label="Cash to Wages Ratio" />
 				<series
-					value="(sum(Industry, inventories.fg.val, t)+sum(Industry, inventories.inProcess.val, t)) : sum(Industry, wageBill, t)"
+					value="(sum(Industry1, inventories.fg.val, t)+sum(Industry1, inventories.inProcess.val, t)) : sum(Industry1, wageBill, t)"
 					label="Circulating Capital to Wages Ratio" />
 				<series
-					value="sum(Industry, production.val, t) : sum(Industry, wageBill, t)"
+					value="sum(Industry1, production.val, t) : sum(Industry1, wageBill, t)"
 					label="Production Value to Wages Ratio" />
 			</chart>
 
@@ -782,7 +1351,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, assets, t) : sum(Industry, sales.val, t-11...t)"
+					value="sum(Industry1, assets, t) : sum(Industry1, sales.val, t-11...t)"
 					label="Capital Intensity Ratio" />
 				<yAxis
 					min="0"
@@ -794,7 +1363,7 @@
 				type="histogram"
 			>
 				<series
-					sector="Industry"
+					sector="Industry1"
 					value="capital"
 					bin="10"
 					color="transparentRed" />
@@ -805,7 +1374,7 @@
 
 	</panel>
 
-	<panel title="Firm56: main">
+	<panel2 title="Firm340: main">
 
 		<col>
 
@@ -814,18 +1383,18 @@
 				type="scatter chart"
 			>
 				<series
-					sector="Industry"
+					sector="Industry1"
 					x="wages"
 					y="prices"
 					color="transparentRed"
-					select="name=Firm56"
-					label="Firm56" />
+					select="name=Firm340"
+					label="Firm340" />
 				<series
-					sector="Industry"
+					sector="Industry1"
 					x="wages"
 					y="prices"
 					color="transparentBlue"
-					select="name!=Firm56"
+					select="name!=Firm340"
 					label="Other firms" />
 			</chart>
 
@@ -834,19 +1403,19 @@
 				type="time chart"
 			>
 				<series
-					value="agentValue(Industry,prices,t,Firm56)"
+					value="agentValue(Industry1,prices,t,Firm340)"
 					color="red"
-					label="Firm56" />
+					label="Firm340" />
 				<series
-					value="mean(Industry,prices,t)"
+					value="mean(Industry1,prices,t)"
 					color="blue"
 					label="Mean" />
 				<series
-					value="max(Industry,prices,t)"
+					value="max(Industry1,prices,t)"
 					color="veryLightBlue"
 					label="Max" />
 				<series
-					value="min(Industry,prices,t)"
+					value="min(Industry1,prices,t)"
 					color="veryLightBlue"
 					label="Min" />
 			</chart>
@@ -856,25 +1425,25 @@
 				type="time chart"
 			>
 				<series
-					value="agentValue(Industry,wages,t,Firm56)"
+					value="agentValue(Industry1,wages,t,Firm340)"
 					color="red"
-					label="Firm56" />
+					label="Firm340" />
 				<series
-					value="agentValue(Industry,wage.high,t,Firm56)"
+					value="agentValue(Industry1,wage.high,t,Firm340)"
 					color="veryLightRed" />
 				<series
-					value="agentValue(Industry,wage.low,t,Firm56)"
+					value="agentValue(Industry1,wage.low,t,Firm340)"
 					color="veryLightRed" />
 				<series
-					value="mean(Industry,wages,t)"
+					value="mean(Industry1,wages,t)"
 					color="blue"
 					label="Mean" />
 				<series
-					value="max(Industry,wages,t)"
+					value="max(Industry1,wages,t)"
 					color="veryLightBlue"
 					label="Max" />
 				<series
-					value="min(Industry,wages,t)"
+					value="min(Industry1,wages,t)"
 					color="veryLightBlue"
 					label="Min" />
 			</chart>
@@ -887,15 +1456,15 @@
 				type="time chart"
 			>
 				<series
-					value="agentValue(Industry,inventories.fg.vol,t,Firm56)"
+					value="agentValue(Industry1,inventories.fg.vol,t,Firm340)"
 					color="red"
-					label="Firm56" />
+					label="Firm340" />
 				<series
-					value="mean(Industry,inventories.fg.vol.normal,t)"
+					value="mean(Industry1,inventories.fg.vol.normal,t)"
 					color="orange"
 					label="Target" />
 				<series
-					value="mean(Industry,inventories.fg.vol,t)"
+					value="mean(Industry1,inventories.fg.vol,t)"
 					color="blue"
 					label="Mean" />
 			</chart>
@@ -904,11 +1473,11 @@
 				type="time chart"
 			>
 				<series
-					value="agentValue(Industry,workforce,t,Firm56) : agentValue(Industry,capacity,t,Firm56)"
+					value="agentValue(Industry1,workforce,t,Firm340) : agentValue(Industry1,capacity,t,Firm340)"
 					color="red"
-					label="Firm56" />
+					label="Firm340" />
 				<series
-					value="sum(Industry, workforce, t) : sum(Industry, capacity,t)"
+					value="sum(Industry1, workforce, t) : sum(Industry1, capacity,t)"
 					color="blue"
 					label="Average" />
 				<yAxis
@@ -920,11 +1489,11 @@
 				type="time chart"
 			>
 				<series
-					value="agentValue(Industry,workforce,t,Firm56)"
+					value="agentValue(Industry1,workforce,t,Firm340)"
 					color="red"
 					label="Workforce" />
 				<series
-					value="agentValue(Industry,capacity,t,Firm56)"
+					value="agentValue(Industry1,capacity,t,Firm340)"
 					color="orange"
 					label="Capacity" />
 			</chart>
@@ -936,52 +1505,136 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, capital, t) : sum(Industry, assets, t)"
+					value="sum(Industry1, capital, t) : sum(Industry1, assets, t)"
 					color="blue"
 					label="Average" />
 				<series
-					value="agentValue(Industry, capital, t, Firm56) : agentValue(Industry, assets, t, Firm56)"
+					value="agentValue(Industry1, capital, t, Firm340) : agentValue(Industry1, assets, t, Firm340)"
 					color="red"
-					label="Firm56" />
+					label="Firm340" />
 			</chart>
 			<chart
 				title="Dividends"
 				type="time chart"
 			>
 				<series
-					value="agentValue(Industry, dividends, t, Firm56) : agentValue(Industry, assets, t, Firm56)"
+					value="agentValue(Industry1, dividends, t, Firm340) : agentValue(Industry1, assets, t, Firm340)"
 					color="red"
 					label="dividends" />
 				<series
-					value="agentValue(Industry, grossProfit, t, Firm56) : agentValue(Industry, assets, t, Firm56)"
+					value="agentValue(Industry1, grossProfit, t, Firm340) : agentValue(Industry1, assets, t, Firm340)"
 					color="green"
 					label="profits" />
 			</chart>
+			<chart
+				title="Inventories"
+				type="time chart"
+			>
+				<series
+					value="mean(Industry1,inventories.fg.vol,t)"
+					color="red"
+					label="Inventories" />
+				<series
+					value="mean(Industry1,inventories.fg.vol.normal,t)"
+					color="blue"
+					label="Target" />
+			</chart>
+		</col>
+	</panel2>
+
+	<panel2 title="Firm340: production">
+		<col>
+			<chart
+				title="Inventories"
+				type="time chart"
+			>
+				<series
+					value="agentValue(Industry1,inventories.fg.vol,t,Firm340)"
+					color="red"
+					label="Volume" />
+				<series
+					value="agentValue(Industry1,inventories.fg.vol.normal,t,Firm340)"
+					color="blue"
+					label="Target" />
+			</chart>
+			<chart
+				title="Workforce"
+				type="time chart"
+			>
+				<series
+					value="agentValue(Industry1,workforce,t,Firm340)"
+					color="red"
+					label="Workforce" />
+				<series
+					value="agentValue(Industry1,workforceTarget,t,Firm340)"
+					color="blue"
+					label="Target" />
+				<series
+					value="agentValue(Industry1,capacity,t,Firm340)"
+					color="orange"
+					label="Capacity" />
+			</chart>
+			<chart
+				title="Production"
+				type="time chart"
+			>
+				<series
+					value="agentValue(Industry1, production.vol, t,Firm340)"
+					color="red"
+					label="Production" />
+				<series
+					value="agentValue(Industry1, production.vol.atFullCapacity, t,Firm340)*agentValue(Industry1,workforceTarget,t,Firm340):agentValue(Industry1,capacity,t,Firm340)"
+					color="blue"
+					label="Target" />
+			</chart>
+
+		</col>
+		<col>
+			<chart
+				title="Production / Target"
+				type="time chart"
+			>
+				<series
+					value="agentValue(Industry1, production.vol, t,Firm340)*agentValue(Industry1,capacity,t,Firm340):(agentValue(Industry1, production.vol.atFullCapacity, t,Firm340)*agentValue(Industry1,workforceTarget,t,Firm340))"
+					color="red"
+					label="Production" />
+				<series
+					value="1"
+					color="blue"
+					label="Target" />
+				<legend>
+					<item
+						label="Production/Target"
+						color="red"
+						series="agentValue(Industry1, production.vol, t,Firm340)*agentValue(Industry1,capacity,t,Firm340):(agentValue(Industry1, production.vol.atFullCapacity, t,Firm340)*agentValue(Industry1,workforceTarget,t,Firm340))" />
+				</legend>
+			</chart>
+			<chart />
 			<chart />
 		</col>
+		<col />
 
+	</panel2>
 
-	</panel>
-
-	<panel title="Firm56: wage">
+	<panel2 title="Firm340: wage">
 		<col>
 			<chart
 				title="Wages and Prices"
 				type="scatter chart"
 			>
 				<series
-					sector="Industry"
+					sector="Industry1"
 					x="wages"
 					y="prices"
 					color="transparentRed"
-					select="name=Firm56"
-					label="Firm56" />
+					select="name=Firm340"
+					label="Firm340" />
 				<series
-					sector="Industry"
+					sector="Industry1"
 					x="wages"
 					y="prices"
 					color="transparentBlue"
-					select="name!=Firm56"
+					select="name!=Firm340"
 					label="Other firms" />
 			</chart>
 			<chart
@@ -989,42 +1642,50 @@
 				type="time chart"
 			>
 				<series
-					value="agentValue(Industry,wages,t,Firm56)"
+					value="agentValue(Industry1,wages,t,Firm340)"
 					color="red"
-					label="Firm56" />
+					label="Firm340" />
 				<series
-					value="agentValue(Industry,wage.high,t,Firm56)"
+					value="agentValue(Industry1,wage.high,t,Firm340)"
 					color="veryLightRed" />
 				<series
-					value="agentValue(Industry,wage.low,t,Firm56)"
+					value="agentValue(Industry1,wage.low,t,Firm340)"
 					color="veryLightRed" />
 				<series
-					value="mean(Industry,wages,t)"
+					value="mean(Industry1,wages,t)"
 					color="blue"
 					label="Mean" />
 				<series
-					value="max(Industry,wages,t)"
+					value="max(Industry1,wages,t)"
 					color="veryLightBlue"
 					label="Max" />
 				<series
-					value="min(Industry,wages,t)"
+					value="min(Industry1,wages,t)"
 					color="veryLightBlue"
 					label="Min" />
+				<legend>
+					<item
+						label="Firm Price"
+						color="red" />
+					<item
+						label="Sector Average"
+						color="blue" />
+				</legend>
 			</chart>
 			<chart
 				title="Workforce"
 				type="time chart"
 			>
 				<series
-					value="agentValue(Industry,workforce,t,Firm56)"
+					value="agentValue(Industry1,workforce,t,Firm340)"
 					color="red"
 					label="Workforce" />
 				<series
-					value="agentValue(Industry,workforceTarget,t,Firm56)"
+					value="agentValue(Industry1,workforceTarget,t,Firm340)"
 					color="blue"
 					label="Target" />
 				<series
-					value="agentValue(Industry,capacity,t,Firm56)"
+					value="agentValue(Industry1,capacity,t,Firm340)"
 					color="orange"
 					label="Capacity" />
 			</chart>
@@ -1033,24 +1694,25 @@
 
 
 			<chart
-				title="Workforce"
+				title="Vacancies"
 				type="time chart"
 			>
 				<series
-					value="(agentValue(Industry,workforceTarget,t,Firm56)-agentValue(Industry,workforce,t,Firm56)):agentValue(Industry,workforceTarget,t,Firm56)"
+					value="(agentValue(Industry1,workforceTarget,t,Firm340)-agentValue(Industry1,workforce,t,Firm340)):agentValue(Industry1,workforceTarget,t,Firm340)"
 					color="red"
 					label="vacancies 1" />
 				<series
-					value="agentValue(Industry,vacancies.rate,t,Firm56)"
+					value="agentValue(Industry1,vacancies.rate,t,Firm340)"
 					color="blue"
 					label="vacancies 2" />
 			</chart>
-			<chart></chart>
+			<chart />
+			<chart />
 		</col>
 		<col>
 			<html>
 				<b>
-					Firm56, updateWage():
+					Firm340, updateWage():
 				</b>
 				<br />
 				<br />
@@ -1058,8 +1720,8 @@
 				<data value="time()-4" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t-4"
 					key="updateWage" />
 				<br />
@@ -1067,8 +1729,8 @@
 				<data value="time()-3" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t-3"
 					key="updateWage" />
 				<br />
@@ -1076,8 +1738,8 @@
 				<data value="time()-2" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t-2"
 					key="updateWage" />
 				<br />
@@ -1085,8 +1747,8 @@
 				<data value="time()-1" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t-1"
 					key="updateWage" />
 				<br />
@@ -1094,13 +1756,13 @@
 				<data value="time()" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t"
 					key="updateWage" />
 				<br />
 				Current wage:
-				<data value="agentValue(Industry,wages,t,Firm56)" />
+				<data value="agentValue(Industry1,wages,t,Firm340)" />
 			</html>
 			<html>
 				<style type="text/css">.boldtable, .boldtable td, .boldtable th
@@ -1114,7 +1776,7 @@
 					cellspacing="10"
 				>
 					<caption>
-						Balance Sheet (Firm56 - period
+						Balance Sheet (Firm340 - period
 						<data value="time()" />
 						)
 					</caption>
@@ -1133,14 +1795,14 @@
 							Cash
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,cash,t,Firm56)" />
+							<data value="agentValue(Industry1,cash,t,Firm340)" />
 						</td>
 						<td />
 						<td>
 							Short Term Debt
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,debt.shortTerm,t,Firm56)" />
+							<data value="agentValue(Industry1,debt.shortTerm,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1148,7 +1810,7 @@
 							Finished Goods
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,inventories.fg.val,t,Firm56)" />
+							<data value="agentValue(Industry1,inventories.fg.val,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1156,7 +1818,7 @@
 							Work In Progress
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,inventories.inProcess.val,t,Firm56)" />
+							<data value="agentValue(Industry1,inventories.inProcess.val,t,Firm340)" />
 						</td>
 					</tr>
 
@@ -1165,14 +1827,14 @@
 							Equipment
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,machinery.val,t,Firm56)" />
+							<data value="agentValue(Industry1,machinery.val,t,Firm340)" />
 						</td>
 						<td />
 						<td>
 							Long Term Debt
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,debt.longTerm,t,Firm56)" />
+							<data value="agentValue(Industry1,debt.longTerm,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1188,7 +1850,7 @@
 							Capital Stock
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,capital,t,Firm56)" />
+							<data value="agentValue(Industry1,capital,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1201,7 +1863,7 @@
 						<td>Total</td>
 						<td align="right">
 							<data
-								value="agentValue(Industry,cash,t,Firm56)+agentValue(Industry,inventories.inProcess.val,t,Firm56)+agentValue(Industry,inventories.fg.val,t,Firm56)+agentValue(Industry,machinery.val,t,Firm56)" />
+								value="agentValue(Industry1,cash,t,Firm340)+agentValue(Industry1,inventories.inProcess.val,t,Firm340)+agentValue(Industry1,inventories.fg.val,t,Firm340)+agentValue(Industry1,machinery.val,t,Firm340)" />
 						</td>
 						<td />
 						<td>
@@ -1209,7 +1871,7 @@
 						</td>
 						<td align="right">
 							<data
-								value="agentValue(Industry,liabilities,t,Firm56)+agentValue(Industry,capital,t,Firm56)" />
+								value="agentValue(Industry1,liabilities,t,Firm340)+agentValue(Industry1,capital,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1221,28 +1883,28 @@
 			</html>
 
 		</col>
-	</panel>
+	</panel2>
 
 
-	<panel title="Firm56: pricing">
+	<panel2 title="Firm340: pricing">
 		<col>
 			<chart
 				title="Wages and Prices"
 				type="scatter chart"
 			>
 				<series
-					sector="Industry"
+					sector="Industry1"
 					x="wages"
 					y="prices"
 					color="transparentRed"
-					select="name=Firm56"
-					label="Firm56" />
+					select="name=Firm340"
+					label="Firm340" />
 				<series
-					sector="Industry"
+					sector="Industry1"
 					x="wages"
 					y="prices"
 					color="transparentBlue"
-					select="name!=Firm56"
+					select="name!=Firm340"
 					label="Other firms" />
 			</chart>
 			<chart
@@ -1250,13 +1912,47 @@
 				type="time chart"
 			>
 				<series
-					value="agentValue(Industry,workforce,t,Firm56)"
+					value="agentValue(Industry1,workforce,t,Firm340)"
 					color="red"
 					label="Workforce" />
 				<series
-					value="agentValue(Industry,capacity,t,Firm56)"
+					value="agentValue(Industry1,capacity,t,Firm340)"
 					color="orange"
 					label="Capacity" />
+			</chart>
+			<chart
+				title="Price"
+				type="time chart"
+			>
+				<series
+					value="agentValue(Industry1,prices,t,Firm340)"
+					color="red"
+					label="Price" />
+				<series
+					value="agentValue(Industry1,price.high,t,Firm340)"
+					color="veryLightRed"
+					label="Firm340" />
+				<series
+					value="agentValue(Industry1,price.low,t,Firm340)"
+					color="veryLightRed"
+					label="Firm340" />
+				<series
+					value="mean(Industry1,prices,t)"
+					color="blue" />
+				<series
+					value="max(Industry1,prices,t)"
+					color="veryLightBlue" />
+				<series
+					value="min(Industry1,prices,t)"
+					color="veryLightBlue" />
+				<legend>
+					<item
+						label="Firm Price"
+						color="red" />
+					<item
+						label="Sector Average"
+						color="blue" />
+				</legend>
 			</chart>
 		</col>
 		<col>
@@ -1267,82 +1963,71 @@
 			>
 				<subplot>
 					<series
-						value="agentValue(Industry,inventories.fg.vol,t,Firm56)"
+						value="agentValue(Industry1,inventories.fg.vol,t,Firm340)"
 						color="green"
 						label="Inventories" />
 					<series
-						value="agentValue(Industry,inventories.fg.vol.normal,t,Firm56)"
+						value="agentValue(Industry1,inventories.fg.vol.normal,t,Firm340)"
 						color="orange"
 						label="Inventories Target" />
 				</subplot>
 				<subplot>
 					<series
-						value="agentValue(Industry,prices,t,Firm56)"
+						value="agentValue(Industry1,prices,t,Firm340)"
 						color="red"
 						label="Price" />
 					<series
-						value="agentValue(Industry,price.high,t,Firm56)"
+						value="agentValue(Industry1,price.high,t,Firm340)"
 						color="veryLightRed"
-						label="Firm56" />
+						label="Firm340" />
 					<series
-						value="agentValue(Industry,price.low,t,Firm56)"
+						value="agentValue(Industry1,price.low,t,Firm340)"
 						color="veryLightRed"
-						label="Firm56" />
+						label="Firm340" />
 					<series
-						value="mean(Industry,prices,t)"
+						value="mean(Industry1,prices,t)"
 						color="blue" />
 					<series
-						value="max(Industry,prices,t)"
+						value="max(Industry1,prices,t)"
 						color="veryLightBlue" />
 					<series
-						value="min(Industry,prices,t)"
+						value="min(Industry1,prices,t)"
 						color="veryLightBlue" />
 				</subplot>
 				<subplot>
 					<series
-						value="agentValue(Industry,prices,t,Firm56)*sum(Industry,sales.vol,t):sum(Industry,sales.val,t)"
+						value="agentValue(Industry1,prices,t,Firm340)*sum(Industry1,sales.vol,t):sum(Industry1,sales.val,t)"
 						color="red"
 						label="Price" />
 					<series
-						value="agentValue(Industry,price.high,t,Firm56)*sum(Industry,sales.vol,t):sum(Industry,sales.val,t)"
+						value="agentValue(Industry1,price.high,t,Firm340)*sum(Industry1,sales.vol,t):sum(Industry1,sales.val,t)"
 						color="veryLightRed"
-						label="Firm56" />
+						label="Firm340" />
 					<series
-						value="agentValue(Industry,price.low,t,Firm56)*sum(Industry,sales.vol,t):sum(Industry,sales.val,t)"
+						value="agentValue(Industry1,price.low,t,Firm340)*sum(Industry1,sales.vol,t):sum(Industry1,sales.val,t)"
 						color="veryLightRed"
-						label="Firm56" />
+						label="Firm340" />
 					<series
 						value="1"
 						color="blue" />
 					<series
-						value="max(Industry,prices,t)*sum(Industry,sales.vol,t):sum(Industry,sales.val,t)"
+						value="max(Industry1,prices,t)*sum(Industry1,sales.vol,t):sum(Industry1,sales.val,t)"
 						color="veryLightBlue" />
 					<series
-						value="min(Industry,prices,t)*sum(Industry,sales.vol,t):sum(Industry,sales.val,t)"
+						value="min(Industry1,prices,t)*sum(Industry1,sales.vol,t):sum(Industry1,sales.val,t)"
 						color="veryLightBlue" />
-				</subplot>
-
-				<subplot>
-					<series
-						value="agentValue(Industry,countGetSupply,t,Firm56)"
-						color="red"
-						label="countGetSupply" />
-					<series
-						value="mean(Industry,countGetSupply,t)"
-						color="blue"
-						label="Sector average" />
 				</subplot>
 				<subplot>
 					<series
-						value="agentValue(Industry, production.vol.atFullCapacity, t,Firm56)"
+						value="agentValue(Industry1, production.vol.atFullCapacity, t,Firm340)"
 						color="orange"
 						label="Potential Output" />
 					<series
-						value="agentValue(Industry,supply.vol,t,Firm56)"
+						value="agentValue(Industry1,supply.vol,t,Firm340)"
 						color="green"
 						label="Supply" />
 					<series
-						value="agentValue(Industry,sales.vol,t,Firm56)"
+						value="agentValue(Industry1,sales.vol,t,Firm340)"
 						color="red"
 						label="Sales" />
 				</subplot>
@@ -1351,7 +2036,7 @@
 		<col>
 			<html>
 				<b>
-					Firm56, pricing decision:
+					Firm340, pricing decision:
 				</b>
 				<br />
 				<br />
@@ -1359,8 +2044,8 @@
 				<data value="time()-5" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t-5"
 					key="updatePrice" />
 				<br />
@@ -1368,8 +2053,8 @@
 				<data value="time()-4" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t-4"
 					key="updatePrice" />
 				<br />
@@ -1377,8 +2062,8 @@
 				<data value="time()-3" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t-3"
 					key="updatePrice" />
 				<br />
@@ -1386,8 +2071,8 @@
 				<data value="time()-2" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t-2"
 					key="updatePrice" />
 				<br />
@@ -1395,8 +2080,8 @@
 				<data value="time()-1" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t-1"
 					key="updatePrice" />
 				<br />
@@ -1404,8 +2089,8 @@
 				<data value="time()" />
 				<br />
 				<info
-					sector="Industry"
-					agent="Firm56"
+					sector="Industry1"
+					agent="Firm340"
 					period="t"
 					key="updatePrice" />
 			</html>
@@ -1421,7 +2106,7 @@
 					cellspacing="10"
 				>
 					<caption>
-						Balance Sheet (Firm56 - period
+						Balance Sheet (Firm340 - period
 						<data value="time()" />
 						)
 					</caption>
@@ -1440,14 +2125,14 @@
 							Cash
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,cash,t,Firm56)" />
+							<data value="agentValue(Industry1,cash,t,Firm340)" />
 						</td>
 						<td />
 						<td>
 							Short Term Debt
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,debt.shortTerm,t,Firm56)" />
+							<data value="agentValue(Industry1,debt.shortTerm,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1455,7 +2140,7 @@
 							Finished Goods
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,inventories.fg.val,t,Firm56)" />
+							<data value="agentValue(Industry1,inventories.fg.val,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1463,7 +2148,7 @@
 							Work In Progress
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,inventories.inProcess.val,t,Firm56)" />
+							<data value="agentValue(Industry1,inventories.inProcess.val,t,Firm340)" />
 						</td>
 					</tr>
 
@@ -1472,14 +2157,14 @@
 							Equipment
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,machinery.val,t,Firm56)" />
+							<data value="agentValue(Industry1,machinery.val,t,Firm340)" />
 						</td>
 						<td />
 						<td>
 							Long Term Debt
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,debt.longTerm,t,Firm56)" />
+							<data value="agentValue(Industry1,debt.longTerm,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1495,7 +2180,7 @@
 							Capital Stock
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,capital,t,Firm56)" />
+							<data value="agentValue(Industry1,capital,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1508,7 +2193,7 @@
 						<td>Total</td>
 						<td align="right">
 							<data
-								value="agentValue(Industry,cash,t,Firm56)+agentValue(Industry,inventories.inProcess.val,t,Firm56)+agentValue(Industry,inventories.fg.val,t,Firm56)+agentValue(Industry,machinery.val,t,Firm56)" />
+								value="agentValue(Industry1,cash,t,Firm340)+agentValue(Industry1,inventories.inProcess.val,t,Firm340)+agentValue(Industry1,inventories.fg.val,t,Firm340)+agentValue(Industry1,machinery.val,t,Firm340)" />
 						</td>
 						<td />
 						<td>
@@ -1516,7 +2201,7 @@
 						</td>
 						<td align="right">
 							<data
-								value="agentValue(Industry,liabilities,t,Firm56)+agentValue(Industry,capital,t,Firm56)" />
+								value="agentValue(Industry1,liabilities,t,Firm340)+agentValue(Industry1,capital,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1528,8 +2213,9 @@
 			</html>
 
 		</col>
-	</panel>
-	<panel title="Firm56: capital">
+	</panel2>
+
+	<panel2 title="Firm340: capital">
 
 		<col>
 
@@ -1539,11 +2225,11 @@
 			>
 				<subplot>
 					<series
-						value="agentValue(Industry, liabilities, t,Firm56) : agentValue(Industry, assets, t,Firm56)"
+						value="agentValue(Industry1, liabilities, t,Firm340) : agentValue(Industry1, assets, t,Firm340)"
 						color="blue"
 						label="Debt Ratio" />
 					<series
-						value="agentValue(Industry, liabilities.target, t,Firm56) : agentValue(Industry, assets, t,Firm56)"
+						value="agentValue(Industry1, liabilities.target, t,Firm340) : agentValue(Industry1, assets, t,Firm340)"
 						color="orange"
 						label="Target" />
 					<yAxis
@@ -1552,13 +2238,13 @@
 				</subplot>
 				<subplot>
 					<series
-						value="agentValue(Industry, investment.vol,t,Firm56)"
+						value="agentValue(Industry1, investment.vol,t,Firm340)"
 						color="green"
 						label="Investment (vol)" />
 				</subplot>
 				<subplot>
 					<series
-						value="agentValue(Industry, capacity,t,Firm56)"
+						value="agentValue(Industry1, capacity,t,Firm340)"
 						color="red"
 						label="Capacity" />
 				</subplot>
@@ -1566,78 +2252,47 @@
 		</col>
 
 		<col>
-			<html>
-				<h3>Firm56 - capital Manager.payDividend()</h3>
 
-				payDividend.cash:
-				<data value="agentValue(Industry,payDividend.cash,t,Firm56)" />
-				<br />
-				payDividend.assets:
-				<data value="agentValue(Industry,payDividend.assets,t,Firm56)" />
-				<br />
-				payDividend.capital:
-				<data value="agentValue(Industry,payDividend.capital,t,Firm56)" />
-				<br />
-				payDividend.capitalTarget:
-				<data value="agentValue(Industry,payDividend.capitalTarget,t,Firm56)" />
-				<br />
-				capital ratio:
-				<data
-					value="agentValue(Industry,payDividend.capital,t,Firm56):agentValue(Industry,payDividend.capitalTarget,t,Firm56)" />
-				<br />
-				payDividend.averageIncome:
-				<data value="agentValue(Industry,payDividend.averageIncome,t,Firm56)" />
-				<br />
-				<b>
-					payDividend.dividend:
-					<data value="agentValue(Industry,payDividend.dividend,t,Firm56)" />
-				</b>
-				<br />
-
-			</html>
 			<chart
 				title="Capital Ratio"
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, capital, t) : sum(Industry, assets, t)"
-					color="blue"
-					label="Average" />
-				<series
-					value="agentValue(Industry, capital, t, Firm56) : agentValue(Industry, assets, t, Firm56)"
+					value="agentValue(Industry1, capital, t, Firm340) : agentValue(Industry1, assets, t, Firm340)"
 					color="red"
-					label="Firm56" />
+					label="Capital Ratio" />
+				<series
+					value="agentValue(Industry1,capitalTargetRatio,t, Firm340)"
+					color="orange"
+					label="Target" />
 			</chart>
 			<chart
 				title="Dividends"
 				type="time chart"
 			>
-				<series
-					value="agentValue(Industry, dividends, t, Firm56) : agentValue(Industry, assets, t, Firm56)"
-					color="red"
-					label="dividends" />
-				<series
-					value="agentValue(Industry, grossProfit, t, Firm56) : agentValue(Industry, assets, t, Firm56)"
-					color="green"
-					label="profits" />
+				<subplot>
+					<series
+						value="agentValue(Industry1, capital, t, Firm340) : agentValue(Industry1, assets, t, Firm340)"
+						color="red"
+						label="Capital Ratio" />
+					<series
+						value="agentValue(Industry1,capitalTargetRatio,t, Firm340)"
+						color="orange"
+						label="Target" />
+				</subplot>
+				<subplot>
+					<series
+						value="agentValue(Industry1, dividends, t, Firm340) : agentValue(Industry1, assets, t, Firm340)"
+						color="blue"
+						label="dividends" />
+					<series
+						value="agentValue(Industry1, grossProfit, t, Firm340) : agentValue(Industry1, assets, t, Firm340)"
+						color="green"
+						label="profits" />
+				</subplot>
 			</chart>
 			<chart />
-			<html>
-				<b>
-					Firm:
-					<info
-						sector="Industry"
-						agent="Firm56"
-						period="t"
-						key="name" />
-				</b>
-				<br />
-				<info
-					sector="Industry"
-					agent="Firm56"
-					period="t"
-					key="account" />
-			</html>
+
 		</col>
 		<col>
 			<html>
@@ -1652,7 +2307,7 @@
 					cellspacing="10"
 				>
 					<caption>
-						Balance Sheet (Firm56 - period
+						Balance Sheet (Firm340 - period
 						<data value="time()" />
 						)
 					</caption>
@@ -1671,14 +2326,14 @@
 							Cash
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,cash,t,Firm56)" />
+							<data value="agentValue(Industry1,cash,t,Firm340)" />
 						</td>
 						<td />
 						<td>
 							Short Term Debt
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,debt.shortTerm,t,Firm56)" />
+							<data value="agentValue(Industry1,debt.shortTerm,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1686,7 +2341,7 @@
 							Finished Goods
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,inventories.fg.val,t,Firm56)" />
+							<data value="agentValue(Industry1,inventories.fg.val,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1694,7 +2349,7 @@
 							Work In Progress
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,inventories.inProcess.val,t,Firm56)" />
+							<data value="agentValue(Industry1,inventories.inProcess.val,t,Firm340)" />
 						</td>
 					</tr>
 
@@ -1703,14 +2358,14 @@
 							Equipment
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,machinery.val,t,Firm56)" />
+							<data value="agentValue(Industry1,machinery.val,t,Firm340)" />
 						</td>
 						<td />
 						<td>
 							Long Term Debt
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,debt.longTerm,t,Firm56)" />
+							<data value="agentValue(Industry1,debt.longTerm,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1726,7 +2381,7 @@
 							Capital Stock
 						</td>
 						<td align="right">
-							<data value="agentValue(Industry,capital,t,Firm56)" />
+							<data value="agentValue(Industry1,capital,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1739,7 +2394,7 @@
 						<td>Total</td>
 						<td align="right">
 							<data
-								value="agentValue(Industry,cash,t,Firm56)+agentValue(Industry,inventories.inProcess.val,t,Firm56)+agentValue(Industry,inventories.fg.val,t,Firm56)+agentValue(Industry,machinery.val,t,Firm56)" />
+								value="agentValue(Industry1,cash,t,Firm340)+agentValue(Industry1,inventories.inProcess.val,t,Firm340)+agentValue(Industry1,inventories.fg.val,t,Firm340)+agentValue(Industry1,machinery.val,t,Firm340)" />
 						</td>
 						<td />
 						<td>
@@ -1747,7 +2402,7 @@
 						</td>
 						<td align="right">
 							<data
-								value="agentValue(Industry,liabilities,t,Firm56)+agentValue(Industry,capital,t,Firm56)" />
+								value="agentValue(Industry1,liabilities,t,Firm340)+agentValue(Industry1,capital,t,Firm340)" />
 						</td>
 					</tr>
 					<tr>
@@ -1757,10 +2412,165 @@
 					</tr>
 				</table>
 			</html>
-			<chart />
+			<html>
+				<h3>Firm340 - capital Manager.payDividend()</h3>
+
+				payDividend.cash:
+				<data value="agentValue(Industry1,payDividend.cash,t,Firm340)" />
+				<br />
+				payDividend.assets:
+				<data value="agentValue(Industry1,payDividend.assets,t,Firm340)" />
+				<br />
+				payDividend.capital:
+				<data value="agentValue(Industry1,payDividend.capital,t,Firm340)" />
+				<br />
+				payDividend.capitalTarget:
+				<data value="agentValue(Industry1,payDividend.capitalTarget,t,Firm340)" />
+				<br />
+				capital ratio:
+				<data
+					value="agentValue(Industry1,payDividend.capital,t,Firm340):agentValue(Industry1,payDividend.capitalTarget,t,Firm340)" />
+				<br />
+				payDividend.averageIncome:
+				<data value="agentValue(Industry1,payDividend.averageIncome,t,Firm340)" />
+				<br />
+				<b>
+					payDividend.dividend:
+					<data value="agentValue(Industry1,payDividend.dividend,t,Firm340)" />
+				</b>
+				<br />
+
+			</html>
+			<html>
+				<b>
+					Firm:
+					<info
+						sector="Industry1"
+						agent="Firm340"
+						period="t"
+						key="name" />
+				</b>
+				<br />
+				<info
+					sector="Industry1"
+					agent="Firm340"
+					period="t"
+					key="account" />
+			</html>
 		</col>
 
-	</panel>
+	</panel2>
+
+	<panel2 title="Firm340: Investment">
+
+		<col>
+
+			<chart
+				title="Capacity"
+				type="time chart"
+			>
+				<series
+					value="agentValue(Industry1, capacity,t,Firm340)"
+					color="red"
+					label="Capacity" />
+			</chart>
+
+			<chart
+				title="Liabilities"
+				type="time chart"
+			>
+				<subplot>
+					<series
+						value="agentValue(Industry1, liabilities, t,Firm340) : agentValue(Industry1, assets, t,Firm340)"
+						color="blue"
+						label="Debt Ratio" />
+					<series
+						value="agentValue(Industry1, liabilities.target, t,Firm340) : agentValue(Industry1, assets, t,Firm340)"
+						color="orange"
+						label="Target" />
+					<yAxis
+						min="0"
+						max="1" />
+				</subplot>
+				<subplot>
+					<series
+						value="agentValue(Industry1, investment.vol,t, Firm340 )"
+						color="green"
+						label="Investment (vol)" />
+
+				</subplot>
+			</chart>
+			<chart
+				title="Investment"
+				type="time chart"
+			>
+			</chart>
+		</col>
+
+		<col>
+			<chart
+				title="Long Term Debt / Fixed Capital"
+				type="time chart"
+			>
+				<series
+					value="agentValue ( Industry1 , debt.longTerm , t , Firm340 ) : agentValue ( Industry1 , machinery.val , t , Firm340 )"
+					color="red"
+					label="Long Term Loans / Fixed Capital" />
+				<series
+					value="agentValue(Industry1, liabilities.target, t,Firm340) : agentValue(Industry1, assets, t,Firm340)"
+					color="orange"
+					label="Target" />
+				<yAxis
+					min="0"
+					max="1.2" />
+			</chart>
+			<chart
+				title="Current Liabilities / Current Assets"
+				type="time chart"
+			>
+				<series
+					value="agentValue ( Industry1 , debt.shortTerm , t , Firm340 ) : (agentValue ( Industry1 , inventories.inProcess.val , t , Firm340 ) + agentValue ( Industry1 , inventories.fg.val , t , Firm340 ) + agentValue ( Industry1 , cash , t , Firm340 ) ) "
+					color="red"
+					label="Current Liabilities / Current Assets" />
+				<yAxis
+					min="0"
+					max="1.2" />
+			</chart>
+			<chart></chart>
+		</col>
+		<col>
+			<chart
+				title="Long Term Debt and Fixed Capital"
+				type="time chart"
+			>
+				<subplot>
+					<series
+						value="agentValue ( Industry1 , debt.longTerm , t , Firm340 )"
+						color="red"
+						label="Long Term Loans" />
+					<series
+						value="agentValue ( Industry1 , machinery.val , t , Firm340 )"
+						color="blue"
+						label="Fixed Capital" />
+				</subplot>
+				<subplot>
+					<series
+						value="agentValue(Industry1, investment.vol,t, Firm340 )"
+						color="green"
+						label="Investment (vol)" />
+				</subplot>
+
+			</chart>
+			<html>
+				<info
+					sector="Industry1"
+					agent="Firm340"
+					period="t"
+					key="account" />
+			</html>
+		</col>
+
+	</panel2>
 
 	<panel title="Bank">
 
@@ -1820,7 +2630,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Industry, cash, t)"
+					value="sum(Industry1, cash, t) + sum(Industry2, cash, t)"
 					label="Firms" />
 				<series
 					value="sum(Households, cash, t)"
@@ -1832,7 +2642,8 @@
 				type="time chart"
 			>
 				<series
-					value="(sum(Industry, wageBill, t-11...t)+sum(Industry, grossProfit, t-11...t) - sum(Industry, inventories.losses.val, t-11...t)) : sum(Banks, liabilities, t)"
+					value="(sum(Industry1, wageBill, t-11...t) + 
+					sum(Industry1, grossProfit, t-11...t) - sum(Industry1, inventories.losses.val, t-11...t) + sum(Industry2, wageBill, t-11...t) + sum(Industry2, grossProfit, t-11...t) - sum(Industry2, inventories.losses.val, t-11...t)) : sum(Banks, liabilities, t)"
 					label="Velocity of Money" />
 				<yAxis
 					min="0"
@@ -1872,11 +2683,11 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Banks, loans.longTerm, t):mean(Industry, prices, t)"
+					value="sum(Banks, loans.longTerm, t):mean(Industry1, prices, t)"
 					color="green"
 					label="Long Term Loans" />
 				<series
-					value="sum(Industry, machinery.val, t):mean(Industry, prices, t)"
+					value="sum(Industry1, machinery.val, t):mean(Industry1, prices, t)"
 					color="red"
 					label="Fixed Capital" />
 			</chart>
@@ -1886,11 +2697,11 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Banks, loans.shortTerm, t)*sum(Industry, inventories.fg.vol, t):sum(Industry, inventories.fg.val, t)"
+					value="sum(Banks, loans.shortTerm, t)*sum(Industry1, inventories.fg.vol, t):sum(Industry1, inventories.fg.val, t)"
 					color="green"
 					label="Short Term Loans" />
 				<series
-					value="(sum(Industry, inventories.inProcess.val, t)+sum(Industry, inventories.fg.val, t))*sum(Industry, inventories.fg.vol, t):sum(Industry, inventories.fg.val, t)"
+					value="(sum(Industry1, inventories.inProcess.val, t)+sum(Industry1, inventories.fg.val, t))*sum(Industry1, inventories.fg.vol, t):sum(Industry1, inventories.fg.val, t)"
 					color="red"
 					label="Circulating Capital" />
 			</chart>
@@ -1904,7 +2715,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Banks, liabilities, t):sum(Industry, assets, t)"
+					value="sum(Banks, liabilities, t):sum(Industry1, assets, t)"
 					color="green"
 					label="Total Debt / Total Assets" />
 				<yAxis
@@ -1917,7 +2728,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Banks, loans.longTerm, t):sum(Industry, machinery.val, t)"
+					value="sum(Banks, loans.longTerm, t):sum(Industry1, machinery.val, t)"
 					color="green"
 					label="Long Term Loans / Fixed Capital" />
 				<yAxis
@@ -1930,7 +2741,7 @@
 				type="time chart"
 			>
 				<series
-					value="sum(Banks, loans.shortTerm, t):(sum(Industry, inventories.inProcess.val, t)+sum(Industry, inventories.fg.val, t))"
+					value="sum(Banks, loans.shortTerm, t):(sum(Industry1, inventories.inProcess.val, t)+sum(Industry1, inventories.fg.val, t))"
 					color="green"
 					label="Short Term Loans / Circulating Capital" />
 				<yAxis
@@ -2012,7 +2823,7 @@
 					value="sum(Households,  wages, t)"
 					label="Wages" />
 				<series
-					value="sum(Industry, grossProfit, t)-sum(Industry, inventories.losses.val, t)"
+					value="sum(Industry1, grossProfit, t)-sum(Industry1, inventories.losses.val, t)"
 					label="Profits" />
 			</chart>
 
@@ -2025,7 +2836,7 @@
 				type="time chart"
 			>
 				<series
-					value="(sum(Households, cash, t)+ sum(Households, capital, t)) : (sum(Households, wages, t)+sum(Industry, grossProfit, t)-sum(Industry, inventories.losses.val, t))"
+					value="(sum(Households, cash, t)+ sum(Households, capital, t)) : (sum(Households, wages, t)+sum(Industry1, grossProfit, t)-sum(Industry1, inventories.losses.val, t))"
 					label="Savings" />
 			</chart>
 
@@ -2054,8 +2865,8 @@
 					value="sum(Banks, dividends, t)"
 					label="Bank dividends" />
 				<series
-					value="sum(Industry, dividends, t)"
-					label="Industry dividends" />
+					value="sum(Industry1, dividends, t)"
+					label="Industry1 dividends" />
 			</chart>
 
 		</col>
@@ -2126,7 +2937,7 @@
 					)
 				</caption>
 				<tr>
-					<td colspan="5">
+					<td colspan="6">
 						<hr />
 					</td>
 				</tr>
@@ -2141,7 +2952,11 @@
 					<th
 						WIDTH="110"
 						align="center"
-					>Firms</th>
+					>Firms 1</th>
+					<th
+						WIDTH="110"
+						align="center"
+					>Firms 2</th>
 					<th
 						WIDTH="110"
 						align="center"
@@ -2152,41 +2967,65 @@
 					>Sum</th>
 				</tr>
 				<tr>
-					<td colspan="5">
+					<td colspan="6">
 						<hr />
+					</td>
+				</tr>
+				<tr align="right">
+					<th>Inputs</th>
+					<td />
+					<td />
+					<td>
+						<data value="sum(Industry2,inventories.input.val,t)" />
+					</td>
+					<td />
+					<td>
+						<data value="sum(Industry2,inventories.input.val,t)" />
 					</td>
 				</tr>
 				<tr align="right">
 					<th>In Process</th>
 					<td />
 					<td>
-						<data value="sum(Industry,inventories.inProcess.val,t)" />
+						<data value="sum(Industry1,inventories.inProcess.val,t)" />
+					</td>
+					<td>
+						<data value="sum(Industry2,inventories.inProcess.val,t)" />
 					</td>
 					<td />
 					<td>
-						<data value="sum(Industry,inventories.inProcess.val,t)" />
+						<data
+							value="sum(Industry1,inventories.inProcess.val,t) + sum(Industry2,inventories.inProcess.val,t)" />
 					</td>
 				</tr>
 				<tr align="right">
 					<th>Finished Goods</th>
 					<td />
 					<td>
-						<data value="sum(Industry,inventories.fg.val,t)" />
+						<data value="sum(Industry1,inventories.fg.val,t)" />
+					</td>
+					<td>
+						<data value="sum(Industry2,inventories.fg.val,t)" />
 					</td>
 					<td />
 					<td>
-						<data value="sum(Industry,inventories.fg.val,t)" />
+						<data
+							value="sum(Industry1,inventories.fg.val,t) + sum(Industry2,inventories.fg.val,t)" />
 					</td>
 				</tr>
 				<tr align="right">
 					<th>Equipment</th>
 					<td />
 					<td>
-						<data value="sum(Industry,machinery.val,t)" />
+						<data value="sum(Industry1,machinery.val,t)" />
+					</td>
+					<td>
+						<data value="sum(Industry2,machinery.val,t)" />
 					</td>
 					<td />
 					<td>
-						<data value="sum(Industry,machinery.val,t)" />
+						<data
+							value="sum(Industry1,machinery.val,t) + sum(Industry2,machinery.val,t)" />
 					</td>
 				</tr>
 				<tr align="right">
@@ -2195,41 +3034,51 @@
 						<data value="sum(Households,cash,t)" />
 					</td>
 					<td>
-						<data value="sum(Industry,cash,t)" />
+						<data value="sum(Industry1,cash,t)" />
+					</td>
+					<td>
+						<data value="sum(Industry2,cash,t)" />
 					</td>
 					<td>
 						<data value="-sum(Banks,liabilities,t)" />
 					</td>
 					<td>
 						<data
-							value="sum(Households,cash,t)+sum(Industry,cash,t)-sum(Banks,liabilities,t)" />
+							value="sum(Households,cash,t)+sum(Industry1,cash,t)+sum(Industry2,cash,t)-sum(Banks,liabilities,t)" />
 					</td>
 				</tr>
 				<tr align="right">
 					<th>Short Term Loans</th>
 					<td />
 					<td>
-						<data value="-sum(Industry,debt.shortTerm,t)" />
+						<data value="-sum(Industry1,debt.shortTerm,t)" />
+					</td>
+					<td>
+						<data value="-sum(Industry2,debt.shortTerm,t)" />
 					</td>
 					<td>
 						<data value="sum(Banks,loans.shortTerm,t)" />
 					</td>
 					<td>
 						<data
-							value="sum(Banks,loans.shortTerm,t)-sum(Industry,debt.shortTerm,t)" />
+							value="sum(Banks,loans.shortTerm,t)-sum(Industry1,debt.shortTerm,t)-sum(Industry2,debt.shortTerm,t)" />
 					</td>
 				</tr>
 				<tr align="right">
 					<th>Long Term Loans</th>
 					<td />
 					<td>
-						<data value="-sum(Industry,debt.longTerm,t)" />
+						<data value="-sum(Industry1,debt.longTerm,t)" />
+					</td>
+					<td>
+						<data value="-sum(Industry2,debt.longTerm,t)" />
 					</td>
 					<td>
 						<data value="sum(Banks,loans.longTerm,t)" />
 					</td>
 					<td>
-						<data value="sum(Banks,loans.longTerm,t)-sum(Industry,debt.longTerm,t)" />
+						<data
+							value="sum(Banks,loans.longTerm,t)-sum(Industry1,debt.longTerm,t)-sum(Industry2,debt.longTerm,t)" />
 					</td>
 				</tr>
 				<tr align="right">
@@ -2238,18 +3087,21 @@
 						<data value="sum(Households,capital,t)" />
 					</td>
 					<td>
-						<data value="-sum(Industry,capital,t)" />
+						<data value="-sum(Industry1,capital,t)" />
+					</td>
+					<td>
+						<data value="-sum(Industry2,capital,t)" />
 					</td>
 					<td>
 						<data value="-sum(Banks,capital,t)" />
 					</td>
 					<td>
 						<data
-							value="sum(Households,capital,t)-sum(Industry,capital,t)-sum(Banks,capital,t)" />
+							value="sum(Households,capital,t)-sum(Industry1,capital,t)-sum(Industry2,capital,t)-sum(Banks,capital,t)" />
 					</td>
 				</tr>
 				<tr>
-					<td colspan="5">
+					<td colspan="6">
 						<hr />
 					</td>
 				</tr>
@@ -2260,7 +3112,11 @@
 					</td>
 					<td>
 						<data
-							value="sum(Industry,inventories.inProcess.val,t)+sum(Industry,inventories.fg.val,t)+sum(Industry,machinery.val,t)+sum(Industry,cash,t)-sum(Industry,liabilities,t)-sum(Industry,capital,t)" />
+							value="sum(Industry1,inventories.inProcess.val,t)+sum(Industry1,inventories.fg.val,t)+sum(Industry1,machinery.val,t)+sum(Industry1,cash,t)-sum(Industry1,liabilities,t)-sum(Industry1,capital,t)" />
+					</td>
+					<td>
+						<data
+							value="sum(Industry2,inventories.input.val,t)+sum(Industry2,inventories.inProcess.val,t)+sum(Industry2,inventories.fg.val,t)+sum(Industry2,machinery.val,t)+sum(Industry2,cash,t)-sum(Industry2,liabilities,t)-sum(Industry2,capital,t)" />
 					</td>
 					<td>
 						<data
@@ -2268,11 +3124,11 @@
 					</td>
 					<td>
 						<data
-							value="sum(Industry,inventories.inProcess.val,t)+sum(Industry,inventories.fg.val,t)+sum(Industry,machinery.val,t)" />
+							value="sum(Industry1,inventories.inProcess.val,t)+sum(Industry1,inventories.fg.val,t)+sum(Industry1,machinery.val,t)+sum(Industry2,inventories.input.val,t)+sum(Industry2,inventories.inProcess.val,t)+sum(Industry2,inventories.fg.val,t)+sum(Industry2,machinery.val,t)" />
 					</td>
 				</tr>
 				<tr>
-					<td colspan="5">
+					<td colspan="6">
 						<hr />
 					</td>
 				</tr>
@@ -2294,9 +3150,13 @@
 				val1="sum(Households, cash, t) + sum(Households, capital, t)"
 				val2="sum(Households, netWorth, t)" />
 			<test
-				label="Sector: Industry"
-				val1="sum(Industry, inventories.inProcess.val, t) + sum(Industry, inventories.fg.val, t) + sum(Industry, machinery.val, t) + sum(Industry, cash, t)"
-				val2="sum(Industry, liabilities, t) + sum(Industry, capital, t)" />
+				label="Sector: Industry1"
+				val1="sum(Industry1, inventories.inProcess.val, t) + sum(Industry1, inventories.fg.val, t) + sum(Industry1, machinery.val, t) + sum(Industry1, cash, t)"
+				val2="sum(Industry1, liabilities, t) + sum(Industry1, capital, t)" />
+			<test
+				label="Sector: Industry2"
+				val1="sum(Industry2, inventories.input.val, t) + sum(Industry2, inventories.inProcess.val, t) + sum(Industry2, inventories.fg.val, t) + sum(Industry2, machinery.val, t) + sum(Industry2, cash, t)"
+				val2="sum(Industry2, liabilities, t) + sum(Industry2, capital, t)" />
 			<test
 				label="Sector: Banks"
 				val1="sum(Banks, assets, t)"
@@ -2306,29 +3166,29 @@
 
 			<test
 				label="Cross-sectoral: Deposits"
-				val1="sum(Households, cash, t) + sum(Industry, cash, t)"
+				val1="sum(Households, cash, t) + sum(Industry1, cash, t) + sum(Industry2, cash, t)"
 				val2="sum(Banks, liabilities, t)" />
 			<test
 				label="Cross-sectoral: Loans"
-				val1="sum(Industry, liabilities, t)"
+				val1="sum(Industry1, liabilities, t) + sum(Industry2, liabilities, t)"
 				val2="sum(Banks, assets, t)" />
 
 			<test
 				label="Cross-sectoral: Capital"
 				val1="sum(Households, capital, t)"
-				val2="sum(Industry, capital, t) + sum(Banks, capital, t)" />
+				val2="sum(Industry1, capital, t) + sum(Industry2, capital, t) + sum(Banks, capital, t)" />
 
 			<test
 				label="Cross-sectoral: Net Worth"
 				val1="sum(Households, netWorth, t)"
-				val2="sum(Industry, inventories.inProcess.val, t) + sum(Industry, inventories.fg.val, t) + sum(Industry, machinery.val, t)" />
+				val2="sum(Industry1, inventories.inProcess.val, t) + sum(Industry1, inventories.fg.val, t) + sum(Industry1, machinery.val, t) + sum(Industry2, inventories.input.val, t) + sum(Industry2, inventories.inProcess.val, t) + sum(Industry2, inventories.fg.val, t) + sum(Industry2, machinery.val, t)" />
 
 			Stock - flow consistency:
 
 			<test
 				label="Definition: Gross Profits"
-				val1="sum(Industry, grossProfit, t)"
-				val2="sum(Industry, sales.val, t) - sum(Industry, sales.cost, t)" />
+				val1="sum(Industry1, grossProfit, t)"
+				val2="sum(Industry1, sales.val, t) - sum(Industry1, sales.cost, t)" />
 
 			<test
 				label="Stocks and flows: Households Deposits"
@@ -2338,42 +3198,43 @@
 			<test
 				label="Stocks and flows: Households Capital"
 				val1="sum(Households, capital, t) - sum(Households, capital, t-1)"
-				val2="sum(Industry, grossProfit, t) - sum(Industry, dividends, t) - sum(Industry, depreciation, t) - sum(Industry, desinvestment.val, t) - sum(Industry, inventories.losses.val, t) + sum(Industry, scrap.val, t) - sum(Banks, dividends, t) + sum(Banks, foreclosures, t)" />
+				val2="sum(Industry1, grossProfit, t) - sum(Industry1, dividends, t) - sum(Industry1, depreciation, t) - sum(Industry1, inventories.losses.val, t) + sum(Industry2, grossProfit, t) - sum(Industry2, dividends, t) - sum(Industry2, depreciation, t) - sum(Industry2, inventories.losses.val, t) - sum(Banks, dividends, t) + sum(Banks, foreclosures, t)" />
 
 			<test
 				label="Stocks and flows: Households Net Worth"
 				val1="sum(Households, netWorth, t) - sum(Households, netWorth, t-1)"
-				val2="sum(Industry, wageBill, t) + sum(Industry, investment.val, t) - sum(Industry, desinvestment.val, t) - sum(Industry, depreciation, t) - sum(Industry, sales.cost, t) - sum(Industry, inventories.inProcess.losses, t) - sum(Industry, inventories.fg.losses, t) + sum(Industry, scrap.val, t)" />
+				val2="sum(Industry1, wageBill, t) + sum(Industry1, investment.val, t) - sum(Industry1, depreciation, t) - sum(Industry1, sales.cost, t) + 
+				      sum(Industry2, inputs.val, t) + sum(Industry2, wageBill, t) + sum(Industry2, investment.val, t) - sum(Industry2, depreciation, t) - sum(Industry2, sales.cost, t) " />
 
 			<test
 				label="Stocks and flows: Firms Inventories (Work In Progress)"
-				val1="sum(Industry, inventories.inProcess.val, t) - sum(Industry, inventories.inProcess.val, t-1)"
-				val2="sum(Industry, wageBill, t) - sum(Industry, production.val, t) - sum(Industry, inventories.inProcess.losses, t)" />
+				val1="sum(Industry1, inventories.inProcess.val, t) - sum(Industry1, inventories.inProcess.val, t-1)"
+				val2="sum(Industry1, wageBill, t) - sum(Industry1, production.val, t) - sum(Industry1, inventories.inProcess.losses, t)" />
 
 			<test
 				label="Stocks and flows: Firms Inventories (Finished Goods)"
-				val1="sum(Industry, inventories.fg.val, t) - sum(Industry, inventories.fg.val, t-1)"
-				val2="sum(Industry, production.val, t) - sum(Industry, sales.cost, t) - sum(Industry, inventories.fg.losses, t) + sum(Industry, scrap.val, t)" />
+				val1="sum(Industry1, inventories.fg.val, t) - sum(Industry1, inventories.fg.val, t-1)"
+				val2="sum(Industry1, production.val, t) - sum(Industry1, sales.cost, t) - sum(Industry1, inventories.fg.losses, t) + sum(Industry1, scrap.val, t)" />
 
 			<test
 				label="Stocks and flows: Firms Equipment"
-				val1="sum(Industry, machinery.val, t) - sum(Industry, machinery.val, t-1)"
-				val2="sum(Industry, investment.val, t)  - sum(Industry, depreciation, t) - sum(Industry, desinvestment.val, t)" />
+				val1="sum(Industry1, machinery.val, t) - sum(Industry1, machinery.val, t-1)"
+				val2="sum(Industry1, investment.val, t)  - sum(Industry1, depreciation, t) - sum(Industry1, desinvestment.val, t)" />
 
 			<test
 				label="Stocks and flows: Firms Deposits"
-				val1="sum(Industry, cash, t) - sum(Industry, cash, t-1)"
-				val2="sum(Industry, liabilities.new, t) - sum(Industry, liabilities.repayment, t) + sum(Industry, sales.val, t) - sum(Industry, wageBill, t) - sum(Industry, investment.val, t) - sum(Industry, dividends, t) - sum(Industry, interest, t) - sum(Industry, canceledDeposits, t)" />
+				val1="sum(Industry1, cash, t) - sum(Industry1, cash, t-1)"
+				val2="sum(Industry1, liabilities.new, t) - sum(Industry1, liabilities.repayment, t) + sum(Industry1, sales.val, t) - sum(Industry1, wageBill, t) - sum(Industry1, investment.val, t) - sum(Industry1, dividends, t) - sum(Industry1, interest, t) - sum(Industry1, canceledDeposits, t)" />
 
 			<test
 				label="Stocks and flows: Firms Debts"
-				val1="sum(Industry, liabilities, t) - sum(Industry, liabilities, t-1)"
-				val2="sum(Industry, liabilities.new, t) - sum(Industry, liabilities.repayment, t) - sum(Industry, canceledDebts, t)" />
+				val1="sum(Industry1, liabilities, t) - sum(Industry1, liabilities, t-1)"
+				val2="sum(Industry1, liabilities.new, t) - sum(Industry1, liabilities.repayment, t) - sum(Industry1, canceledDebts, t)" />
 
 			<test
 				label="Stocks and flows: Firms Capital"
-				val1="sum(Industry, capital, t) - sum(Industry, capital, t-1)"
-				val2="sum(Industry, grossProfit, t) - sum(Industry, dividends, t) - sum(Industry, depreciation, t) - sum(Industry, interest, t) - sum(Industry, inventories.losses.val, t) - sum(Industry, canceledDeposits, t) + sum(Industry, canceledDebts, t) - sum(Industry, desinvestment.val, t) + sum(Industry, scrap.val, t)" />
+				val1="sum(Industry1, capital, t) - sum(Industry1, capital, t-1)"
+				val2="sum(Industry1, grossProfit, t) - sum(Industry1, dividends, t) - sum(Industry1, depreciation, t) - sum(Industry1, interest, t) - sum(Industry1, inventories.losses.val, t) - sum(Industry1, canceledDeposits, t) + sum(Industry1, canceledDebts, t) - sum(Industry1, desinvestment.val, t) + sum(Industry1, scrap.val, t)" />
 
 			<test
 				label="Stocks and flows: Banks Deposits"
@@ -2389,18 +3250,6 @@
 				label="Stocks and flows: Banks Capital"
 				val1="sum(Banks, capital, t) - sum(Banks, capital, t-1)"
 				val2="sum(Banks, interest, t) - sum(Banks, dividends, t) + sum(Banks, canceledDeposits, t) - sum(Banks, canceledDebts, t) + sum(Banks, foreclosures, t)" />
-
-			Volume:
-
-			<test
-				label="Volume: Inventories (Finished Goods)"
-				val1="sum(Industry, inventories.fg.vol, t) - sum(Industry, inventories.fg.vol, t-1)"
-				val2="sum(Industry, production.vol, t) - sum(Industry, sales.vol, t) - sum(Industry, inventories.fg.losses.vol, t) + sum(Industry, scrap.vol, t)" />
-
-			<test
-				label="Volume: Sales"
-				val1="sum(Industry, sales.vol, t)"
-				val2="sum(Households, consumption.vol, t) + sum(Industry, investment.vol, t)" />
 
 		</validation>
 	</panel>

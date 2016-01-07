@@ -8,6 +8,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -83,7 +84,7 @@ public class Jamel {
 	private static final String tab = "&emsp;&emsp;&emsp;&emsp;";
 
 	/** This version of Jamel. */
-	final public static int version = 20150916;
+	final public static int version = 20160103;
 
 	/**
 	 * Downloads the latest version of Jamel.
@@ -227,8 +228,10 @@ public class Jamel {
 	 * @return the file selected.
 	 */
 	private static File selectScenario() {
+		Jamel.println("Jamel.selectScenario()");
 		final String preference = "Jamel-" + version + "." + KEY.PREFERENCE_SCENARIO_PATHNAME;
 		final String path = prefs.get(preference, KEY.SCENARIO_DEFAULT_PATHNAME);
+		Jamel.println("new JFileChooser()");
 		final JFileChooser fc = new JFileChooser() {
 			{
 				this.setFileFilter(new FileNameExtensionFilter("XML files", "xml"));
@@ -310,13 +313,14 @@ public class Jamel {
 	public static void main(String[] args) {
 		PrintStream out = null;
 		/*
-		 * TODO: desactiver ce bloc pour envoyer les messages vers la console
-		 * d'Eclipse plutot que dans le fichier log.
+		 * TODO: decommenter ce bloc pour envoyer les messages vers le fichier
+		 * log plutot que vers la console d'Eclipse.
 		 *
 		 * { try { out = new PrintStream(new FileOutputStream("jamel.log"));
 		 * System.setOut(out); System.setErr(out); } catch
-		 * (FileNotFoundException e1) { e1.printStackTrace(); } } /
-		 **/
+		 * (FileNotFoundException e1) { e1.printStackTrace(); } }
+		 */
+
 		final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d HH:mm:ss", Locale.US);
 		final String dateStr = simpleDateFormat.format(new Date());
 		Jamel.println(dateStr);
@@ -367,11 +371,12 @@ public class Jamel {
 					final String where;
 					if (e.getCause() != null) {
 						if (e.getCause().getMessage() == null) {
-							if (e.getCause().getCause() != null && e.getCause().getCause().getMessage()!=null) {
-								cause = tab + "Cause: " + e.getCause().getCause().getMessage() + "<br>";								
-								where = tab + "Where: " + e.getCause().getCause().getStackTrace()[0].toString() + "<br>";
+							if (e.getCause().getCause() != null && e.getCause().getCause().getMessage() != null) {
+								cause = tab + "Cause: " + e.getCause().getCause().getMessage() + "<br>";
+								where = tab + "Where: " + e.getCause().getCause().getStackTrace()[0].toString()
+										+ "<br>";
 							} else {
-								cause = tab + "Cause: " + e.getCause().toString() + "<br>";								
+								cause = tab + "Cause: " + e.getCause().toString() + "<br>";
 								where = tab + "Where: " + e.getCause().getStackTrace()[0].toString() + "<br>";
 							}
 						} else {
@@ -382,7 +387,7 @@ public class Jamel {
 						cause = tab + "Cause: unknown.<br>";
 						where = "";
 					}
-					JOptionPane.showMessageDialog(null, "<html>" + message + cause + where +seeLogFile + "</html>",
+					JOptionPane.showMessageDialog(null, "<html>" + message + cause + where + seeLogFile + "</html>",
 							"Runtime Error", JOptionPane.ERROR_MESSAGE);
 					e.printStackTrace();
 					if (out != null) {
@@ -438,6 +443,12 @@ public class Jamel {
 		System.out.println();
 	}
 
+	/**
+	 * Prints several objects.
+	 *
+	 * @param objects
+	 *            The <code>Objects</code> to be printed.
+	 */
 	public static void println(Object... objects) {
 		for (int i = 0; i < objects.length; i++) {
 			final String string;

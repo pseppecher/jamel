@@ -30,18 +30,6 @@ public class InvestorToolBox {
 	final private static String rc = System.getProperty("line.separator");
 
 	/**
-	 * The supply comparator.
-	 * <p>
-	 * To compare supplies according to their price.
-	 */
-	public static final Comparator<Supply> supplyComparator = new Comparator<Supply>() {
-		@Override
-		public int compare(Supply offer1, Supply offer2) {
-			return (-(new Double(offer2.getPrice())).compareTo(offer1.getPrice()));
-		}
-	};
-
-	/**
 	 * Returns the present value of the specified income stream.
 	 * 
 	 * @param cashFlow
@@ -215,10 +203,10 @@ public class InvestorToolBox {
 		if (investmentSize == 0) {
 			// TODO: WORK IN PROGRESS 2015-09-30
 			// On essaye de mettre des machines à la casse.
-			
+
 			//stringBuilder = new StringBuilder();
 			//stringBuilder.append("Try to desinvest."+rc);
-			
+
 			final int realScrapValue = 100;
 			// TODO realScrapValue should be an argument.
 			int desinvest = 0;
@@ -283,40 +271,42 @@ public class InvestorToolBox {
 
 		long incomplete = 0;
 		for (int i = 0; i < supplies.length; i++) {
-
-			long remainingVolume = supplies[i].getVolume();
-			final double price = supplies[i].getPrice();
-			if (incomplete != 0) {
-				final long need = realCost - incomplete;
-				if (need <= remainingVolume) {
-					totalPrice += need * price;
-					priceList.add(totalPrice);
-					remainingVolume -= need;
-					incomplete = 0;
-				} else {
-					totalPrice += remainingVolume * price;
-					incomplete += remainingVolume;
-					remainingVolume = 0;
-				}
-			}
-
-			if (remainingVolume > 0) {
-				if (remainingVolume >= realCost) {
-					final int n = (int) (remainingVolume / realCost);
-					for (int j = 0; j < n; j++) {
-						totalPrice += realCost * price;
+			if (supplies[i]!=null) {
+				long remainingVolume = supplies[i].getVolume();
+				final double price = supplies[i].getPrice();
+				if (incomplete != 0) {
+					final long need = realCost - incomplete;
+					if (need <= remainingVolume) {
+						totalPrice += need * price;
 						priceList.add(totalPrice);
-						remainingVolume -= realCost;
+						remainingVolume -= need;
+						incomplete = 0;
+					} else {
+						totalPrice += remainingVolume * price;
+						incomplete += remainingVolume;
+						remainingVolume = 0l;
 					}
 				}
 
 				if (remainingVolume > 0) {
-					totalPrice += remainingVolume * price;
-					incomplete += remainingVolume;
-					remainingVolume = 0;
-				}
+					if (remainingVolume >= realCost) {
+						final int n = (int) (remainingVolume / realCost);
+						for (int j = 0; j < n; j++) {
+							totalPrice += realCost * price;
+							priceList.add(totalPrice);
+							remainingVolume -= realCost;
+						}
+					}
 
-			}
+					if (remainingVolume > 0) {
+						totalPrice += remainingVolume * price;
+						incomplete += remainingVolume;
+						remainingVolume = 0l;
+					}
+
+				}
+			}			
+			
 		}
 
 		final Long[] prices = priceList.toArray(new Long[priceList.size()]);
@@ -331,9 +321,9 @@ public class InvestorToolBox {
 	 *            unused.
 	 */
 	public static void main(String[] args) {
-		
+
 		Jamel.println(Long.MAX_VALUE);
-				
+
 		class MySupply implements Supply {
 			final private double myPrice;
 			final private long myVolume;

@@ -123,11 +123,9 @@ public class BasicSectorDataset implements SectorDataset {
 			if (query.startsWith("name=")) {
 				final String name = query.substring(5, query.length());
 				final AgentDataset dataset = data.get(name);
+				result = new HashMap<String, AgentDataset>();
 				if (dataset != null) {
-					result = new HashMap<String, AgentDataset>();
 					result.put(name, dataset);
-				} else {
-					result = null;
 				}
 			} else if (query.startsWith("name!=")) {
 				final String name = query.substring(6, query.length());
@@ -269,7 +267,9 @@ public class BasicSectorDataset implements SectorDataset {
 		Double max = null;
 		Double min = null;
 		final Map<String, AgentDataset> selection = select(this.agentsData, select);
-
+		if (selection==null) {
+			throw new RuntimeException("Selection is null");
+		}
 		int count = 0;
 		for (final AgentDataset agentDataset : selection.values()) {
 			final Double val = agentDataset.get(data);

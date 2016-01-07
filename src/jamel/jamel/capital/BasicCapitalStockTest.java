@@ -86,6 +86,9 @@ public class BasicCapitalStockTest {
 
 			@Override
 			public Cheque newCheque(final long amount) {
+				if (amount<=0) {
+					throw new RuntimeException("Negative amount.");
+				}
 				return new Cheque() {
 
 					@Override
@@ -102,14 +105,10 @@ public class BasicCapitalStockTest {
 			}
 
 			@Override
-			public void newAmortizingLoan(long principal) {
-				throw new RuntimeException("Not yet implemented.");
+			public void newLoan(long principal, int term, boolean amortized) {
+				throw new RuntimeException("Not used.");
 			}
 
-			@Override
-			public void newNonAmortizingLoan(long principal) {
-				throw new RuntimeException("Not yet implemented.");
-			}
 		};
 	}
 

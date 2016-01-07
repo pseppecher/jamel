@@ -1,6 +1,5 @@
 package jamel.jamel.capital;
 
-import jamel.Jamel;
 import jamel.basic.util.Timer;
 import jamel.jamel.roles.Corporation;
 import jamel.jamel.util.AnachronismException;
@@ -261,51 +260,6 @@ public class BasicCapitalStock implements CapitalStock {
 			
 		}
 		
-	}
-
-	/**
-	 * Updates the book value of this stock.
-	 * <p>
-	 * The book value of each share is updated.
-	 */
-	private void updateBookValue_BAK() {
-		if (canceled) {
-			throw new RuntimeException("This capital stock is canceled.");
-		}
-		if (this.issuedShares != this.sharesAuthorised) {
-			throw new RuntimeException("The distribution of this capital stock is not completed.");
-		}
-		if (this.corporation.getBookValue() != this.bookValue) {
-			this.bookValue = this.corporation.getBookValue();
-			long remainder = this.bookValue;
-			for (int id = 0; id < this.bookValues.size(); id++) {
-				final long newBookValue = (long) (1d * this.bookValue * this.shares.get(id).getShares() / this.sharesAuthorised);
-				this.bookValues.set(id, newBookValue);
-				remainder -= newBookValue;
-			}
-			if (remainder > 0) {
-				for (int id = 0; id < bookValues.size(); id++) {
-					this.bookValues.set(id, this.bookValues.get(id) + 1);
-					remainder--;
-					if (remainder == 0) {
-						break;
-					}
-				}
-			} else if (remainder < 0) {
-				// Oui c'est possible, si la valeur de l'entreprise est
-				// negative.
-				for (int id = 0; id < bookValues.size(); id++) {
-					this.bookValues.set(id, this.bookValues.get(id) - 1);
-					remainder++;
-					if (remainder == 0) {
-						break;
-					}
-				}
-			}
-			if (remainder != 0) {
-				throw new RuntimeException("Something went wrong while updating the book value.");
-			}
-		}
 	}
 
 	@Override

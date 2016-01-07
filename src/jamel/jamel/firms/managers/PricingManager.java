@@ -30,6 +30,12 @@ public abstract class PricingManager extends AbstractManager{
 	 */
 	public abstract void updatePrice();
 
+	/**
+	 * Sets the price.
+	 * @param price the price to set.
+	 */
+	public abstract void setPrice(double price);
+
 }
 
 // ***

@@ -38,6 +38,11 @@ class BasicBank implements Bank, Corporation {
 		 * An abstract loan.
 		 */
 		private abstract class AbstractLoan implements Loan {
+			
+			/**
+			 * Some info about this loan.
+			 */
+			private final String info;
 
 			/**
 			 * The remainder of the interest.
@@ -67,8 +72,10 @@ class BasicBank implements Bank, Corporation {
 			 *            the normal rate of interest.
 			 * @param normalTerm
 			 *            the normal term.
+			 * @param info
+			 *            some info about this loan.
 			 */
-			public AbstractLoan(long principal, double rate, int normalTerm) {
+			public AbstractLoan(long principal, double rate, int normalTerm, String info) {
 
 				if (!open) {
 					throw new RuntimeException("This account is closed.");
@@ -80,6 +87,7 @@ class BasicBank implements Bank, Corporation {
 				this.origin = timer.getPeriod().intValue();
 				this.rate = rate;
 				this.maturityDate = timer.getPeriod().intValue() + normalTerm;
+				this.info = info;
 
 				Account.this.deposit.credit(principal);
 				this.newDebt(principal);
@@ -154,6 +162,11 @@ class BasicBank implements Bank, Corporation {
 			}
 
 			@Override
+			public String getInfo() {
+				return this.info;
+			}
+
+			@Override
 			public int getMaturity() {
 				return this.maturityDate;
 			}
@@ -185,9 +198,11 @@ class BasicBank implements Bank, Corporation {
 			 *            the rate of interest.
 			 * @param term
 			 *            the term.
+			 * @param info
+			 *            some info about this loan.
 			 */
-			public AmortizingLoan(long principal, double rate, int term) {
-				super(principal, rate, term);
+			public AmortizingLoan(long principal, double rate, int term, String info) {
+				super(principal, rate, term, info);
 			}
 
 			@Override
@@ -235,9 +250,11 @@ class BasicBank implements Bank, Corporation {
 			 *            the rate of interest.
 			 * @param term
 			 *            the term.
+			 * @param info
+			 *            some info about this loan.
 			 */
-			public NonAmortizingLoan(long principal, double rate, int term) {
-				super(principal, rate, term);
+			public NonAmortizingLoan(long principal, double rate, int term, String info) {
+				super(principal, rate, term, info);
 			}
 
 			@Override
@@ -280,9 +297,11 @@ class BasicBank implements Bank, Corporation {
 			 *            the rate of interest.
 			 * @param term
 			 *            the term.
+			 * @param info
+			 *            some info about this loan.
 			 */
-			public NonPerformingLoan(long principal, double rate, int term) {
-				super(principal, rate, term);
+			public NonPerformingLoan(long principal, double rate, int term, String info) {
+				super(principal, rate, term, info);
 			}
 
 			@Override
@@ -407,7 +426,7 @@ class BasicBank implements Bank, Corporation {
 		 * The total debt of the account (equals the sum of the principal of the
 		 * loans).
 		 */
-		private Long longTermDebt = null;
+		// private Long longTermDebt = null;
 
 		/** The new debt of the period. */
 		private long newDebt = 0;
@@ -423,11 +442,6 @@ class BasicBank implements Bank, Corporation {
 
 		/** The repaid debt. */
 		private long repaidDebt = 0;
-
-		/**
-		 * The total short-term debt of this account.
-		 */
-		private Long shortTermDebt = null;
 
 		/**
 		 * Creates a new account.
@@ -451,8 +465,8 @@ class BasicBank implements Bank, Corporation {
 			for (Loan loan : loans) {
 				loan.cancel();
 			}
-			this.longTermDebt = 0l;
-			this.shortTermDebt = 0l;
+			// this.longTermDebt = 0l;
+			// this.shortTermDebt = 0l;
 			this.loans.clear();
 			this.cancelled = true;
 		}
@@ -467,8 +481,8 @@ class BasicBank implements Bank, Corporation {
 			if (!open) {
 				throw new RuntimeException("This account is closed.");
 			}
-			this.longTermDebt = 0l;
-			this.shortTermDebt = 0l;
+			// this.longTermDebt = 0l;
+			// this.shortTermDebt = 0l;
 			Collections.sort(loans, compareMaturity);
 			long remainder = amount;
 			for (Loan loan : loans) {
@@ -479,11 +493,11 @@ class BasicBank implements Bank, Corporation {
 					loan.cancel(remainder);
 					remainder = 0;
 				}
-				if (loan.getMaturity() - period > shortTermLimit) {
-					this.longTermDebt += loan.getPrincipal();
-				} else {
-					this.shortTermDebt += loan.getPrincipal();
-				}
+				/*
+				 * if (loan.getMaturity() - period > shortTermLimit) {
+				 * this.longTermDebt += loan.getPrincipal(); } else {
+				 * this.shortTermDebt += loan.getPrincipal(); }
+				 */
 			}
 		}
 
@@ -498,6 +512,16 @@ class BasicBank implements Bank, Corporation {
 			this.accountInfo.append("Deposit: " + this.getAmount() + "<br/>");
 			this.accountInfo.append("Debt: " + this.getDebt() + "<br/>");
 			this.accountInfo.append("Account Balance: " + (this.getAmount() - this.getDebt()) + "<br/>");
+			this.accountInfo.append("<hr />");
+			final int now = timer.getPeriod().intValue();
+			for (Loan loan : loans) {
+				this.accountInfo.append("Loan: " + loan.getPrincipal() + ", " + (loan.getMaturity() - now) + ", " + loan.getInfo());
+				if (loan.getMaturity() > now + shortTermLimit) {
+					this.accountInfo.append(" (LT)<br />");
+				} else {
+					this.accountInfo.append(" (CT)<br />");
+				}
+			}
 		}
 
 		/**
@@ -508,35 +532,39 @@ class BasicBank implements Bank, Corporation {
 			this.loans.addAll(this.newLoans);
 			this.newLoans.clear();
 
-			this.shortTermDebt = 0l;
-			this.longTermDebt = 0l;
-
 			final Iterator<Loan> itr = this.loans.iterator();
 			while (itr.hasNext()) {
 				Loan loan = itr.next();
 				loan.payBack();
-				if (loan.getMaturity() - period > 12) {
-					this.longTermDebt += loan.getPrincipal();
-				} else {
-					this.shortTermDebt += loan.getPrincipal();
-				}
+				/*
+				 * if (loan.getMaturity() - period > shortTermLimit) {
+				 * this.longTermDebt += loan.getPrincipal(); } else {
+				 * this.shortTermDebt += loan.getPrincipal(); }
+				 */
 				if (loan.getPrincipal() == 0) {
 					itr.remove();
 				}
 			}
 
 			for (Loan loan : this.newLoans) {
-				if (loan.getMaturity() - period > shortTermLimit) {
-					this.longTermDebt += loan.getPrincipal();
-				} else {
-					this.shortTermDebt += loan.getPrincipal();
-				}
+				/*
+				 * if (loan.getMaturity() - period > shortTermLimit) {
+				 * this.longTermDebt += loan.getPrincipal(); } else {
+				 * this.shortTermDebt += loan.getPrincipal(); }
+				 */
 				this.loans.add(loan);
 			}
 			this.newLoans.clear();
-			if (this.longTermDebt + this.shortTermDebt != this.debt) {
-				throw new RuntimeException("Inconstistency.");
-			}
+
+			/*
+			 * this.shortTermDebt = 0l; this.longTermDebt = 0l; for (Loan loan :
+			 * this.newLoans) { if (loan.getMaturity() - period >
+			 * shortTermLimit) { this.longTermDebt += loan.getPrincipal(); }
+			 * else { this.shortTermDebt += loan.getPrincipal(); } }
+			 * 
+			 * if (this.longTermDebt + this.shortTermDebt != this.debt) { throw
+			 * new RuntimeException("Inconstistency."); }
+			 */
 		}
 
 		/**
@@ -574,7 +602,7 @@ class BasicBank implements Bank, Corporation {
 		 */
 		private void newNonPerformingLoan(long principal) {
 			this.newLoans.add(new NonPerformingLoan(principal, bankingSector.getParam(PENALTY_RATE),
-					bankingSector.getParam(EXTENDED_TERM).intValue()));
+					bankingSector.getParam(EXTENDED_TERM).intValue(),"Non Performing Loan"));
 		}
 
 		/**
@@ -602,8 +630,8 @@ class BasicBank implements Bank, Corporation {
 			this.newDebt = 0;
 			this.canceledDebt = 0;
 			this.canceledMoney = 0;
-			this.longTermDebt = null;
-			this.shortTermDebt = null;
+			// this.longTermDebt = null;
+			// this.shortTermDebt = null;
 			this.accountInfo = new StringBuilder();
 			this.accountInfo.append("Account Holder: " + this.accountHolder.getName() + "<br/>");
 			this.accountInfo.append("Period: " + timer.getPeriod().intValue() + "<br/>");
@@ -676,7 +704,14 @@ class BasicBank implements Bank, Corporation {
 
 		@Override
 		public long getLongTermDebt() {
-			return this.longTermDebt;
+			long longTermDebt = 0;
+			final int now = timer.getPeriod().intValue();
+			for (Loan loan : loans) {
+				if (loan.getMaturity() > now + shortTermLimit) {
+					longTermDebt += loan.getPrincipal();
+				}
+			}
+			return longTermDebt;
 		}
 
 		@Override
@@ -691,10 +726,14 @@ class BasicBank implements Bank, Corporation {
 
 		@Override
 		public long getShortTermDebt() {
-			if (this.shortTermDebt == null) {
-				throw new NullPointerException();
+			long shortTermDebt = 0;
+			final int now = timer.getPeriod().intValue();
+			for (Loan loan : loans) {
+				if (loan.getMaturity() <= now + shortTermLimit) {
+					shortTermDebt += loan.getPrincipal();
+				}
 			}
-			return this.shortTermDebt;
+			return shortTermDebt;
 		}
 
 		@Override
@@ -709,6 +748,9 @@ class BasicBank implements Bank, Corporation {
 			}
 			if (cancelled) {
 				throw new RuntimeException("This account is cancelled.");
+			}
+			if (amount<=0) {
+				throw new RuntimeException("Negative amount.");
 			}
 			return new Cheque() {
 
@@ -746,12 +788,15 @@ class BasicBank implements Bank, Corporation {
 		}
 
 		@Override
-		public void newLoan(long principal,int term, boolean amortized) {
+		public void newLoan(long principal, int term, boolean amortized) {
+			if (principal<=0) {
+				throw new IllegalArgumentException("Principal must be positive.");
+			}
 			final Loan newLoan;
 			if (amortized) {
-				newLoan = new AmortizingLoan(principal, bankingSector.getParam(RATE), term);				
+				newLoan = new AmortizingLoan(principal, bankingSector.getParam(RATE), term, "Amortized");
 			} else {
-				newLoan = new NonAmortizingLoan(principal, bankingSector.getParam(RATE),term);				
+				newLoan = new NonAmortizingLoan(principal, bankingSector.getParam(RATE), term, "Non Amortized");
 			}
 			this.newLoans.add(newLoan);
 		}
@@ -800,6 +845,11 @@ class BasicBank implements Bank, Corporation {
 	@SuppressWarnings("javadoc")
 	private final static String EXTENDED_TERM = "term.extended";
 
+	/**
+	 * The max value of liabilities (to avoid overflow).
+	 */
+	private static final long MAX_VALUE = (long) (0.95f * Long.MAX_VALUE);
+
 	@SuppressWarnings("javadoc")
 	private final static String PATIENCE = "patience";
 
@@ -808,11 +858,6 @@ class BasicBank implements Bank, Corporation {
 
 	@SuppressWarnings("javadoc")
 	private final static String RATE = "rate.normal";
-
-	/**
-	 * The max value of liabilities (to avoid overflow).
-	 */
-	private static final long MAX_VALUE = (long) (0.95f*Long.MAX_VALUE);
 
 	/** The list of customers accounts. */
 	private final List<Account> accounts = new ArrayList<Account>(1000);
@@ -938,7 +983,7 @@ class BasicBank implements Bank, Corporation {
 	 *         <code>false</code> otherwise.
 	 */
 	private boolean checkConsistency() {
-		if (this.liabilities>MAX_VALUE) {
+		if (this.liabilities > MAX_VALUE) {
 			throw new RuntimeException("The total amount of liabilities exceeds the max value.");
 		}
 		boolean result = true;
@@ -982,7 +1027,8 @@ class BasicBank implements Bank, Corporation {
 		final Firm firm = (Firm) accountHolder;
 		if (firm.getSize() > 0) {
 			final long firmAssets = firm.getValueOfAssets();
-			final long targetedLiabilites = (long) (0.8 * firmAssets);
+			final long targetedLiabilites=(long) (0.8 * firmAssets);
+			//final long targetedLiabilites=Math.max((long) (0.8 * firmAssets),firmAssets-200);
 			// TODO: 0.8 should be a parameter;
 			final long debtToBeCancelled = firm.getValueOfLiabilities() - targetedLiabilites;
 			account.cancelDebt(debtToBeCancelled);
@@ -990,10 +1036,16 @@ class BasicBank implements Bank, Corporation {
 			try {
 				cheques = this.bankingSector.sellCorporation(firm);
 			} catch (Exception e) {
-				Jamel.println("firmAssets= "+firmAssets);
-				Jamel.println("targetedLiabilites"+targetedLiabilites);
-				Jamel.println("debtToBeCancelled"+debtToBeCancelled);
-				throw new RuntimeException("Something went wrong while selling the firm.",e);
+				Jamel.println();
+				Jamel.println("***********************");
+				Jamel.println();
+				Jamel.println("firmAssets = " + firmAssets);
+				Jamel.println("targetedLiabilites = " + targetedLiabilites);
+				Jamel.println("debtToBeCancelled = " + debtToBeCancelled);
+				Jamel.println();
+				Jamel.println("***********************");
+				Jamel.println();
+				throw new RuntimeException("Something went wrong while selling the firm.", e);
 			}
 			double foreclosures = this.dataset.get("foreclosures");
 			// TODO: foreclosures should be a field.
@@ -1003,19 +1055,24 @@ class BasicBank implements Bank, Corporation {
 			}
 			this.dataset.put("foreclosures", foreclosures);
 			account.setBankrupt(false);
-			if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
-				throw new RuntimeException("Inconsistency");
-			}
+			/*
+			 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
+			 * account.getDebt()) { throw new RuntimeException("Inconsistency");
+			 * }
+			 */
 		} else {
 			account.cancel();
 			firm.goBankrupt();
-			if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
-				throw new RuntimeException("Inconsistency");
-			}
+			/*
+			 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
+			 * account.getDebt()) { throw new RuntimeException("Inconsistency");
+			 * }
+			 */
 		}
-		if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
-			throw new RuntimeException("Inconsistency");
-		}
+		/*
+		 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
+		 * account.getDebt()) { throw new RuntimeException("Inconsistency"); }
+		 */
 	}
 
 	/**
@@ -1131,6 +1188,9 @@ class BasicBank implements Bank, Corporation {
 			// automatiquement ? r�fl�chir � �a.
 			throw new RuntimeException("Inconsistency");
 		}
+		if (this.capital<0) {
+			throw new RuntimeException("Bank Failure");
+		}
 	}
 
 	/**
@@ -1149,9 +1209,11 @@ class BasicBank implements Bank, Corporation {
 		while (iterAccount.hasNext()) {
 			Account account = iterAccount.next();
 			account.debtRecovery();
-			if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
-				throw new RuntimeException("Inconsistency");
-			}
+			/*
+			 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
+			 * account.getDebt()) { throw new RuntimeException("Inconsistency");
+			 * }
+			 */
 			if (!account.isSolvent()) {
 				if (now - account.creation > this.bankingSector.getParam(PATIENCE)) {
 					account.bankrupt = true;
@@ -1166,23 +1228,29 @@ class BasicBank implements Bank, Corporation {
 				}
 				this.bankruptcies++;
 				foreclosure(account);
-				if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
-					throw new RuntimeException("Inconsistency");
-				}
+				/*
+				 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
+				 * account.getDebt()) { throw new
+				 * RuntimeException("Inconsistency"); }
+				 */
 				if (account.bankrupt) {
 					iterAccount.remove();
 					// throw new RuntimeException("Not yet implemented.");
 				}
-				if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
-					throw new RuntimeException("Inconsistency");
-				}
+				/*
+				 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
+				 * account.getDebt()) { throw new
+				 * RuntimeException("Inconsistency"); }
+				 */
 			}
 			this.shortTermLoans += account.getShortTermDebt();
 			this.longTermLoans += account.getLongTermDebt();
 			totalDebt += account.getDebt();
-			if (account.getShortTermDebt() + account.getLongTermDebt() != account.getDebt()) {
-				throw new RuntimeException("Inconsistency");
-			}
+			/*
+			 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
+			 * account.getDebt()) { throw new RuntimeException("Inconsistency");
+			 * }
+			 */
 		}
 
 		if (totalDebt != this.assets) {
@@ -1227,6 +1295,11 @@ class BasicBank implements Bank, Corporation {
 	}
 
 	@Override
+	public StockCertificate[] getNewShares(List<Integer> shares) {
+		throw new RuntimeException("Not yet implemented.");
+	}
+
+	@Override
 	public boolean isCancelled() {
 		return false;
 	}
@@ -1264,8 +1337,8 @@ class BasicBank implements Bank, Corporation {
 	 */
 	@Override
 	public void payDividend() {
-		if (this.assets<0) {
-			throw new RuntimeException("Bad assets value: "+this.assets);
+		if (this.assets < 0) {
+			throw new RuntimeException("Bad assets value: " + this.assets);
 		}
 		final long requiredCapital = (long) (this.assets * bankingSector.getParam(CAPITAL_RATIO));
 		final long excedentCapital = Math.max(0, this.capital - requiredCapital);
@@ -1273,11 +1346,6 @@ class BasicBank implements Bank, Corporation {
 
 		capitalStock.setDividend(dividend);
 		this.dividends = dividend;
-	}
-
-	@Override
-	public StockCertificate[] getNewShares(List<Integer> shares) {
-		throw new RuntimeException("Not yet implemented.");
 	}
 
 }

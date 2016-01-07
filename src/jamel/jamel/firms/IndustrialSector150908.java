@@ -9,7 +9,17 @@ import jamel.basic.sector.Phase;
  * WORK IN PROGRESS 16-09-2015
  * TODO: comment
  */
-public class Sector150908 extends BasicIndustrialSector {
+public class IndustrialSector150908 extends BasicIndustrialSector {
+
+	/**
+	 * The inputs purchase phase: when firms buy raw materials and other inputs.
+	 */
+	@Override
+	protected void inputsPurchase() {
+		for (final Firm firm : firms.getShuffledList()) {
+			firm.inputsPurchase();
+		}
+	}
 
 	/**
 	 * Creates a new industrial sector.
@@ -19,7 +29,7 @@ public class Sector150908 extends BasicIndustrialSector {
 	 * @param circuit
 	 *            the circuit.
 	 */
-	public Sector150908(String name, Circuit circuit) {
+	public IndustrialSector150908(String name, Circuit circuit) {
 		super(name, circuit);
 	}
 	

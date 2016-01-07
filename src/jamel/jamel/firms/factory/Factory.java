@@ -1,5 +1,7 @@
 package jamel.jamel.firms.factory;
 
+import java.util.Map;
+
 import jamel.basic.data.AgentDataset;
 import jamel.jamel.firms.managers.Askable;
 import jamel.jamel.widgets.Commodities;
@@ -54,6 +56,14 @@ public interface Factory extends Askable {
 	Commodities getCommodities(long demand);
 
 	/**
+	 * Returns the current maximum capacity according to the level of input
+	 * stocks.
+	 * 
+	 * @return the current maximum capacity.
+	 */
+	int getCurrentMaxCapacity();
+
+	/**
 	 * Returns the dataset of the factory.
 	 * 
 	 * @return the dataset of the factory.
@@ -101,6 +111,11 @@ public interface Factory extends Askable {
 	double getMaxUtilAverageProduction();
 
 	/**
+	 * @return
+	 */
+	Map<String, Long> getNeeds();
+
+	/**
 	 * Returns the unit cost of the finished goods in the inventory. The unit
 	 * cost is
 	 * "The cost incurred by a company to produce, store and sell one unit of a particular product."
@@ -109,7 +124,7 @@ public interface Factory extends Askable {
 	 *      investopedia.com/terms/u/unitcost.asp</a>
 	 * @return the unit cost.
 	 */
-	double getUnitCost();
+	Double getUnitCost();
 
 	/**
 	 * Returns the total value of finished and unfinished goods present in the
@@ -135,6 +150,13 @@ public interface Factory extends Askable {
 	 *            the labor powers.
 	 */
 	void process(LaborPower... laborPowers);
+
+	/**
+	 * 
+	 * @param inputKey
+	 * @param input
+	 */
+	void putResources(String inputKey, Commodities input);
 
 	/**
 	 * Scraps the specified number of machines.

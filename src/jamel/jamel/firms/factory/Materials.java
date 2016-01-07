@@ -45,6 +45,13 @@ interface Materials extends Asset {
 	int getProductionPeriod();
 
 	/**
+	 * Returns the type of the materials.
+	 * 
+	 * @return the type of the materials.
+	 */
+	String getType();
+
+	/**
 	 * Returns the volume of this heap.
 	 * 
 	 * @return the volume of this heap.

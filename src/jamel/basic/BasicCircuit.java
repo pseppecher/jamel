@@ -1,6 +1,5 @@
 package jamel.basic;
 
-import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -342,6 +341,11 @@ public class BasicCircuit implements Circuit {
 					this.doEvents(event);
 				} else {
 					final Sector sector = this.sectors.get(sectorName);
+					if (sector == null) {
+						final Throwable cause = new Throwable("Sector not found: \"" + sectorName + "\"");
+						throw new RuntimeException("Something wrong with the event: \"" + event.getTagName() + "\"",
+								cause);
+					}
 					sector.doEvent(event);
 				}
 			}
@@ -360,7 +364,7 @@ public class BasicCircuit implements Circuit {
 		} else if (event.getNodeName().equals("export")) {
 			this.dataManager.export(event);
 		} else {
-			throw new RuntimeException("Unknown event: "+event.getNodeName());
+			throw new RuntimeException("Unknown event: " + event.getNodeName());
 		}
 	}
 
@@ -481,6 +485,7 @@ public class BasicCircuit implements Circuit {
 	 */
 	@Override
 	public void run() {
+		Jamel.println("BasicCircuit.run()");
 		this.start = new Date().getTime();
 		while (this.run) {
 			this.doPeriod();

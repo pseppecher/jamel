@@ -8,8 +8,8 @@
 >
 
 	<settings
-		randomSeed="1"
-		chartsConfigFile="config/panels2.xml" />
+		randomSeed="6"
+		chartsConfigFile="config/panels.xml" />
 
 	<sectors>
 
@@ -26,7 +26,9 @@
 				jobs.selection="10"
 				supplies.selection="10" />
 			<dependencies>
-				<Suppliers value="Industry" />
+				<Suppliers
+					value="Industry"
+					good="Composite good" />
 				<Employers value="Industry" />
 				<Banks value="Banks" />
 			</dependencies>
@@ -39,7 +41,7 @@
 				capital.targetedRatio="0.1"
 				capital.propensityToDistributeExcess="1."
 				term.normal="12"
-				term.extended="24"
+				term.extended="12"
 				accommodating="0"
 				patience="12" />
 			<dependencies>
@@ -48,8 +50,8 @@
 		</Banks>
 
 		<Industry
-			type="jamel.jamel.firms.Sector150908"
-			agent="jamel.jamel.firms.Firm150908"
+			type="jamel.jamel.firms.IndustrialSector150908"
+			agent="jamel.jamel.firms.Firm151123"
 		>
 			<settings
 				mutation.strenght="0.5"
@@ -65,8 +67,6 @@
 				labourContract.min="6"
 				price.flexibility="0.02"
 				production.capacity="20"
-				production.time="6"
-				production.productivity="100"
 				utilizationRate.flexibility="0.1"
 				utilizationRate.initialValue="0.75"
 				vacancy.normalRate="0.03"
@@ -76,10 +76,26 @@
 				wage.minimum="0"
 				regenerationLapse.min="12"
 				regenerationLapse.max="24" />
+
 			<dependencies>
 				<CapitalistSector value="Households" />
 				<Banks value="Banks" />
+				<Suppliers
+					sector="Industry"
+					supply="Production Goods" />
 			</dependencies>
+
+			<technology
+				machine.creation.input.volume="500"
+				machine.creation.input.type="Composite good"
+				machine.timelife.mean="110"
+				machine.timelife.stDev="15"
+				production.productivity="100"
+				production.time="6"
+				production.type="Composite good"
+			>
+				<techCoeficients />
+			</technology>
 		</Industry>
 	</sectors>
 
@@ -116,45 +132,9 @@
 			size="500" />
 
 		<pause
-			period="600"
-			comment="50 years" />
-
-		<pause
-			period="1200"
-			comment="100 years" />
-
-		<pause
 			period="2400"
 			comment="200 years" />
 
-		<export
-			period="1712"
-			file="exports/debugHouseholds.csv"
-		>
-
-			<comment>
-				On cherche à identifier une incohérence dans le calcul de la
-				richesse net des ménages.
-			</comment>
-
-			<forEach_DELETE
-				sector="Households"
-				data="name,cash,capital,netWorth" />
-
-		</export>
-
 	</events>
-
-	<export_DELETE_ME file="exports/baseline.csv">
-		<data value="time()" />
-
-		<data value="sum(Households, dividends, t)" />
-		<data value="sum(Industry, dividends, t)" />
-		<data value="sum(Banks, dividends, t)" />
-
-		<data value="sum(Households, capital, t)" />
-		<data value="sum(Banks, capital, t)" />
-		<data value="sum(Industry, capital, t)" />
-	</export_DELETE_ME>
 
 </circuit>

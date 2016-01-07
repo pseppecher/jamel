@@ -24,7 +24,7 @@ import java.util.Random;
  * An abstract firm.
  */
 public abstract class AbstractFirm implements Firm {
-	
+
 	@SuppressWarnings("javadoc")
 	public final static String CAPITAL_PROPENSITY2DISTRIBUTE = "capital.propensityToDistribute";
 
@@ -82,8 +82,31 @@ public abstract class AbstractFirm implements Firm {
 	@SuppressWarnings("javadoc")
 	public final static String WAGE_MINIMUM = "wage.minimum";
 
+	/** The capital manager. */
+	private CapitalManager capitalManager;
+
 	/** A flag that indicates if the data of the firm is to be exported. */
 	private boolean exportData;
+
+	/** The factory. */
+	private Factory factory;
+
+	/** The pricing manager. */
+	private PricingManager pricingManager;
+
+	/** The production manager. */
+	private ProductionManager productionManager;
+
+	/** The marketing manager. */
+	private SalesManager salesManager;
+
+	/**
+	 * The type of production.
+	 */
+	private String typeOfProduction = null;
+
+	/** The employer behavior. */
+	private WorkforceManager workforceManager;
 
 	/** The account. */
 	protected final BankAccount account;
@@ -91,19 +114,13 @@ public abstract class AbstractFirm implements Firm {
 	/** A flag that indicates if the firm is bankrupted. */
 	protected boolean bankrupted = false;
 
-	/** The capital manager. */
-	protected final CapitalManager capitalManager;
-
 	/** Date of creation. */
 	protected final int creation;
 
 	/** The data of the agent. */
 	protected AgentDataset data;
 
-	/** The factory. */
-	protected final Factory factory;
-
-	/** The name. */
+	/** The name of this firm. */
 	protected final String name;
 
 	/** A flag that indicates if this firm is open or not. */
@@ -112,26 +129,14 @@ public abstract class AbstractFirm implements Firm {
 	/** The current period. */
 	protected Integer period = null;
 
-	/** The pricing manager. */
-	protected final PricingManager pricingManager;
-
-	/** The production manager. */
-	protected final ProductionManager productionManager;
-
 	/** The random. */
 	final protected Random random;
-
-	/** The marketing manager. */
-	protected final SalesManager salesManager;
 
 	/** The sector. */
 	protected final IndustrialSector sector;
 
 	/** The timer. */
 	final protected Timer timer;
-
-	/** The employer behavior. */
-	protected final WorkforceManager workforceManager;
 
 	/**
 	 * Creates a new firm.
@@ -148,12 +153,6 @@ public abstract class AbstractFirm implements Firm {
 		this.creation = this.timer.getPeriod().intValue();
 		this.random = this.sector.getRandom();
 		this.account = this.sector.getNewAccount(this);
-		this.factory = getNewFactory();
-		this.capitalManager = getNewCapitalManager();
-		this.pricingManager = getNewPricingManager();
-		this.workforceManager = getNewWorkforceManager();
-		this.productionManager = getNewProductionManager();
-		this.salesManager = getNewSalesManager();
 	}
 
 	/**
@@ -165,8 +164,7 @@ public abstract class AbstractFirm implements Firm {
 	private void exportData() throws IOException {
 		if (this.exportData) {
 			// TODO gerer la localisation du dossier exports, son existence
-			final File outputFile = new File("exports/"
-					+ sector.getSimulationID() + "-" + this.name + ".csv");
+			final File outputFile = new File("exports/" + sector.getSimulationID() + "-" + this.name + ".csv");
 			if (!outputFile.exists()) {
 				this.data.exportHeadersTo(outputFile);
 			}
@@ -195,11 +193,18 @@ public abstract class AbstractFirm implements Firm {
 	}
 
 	/**
-	 * Creates and returns a new capital manager.
-	 * 
-	 * @return a new {@linkplain CapitalManager}.
+	 * @return the capitalManager
 	 */
-	abstract protected CapitalManager getNewCapitalManager();
+	protected CapitalManager getCapitalManager() {
+		return capitalManager;
+	}
+
+	/**
+	 * @return the factory
+	 */
+	protected Factory getFactory() {
+		return factory;
+	}
 
 	/**
 	 * Creates and returns a new agent dataset.
@@ -211,39 +216,32 @@ public abstract class AbstractFirm implements Firm {
 	}
 
 	/**
-	 * Creates and returns a new factory.
-	 * 
-	 * @return a new factory.
+	 * @return the pricingManager
 	 */
-	abstract protected Factory getNewFactory();
+	protected PricingManager getPricingManager() {
+		return pricingManager;
+	}
 
 	/**
-	 * Creates and returns a new pricing manager.
-	 * 
-	 * @return a new pricing manager.
+	 * @return the productionManager
 	 */
-	abstract protected PricingManager getNewPricingManager();
+	protected ProductionManager getProductionManager() {
+		return productionManager;
+	}
 
 	/**
-	 * Creates and returns a new {@linkplain ProductionManager}.
-	 * 
-	 * @return a new {@linkplain ProductionManager}.
+	 * @return the salesManager
 	 */
-	abstract protected ProductionManager getNewProductionManager();
+	protected SalesManager getSalesManager() {
+		return salesManager;
+	}
 
 	/**
-	 * Creates and returns a new sales manager.
-	 * 
-	 * @return a new {@linkplain SalesManager}.
+	 * @return the workforceManager
 	 */
-	protected abstract SalesManager getNewSalesManager();
-
-	/**
-	 * Returns a new {@link WorkforceManager}.
-	 * 
-	 * @return a new {@link WorkforceManager}.
-	 */
-	abstract protected WorkforceManager getNewWorkforceManager();
+	protected WorkforceManager getWorkforceManager() {
+		return workforceManager;
+	}
 
 	/**
 	 * Opens all the managers of this firm.
@@ -255,6 +253,83 @@ public abstract class AbstractFirm implements Firm {
 		this.productionManager.open();
 		this.salesManager.open();
 		this.workforceManager.open();
+	}
+
+	/**
+	 * @param capitalManager
+	 *            the capitalManager to set
+	 */
+	protected void setCapitalManager(CapitalManager capitalManager) {
+		if (this.capitalManager != null) {
+			throw new RuntimeException("Not null");
+		}
+		this.capitalManager = capitalManager;
+	}
+
+	/**
+	 * @param factory
+	 *            the factory to set
+	 */
+	protected void setFactory(Factory factory) {
+		if (this.factory != null) {
+			throw new RuntimeException("Not null");
+		}
+		this.factory = factory;
+	}
+
+	/**
+	 * @param pricingManager
+	 *            the pricingManager to set
+	 */
+	protected void setPricingManager(PricingManager pricingManager) {
+		if (this.pricingManager != null) {
+			throw new RuntimeException("Not null");
+		}
+		this.pricingManager = pricingManager;
+	}
+
+	/**
+	 * @param productionManager
+	 *            the productionManager to set
+	 */
+	protected void setProductionManager(ProductionManager productionManager) {
+		if (this.productionManager != null) {
+			throw new RuntimeException("Not null");
+		}
+		this.productionManager = productionManager;
+	}
+
+	/**
+	 * @param salesManager
+	 *            the salesManager to set
+	 */
+	protected void setSalesManager(SalesManager salesManager) {
+		if (this.salesManager != null) {
+			throw new RuntimeException("Not null");
+		}
+		this.salesManager = salesManager;
+	}
+
+	/**
+	 * Sets the type of production.
+	 * @param typeOfProduction the type of production to set.
+	 */
+	protected void setTypeOfProduction(String typeOfProduction) {
+		if (this.typeOfProduction!=null) {
+			throw new RuntimeException("Type of production already set.");
+		}
+		this.typeOfProduction = typeOfProduction;
+	}
+
+	/**
+	 * @param workforceManager
+	 *            the workforceManager to set
+	 */
+	protected void setWorkforceManager(WorkforceManager workforceManager) {
+		if (this.workforceManager != null) {
+			throw new RuntimeException("Not null");
+		}
+		this.workforceManager = workforceManager;
 	}
 
 	/**
@@ -284,10 +359,10 @@ public abstract class AbstractFirm implements Firm {
 
 	@Override
 	public void close() {
-		if(!this.open) {
+		if (!this.open) {
 			throw new RuntimeException("Already closed.");
 		}
-		this.open=false;
+		this.open = false;
 
 		this.closeManagers();
 
@@ -328,13 +403,20 @@ public abstract class AbstractFirm implements Firm {
 	 * @return a {@link StockCertificate} that encapsulates the new shares.
 	 */
 	@Override
-	public 	StockCertificate[] getNewShares(List<Integer> shares) {
+	public StockCertificate[] getNewShares(List<Integer> shares) {
 		return this.capitalManager.getNewShares(shares);
 	}
 
 	@Override
 	public Supply getSupply() {
 		return this.salesManager.getSupply();
+	}
+
+	/**
+	 * @return the typeOfProduction
+	 */
+	public String getTypeOfProduction() {
+		return this.typeOfProduction;
 	}
 
 	@Override
@@ -357,6 +439,7 @@ public abstract class AbstractFirm implements Firm {
 	public boolean isBankrupted() {
 		return this.bankrupted;
 	}
+
 	@Override
 	public boolean isCancelled() {
 		return this.bankrupted;
@@ -369,16 +452,15 @@ public abstract class AbstractFirm implements Firm {
 
 	@Override
 	public void open() {
-		if(this.open) {
+		if (this.open) {
 			throw new RuntimeException("Already open.");
 		}
-		this.open=true;
-		if (this.period==null) {
-			this.period=this.timer.getPeriod().intValue();
-		}
-		else {
+		this.open = true;
+		if (this.period == null) {
+			this.period = this.timer.getPeriod().intValue();
+		} else {
 			this.period++;
-			if (this.period!=timer.getPeriod().intValue()) {
+			if (this.period != timer.getPeriod().intValue()) {
 				throw new AnachronismException("Bad period");
 			}
 		}
