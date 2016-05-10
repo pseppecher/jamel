@@ -1,8 +1,8 @@
 package jamel.jamel.capital;
 
-import jamel.jamel.roles.Corporation;
-
 import java.util.List;
+
+import jamel.jamel.roles.Corporation;
 
 /**
  * Represents the capital stock of a {@link Corporation}.

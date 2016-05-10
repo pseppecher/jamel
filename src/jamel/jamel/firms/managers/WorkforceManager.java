@@ -8,11 +8,14 @@ import jamel.jamel.widgets.LaborPower;
  * The workforce manager.
  */
 public abstract class WorkforceManager extends AbstractManager implements Askable {
-	
+
 	/**
 	 * Creates a new workforce manager.
-	 * @param name the name of the manager.
-	 * @param timer the timer.
+	 * 
+	 * @param name
+	 *            the name of the manager.
+	 * @param timer
+	 *            the timer.
 	 */
 	public WorkforceManager(String name, Timer timer) {
 		super(name, timer);
@@ -20,18 +23,21 @@ public abstract class WorkforceManager extends AbstractManager implements Askabl
 
 	/**
 	 * Returns the current {@linkplain JobOffer}.
+	 * 
 	 * @return a {@link JobOffer}.
 	 */
 	public abstract JobOffer getJobOffer();
 
 	/**
-	 * Returns an array containing all of the labor powers of the workforce. 
+	 * Returns an array containing all of the labor powers of the workforce.
+	 * 
 	 * @return an array of {@linkplain LaborPower}.
 	 */
 	public abstract LaborPower[] getLaborPowers();
 
 	/**
 	 * Returns the payroll (= the future wage bill).
+	 * 
 	 * @return a long that represents the payroll.
 	 */
 	public abstract long getPayroll();
@@ -45,6 +51,14 @@ public abstract class WorkforceManager extends AbstractManager implements Askabl
 	 * Pays the workers in the workforce.
 	 */
 	public abstract void payWorkers();
+
+	/**
+	 * Sets the wage.
+	 * 
+	 * @param wage
+	 *            the wage to be set.
+	 */
+	public abstract void setWage(double wage);
 
 	/**
 	 * Updates the wage.

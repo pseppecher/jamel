@@ -32,7 +32,7 @@ public class Grass implements Sector, LandSector {
 	private final String name;
 
 	/** The parameters of the sector. */
-	private final JamelParameters params = new BasicParameters();
+	private final JamelParameters params;
 
 	/** The squares of land. */
 	private LandSquare[][] squares = null;
@@ -50,6 +50,12 @@ public class Grass implements Sector, LandSector {
 	 */
 	public Grass(String name, Circuit circuit) {
 		this.name = name;
+		this.params = new BasicParameters(name);
+	}
+
+	@Override
+	public Object askFor(String key) {
+		throw new RuntimeException("Not used.");
 	}
 
 	@Override

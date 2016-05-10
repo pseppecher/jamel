@@ -1,9 +1,5 @@
 package jamel.basic.gui;
 
-import jamel.basic.data.BasicDataManager;
-import jamel.basic.data.ExpressionFactory;
-import jamel.basic.util.InitializationException;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -14,7 +10,6 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jfree.chart.JFreeChart;
 import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
 import org.jfree.chart.annotations.XYAnnotation;
@@ -26,6 +21,7 @@ import org.jfree.chart.block.BlockBorder;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.LookupPaintScale;
 import org.jfree.chart.renderer.PaintScale;
@@ -45,22 +41,25 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import jamel.basic.data.BasicDataManager;
+import jamel.basic.data.ExpressionFactory;
+import jamel.basic.util.InitializationException;
+
 /**
  * A collection of utility methods for creating charts.
+ * 
+ * @author pascal
  */
 public class ChartFactory {
+	
+	// 2016-05-01: introduction de JamelChart
+	// pour une meilleure utilisation des markers.
 
 	/** A basic stroke used for legend items. */
 	private static final BasicStroke basicStroke = new BasicStroke();
 
-	/** A transparent color used for chart background. */
-	private static final Color colorTransparent = new Color(0, 0, 0, 0);
-
 	/** The tick unit source. */
 	private static final TickUnitSource IntegerTickUnits = NumberAxis.createIntegerTickUnits();
-
-	/** The font used for legend items. */
-	private static final Font legendItemFont = new Font("Monaco", Font.PLAIN, 10);
 
 	/** A shape line used by time charts. */
 	private static final Shape line = new Line2D.Double(0, 0, 15, 0);
@@ -73,9 +72,6 @@ public class ChartFactory {
 
 	/** The font used for tick labels. */
 	private static final Font tickLabelFont = new Font("Tahoma", Font.PLAIN, 10);
-
-	/** The font used for chart titles. */
-	private static final Font titleFont = new Font("Tahoma", Font.PLAIN, 14);
 
 	/**
 	 * Creates and returns a new Y axis.
@@ -96,9 +92,9 @@ public class ChartFactory {
 				axis.setStandardTickUnits(source);
 			}
 		}
-		
+
 		axis.setAutoRangeIncludesZero(false);
-		
+
 		if (description != null && !description.getAttribute("label").equals("")) {
 			axis.setLabel(description.getAttribute("label"));
 		}
@@ -122,25 +118,6 @@ public class ChartFactory {
 	}
 
 	/**
-	 * Creates and returns a new chart with the given title and plot.
-	 * 
-	 * @param title
-	 *            the chart title (<code>null</code> permitted).
-	 * @param plot
-	 *            controller of the visual representation of the data (
-	 *            <code>null</code> not permitted).
-	 * @return a new chart.
-	 */
-	private static JFreeChart createChart(String title, XYPlot plot) {
-		return new JFreeChart(title, titleFont, plot, true) {
-			{
-				this.setBackgroundPaint(colorTransparent);
-				this.getLegend().setItemFont(legendItemFont);
-			}
-		};
-	}
-
-	/**
 	 * Creates and returns a new combined time chart. A combined chart is a
 	 * chart composed of multiple subplots.
 	 * 
@@ -153,9 +130,9 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	private static JFreeChart createCombinedTimeChart(Element description, BasicDataManager dataManager)
+	private static JamelChart createCombinedTimeChart(Element description, BasicDataManager dataManager)
 			throws InitializationException {
-		final JFreeChart chart;
+		final JamelChart chart;
 		final String name = description.getAttribute("title");
 
 		final NumberAxis xAxis = createAxis((Element) description.getElementsByTagName("xAxis").item(0),
@@ -242,10 +219,26 @@ public class ChartFactory {
 			}
 			final NumberAxis yAxis = createAxis((Element) subplotElem.getElementsByTagName("yAxis").item(0), null);
 			final XYPlot subplot = createXYPlot(dataset, xAxis, yAxis, renderer);
+			if (subplotElem.getAttribute("xZeroBaselineVisible").equals("true")) {
+				subplot.setDomainZeroBaselineVisible(true);
+			}
+			if (subplotElem.getAttribute("yZeroBaselineVisible").equals("true")) {
+				subplot.setRangeZeroBaselineVisible(true);
+			}
+
 			plot.add(subplot);
 		}
 
-		chart = createChart(name, plot);
+		chart = new JamelChart(name, plot) {
+			@Override
+			public void addTimeMarker(ValueMarker marker) {
+				@SuppressWarnings("unchecked")
+				final List<XYPlot> subplots = plot.getSubplots();
+				for (final XYPlot subplot : subplots) {
+					subplot.addDomainMarker(marker);
+				}
+			}
+		};
 
 		final NodeList legends = description.getElementsByTagName("legend");
 		if (legends.getLength() > 0) {
@@ -286,7 +279,7 @@ public class ChartFactory {
 	 *            the data manager.
 	 * @return a new histogram.
 	 */
-	private static JFreeChart createHistogram(Element description, BasicDataManager dataManager) {
+	private static JamelChart createHistogram(Element description, BasicDataManager dataManager) {
 		final String name = description.getAttribute("title");
 		final NodeList seriesList = description.getElementsByTagName("series");
 		final XYItemRenderer renderer = new XYBarRenderer();
@@ -336,7 +329,12 @@ public class ChartFactory {
 
 		plot.setFixedLegendItems(new LegendItemCollection()); // Pas de legende
 
-		final JFreeChart result = createChart(name, plot);
+		final JamelChart result = new JamelChart(name, plot) {
+			@Override
+			public void addTimeMarker(ValueMarker marker) {
+				// Does nothing.
+			}
+		};
 
 		/*
 		 * final NodeList legends = description.getElementsByTagName("legend");
@@ -372,7 +370,7 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	private static JFreeChart createScatterChart(Element description, BasicDataManager dataManager)
+	private static JamelChart createScatterChart(Element description, BasicDataManager dataManager)
 			throws InitializationException {
 		final String name = description.getAttribute("title");
 		final NodeList seriesList = description.getElementsByTagName("series");
@@ -474,7 +472,12 @@ public class ChartFactory {
 			plot.setBackgroundPaint(JamelColor.getColor(background));
 		}
 
-		final JFreeChart result = createChart(name, plot);
+		final JamelChart result = new JamelChart(name, plot) {
+			@Override
+			public void addTimeMarker(ValueMarker marker) {
+				// Does nothing.
+			}
+		};
 		if (psl != null) {
 			result.addSubtitle(psl);
 		}
@@ -488,7 +491,7 @@ public class ChartFactory {
 			for (int i = 0; i < items.getLength(); i++) {
 				final Element item = (Element) items.item(i);
 				final String tooltip = item.getAttribute("series");
-				final String legendLabel = item.getAttribute("value");
+				final String legendLabel = item.getAttribute("label");
 				final Paint paint = JamelColor.getColor(item.getAttribute("color"));
 				final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, true, square, true,
 						paint, true, lineColor, basicStroke, false, null, basicStroke, null);
@@ -518,10 +521,10 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             if something goes wrong.
 	 */
-	private static JFreeChart createStandardTimeChart(final Element description, final BasicDataManager dataManager)
+	private static JamelChart createStandardTimeChart(final Element description, final BasicDataManager dataManager)
 			throws InitializationException {
 
-		final JFreeChart chart;
+		final JamelChart chart;
 		final String name = description.getAttribute("title");
 		final NumberAxis xAxis = createAxis((Element) description.getElementsByTagName("xAxis").item(0),
 				IntegerTickUnits);
@@ -568,18 +571,24 @@ public class ChartFactory {
 			final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, line, basicStroke, paint);
 			defaultLegendItemCollection.add(legendItem);
 		}
-		
+
 		final NumberAxis yAxis = createAxis((Element) description.getElementsByTagName("yAxis").item(0), null);
 		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
-		
+
 		if (description.getAttribute("xZeroBaselineVisible").equals("true")) {
-			plot.setRangeZeroBaselineVisible(true);
-		}
-		if (description.getAttribute("yZeroBaselineVisible").equals("true")) {
 			plot.setDomainZeroBaselineVisible(true);
 		}
+		if (description.getAttribute("yZeroBaselineVisible").equals("true")) {
+			plot.setRangeZeroBaselineVisible(true);
+		}
 
-		chart = createChart(name, plot);
+		chart = new JamelChart(name, plot) {
+			@Override
+			public void addTimeMarker(ValueMarker marker) {
+				this.getXYPlot().addDomainMarker(marker);
+			}
+		};
+		
 		final NodeList legends = description.getElementsByTagName("legend");
 		if (legends.getLength() > 0) {
 			Element legend = (Element) legends.item(0);
@@ -618,9 +627,9 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	private static JFreeChart createTimeChart(final Element description, BasicDataManager dataManager)
+	private static JamelChart createTimeChart(final Element description, BasicDataManager dataManager)
 			throws InitializationException {
-		final JFreeChart chart;
+		final JamelChart chart;
 		final NodeList subPlots = description.getElementsByTagName("subplot");
 		if (subPlots.getLength() > 0) {
 			chart = createCombinedTimeChart(description, dataManager);
@@ -642,7 +651,7 @@ public class ChartFactory {
 	 * @throws InitializationException
 	 *             if something goes wrong.
 	 */
-	private static JFreeChart createTimeScatterChart(Element description, BasicDataManager dataManager)
+	private static JamelChart createTimeScatterChart(Element description, BasicDataManager dataManager)
 			throws InitializationException {
 		final String name = description.getAttribute("title");
 		final NodeList seriesList = description.getElementsByTagName("series");
@@ -658,7 +667,11 @@ public class ChartFactory {
 			final XYSeries xySeries = dataManager.getTimeScatterSeries(x, y, serieXML.getAttribute("mod"));
 			dataset.addSeries(xySeries);
 			final String color = serieXML.getAttribute("color");
-			renderer.setSeriesShape(k, square);
+			renderer.setSeriesShape(k, null);
+			final String shapesVisibles = serieXML.getAttribute("shapesVisibles");
+			if (shapesVisibles.equals("false")) {
+				renderer.setSeriesShapesVisible(k, false);
+			}
 			renderer.setSeriesPaint(k, lineColor);
 			final Paint paint;
 			if (color.equals("")) {
@@ -690,6 +703,10 @@ public class ChartFactory {
 
 		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
 
+		// final Element truc = (Element)
+		// description.getElementsByTagName("yAxis").item(0);
+		// if (truc )
+
 		final NodeList legends = description.getElementsByTagName("legend");
 		if (legends.getLength() > 0) {
 			Element legend = (Element) legends.item(0);
@@ -720,7 +737,13 @@ public class ChartFactory {
 			plot.setBackgroundPaint(JamelColor.getColor(background));
 		}
 
-		final JFreeChart result = createChart(name, plot);
+		final JamelChart result = new JamelChart(name, plot) {
+			@Override
+			public void addTimeMarker(ValueMarker marker) {
+				// Does nothing.
+			}
+		};
+		
 		return result;
 	}
 
@@ -874,13 +897,13 @@ public class ChartFactory {
 		if ("".equals(type)) {
 			throw new InitializationException("Chart " + elem.getAttribute("title") + ": Chart type is missing.");
 		} else if ("scatter chart".equals(type)) {
-			chartPanel = new JamelChartPanel(createScatterChart(elem, dataManager), false);
+			chartPanel = new JamelChartPanel(createScatterChart(elem, dataManager));
 		} else if ("time scatter chart".equals(type)) {
-			chartPanel = new JamelChartPanel(createTimeScatterChart(elem, dataManager), false);
+			chartPanel = new JamelChartPanel(createTimeScatterChart(elem, dataManager));
 		} else if ("time chart".equals(type)) {
-			chartPanel = new JamelChartPanel(createTimeChart(elem, dataManager), true);
+			chartPanel = new JamelChartPanel(createTimeChart(elem, dataManager));
 		} else if ("histogram".equals(type)) {
-			chartPanel = new JamelChartPanel(createHistogram(elem, dataManager), false);
+			chartPanel = new JamelChartPanel(createHistogram(elem, dataManager));
 		} else {
 			throw new InitializationException("Unexpected chart type: " + type);
 		}

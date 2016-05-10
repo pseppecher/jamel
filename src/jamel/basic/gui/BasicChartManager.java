@@ -8,6 +8,7 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -16,6 +17,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
+import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.plot.ValueMarker;
@@ -25,13 +27,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * A basic chart manager. Used by the {@link BasicDataManager} to display
- * dynamic charts in the {@link GUI}.
+ * A basic chart manager. Used to display dynamic charts in the {@link GUI}.
  */
 public class BasicChartManager implements ChartManager {
 
 	/** An empty panel. */
-	private class EmptyPanel extends ChartPanel {
+	private class EmptyPanel
+
+			extends ChartPanel {
 		@SuppressWarnings("javadoc")
 		public EmptyPanel() {
 			super(null);
@@ -57,10 +60,15 @@ public class BasicChartManager implements ChartManager {
 	private List<Updatable> updatables = new LinkedList<Updatable>();
 
 	/**
+	 * The XML file that contains the panels configuration.
+	 */
+	private final File file;
+
+	/**
 	 * Creates the chart manager.
 	 * 
-	 * @param root
-	 *            a XML element that contains the chart panel configuration.
+	 * @param file
+	 *            an XML file that contains the panels configuration.
 	 * @param dataManager
 	 *            the parent data manager.
 	 * @param timer
@@ -68,7 +76,17 @@ public class BasicChartManager implements ChartManager {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	public BasicChartManager(Element root, BasicDataManager dataManager, Timer timer) throws InitializationException {
+	public BasicChartManager(File file, BasicDataManager dataManager, Timer timer) throws InitializationException {
+		this.file = file;
+		final Element root;
+		try {
+			root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).getDocumentElement();
+		} catch (Exception e) {
+			throw new InitializationException("Something goes wrong while creating the ChartManager.", e);
+		}
+		if (!"charts".equals(root.getNodeName())) {
+			throw new InitializationException("The root node of the file must be named <charts>.");
+		}
 		final NodeList panelNodeList = root.getElementsByTagName("panel");
 		this.dataManager = dataManager;
 		this.tabbedPanes = new JPanel[panelNodeList.getLength()];
@@ -78,22 +96,21 @@ public class BasicChartManager implements ChartManager {
 				throw new RuntimeException("This node should be a panel node.");
 			}
 			final Element panelElement = (Element) panelNodeList.item(i);
-			final JPanel tabPanel = new JPanel();
-			tabPanel.setLayout(new BoxLayout(tabPanel, BoxLayout.X_AXIS));
-			tabbedPanes[i] = tabPanel;
-			tabPanel.setBackground(new Color(0, 0, 0, 0));
-			tabPanel.setName(panelElement.getAttribute("title"));
-			final NodeList nodeList = panelElement.getChildNodes();
-			for (int j = 0; j < nodeList.getLength(); j++) {
-				Component subPanel = null;
-				try {
-					subPanel = getPanel(nodeList.item(j), timer);
-				} catch (Exception e) {
-					e.printStackTrace();
-					subPanel = new HtmlPanel("<font color=\"red\">Error:<br />" + e.toString()
-							+ "<br />See jamel.log file for more details.</font>");
-				}
-				if (subPanel != null) {
+			if (!panelElement.getAttribute("visible").equals("false")) {
+				final JPanel tabPanel = new JPanel();
+				tabPanel.setLayout(new BoxLayout(tabPanel, BoxLayout.X_AXIS));
+				tabbedPanes[i] = tabPanel;
+				tabPanel.setBackground(new Color(0, 0, 0, 0));
+				tabPanel.setName(panelElement.getAttribute("title"));
+				final NodeList nodeList = panelElement.getChildNodes();
+
+				// 2016-03-28: changement de la syntaxe
+				// Par défaut, les graphiques sont organisés en colonne.
+				// La balise 'col' indique un saut de colonne.
+
+				final List<JPanel> subPanelList = getSubPanels(nodeList, timer);
+
+				for (JPanel subPanel : subPanelList) {
 					tabPanel.add(subPanel);
 				}
 			}
@@ -129,7 +146,7 @@ public class BasicChartManager implements ChartManager {
 						result = chartPanel;
 					}
 				} else if (elem.getNodeName().equals("html")) {
-					final HtmlPanel panel = new HtmlPanel(elem, this.dataManager.getMacroDatabase());
+					final HtmlPanel panel = HtmlPanel.getNewHtmlPanel(elem, this.dataManager.getMacroDatabase(), file);
 					this.updatables.add(panel);
 					result = panel;
 				} else if (elem.getNodeName().equals("validation")) {
@@ -139,8 +156,8 @@ public class BasicChartManager implements ChartManager {
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				result = new HtmlPanel("<font color=\"red\">Error:<br />" + e.toString()
-						+ "<br />See jamel.log file for more details.</font>");
+				result = HtmlPanel
+						.getErrorPanel("Error:<br />" + e.toString() + "<br />See jamel.log file for more details.");
 			}
 			if (result == null) {
 				final JPanel jPanel = new JPanel();
@@ -181,8 +198,56 @@ public class BasicChartManager implements ChartManager {
 		return result;
 	}
 
+	/**
+	 * Creates and returns a list of sub-panels. Each sub-panel represents a
+	 * column of the main panel. In a sub-panel, elements are added vertically.
+	 * 
+	 * @param nodeList
+	 *            the XML description of the sub-panel to be created.
+	 * @param timer
+	 *            the timer.
+	 * @return a list of sub-panels.
+	 */
+	private List<JPanel> getSubPanels(NodeList nodeList, Timer timer) {
+
+		// 2016-03-28: changement de la syntaxe
+		// Construit une liste de panels, chacun représentant une colonne.
+		// A l'intérieur de la colonne, les panneaux sont empilés les uns en
+		// dessous des autres.
+		// La balise 'col' indique un saut de colonne.
+
+		final List<JPanel> result = new LinkedList<JPanel>();
+
+		JPanel col = new JPanel();
+		col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
+		result.add(col);
+
+		for (int j = 0; j < nodeList.getLength(); j++) {
+			final Node node = nodeList.item(j);
+			if (node.getNodeName().equals("col")) {
+				col = new JPanel();
+				col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
+				result.add(col);
+			} else {
+				Component subPanel = null;
+				try {
+					subPanel = getPanel(nodeList.item(j), timer);
+				} catch (Exception e) {
+					e.printStackTrace();
+					subPanel = HtmlPanel.getErrorPanel(
+							"Error:<br />" + e.toString() + "<br />See jamel.log file for more details.");
+				}
+				if (subPanel != null) {
+					col.add(subPanel);
+				}
+			}
+		}
+		return result;
+	}
+
 	@Override
 	public void addMarker(String label, int period) {
+		// FIXME: doesn't work with subplot.
 		final ValueMarker marker = new ValueMarker(period);
 		marker.setLabel(label);
 		marker.setLabelTextAnchor(TextAnchor.TOP_LEFT);

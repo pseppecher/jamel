@@ -32,6 +32,17 @@ public interface SectorDataset {
 	Double getAgentValue(String dataKey, String agentName);
 
 	/**
+	 * Returns sector data at individual level.
+	 * 
+	 * @param dataKeys
+	 *            the keys of the data to be returned.
+	 * @param select
+	 *            selection mode.
+	 * @return a dataset of individual data.
+	 */
+	Object[][] getData(String[] dataKeys, String select);
+
+	/**
 	 * Returns an array of values for the specified key.
 	 * 
 	 * @param key
@@ -164,7 +175,7 @@ public interface SectorDataset {
 	 *            the data to be stored.
 	 */
 	void putIndividualData(AgentDataset data);
-
+	
 	/**
 	 * Stores the specified sector value into this dataset. Hendrik: The reason
 	 * why I need this is that there are certain data that are sector-specific
@@ -181,8 +192,6 @@ public interface SectorDataset {
 	 *            the value to be added.
 	 */
 	void putSectorialValue(String key, Number value);
-
-	Object[][] getData(String keys, String select);
 
 }
 

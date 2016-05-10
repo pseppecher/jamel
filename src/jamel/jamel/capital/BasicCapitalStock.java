@@ -3,8 +3,8 @@ package jamel.jamel.capital;
 import jamel.basic.util.Timer;
 import jamel.jamel.roles.Corporation;
 import jamel.jamel.util.AnachronismException;
-import jamel.jamel.widgets.Cheque;
 import jamel.jamel.widgets.Chequable;
+import jamel.jamel.widgets.Cheque;
 
 import java.util.ArrayList;
 import java.util.LinkedList;

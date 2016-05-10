@@ -3,13 +3,14 @@ package jamel.basic;
 import jamel.basic.sector.Sector;
 import jamel.basic.util.Period;
 import jamel.basic.util.Timer;
+import jamel.jamel.firms.managers.Askable;
 
 import java.util.Random;
 
 /**
  * Defines the interface for the macro-economic circuit.
  */
-public interface Circuit {
+public interface Circuit extends Askable {
 
 	/**
 	 * Returns the current period.

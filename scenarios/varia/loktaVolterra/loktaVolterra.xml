@@ -7,8 +7,8 @@
 	date="10-07-2015">
 
 	<settings
-		randomSeed="0"
-		chartsConfigFile="charts.xml" />
+	randomSeed="0"
+	chartsConfigFile="charts/charts.xml" />
 
 	<sectors>
 

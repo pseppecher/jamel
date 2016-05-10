@@ -85,6 +85,12 @@ public interface BankAccount extends Chequable {
 	long getNewDebt();
 
 	/**
+	 * Returns the current real rate (according to the past price inflation).
+	 * @return the current real rate (according to the past price inflation).
+	 */
+	float getRealRate();
+
+	/**
 	 * Returns the amount of the loans repaid for this account for the current
 	 * period.
 	 * 
@@ -120,7 +126,7 @@ public interface BankAccount extends Chequable {
 	 *            a flag specifying whether or not the loan will be amortized.
 	 */
 	void newLoan(long principal, int term, boolean amortized);
-	
+
 }
 
 // ***

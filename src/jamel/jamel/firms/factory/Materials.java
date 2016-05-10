@@ -58,6 +58,14 @@ interface Materials extends Asset {
 	 */
 	long getVolume();
 
+	/**
+	 * Sets the value of this heap of materials.
+	 * 
+	 * @param newValue
+	 *            the value of this heap of materials.
+	 */
+	void setValue(long newValue);
+
 }
 
 // ***

@@ -4,11 +4,12 @@
 	title="Lokta Voltera Model"
 	type="jamel.basic.BasicCircuit"
 	content="A toy model to test the Jamel framework."
-	date="10-07-2015">
+	date="10-07-2015"
+>
 
 	<settings
 		randomSeed="0"
-		chartsConfigFile="charts2.xml" />
+		chartsConfigFile="charts/charts2.xml" />
 
 	<sectors>
 

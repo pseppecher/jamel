@@ -52,6 +52,9 @@ public enum JamelColor {
 	/** transparent red */
 	transparentRed(new Color(0xFF, 0x80, 0x80, 100)),
 
+	/** transparent yellow */
+	transparentYellow(new Color(0xFF, 0xFF, 0x80, 100)),
+
 	/** very light blue */
 	veryLightBlue(ChartColor.VERY_LIGHT_BLUE),
 

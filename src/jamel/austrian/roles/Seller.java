@@ -2,7 +2,7 @@ package jamel.austrian.roles;
 
 
 import jamel.austrian.roles.Offerer;
-import jamel.austrian.widgets.Cheque;
+import jamel.austrian.widgets.AbstractCheque;
 
 
 public interface Seller extends Offerer {
@@ -12,6 +12,6 @@ public interface Seller extends Offerer {
 	 * @param offer - the offer to which the buyer responds.
 	 * @param cheque - the payment.
 	 */
-	void sell(Cheque cheque);
+	void sell(AbstractCheque cheque);
 
 }

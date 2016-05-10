@@ -111,6 +111,17 @@ public class Parameters {
 	/** The minimal spread between the savings and the lending rate. */
 	public final float bankMarkup = 0.01f;
 	
+	/** The capital requirement as imposed by central banks
+	 *  I.e., the minimal value of equity over risk weighted assets. */
+	public final float capitalRatio = 0.08f;
+	
+	/** The reserve requirement as imposed by central banks
+	 *  I.e., the percentage of liabilities that has to be balanced through CB reserves. */
+	public final float reserveRequirement = 0.05f;
+	
+	/** The reserve target as a percentage of deposits. */
+	public final float reserveTarget = 0.1f;
+	
 	public final float minSavingsRate = 0.00001f;
 	
 	

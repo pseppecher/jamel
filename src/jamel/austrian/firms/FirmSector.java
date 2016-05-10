@@ -1,10 +1,11 @@
-/* =========================================================
+/*
+ * =========================================================
  * JAMEL : a Java (tm) Agent-based MacroEconomic Laboratory.
  * =========================================================
  *
  * (C) Copyright 2007-2012, Pascal Seppecher.
  * 
- * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>. 
+ * Project Info <http://p.seppecher.free.fr/jamel/javadoc/index.html>.
  *
  * This file is a part of JAMEL (Java Agent-based MacroEconomic Laboratory).
  * 
@@ -15,7 +16,7 @@
  * 
  * JAMEL is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.
  * 
  * You should have received a copy of the GNU General Public License
@@ -47,72 +48,79 @@ import jamel.basic.sector.AgentSet;
 import jamel.basic.sector.BasicAgentSet;
 import jamel.basic.sector.Phase;
 
-
 /**
  * Represents the firms sector.
  */
 public class FirmSector extends SFCSector {
 
-	/** The collection of agents. */
-	protected final AgentSet<Firm> firms;
+	/** The value of nominal GDP in the base year. */
+	private static double nominalGDPBase = Float.NaN;
 
-	/** The list of firms with positive investment demand (as updated during a time period). */
-	private final AgentSet<Firm> firmsWithPositiveDemand ;
-
-	/** The list of firms with zero investment demand (as updated during a time period). */
-	private final AgentSet<Firm> firmsWithZeroDemand ;
-
-	/** The structure of gross profits.*/
-	private final HashMap<String, Integer> profitStructure ;
-
-	/** The structure of net profits.*/
-	private final HashMap<String, Integer> netProfitStructure ;
-
-	/** The structure of revenue.*/
-	private final HashMap<String, Integer> revenueStructure ;
-
-	/** The structure of average operating margins.*/
-	private final TreeMap<Float, String> profitabilityStructure ;
-
-	/** The structure of net average operating margins.*/
-	private final TreeMap<Float, String> netProfitabilityStructure ;
-
-	/** The structure of average operating margins.*/
-	private final TreeMap<Float, String> copyOfProfitabilityStructure ;
-
-	/** The number of firms at each node.*/
-	private final HashMap<String, Integer> firmPositions ;
-
-	/** The number of workers at each node.*/
-	private final HashMap<String, Integer> workerPositions ;
+	/** The structure of average operating margins. */
+	private final TreeMap<Float, String> copyOfProfitabilityStructure;
 
 	/** The list of defaulting firms. */
 	private final LinkedList<Firm> firmFailures;
 
-	/** The number of newly created firms. */
-	private int newFirms;
+	/** The number of firms at each node. */
+	private final HashMap<String, Integer> firmPositions;
 
-	/** The value of nominal GDP in the base year. */
-	private static double nominalGDPBase = Float.NaN; 
+	/**
+	 * The list of firms with positive investment demand (as updated during a
+	 * time period).
+	 */
+	private final AgentSet<Firm> firmsWithPositiveDemand;
 
-	private boolean searchFirm = true;
+	/**
+	 * The list of firms with zero investment demand (as updated during a time
+	 * period).
+	 */
+	private final AgentSet<Firm> firmsWithZeroDemand;
 
 	private boolean monitor;
 
+	/** The structure of net average operating margins. */
+	private final TreeMap<Float, String> netProfitabilityStructure;
+
+	/** The structure of net profits. */
+	private final HashMap<String, Integer> netProfitStructure;
+
+	/** The number of newly created firms. */
+	private int newFirms;
+
+	/** The structure of average operating margins. */
+	private final TreeMap<Float, String> profitabilityStructure;
+
+	/** The structure of gross profits. */
+	private final HashMap<String, Integer> profitStructure;
+
+	/** The structure of revenue. */
+	private final HashMap<String, Integer> revenueStructure;
+
+	private boolean searchFirm = true;
+
+	/** The number of workers at each node. */
+	private final HashMap<String, Integer> workerPositions;
+
+	/** The collection of agents. */
+	protected final AgentSet<Firm> firms;
 
 	/**
 	 * Creates a new sector for firms.
-	 * @param name the name of the sector.
-	 * @param circuit the circuit.
+	 * 
+	 * @param name
+	 *            the name of the sector.
+	 * @param circuit
+	 *            the circuit.
 	 */
 	public FirmSector(String name, Circuit aCircuit) {
 		super(name, aCircuit);
 		this.firms = new BasicAgentSet<Firm>(this.random);
 		this.firmsWithPositiveDemand = new BasicAgentSet<Firm>(this.random);
 		this.firmsWithZeroDemand = new BasicAgentSet<Firm>(this.random);
-		this.revenueStructure = new HashMap<String,Integer>();
-		this.profitStructure = new HashMap<String,Integer>();
-		this.netProfitStructure = new HashMap<String,Integer>();
+		this.revenueStructure = new HashMap<String, Integer>();
+		this.profitStructure = new HashMap<String, Integer>();
+		this.netProfitStructure = new HashMap<String, Integer>();
 		this.profitabilityStructure = new TreeMap<Float, String>();
 		this.netProfitabilityStructure = new TreeMap<Float, String>();
 		this.copyOfProfitabilityStructure = new TreeMap<Float, String>();
@@ -121,25 +129,14 @@ public class FirmSector extends SFCSector {
 		this.firmFailures = new LinkedList<Firm>();
 	}
 
-
-	@Override
-	public void doEvent(Element event) {
-		if (event.getNodeName().equals("new")) {
-			final int size = Integer.parseInt(event.getAttribute("size"));
-			this.firms.putAll(this.createFirms(this.agentType,size));
-			getInvestmentBank().setFirmID(size);
-		}
-		else {
-			throw new RuntimeException("Unknown event or not yet implemented: "+event.getNodeName());			
-		}
-	}
-
-
 	/**
 	 * Creates firms.
-	 * @param type the type of firms to create.
-	 * @param lim the number of firms to create.
-	 * @return a list containing the new firms. 
+	 * 
+	 * @param type
+	 *            the type of firms to create.
+	 * @param lim
+	 *            the number of firms to create.
+	 * @return a list containing the new firms.
 	 */
 	private List<Firm> createFirms(String type, int lim) {
 		final List<Firm> result = new ArrayList<Firm>(lim);
@@ -148,90 +145,508 @@ public class FirmSector extends SFCSector {
 		try {
 			int typeMin = getParam("typeMin").intValue();
 			int typeRange = getParam("typeRange").intValue();
-			int initialMoney = initialConditions.initialMoney;
+			int initialMoney = getParam("initialMoney").intValue();
 			String producerType = null;
 			int stage = 0;
 
-			for(int index=0;index<lim;index++) {
+			for (int index = 0; index < lim; index++) {
 				this.countAgents++;
 
-				//  Choose a random node for the firm to operate at. 
+				// Choose a random node for the firm to operate at.
 				stage = 1 + random.nextInt(getParam("stages").intValue());
-				if (typeRange==0) producerType =  Alphabet.getLetter(typeMin);
-				else producerType =  Alphabet.getLetter(typeMin + random.nextInt(typeRange+1));
-				if (producerType.equals("A")) stage = 1;
+				if (typeRange == 0)
+					producerType = Alphabet.getLetter(typeMin);
+				else
+					producerType = Alphabet.getLetter(typeMin + random.nextInt(typeRange + 1));
+				if (producerType.equals("A"))
+					stage = 1;
 
 				// Create the target market(s) if necessary.
-				getMarketSector().addMarkets(producerType,stage);
+				getMarketSector().addMarkets(producerType, stage);
 
-				final Firm firm = (Firm) Class.forName(type,false,ClassLoader.getSystemClassLoader()).getConstructor(
-						Integer.class,Circuit.class,FirmSector.class,HashMap.class,Integer.class,String.class,Integer.class).
-						newInstance(countAgents,
-								circuit,
-								FirmSector.this,
-								getHouseholdsSector().selectRandomShareholders(3),
-								initialMoney, 
-								producerType, 
-								stage);
+				final Firm firm = (Firm) Class.forName(type, false, ClassLoader.getSystemClassLoader())
+						.getConstructor(Integer.class, Circuit.class, FirmSector.class, HashMap.class, Integer.class,
+								String.class, Integer.class)
+						.newInstance(countAgents, circuit, FirmSector.this,
+								getHouseholdsSector().selectRandomShareholders(3), initialMoney, producerType, stage);
 				result.add(firm);
 
 				int firmNumber;
-				if (!firmPositions.containsKey(producerType+stage)) firmNumber = 1;
-				else firmNumber = firmPositions.get(producerType+stage)+1;
-				firmPositions.put(producerType+stage, firmNumber);
+				if (!firmPositions.containsKey(producerType + stage))
+					firmNumber = 1;
+				else
+					firmNumber = firmPositions.get(producerType + stage) + 1;
+				firmPositions.put(producerType + stage, firmNumber);
 			}
 		} catch (Exception e) {
-			throw new RuntimeException("Firm creation failure",e); 
+			throw new RuntimeException("Firm creation failure", e);
 		}
 		return result;
 	}
 
+	/**
+	 * Updates data at the end of a period.<br>
+	 * Gets the data from each firm and adds them
+	 * to the sector data.
+	 */
+	private void updateData() {
 
+		revenueStructure.clear();
+		profitStructure.clear();
+		netProfitStructure.clear();
+		profitabilityStructure.clear();
+		copyOfProfitabilityStructure.clear();
+		netProfitabilityStructure.clear();
+		workerPositions.clear();
 
+		// Updates the data for the individual firms.
+		for (Firm firm : this.firms.getList()) {
+
+			String key = firm.getTypeAlphabetic() + firm.getStage();
+
+			Double workers = firm.getData("hiring");
+			if (!workers.isNaN()) {
+				if (!workerPositions.containsKey(key))
+					workerPositions.put(key, (int) firm.getData("hiring"));
+				else
+					workerPositions.put(key, workerPositions.get(key) + (int) firm.getData("hiring"));
+			}
+
+			// if (firmDataset.get(FirmDataLabels.REVENUE).intValue()>0){
+			if (!revenueStructure.containsKey(key)) {
+				profitStructure.put(key, (int) firm.getData("grossProfit"));
+				netProfitStructure.put(key, (int) firm.getData("netProfit"));
+				revenueStructure.put(key, (int) firm.getData("revenue"));
+			} else {
+				profitStructure.put(key, profitStructure.get(key) + (int) firm.getData("grossProfit"));
+				netProfitStructure.put(key, netProfitStructure.get(key) + (int) firm.getData("netProfit"));
+				revenueStructure.put(key, revenueStructure.get(key) + (int) firm.getData("revenue"));
+			}
+			// }
+		}
+
+		for (String type : revenueStructure.keySet()) {
+			float profitability = profitStructure.get(type).floatValue() / revenueStructure.get(type).floatValue();
+			float netProfitability = netProfitStructure.get(type).floatValue()
+					/ revenueStructure.get(type).floatValue();
+			profitabilityStructure.put(profitability, type);
+			copyOfProfitabilityStructure.put(profitability, type);
+			netProfitabilityStructure.put(netProfitability, type);
+		}
+
+	}
+
+	@Override
+	public Object askFor(String key) {
+		throw new RuntimeException("Not used");
+	}
+
+	/**
+	 * An agents files bankruptcy.
+	 */
+	public void bankruptcy(Firm aBankruptAgent) {
+		firmFailures.add(aBankruptAgent);
+	}
+
+	@Override
+	public void doEvent(Element event) {
+		final String eventType = event.getAttribute("event");
+		if (eventType.equals("Create new firms")) {
+			final int size = Integer.parseInt(event.getAttribute("size"));
+			this.firms.putAll(this.createFirms(this.agentType, size));
+			getInvestmentBank().setFirmID(size);
+		} else {
+			throw new RuntimeException(
+					"Unknown event or not yet implemented: " + event.getNodeName() + ": " + eventType);
+		}
+	}
+
+	@Override
+	public SectorDataset getDataset() {
+
+		SectorDataset data = firms.collectData();
+
+		if (timer.getPeriod().intValue() > 1) {
+			if ((Double.isNaN(nominalGDPBase) | nominalGDPBase == 0D)) {
+				nominalGDPBase = data.getSum("revenue", "consumerProducer=1") + data.getSum("machineInvestment", "")
+						+ data.getSum("operationsInvestment", "") - data.getSum("costsOfGoodsSold", "");
+				data.putSectorialValue("nominalGDP", Double.valueOf(nominalGDPBase));
+				data.putSectorialValue("nominalGDP_index", Double.valueOf(100));
+			} else {
+				// Calculates the index of nominal GDP
+				double GDP = data.getSum("revenue", "consumerProducer=1") + data.getSum("machineInvestment", "")
+						+ data.getSum("operationsInvestment", "") - data.getSum("costsOfGoodsSold", "");
+				double nominalIndex = GDP / nominalGDPBase * 100;
+				data.putSectorialValue("nominalGDP", Double.valueOf(GDP));
+				data.putSectorialValue("nominalGDP_index", Double.valueOf(nominalIndex));
+			}
+		}
+
+		data.putSectorialValue("maxStageB", (double) getMaxStage2("B"));
+		data.putSectorialValue("firmFailures", (double) firmFailures.size());
+		data.putSectorialValue("firmNumber", (double) firms.getList().size());
+		data.putSectorialValue("newFirms", (double) newFirms);
+
+		for (Firm firm : firmFailures) {
+
+			String type = firm.getTypeAlphabetic();
+			int stage = firm.getStage();
+			String location = type + stage;
+			int remainingFirms = firmPositions.get(location) - 1;
+			if (remainingFirms < 0)
+				throw new RuntimeException("False number of firms.");
+			firmPositions.put(location, remainingFirms);
+			firms.remove(firm);
+			firm.kill();
+			getInvestmentBank().newProject("Firm"); // The max. number of firms
+													// in the economy is
+													// constant.
+		}
+		firmFailures.clear();
+
+		return data;
+	}
+
+	/**
+	 * Returns the number of firms with unsaturated demand;
+	 */
+	public int getDemanders() {
+		return firmsWithPositiveDemand.getList().size();
+	}
+
+	/**
+	 * Returns the highest stage with positive revenue for @param type.<br>
+	 * Returns 1 if no revenue was made.
+	 */
+
+	public int getMaxStage(String type) {
+		int maxstage = 1;
+		for (String j : revenueStructure.keySet()) {
+			String column = String.valueOf(j.charAt(0));
+			int row = Integer.parseInt(String.valueOf(j.charAt(1)));
+			if (column.equals(type) & row > maxstage)
+				maxstage = row;
+		}
+		return maxstage;
+	}
+
+	/**
+	 * Returns the highest stage in the given line of production.<br>
+	 * Returns 1 if there are no firms.
+	 */
+
+	public int getMaxStage2(String type) {
+		int maxstage = 1;
+		for (String j : firmPositions.keySet()) {
+			String column = String.valueOf(j.charAt(0));
+			int row = Integer.parseInt(String.valueOf(j.charAt(1)));
+			if (column.equals(type) & row > maxstage)
+				maxstage = row;
+		}
+		return maxstage;
+	}
+
+	/**
+	 * Returns the stage with the smallest firm population if it
+	 * is populated by less than minPopulationRequirement firms.
+	 */
+
+	public int getMinPopulation(String type, int minPopulationRequirement) {
+		int minPopulation = Integer.MAX_VALUE;
+		int smallestStage = 0;
+		for (String j : firmPositions.keySet()) {
+			String column = String.valueOf(j.charAt(0));
+			if (column.equals(type) & firmPositions.get(j) < minPopulation) {
+				minPopulation = firmPositions.get(j);
+				smallestStage = Integer.parseInt(String.valueOf(j.charAt(1)));
+			}
+		}
+		if (minPopulation < minPopulationRequirement)
+			return smallestStage;
+		return 0;
+	}
+
+	@Override
+	public Phase getPhase(String name) {
+		Phase result = null;
+
+		if (name.equals("opening")) {
+			result = new AbstractPhase(name, this) {
+
+				@Override
+				public void run() {
+
+					newFirms = 0;
+					LinkedList<InvestmentProject> projects = getInvestmentBank().getNewFirmProjects();
+
+					if (projects.size() > 0) {
+						for (InvestmentProject project : projects) {
+
+							BasicFirm newFirm;
+							try {
+								String producerType = project.getType();
+								int stage = project.getStage();
+								monitor = false;
+								// This is a search criterion.
+								// For the first firm which meets this criterion
+								// detailed output is produced.
+								// To enable: switch both to true
+								if (searchFirm & producerType.equals("A") & stage == 1) {// &
+																							// getCurrentPeriod().getYearValue()>2020){
+									searchFirm = false;
+									monitor = false;
+								}
+
+								newFirm = (BasicFirm) Class
+										.forName("jamel.austrian.firms.BasicFirm", false,
+												ClassLoader.getSystemClassLoader())
+										.getConstructor(InvestmentProject.class, Circuit.class, FirmSector.class,
+												Boolean.class)
+										.newInstance(project, circuit, FirmSector.this, monitor);
+
+								int firmNumber;
+								if (!firmPositions.containsKey(producerType + stage))
+									firmNumber = 1;
+								else
+									firmNumber = firmPositions.get(producerType + stage) + 1;
+								firmPositions.put(producerType + stage, firmNumber);
+							} catch (Exception e) {
+								e.printStackTrace();
+								throw new RuntimeException("Firm creation failure");
+							}
+							firms.put(newFirm);
+							newFirms++;
+						}
+					}
+
+					for (final Firm firm : firms.getList()) {
+						firm.open();
+					}
+					firmsWithZeroDemand.clear();
+					firmsWithZeroDemand.putAll(firms.getList());
+				}
+			};
+		}
+
+		if (name.equals("offering")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.makeOffer();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms revise their strategies.<br>
+		 * If there is an acute shortage of capital they switch to pure labor
+		 * production.
+		 */
+		if (name.equals("setProductionMode")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.setProductionMode();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms purchase fixed capital.
+		 */
+		if (name.equals("buyMachinery")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					AgentSet<Firm> copyOfFirmsList = new BasicAgentSet<Firm>(random);
+					copyOfFirmsList.putAll(firms.getList());
+					do {
+						Firm firm = copyOfFirmsList.getRandomAgent();
+						if (!firm.buyMachinery())
+							copyOfFirmsList.remove(firm);
+					} while (copyOfFirmsList.getList().size() > 0);
+				}
+			};
+		}
+
+		/**
+		 * Firms update their prices and quantity targets.
+		 */
+		if (name.equals("updateMachinePrices")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.updateMachinePrice();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms plan their production activities
+		 */
+		if (name.equals("planProduction")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.planProduction();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms make offers in the labor market.
+		 */
+		if (name.equals("offerJobs")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.offerJobs();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms register demand for the second investment phase.
+		 */
+		if (name.equals("registerExpansionDemand")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.registerExpansionDemand();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms update their prices and quantity targets.
+		 */
+		if (name.equals("updatePrices")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.updatePrice();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms make interest and redemption payments.
+		 */
+		if (name.equals("payInterest")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.payInterest();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms produce.
+		 */
+		if (name.equals("production")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.production();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms manage their liquidity position.
+		 */
+		if (name.equals("updateProfits")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getList()) {
+						firm.updateProfits();
+					}
+				}
+			};
+		}
+
+		/**
+		 * Firms close their operations.
+		 */
+		if (name.equals("closure")) {
+			result = new AbstractPhase(name, this) {
+				@Override
+				public void run() {
+					if (firmsWithPositiveDemand.getList().size() > 0)
+						throw new RuntimeException("Unfinished investment.");
+					for (final Firm firm : firms.getList()) {
+						firm.close();
+					}
+					updateData();
+				}
+			};
+		}
+
+		return result;
+	}
 
 	/**
 	 * Finds the position at which the next firm is created.<br>
 	 * Called by the investmentBank.
 	 */
-	public StartupDetails getStartupDetails(){
+	public StartupDetails getStartupDetails() {
 
 		String type = null;
 		int stage = 0;
 		boolean physicalCapital;
 		int maxStage;
 
-
-		if (getRandom().nextFloat()<parameters.expansionProbability) { 
+		if (getRandom().nextFloat() < parameters.expansionProbability) {
 
 			int typeMin = getParam("typeMin").intValue();
-			int typeRange =  getParam("typeRange").intValue();
+			int typeRange = getParam("typeRange").intValue();
 
-
-			//looks to expand the system 
-			type = Alphabet.getLetter(typeMin + random.nextInt(typeRange+1));
+			// looks to expand the system
+			type = Alphabet.getLetter(typeMin + random.nextInt(typeRange + 1));
 			maxStage = getMaxStage2(type);
 
-			//non-machines
-			if (!type.equals("A")){ 
-				int nextLowerStage = maxStage-1;
-				Market highestMarket = getMarket(type+nextLowerStage);
-				if (firmPositions.get(type+maxStage) >= parameters.expansionRequirement1
-						& highestMarket.getSales() > parameters.expansionRequirement2){
-					stage = maxStage+1;
+			// non-machines
+			if (!type.equals("A")) {
+				int nextLowerStage = maxStage - 1;
+				Market highestMarket = getMarket(type + nextLowerStage);
+				if (firmPositions.get(type + maxStage) >= parameters.expansionRequirement1
+						& highestMarket.getSales() > parameters.expansionRequirement2) {
+					stage = maxStage + 1;
 				}
 			}
 			// machines
-			else stage = 1;
-		}
-		else {	// stays within the existing boundaries
-			String key=null;
+			else
+				stage = 1;
+		} else { // stays within the existing boundaries
+			String key = null;
 
 			// Choose according to labor allocation
 			float highestWorkerToFirm = Float.MIN_VALUE;
-			for (String currentKey : firmPositions.keySet()){
-				if (firmPositions.get(currentKey)==0) continue;
+			for (String currentKey : firmPositions.keySet()) {
+				if (firmPositions.get(currentKey) == 0)
+					continue;
 				float workerToFirm = (float) workerPositions.get(currentKey) / (float) firmPositions.get(currentKey);
-				if (workerToFirm>highestWorkerToFirm){
+				if (workerToFirm > highestWorkerToFirm) {
 					highestWorkerToFirm = workerToFirm;
 					key = currentKey;
 				}
@@ -262,17 +677,18 @@ public class FirmSector extends SFCSector {
 			maxStage = getMaxStage2(type);
 		}
 
+		if (stage == 0)
+			stage = 1 + getRandom().nextInt(maxStage);
 
-		if (stage == 0) stage = 1 + getRandom().nextInt(maxStage);
-
-		getMarketSector().addMarkets(type,stage);
-		if (stage >= maxStage | type.equals("A")) physicalCapital = false;
-		else physicalCapital = true;
+		getMarketSector().addMarkets(type, stage);
+		if (stage >= maxStage | type.equals("A"))
+			physicalCapital = false;
+		else
+			physicalCapital = true;
 
 		StartupDetails details = new StartupDetails(type, stage, physicalCapital);
 		return details;
 	}
-
 
 	/**
 	 * Initiates investments.<br>
@@ -281,432 +697,43 @@ public class FirmSector extends SFCSector {
 	 */
 	public void investment() {
 
-		do{	
-			Firm firm = firmsWithPositiveDemand.getRandomAgent();// If no randomization then low-price and type-A firms could register first.
-			if (firmsWithZeroDemand.contains(firm)) firmsWithZeroDemand.remove(firm);
-			if (!firm.invest()) firmsWithPositiveDemand.remove(firm);
-		} while (firmsWithPositiveDemand.getList().size()>0);
+		do {
+			Firm firm = firmsWithPositiveDemand.getRandomAgent();// If no
+																	// randomization
+																	// then
+																	// low-price
+																	// and
+																	// type-A
+																	// firms
+																	// could
+																	// register
+																	// first.
+			if (firmsWithZeroDemand.contains(firm))
+				firmsWithZeroDemand.remove(firm);
+			if (!firm.invest())
+				firmsWithPositiveDemand.remove(firm);
+		} while (firmsWithPositiveDemand.getList().size() > 0);
 
 		for (Firm firm : firmsWithZeroDemand.getList()) {
 			firm.laborRelease();
 		}
 	}
 
-
 	/**
-	 * An agents files bankruptcy.
+	 * Kills the sector.
 	 */
-	public void bankruptcy(Firm aBankruptAgent){	
-		firmFailures.add(aBankruptAgent);	
+	public void kill() {
+		for (Firm firm : firms.getList())
+			firm.kill();
+		this.firms.clear();
 	}
-
-
-	@Override
-	public Phase getPhase(String name) {
-		Phase result = null;
-
-		if (name.equals("opening")) {
-			result = new AbstractPhase(name, this){
-
-				@Override public void run() {
-
-					newFirms=0;
-					LinkedList<InvestmentProject> projects = getInvestmentBank().getNewFirmProjects();
-
-					if (projects.size()>0){
-						for (InvestmentProject project:projects){
-
-							BasicFirm newFirm;
-							try {
-								String producerType = project.getType();
-								int stage = project.getStage();
-								monitor = false;
-								// This is a search criterion. 
-								// For the first firm which meets this criterion detailed output is produced.
-								// To enable: switch both to true
-								if (searchFirm & producerType.equals("A") & stage==1){// & getCurrentPeriod().getYearValue()>2020){
-									searchFirm = false;
-									monitor = false;
-								}
-
-								newFirm = (BasicFirm) Class.forName("jamel.austrian.firms.BasicFirm",false,ClassLoader.getSystemClassLoader()).getConstructor(
-										InvestmentProject.class,Circuit.class,FirmSector.class,Boolean.class).
-										newInstance(project,
-												circuit,
-												FirmSector.this,
-												monitor);
-
-								int firmNumber;
-								if (!firmPositions.containsKey(producerType+stage)) firmNumber = 1;
-								else firmNumber = firmPositions.get(producerType+stage)+1;
-								firmPositions.put(producerType+stage, firmNumber);
-							}
-							catch (Exception e) {
-								e.printStackTrace();
-								throw new RuntimeException("Firm creation failure"); 
-							}
-							firms.put(newFirm);
-							newFirms++;
-						}
-					}
-
-					for (final Firm firm:firms.getList()) {
-						firm.open();
-					}
-					firmsWithZeroDemand.clear();
-					firmsWithZeroDemand.putAll(firms.getList());
-				}				
-			};			
-		}
-
-		if (name.equals("offering")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.makeOffer();
-					}
-				}				
-			};			
-		}
-
-
-		/**
-		 * Firms revise their strategies.<br>
-		 * If there is an acute shortage of capital they switch to pure labor production.
-		 */
-		if (name.equals("setProductionMode")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.setProductionMode();
-					}
-				}				
-			};			
-		}
-
-
-		/**
-		 * Firms purchase fixed capital.
-		 */
-		if (name.equals("buyMachinery")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					AgentSet<Firm> copyOfFirmsList = new BasicAgentSet<Firm>(random);
-					copyOfFirmsList.putAll(firms.getList());
-					do{	Firm firm = copyOfFirmsList.getRandomAgent();
-					if (!firm.buyMachinery()) copyOfFirmsList.remove(firm);
-					} while (copyOfFirmsList.getList().size()>0);	
-				}				
-			};			
-		}
-
-		/**
-		 * Firms update their prices and quantity targets.
-		 */
-		if (name.equals("updateMachinePrices")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.updateMachinePrice();
-					}
-				}				
-			};			
-		}
-
-		/**
-		 * Firms plan their production activities
-		 */
-		if (name.equals("planProduction")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.planProduction();
-					}
-				}				
-			};			
-		}
-
-		/**
-		 * Firms make offers in the labor market.
-		 */
-		if (name.equals("offerJobs")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.offerJobs();
-					}
-				}				
-			};			
-		}
-
-
-		/**
-		 * Firms register demand for the second investment phase.
-		 */
-		if (name.equals("registerExpansionDemand")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.registerExpansionDemand();
-					}
-				}				
-			};			
-		}
-
-
-		/**
-		 * Firms update their prices and quantity targets.
-		 */
-		if (name.equals("updatePrices")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.updatePrice();
-					}
-				}				
-			};			
-		}
-
-		/**
-		 * Firms make interest and redemption payments.
-		 */
-		if (name.equals("payInterest")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.payInterest();
-					}
-				}				
-			};			
-		}
-
-		/**
-		 * Firms produce.
-		 */
-		if (name.equals("production")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.production();
-					}
-				}				
-			};			
-		}
-
-		/**
-		 * Firms manage their liquidity position.
-		 */
-		if (name.equals("updateProfits")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					for (final Firm firm:firms.getList()) {
-						firm.updateProfits();
-					}
-				}				
-			};			
-		}
-
-		/**
-		 * Firms close their operations.
-		 */
-		if (name.equals("closure")) {
-			result = new AbstractPhase(name, this){
-				@Override public void run() {
-					if (firmsWithPositiveDemand.getList().size()>0) throw new RuntimeException("Unfinished investment.");
-					for (final Firm firm:firms.getList()) {
-						firm.close();
-					}
-					updateData();
-				}				
-			};			
-		}
-
-		return result;
-	}
-
-
-	/**
-	 * Updates data at the end of a period.<br>
-	 * Gets the data from each firm and adds them 
-	 * to the sector data.
-	 */
-	private void updateData() {
-
-		revenueStructure.clear();
-		profitStructure.clear();
-		netProfitStructure.clear();
-		profitabilityStructure.clear();
-		copyOfProfitabilityStructure.clear();
-		netProfitabilityStructure.clear();
-		workerPositions.clear();
-
-
-		// Updates the data for the individual firms.
-		for (Firm firm : this.firms.getList()) {
-
-			String key = firm.getTypeAlphabetic()+firm.getStage();
-
-
-			Double workers = firm.getData("hiring");
-			if (!workers.isNaN()){
-				if (!workerPositions.containsKey(key)) workerPositions.put(key, (int) firm.getData("hiring"));
-				else workerPositions.put(key, workerPositions.get(key) + (int) firm.getData("hiring"));
-			}
-
-
-			//if (firmDataset.get(FirmDataLabels.REVENUE).intValue()>0){
-			if (!revenueStructure.containsKey(key)){
-				profitStructure.put(key, (int) firm.getData("grossProfit"));
-				netProfitStructure.put(key, (int) firm.getData("netProfit"));
-				revenueStructure.put(key, (int) firm.getData("revenue"));
-			}
-			else{
-				profitStructure.put(key,profitStructure.get(key) + (int) firm.getData("grossProfit"));	
-				netProfitStructure.put(key,netProfitStructure.get(key) + (int) firm.getData("netProfit"));
-				revenueStructure.put(key,revenueStructure.get(key) + (int) firm.getData("revenue"));
-			}
-			//}	
-		}
-
-
-		for (String type : revenueStructure.keySet()){
-			float profitability = profitStructure.get(type).floatValue()/revenueStructure.get(type).floatValue();
-			float netProfitability = netProfitStructure.get(type).floatValue()/revenueStructure.get(type).floatValue();
-			profitabilityStructure.put(profitability,type);
-			copyOfProfitabilityStructure.put(profitability,type);
-			netProfitabilityStructure.put(netProfitability,type);
-		}
-
-	}
-
 
 	/**
 	 * Adds a firm to the list of firms with positive investment demand.
 	 */
 	public void registerInvestmentDemand(Firm firm) {
-		if (!firmsWithPositiveDemand.contains(firm)) firmsWithPositiveDemand.put(firm);
+		if (!firmsWithPositiveDemand.contains(firm))
+			firmsWithPositiveDemand.put(firm);
 	}
-
-
-	/**
-	 * Returns the number of firms with unsaturated demand;
-	 */
-	public int getDemanders() {
-		return firmsWithPositiveDemand.getList().size();
-	}
-
-
-	/**
-	 * Returns the highest stage with positive revenue for @param type.<br>
-	 * Returns 1 if no revenue was made.
-	 */
-
-	public int getMaxStage(String type){
-		int maxstage = 1;
-		for (String j : revenueStructure.keySet()){
-			String column = String.valueOf(j.charAt(0));
-			int row = Integer.parseInt(String.valueOf(j.charAt(1)));
-			if (column.equals(type) & row > maxstage) maxstage = row; 
-		}
-		return maxstage;
-	}
-
-
-	/**
-	 * Returns the highest stage in the given line of production.<br>
-	 * Returns 1 if there are no firms.
-	 */
-
-	public int getMaxStage2(String type){
-		int maxstage = 1;
-		for (String j : firmPositions.keySet()){
-			String column = String.valueOf(j.charAt(0));
-			int row = Integer.parseInt(String.valueOf(j.charAt(1)));
-			if (column.equals(type) & row > maxstage) maxstage = row; 
-		}
-		return maxstage;
-	}
-
-
-	/**
-	 * Returns the stage with the smallest firm population if it 
-	 * is populated by less than minPopulationRequirement firms.
-	 */
-
-	public int getMinPopulation(String type, int minPopulationRequirement){
-		int minPopulation = Integer.MAX_VALUE;
-		int smallestStage = 0;
-		for (String j : firmPositions.keySet()){
-			String column = String.valueOf(j.charAt(0));
-			if (column.equals(type) & firmPositions.get(j)<minPopulation){
-				minPopulation = firmPositions.get(j);
-				smallestStage = Integer.parseInt(String.valueOf(j.charAt(1)));
-			}
-		}
-		if (minPopulation<minPopulationRequirement) return smallestStage;
-		return 0;
-	}
-
-
-
-	@Override
-	public SectorDataset getDataset() {
-
-		SectorDataset data = firms.collectData();
-
-		if (timer.getPeriod().intValue()>1){
-			if ((Double.isNaN(nominalGDPBase) | nominalGDPBase == 0D)) {
-				nominalGDPBase = data.getSum("revenue","consumerProducer=1")
-						+ data.getSum("machineInvestment","")
-						+ data.getSum("operationsInvestment","")
-						- data.getSum("costsOfGoodsSold","");
-				data.putSectorialValue("nominalGDP", Double.valueOf(nominalGDPBase));
-				data.putSectorialValue("nominalGDP_index", Double.valueOf(100));
-			}
-			else {
-				// Calculates the index of nominal GDP
-				double GDP = data.getSum("revenue","consumerProducer=1")
-						+ data.getSum("machineInvestment","")
-						+ data.getSum("operationsInvestment","")
-						- data.getSum("costsOfGoodsSold","");
-				double nominalIndex = GDP / nominalGDPBase * 100;
-				data.putSectorialValue("nominalGDP", Double.valueOf(GDP));
-				data.putSectorialValue("nominalGDP_index", Double.valueOf(nominalIndex));
-			}
-		}
-
-		data.putSectorialValue("maxStageB", (double) getMaxStage2("B"));
-		data.putSectorialValue("firmFailures", (double) firmFailures.size());
-		data.putSectorialValue("firmNumber", (double) firms.getList().size());
-		data.putSectorialValue("newFirms", (double) newFirms);
-
-		for (Firm firm:firmFailures) {
-
-			String type = firm.getTypeAlphabetic();
-			int stage = firm.getStage();
-			String location = type+stage;
-			int remainingFirms = firmPositions.get(location)-1;
-			if (remainingFirms<0) throw new RuntimeException("False number of firms.");
-			firmPositions.put(location, remainingFirms);
-			firms.remove(firm);
-			firm.kill();
-			getInvestmentBank().newProject("Firm"); // The max. number of firms in the economy is constant.
-		}
-		firmFailures.clear();
-
-		return data;
-	}
-
-
-
-	/**
-	 * Kills the sector.
-	 */
-	public void kill() {
-		for (Firm firm : firms.getList()) firm.kill() ;
-		this.firms.clear();
-	}
-
-
 
 }

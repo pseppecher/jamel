@@ -4,12 +4,13 @@
 	type="jamel.basic.BasicCircuit"
 	title="Spatial segregation"
 	date="21-07-2015"
-	content="The spatial segregation model of Schelling">
+	content="The spatial segregation model of Schelling"
+>
 
 	<settings
 		randomSeed="0"
 		sleep="0"
-		chartsConfigFile="charts.xml" />
+		chartsConfigFile="charts/charts.xml" />
 
 	<sectors>
 
@@ -19,8 +20,7 @@
 				height="100"
 				vacancies="100"
 				tolerance="6"
-				spontaneous="50"
-				/>
+				spontaneous="50" />
 		</Schelling>
 
 	</sectors>

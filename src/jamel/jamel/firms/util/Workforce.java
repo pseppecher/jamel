@@ -1,10 +1,10 @@
 package jamel.jamel.firms.util;
 
-import jamel.jamel.widgets.JobContract;
-import jamel.jamel.widgets.LaborPower;
-
 import java.util.Iterator;
 import java.util.LinkedList;
+
+import jamel.jamel.widgets.JobContract;
+import jamel.jamel.widgets.LaborPower;
 
 /**
  * A collection of job contracts.

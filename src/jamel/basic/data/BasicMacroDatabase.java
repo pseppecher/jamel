@@ -12,6 +12,9 @@ import org.jfree.data.xy.XYDataItem;
 
 /**
  * A basic database for the macro-economic level.
+ * 
+ * @author pascal
+ *
  */
 public class BasicMacroDatabase implements MacroDatabase {
 
@@ -117,19 +120,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 	}
 
 	@Override
-	public Double[] getDistributionData(String sector, String key, int t, String select) {
-		final Double[] result;
-		final SectorDataset sectorDataset = getSectorDataset(sector, t);
-		if (sectorDataset != null) {
-			result = sectorDataset.getField(key, select);
-		} else {
-			result = null;// TODO générer une erreur ?
-		}
-		return result;
-	}
-
-	@Override
-	public Object[][] getData(String sector, String keys, int t, String select) {
+	public Object[][] getData(String sector, String[] keys, int t, String select) {
 		final Object[][] result;
 		final SectorDataset sectorDataset = getSectorDataset(sector, t);
 		if (sectorDataset != null) {
@@ -141,14 +132,15 @@ public class BasicMacroDatabase implements MacroDatabase {
 	}
 
 	@Override
-	public String getMessage(String sector, String agent, String key, int lag) {
-		final String result;
-		final int t=timer.getPeriod().intValue()-lag;
+	public Double[] getDistributionData(String sector, String key, int t, String select) {
+		final Double[] result;
 		final SectorDataset sectorDataset = getSectorDataset(sector, t);
 		if (sectorDataset != null) {
-			result = sectorDataset.getAgentInfo(agent, key);
+			result = sectorDataset.getField(key, select);
 		} else {
-			result = null;// TODO générer une erreur ?
+			result = null;
+			// 2016-05-01: pour voir si ça arrive.
+			throw new RuntimeException("Result is null");
 		}
 		return result;
 	}
@@ -158,12 +150,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 		final String formated = ExpressionFactory.format(query);
 		final Expression result;
 		if (query.equals("time()")) {
-			result = new Expression() {
-
-				@Override
-				public String getQuery() {
-					return formated;
-				}
+			result = new AbstractExpression(formated) {
 
 				@Override
 				public Double value() {
@@ -171,13 +158,13 @@ public class BasicMacroDatabase implements MacroDatabase {
 				}
 
 			};
-		} else {
 
+		} else {
 
 			final String[] word = query.substring(0, query.length() - 1).split("\\(", 2);
 			final String[] arg = word[1].split(",", 4);
 			if (arg.length < 3) {
-				throw new InitializationException("Malformed query: "+query);
+				throw new InitializationException("Malformed query: " + query);
 			}
 			final String sector = arg[0];
 			final String data = arg[1];
@@ -193,8 +180,8 @@ public class BasicMacroDatabase implements MacroDatabase {
 			final int lag1;
 			if (timeKey.contains("...")) {
 				final String[] keys = timeKey.split("\\.\\.\\.", 2);
-				if (keys.length !=2) {
-					throw new InitializationException("Malformed query: "+query);
+				if (keys.length != 2) {
+					throw new InitializationException("Malformed query: " + query);
 				}
 				lag0 = parseLag(keys[0]);
 				lag1 = parseLag(keys[1]) - 1;
@@ -209,12 +196,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 			if (word[0].equals(SUM)) {
 
-				result = new Expression() {
-
-					@Override
-					public String getQuery() {
-						return formated;
-					}
+				result = new AbstractExpression(formated) {
 
 					@Override
 					public Double value() {
@@ -249,12 +231,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 			else if (word[0].equals(MEAN)) {
 
-				result = new Expression() {
-
-					@Override
-					public String getQuery() {
-						return formated;
-					}
+				result = new AbstractExpression(formated) {
 
 					@Override
 					public Double value() {
@@ -294,12 +271,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 			else if (word[0].equals(MAX)) {
 
-				result = new Expression() {
-
-					@Override
-					public String getQuery() {
-						return formated;
-					}
+				result = new AbstractExpression(formated) {
 
 					@Override
 					public Double value() {
@@ -332,12 +304,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 			else if (word[0].equals(MIN)) {
 
-				result = new Expression() {
-
-					@Override
-					public String getQuery() {
-						return formated;
-					}
+				result = new AbstractExpression(formated) {
 
 					@Override
 					public Double value() {
@@ -373,12 +340,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 				// On r�cup�re une valeur donn�e enregistr�e au niveau du
 				// secteur.
 
-				result = new Expression() {
-
-					@Override
-					public String getQuery() {
-						return formated;
-					}
+				result = new AbstractExpression(formated) {
 
 					@Override
 					public Double value() {
@@ -410,18 +372,13 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 				// On r�cup�re une valeur donn�e pour un agent donn�.
 
-				if (arg.length!=4) {
-					throw new InitializationException("Malformed query: "+query);
+				if (arg.length != 4) {
+					throw new InitializationException("Malformed query: " + query);
 				}
 
 				final String agentName = arg[3];
 
-				result = new Expression() {
-
-					@Override
-					public String getQuery() {
-						return formated;
-					}
+				result = new AbstractExpression(formated) {
 
 					@Override
 					public Double value() {
@@ -440,12 +397,7 @@ public class BasicMacroDatabase implements MacroDatabase {
 
 			else if (word[0].equals(GINI)) {
 
-				result = new Expression() {
-
-					@Override
-					public String getQuery() {
-						return formated;
-					}
+				result = new AbstractExpression(formated) {
 
 					@Override
 					public Double value() {
@@ -474,6 +426,25 @@ public class BasicMacroDatabase implements MacroDatabase {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public String getMessage(String sector, String agent, String key, int lag) {
+		final String result;
+		final int t = timer.getPeriod().intValue() - lag;
+		final SectorDataset sectorDataset = getSectorDataset(sector, t);
+		if (sectorDataset != null) {
+			result = sectorDataset.getAgentInfo(agent, key);
+		} else {
+			result = null;
+			// 2016-05-01: pas nécessaire de générer une erreur.
+		}
+		return result;
+	}
+
+	@Override
+	public int getPeriod() {
+		return this.timer.getPeriod().intValue();
 	}
 
 	@Override

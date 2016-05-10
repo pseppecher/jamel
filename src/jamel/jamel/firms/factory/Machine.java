@@ -1,11 +1,11 @@
 package jamel.jamel.firms.factory;
 
+import java.util.List;
+import java.util.Map;
+
 import jamel.jamel.widgets.Asset;
 import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.LaborPower;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * Represents a machine.

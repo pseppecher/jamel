@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<circuit
+	type="jamel.basic.BasicCircuit"
+	title="GA - Beale artificial landscape"
+	date="10-07-2015"
+	content="Testing genetic algorithms on the Beale artificial landscape">
+
+	<settings
+		randomSeed="0"
+		sleep="0"
+		chartsConfigFile="Beale/charts.xml" />
+
+	<sectors>
+
+		<Landscape type="jamel.varia.optimization.artificialLandscapes.Beale">
+			<settings
+				top="5"
+				bottom="-5"
+				left="-5"
+				right="5"
+				blockWidth="0.05"
+				blockHeight="0.05" />
+		</Landscape>
+
+		<Algo0
+			type="jamel.varia.optimization.genetic.BasicGA"
+			agentType="jamel.varia.optimization.genetic.BasicIndividual">
+			<settings
+				nAgents="100"
+				top="-4"
+				bottom="-5"
+				left="-5"
+				right="-4"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo0>
+
+		<Algo1
+			type="jamel.varia.optimization.genetic.BasicGA"
+			agentType="jamel.varia.optimization.genetic.SatisficingIndividual">
+			<settings
+				nAgents="100"
+				top="-4"
+				bottom="-5"
+				left="-5"
+				right="-4"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo1>
+
+		<Algo2
+			type="jamel.varia.optimization.genetic.BasicGA"
+			agentType="jamel.varia.optimization.genetic.PyramidingIndiv">
+			<settings
+				nAgents="100"
+				top="-4"
+				bottom="-5"
+				left="-5"
+				right="-4"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo2>
+
+	</sectors>
+
+	<phases>
+		<Algo0 action="tournament" />
+		<Algo1 action="tournament" />
+		<Algo2 action="tournament" />
+		<Algo0 action="adaptation" />
+		<Algo1 action="adaptation" />
+		<Algo2 action="adaptation" />
+	</phases>
+
+	<events>
+		<pause period="0" />
+		<pause period="300" />
+	</events>
+
+</circuit>

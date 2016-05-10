@@ -27,6 +27,8 @@
 
 package jamel.austrian.households;
 
+import org.w3c.dom.Element;
+
 import jamel.austrian.roles.Shareholder;
 import jamel.austrian.roles.Creditor;
 import jamel.austrian.roles.Worker;
@@ -50,5 +52,7 @@ public interface Household extends Worker, Shareholder, Creditor{
 	void registerExpenditure();
 
 	void setReservationWage();
+
+	void changePreference(Element event);
 
 }

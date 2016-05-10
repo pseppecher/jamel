@@ -67,6 +67,14 @@ public abstract class SFCSector extends SFCObject implements Sector {
 		return this.params.get(key);
 	}
 	
+	/**
+	 * Returns the agent type of the sector.
+	 * @return the agent type.
+	 */
+	public String getAgentType() {
+		return this.agentType;
+	}
+	
 
 }
 

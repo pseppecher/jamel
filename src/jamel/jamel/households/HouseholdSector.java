@@ -1,5 +1,6 @@
 package jamel.jamel.households;
 
+import java.util.List;
 import java.util.Random;
 
 import jamel.basic.sector.Sector;
@@ -61,6 +62,15 @@ interface HouseholdSector extends Sector {
 	 * @return the type of goods the household want to consume.
 	 */
 	String getTypeOfConsumptionGood();
+
+	/**
+	 * Selects a random sample of households.
+	 * 
+	 * @param i
+	 *            the size of the sample.
+	 * @return a random sample of households.
+	 */
+	List<Household> selectRandomSample(int i);
 
 }
 

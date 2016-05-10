@@ -6,9 +6,9 @@ import jamel.basic.util.Timer;
 import jamel.jamel.capital.StockCertificate;
 import jamel.jamel.firms.factory.Factory;
 import jamel.jamel.firms.managers.CapitalManager;
-import jamel.jamel.firms.managers.SalesManager;
 import jamel.jamel.firms.managers.PricingManager;
 import jamel.jamel.firms.managers.ProductionManager;
+import jamel.jamel.firms.managers.SalesManager;
 import jamel.jamel.firms.managers.WorkforceManager;
 import jamel.jamel.util.AnachronismException;
 import jamel.jamel.widgets.BankAccount;
@@ -32,7 +32,7 @@ public abstract class AbstractFirm implements Firm {
 	public final static String CAPITAL_TARGET = "capital.target";
 
 	@SuppressWarnings("javadoc")
-	public final static String INVENTORY_NORMAL_LEVEL = "inventory.normalLevel";
+	public final static String INVENTORY_NORMAL_LEVEL = "inventories.normalLevel";
 
 	@SuppressWarnings("javadoc")
 	public final static String LABOUR_CONTRACT_MAX = "labourContract.max";
@@ -59,7 +59,7 @@ public abstract class AbstractFirm implements Firm {
 	public final static String PRODUCTIVITY = "production.productivity";
 
 	@SuppressWarnings("javadoc")
-	public final static String PROPENSITY2SELL = "inventory.propensity2sell";
+	public final static String PROPENSITY2SELL = "inventories.propensity2sell";
 
 	@SuppressWarnings("javadoc")
 	public final static String SELLING_CAPACITY = "sales.capacity";
@@ -83,7 +83,7 @@ public abstract class AbstractFirm implements Firm {
 	public final static String WAGE_MINIMUM = "wage.minimum";
 
 	/** The capital manager. */
-	private CapitalManager capitalManager;
+	protected CapitalManager capitalManager;
 
 	/** A flag that indicates if the data of the firm is to be exported. */
 	private boolean exportData;
@@ -312,10 +312,12 @@ public abstract class AbstractFirm implements Firm {
 
 	/**
 	 * Sets the type of production.
-	 * @param typeOfProduction the type of production to set.
+	 * 
+	 * @param typeOfProduction
+	 *            the type of production to set.
 	 */
 	protected void setTypeOfProduction(String typeOfProduction) {
-		if (this.typeOfProduction!=null) {
+		if (this.typeOfProduction != null) {
 			throw new RuntimeException("Type of production already set.");
 		}
 		this.typeOfProduction = typeOfProduction;
@@ -466,6 +468,7 @@ public abstract class AbstractFirm implements Firm {
 		}
 		this.data = getNewDataset();
 		this.openManagers();
+		getFactory().setInventoryNormalLevel(sector.getParam(INVENTORY_NORMAL_LEVEL));
 		if (this.bankrupted) {
 			this.capitalManager.bankrupt();
 			this.workforceManager.layoff();

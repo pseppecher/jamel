@@ -41,7 +41,7 @@ import jamel.austrian.roles.Shareholder;
 import jamel.austrian.roles.Worker;
 import jamel.austrian.sfc.SFCAgent;
 import jamel.austrian.util.Alphabet;
-import jamel.austrian.widgets.Cheque;
+import jamel.austrian.widgets.AbstractCheque;
 import jamel.austrian.widgets.CreditContract;
 import jamel.austrian.widgets.Goods;
 import jamel.austrian.widgets.InvestmentProject;
@@ -741,7 +741,7 @@ public class BasicFirm extends SFCAgent implements Firm {
 		 * Updates the inventory and the costs of goods sold.<br>
 		 * The accounting method applied is first-in first-out (FIFO).
 		 */
-		private void sell(Cheque cheque) {
+		private void sell(AbstractCheque cheque) {
 
 			if (cheque.getAmount() != (int) (salesManager.currentPrice ))throw new RuntimeException("Bad cheque amount.");
 			
@@ -1035,25 +1035,25 @@ public class BasicFirm extends SFCAgent implements Firm {
 			requiredPayments = 0;			
 			for (CreditContract contract : operatingLoans){
 				if (contract.isDue()){
-					int obligation = (int) (contract.getInterest()*contract.getVolume())
+					int obligation = (int) (contract.getInterestRate()*contract.getVolume())
 							+ contract.getRedemption()  // this is zero!
 							+ contract.getDeferredInterest();
 					if (obligation>0){
 						obligations.add(contract);
 						requiredPayments += obligation;
-						fixedCosts += (int) (contract.getInterest()*contract.getVolume());
+						fixedCosts += (int) (contract.getInterestRate()*contract.getVolume());
 					}
 				}
 			}
 			for (CreditContract contract : investmentLoans){
 				if (contract.isDue()){
-					int obligation = (int) (contract.getInterest()*contract.getVolume())
+					int obligation = (int) (contract.getInterestRate()*contract.getVolume())
 							+ contract.getRedemption()
 							+ contract.getDeferredInterest();
 					if (obligation>0){
 						obligations.add(contract);
 						requiredPayments += obligation;
-						fixedCosts += (int) (contract.getInterest()*contract.getVolume());
+						fixedCosts += (int) (contract.getInterestRate()*contract.getVolume());
 					}
 				}
 			}
@@ -1089,7 +1089,7 @@ public class BasicFirm extends SFCAgent implements Firm {
 		}
 		
 		
-		private void notifySale (int costOfGoodsSold, Cheque cheque){
+		private void notifySale (int costOfGoodsSold, AbstractCheque cheque){
 		
 			costsOfGoodsSold += costOfGoodsSold;
 			revenue += cheque.getAmount();	
@@ -1400,10 +1400,10 @@ public class BasicFirm extends SFCAgent implements Firm {
 						investmentLoans.add(newContract);
 						obligations.add(newContract);
 						newInvestmentCredit+=newContract.getVolume();
-						int obligation = (int) (newContract.getInterest()*newContract.getVolume()) + newContract.getRedemption();
+						int obligation = (int) (newContract.getInterestRate()*newContract.getVolume()) + newContract.getRedemption();
 						requiredPayments += obligation;
 					}
-					Cheque cheque = creditor.acceptDebtor(newContract);
+					AbstractCheque cheque = creditor.acceptDebtor(newContract);
 					bank.deposit(BasicFirm.this, cheque ) ;
 					newCredit += cheque.getAmount() ;
 					remainingCreditRequirement -= cheque.getAmount();
@@ -1433,10 +1433,10 @@ public class BasicFirm extends SFCAgent implements Firm {
 						investmentLoans.add(newContract);
 						obligations.add(newContract);
 						newInvestmentCredit+=newContract.getVolume();
-						int obligation = (int) (newContract.getInterest()*newContract.getVolume()) + newContract.getRedemption();
+						int obligation = (int) (newContract.getInterestRate()*newContract.getVolume()) + newContract.getRedemption();
 						requiredPayments += obligation;
 					}
-					Cheque cheque = creditor.acceptDebtor(newContract);
+					AbstractCheque cheque = creditor.acceptDebtor(newContract);
 					bank.deposit(BasicFirm.this, cheque);
 					newCredit += cheque.getAmount();
 					remainingCreditRequirement = 0;
@@ -1491,15 +1491,15 @@ public class BasicFirm extends SFCAgent implements Firm {
 			if (cash >= requiredPayments){
 				for (CreditContract contract : obligations){
 					Creditor creditor = contract.getCreditor();
-					int interestAmount =  (int) (contract.getVolume()*contract.getInterest()) + contract.getDeferredInterest();
+					int interestAmount =  (int) (contract.getVolume()*contract.getInterestRate()) + contract.getDeferredInterest();
 					int redemptionAmount = contract.getRedemption();
 					if (interestAmount>0){
-						Cheque cheque1 = bank.newCheque(BasicFirm.this, interestAmount);
+						AbstractCheque cheque1 = bank.newCheque(BasicFirm.this, interestAmount);
 						creditor.receiveInterestPayment(cheque1);
 						contract.interestPayment(interestAmount);
 					}
 					if (redemptionAmount>0){		
-						Cheque cheque2 = bank.newCheque(BasicFirm.this, redemptionAmount);
+						AbstractCheque cheque2 = bank.newCheque(BasicFirm.this, redemptionAmount);
 						creditor.receiveRedemption(cheque2);
 						contract.subtract(redemptionAmount);  
 					}								
@@ -1516,9 +1516,9 @@ public class BasicFirm extends SFCAgent implements Firm {
 				float haircut = (float) cash / (float) requiredPayments;  // <1
 				int intendedPayments = 0;
 				for (CreditContract contract : obligations){	
-					int requiredPayment = (int) (contract.getInterest()*contract.getVolume()) 
-					+ contract.getDeferredInterest()
-					+ contract.getRedemption();
+					int requiredPayment = (int) (contract.getInterestRate()*contract.getVolume()) 
+								+ contract.getDeferredInterest()
+								+ contract.getRedemption();
 					intendedPayments += (int) (haircut * requiredPayment);
 				}
 				int remainder = cash - intendedPayments;			
@@ -1527,22 +1527,21 @@ public class BasicFirm extends SFCAgent implements Firm {
 				for (CreditContract contract : obligations){ //Note that the order in which debt contracts are served is the order in which they were signed.
 					i++;
 					Creditor creditor = contract.getCreditor();
-					int requiredInterest =  (int) (contract.getVolume()*contract.getInterest()) + contract.getDeferredInterest();
+					int requiredInterest =  (int) (contract.getVolume()*contract.getInterestRate()) + contract.getDeferredInterest();
 					int requiredRedemption = contract.getRedemption();
-					int obligation = requiredInterest+requiredRedemption;
-					int creditorShare = (int) (haircut * obligation);
-					if (i<=remainder) creditorShare += 1;	
+					int payment = (int) (haircut * (requiredInterest+requiredRedemption));
+					if (i<=remainder) payment += 1;	
 
 					//The outstanding amount of debt is only reduced if interest has been paid.
-					if (creditorShare >= requiredInterest){
-						int redemptionAmount = creditorShare - requiredInterest;
+					if (payment >= requiredInterest){
+						int redemptionAmount = payment - requiredInterest;
 						if (requiredInterest>0) {
-							Cheque cheque1 = bank.newCheque(BasicFirm.this, requiredInterest);		
+							AbstractCheque cheque1 = bank.newCheque(BasicFirm.this, requiredInterest);		
 							creditor.receiveInterestPayment(cheque1);
 							contract.interestPayment(requiredInterest);
 						}
 						if (redemptionAmount>0){
-							Cheque cheque2 = bank.newCheque(BasicFirm.this, redemptionAmount);
+							AbstractCheque cheque2 = bank.newCheque(BasicFirm.this, redemptionAmount);
 							creditor.receiveRedemption(cheque2);
 							contract.subtract(redemptionAmount);  
 						}								
@@ -1551,13 +1550,13 @@ public class BasicFirm extends SFCAgent implements Firm {
 						redemption += redemptionAmount;
 					}
 					else{
-						if (creditorShare>0) {
-							Cheque cheque1 = bank.newCheque(BasicFirm.this, creditorShare);
+						if (payment>0) {
+							AbstractCheque cheque1 = bank.newCheque(BasicFirm.this, payment);
 							creditor.receiveInterestPayment(cheque1);
-							contract.interestPayment(creditorShare);
+							contract.interestPayment(payment);
 						}
-						contract.deferInterest(requiredInterest - creditorShare);
-						financingCosts += creditorShare;
+						contract.deferInterest(requiredInterest - payment);
+						financingCosts += payment;
 					}
 
 
@@ -1596,7 +1595,7 @@ public class BasicFirm extends SFCAgent implements Firm {
 				Creditor creditor = contract.getCreditor();
 				int creditVolume = contract.getVolume();
 				if (bank.getBalance(BasicFirm.this) >= creditVolume){		
-					Cheque cheque = bank.newCheque(BasicFirm.this, creditVolume);
+					AbstractCheque cheque = bank.newCheque(BasicFirm.this, creditVolume);
 					creditor.receiveRedemption(cheque);
 					contract.subtract(creditVolume); 
 					redemption += creditVolume;
@@ -1604,7 +1603,7 @@ public class BasicFirm extends SFCAgent implements Firm {
 				else {
 					int remainingMoney = bank.getBalance(BasicFirm.this);
 					if (remainingMoney > 0){
-						Cheque cheque = bank.newCheque(BasicFirm.this, remainingMoney);
+						AbstractCheque cheque = bank.newCheque(BasicFirm.this, remainingMoney);
 						creditor.receiveRedemption(cheque);
 						contract.subtract(remainingMoney); 
 						redemption += remainingMoney;
@@ -1919,7 +1918,7 @@ public class BasicFirm extends SFCAgent implements Firm {
 		int nextStage = stage - 1;
 		bank = getBankingSector().selectRandomBank();
 		bank.getNewAccount(this,0);
-		Cheque cheque = getInvestmentBank().underwrite(project.getID());
+		AbstractCheque cheque = getInvestmentBank().underwrite(project.getID());
 		bank.deposit(this, cheque);
 		owners = project.getOwners();
 		for (Shareholder owner:owners.keySet()) owner.newEquityHolding(this);
@@ -2382,7 +2381,7 @@ public class BasicFirm extends SFCAgent implements Firm {
 	 * Sells one unit of the offered commodity to another agent.<br>
 	 * Puts the received money in the bank bank.
 	 */
-	public void sell(Cheque cheque ) {
+	public void sell(AbstractCheque cheque ) {
 		bank.deposit(this,cheque) ;
 		salesManager.sell(cheque);
 	}
@@ -2649,7 +2648,7 @@ public class BasicFirm extends SFCAgent implements Firm {
 	/**
 	 * Never called.
 	 */
-	public void acquireFunding(TimeDeposit timeDeposit, Cheque cheque) {
+	public void acquireFunding(TimeDeposit timeDeposit, AbstractCheque cheque) {
 		
 	}
 

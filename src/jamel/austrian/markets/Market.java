@@ -273,7 +273,8 @@ public class Market extends SFCAgent {
 
 
 	/**
-	 * Registers a sale and removes the offer from the market if applicable.
+	 * Registers a sale and removes the offer from the market if applicable <br>
+	 * Does not apply for market with unlimited supply.
 	 */
 	public void registerSale(Offer offer, int soldQuantity, boolean keepZeros) {	
 		

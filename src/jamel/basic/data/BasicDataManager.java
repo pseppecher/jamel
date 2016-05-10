@@ -1,17 +1,11 @@
 package jamel.basic.data;
 
-import jamel.Jamel;
-import jamel.basic.gui.BasicXYZDataset;
-import jamel.basic.gui.DynamicHistogramDataset;
-import jamel.basic.gui.Updatable;
-import jamel.basic.util.InitializationException;
-import jamel.basic.util.Timer;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,7 +18,14 @@ import org.jfree.data.xy.XYDataItem;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYZDataset;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import jamel.basic.gui.BasicXYZDataset;
+import jamel.basic.gui.DynamicHistogramDataset;
+import jamel.basic.gui.Updatable;
+import jamel.basic.util.InitializationException;
+import jamel.basic.util.Timer;
 
 /**
  * A basic data manager.
@@ -49,20 +50,313 @@ public class BasicDataManager {
 
 	}
 
-	/** The number format for exporting data. */
-	final private static DecimalFormat nf = (DecimalFormat) NumberFormat.getNumberInstance(new Locale("en", "UK"));
+	/**
+	 * Definition of an export of data in an external file.
+	 */
+	private abstract class Export {
+
+		/**
+		 * The end of the export.
+		 */
+		final private Integer end;
+
+		/**
+		 * Periodicity of the export (=12 if annual).
+		 */
+		final private Integer mod;
+
+		/**
+		 * The start of the export.
+		 */
+		final private Integer start;
+
+		/** The number format for exporting data. */
+		protected final DecimalFormat nf = (DecimalFormat) NumberFormat.getNumberInstance(new Locale("en", "UK"));
+
+		/**
+		 * The output file.
+		 */
+		protected final File outputFile;
+
+		/**
+		 * Characters used to separate rows in the output file.
+		 * Any character may be used, but the most common delimiters are the
+		 * comma, tab, and colon. The vertical bar (also referred to as pipe)
+		 * and space are also sometimes used.
+		 */
+		protected final String separator;
+
+		/**
+		 * Creates an new Export.
+		 * 
+		 * @param description
+		 *            the description of the Export to be created.
+		 * @param path
+		 *            the path to the parent file.
+		 */
+		public Export(Element description, String path) {
+
+			if (path == null) {
+				throw new IllegalArgumentException("Path is null");
+			}
+
+			if (description.getAttribute("numberFormat").equals("")) {
+				nf.applyPattern("###.####");
+			} else {
+				nf.applyPattern(description.getAttribute("numberFormat"));
+			}
+
+			if (description.getAttribute("separator").equals("")) {
+				separator = ";";
+			} else {
+				separator = description.getAttribute("separator");
+			}
+
+			final String when = description.getAttribute("when");
+			if (when.equals("")) {
+				start = 0;
+				end = null;
+			} else {
+				final String[] bounds = when.split("-");
+				if (bounds.length == 2) {
+					start = Integer.parseInt(bounds[0]);
+					end = Integer.parseInt(bounds[1]);
+				} else {
+					start = Integer.parseInt(bounds[0]);
+					end = start;
+				}
+			}
+
+			final String each = description.getAttribute("each");
+			if (each.equals("")) {
+				mod = null;
+			} else {
+				mod = Integer.parseInt(each);
+			}
+
+			final String fileName = path + "/" + description.getAttribute("file");
+			this.outputFile = new File(fileName);
+			/*if (this.outputFile.exists()) {
+				this.outputFile.delete();
+			}*/
+
+			try {
+				final File parentFile = outputFile.getParentFile();
+				if (!parentFile.exists()) {
+					parentFile.mkdirs();
+				}
+				outputFile.createNewFile();
+			} catch (IOException e) {
+				throw new RuntimeException("Unable to create the file: " + fileName, e);
+			}
+
+		}
+
+		/**
+		 * Writes data in the output file.
+		 */
+		protected abstract void write();
+
+		/**
+		 * Exports the data in the output file.
+		 */
+		final public void run() {
+			final int now = timer.getPeriod().intValue();
+			if ((start == null && end == null) || (start == null && now <= end) || (start <= now && end == null)
+					|| (start <= now && now <= end)) {
+				if (mod == null || now % mod == 0) {
+					write();
+				}
+			}
+		}
+
+	}
+
+	/**
+	 * Export of aggregate data.
+	 */
+	private class ExportAggregate extends Export {
+
+		/** List of the expressions to be exported. */
+		private final List<Expression> expressions = new LinkedList<Expression>();
+
+		/**
+		 * Creates an new Export.
+		 * 
+		 * @param description
+		 *            the description of the export to be created.
+		 * @param path
+		 *            the path to the parent file.
+		 */
+		public ExportAggregate(Element description, String path) {
+
+			super(description, path);
+
+			final NodeList exportNodeList = description.getChildNodes();
+
+			for (int i = 0; i < exportNodeList.getLength(); i++) {
+				if (exportNodeList.item(i).getNodeName().equals("data")) {
+					final Element data = (Element) exportNodeList.item(i);
+					final String queryString = data.getAttribute("value");
+					final String name;
+					if (data.getAttribute("name").equals("")) {
+						name = null;
+					} else {
+						name = data.getAttribute("name");
+					}
+					Expression expression;
+					try {
+						expression = macroDatabase.newQuery(queryString);
+						expression.setName(name);
+						this.expressions.add(expression);
+					} catch (InitializationException e) {
+						e.printStackTrace();
+						expression = ExpressionFactory.newNullExpression("Error: " + queryString);
+						this.expressions.add(expression);
+					}
+				}
+			}
+
+			try {
+				// Writes the headers in the file.
+				final FileWriter writer = new FileWriter(outputFile, true);
+				for (Expression query : expressions) {
+					final String title;
+					if (query.getName() != null) {
+						title = query.getName();
+					} else {
+						title = query.getQuery();
+					}
+					writer.write(title + this.separator);
+				}
+				writer.write(rc);
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}
+
+		@Override
+		protected void write() {
+			try {
+				FileWriter writer = new FileWriter(outputFile, true);
+				for (Expression query : this.expressions) {
+					final Double val = query.value();
+					if (val != null && !val.isNaN() && !val.isInfinite()) {
+						writer.write(nf.format(val) + separator);
+					} else {
+						writer.write("nan" + separator);
+					}
+				}
+				writer.write(rc);
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * Export of individual data.
+	 */
+	private class ExportIndividual extends Export {
+
+		/**
+		 * The labels of the data to be exported.
+		 */
+		private final List<String> labels = new LinkedList<String>();
+
+		/**
+		 * The queries defining the data to be exported.
+		 */
+		private final List<String> queries = new LinkedList<String>();
+
+		/**
+		 * The sector.
+		 */
+		private final String sector;
+
+		/**
+		 * Creates an new Export.
+		 * 
+		 * @param description
+		 *            the description of the export to be created.
+		 * @param path
+		 *            the path to the parent file.
+		 */
+		public ExportIndividual(Element description, String path) {
+
+			super(description, path);
+
+			this.sector = description.getAttribute("sector");
+
+			final NodeList exportNodeList = description.getChildNodes();
+
+			for (int i = 0; i < exportNodeList.getLength(); i++) {
+				if (exportNodeList.item(i).getNodeName().equals("data")) {
+					final Element data = (Element) exportNodeList.item(i);
+					final String queryString = data.getAttribute("value");
+					final String name;
+					if (data.getAttribute("name").equals("")) {
+						name = null;
+					} else {
+						name = data.getAttribute("name");
+					}
+
+					this.labels.add(name);
+					this.queries.add(queryString);
+				}
+			}
+
+		}
+
+		@Override
+		protected void write() {
+			try {
+				FileWriter writer = new FileWriter(outputFile, true);
+				int index = 0;
+				for (String name : this.labels) {
+					if (name != null) {
+						name = this.queries.get(index);
+					}
+					writer.write(name + separator);
+					index++;
+				}
+				writer.write(rc);
+
+				final Object[][] data = macroDatabase.getData(sector, queries.toArray(new String[0]),
+						timer.getPeriod().intValue(), "");
+				for (int i = 0; i < data.length; i++) {
+					for (int j = 0; j < data[i].length; j++) {
+						final String result;
+						final Object value = data[i][j];
+						if (value == null) {
+							result = "nan";
+						} else if (value instanceof Number) {
+							result = nf.format(value);
+						} else {
+							result = value.toString();
+						}
+						writer.write(result + separator);
+					}
+					writer.write(rc);
+				}
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	/** The line separator. */
 	final private static String rc = System.getProperty("line.separator");
 
-	/** List of the data to be exported. */
-	private final List<Expression> exports = new LinkedList<Expression>();
-
 	/** List of the export events for the current period. */
-	private final List<Element> exportEvents = new LinkedList<Element>();
+	// private final List<Element> exportEvents = new LinkedList<Element>();
 
-	/** The output file. */
-	private File outputFile = null;
+	/** List of the exports. */
+	private final List<Export> exports = new LinkedList<Export>();
 
 	/**
 	 * The collection of the dynamic data used by the GUI. These data are
@@ -97,88 +391,49 @@ public class BasicDataManager {
 		}
 		this.timer = timer;
 		this.macroDatabase = getNewMacroDataset();
-		this.initExport(elem);
-	}
-
-	/**
-	 * Exports the data into the output file.
-	 * 
-	 * @throws IOException
-	 *             If something goes wrong.
-	 */
-	private void exportData() throws IOException {
-		if (outputFile != null && outputFile.exists()) {
-			FileWriter writer = new FileWriter(outputFile, true);
-			for (Expression query : exports) {
-				final Double val = query.value();
-				if (val != null) {
-					writer.write(nf.format(val) + ";");
-				} else {
-					writer.write("null;");
-				}
-			}
-			writer.write(rc);
-			writer.close();
-		}
+		this.initExport(elem, path);
 	}
 
 	/**
 	 * Initializes the exportation of data.
 	 * 
-	 * @param elem
+	 * @param truc
 	 *            an XML element that contains the description of the data to be
 	 *            exported.
+	 * @param path
+	 *            the path to the scenario file.
 	 */
-	private void initExport(Element elem) {
-		nf.applyPattern("###.##");
-		final NodeList nodeList = elem.getChildNodes();
-		NodeList exportNodeList = null;
-		for (int i = 0; i < nodeList.getLength(); i++) {
-			if (nodeList.item(i).getNodeName().equals("export")) {
-				final Element export = (Element) nodeList.item(i);
-				final String fileName = export.getAttribute("file");
-				outputFile = new File(fileName);
-				if (this.outputFile.exists()) {
-					this.outputFile.delete();
-				}
-				try {
-					final File parentFile = outputFile.getParentFile();
-					if (!parentFile.exists()) {
-						parentFile.mkdirs();
-					}
-					outputFile.createNewFile();
-				} catch (IOException e) {
-					throw new RuntimeException("Unable to create the file: "+fileName,e);
-				}
-				exportNodeList = export.getChildNodes();
-				break;
-			}
+	private void initExport(Element truc, String path) {
+
+		// 2016-03-28: petite modification de la syntaxe.
+		// Un tag 'exports' doit encadrer toutes les tags 'export'.
+		// Seule la première balise <exports> est prise en compte.
+		// 2016-04-03: implémentation du cas où le tag 'exports' est absente.
+
+		if (path == null) {
+			throw new IllegalArgumentException("Path is null");
 		}
-		if (outputFile != null && outputFile.exists()) {
-			for (int i = 0; i < exportNodeList.getLength(); i++) {
-				if (exportNodeList.item(i).getNodeName().equals("data")) {
-					final Element data = (Element) exportNodeList.item(i);
-					final String queryString = data.getAttribute("value");
-					Expression expression;
-					try {
-						expression = this.macroDatabase.newQuery(queryString);
-						this.exports.add(expression);
-					} catch (InitializationException e) {
-						e.printStackTrace();
-						expression = ExpressionFactory.newNullExpression("Error: " + queryString);
-						this.exports.add(expression);
+
+		final Node elem = truc.getElementsByTagName("exports").item(0);
+		if (elem != null) {
+			final NodeList nodeList = elem.getChildNodes();
+			for (int i = 0; i < nodeList.getLength(); i++) {
+				if (nodeList.item(i).getNodeName().equals("export")) {
+					final Element exportElem = (Element) nodeList.item(i);
+					final String type = exportElem.getAttribute("data.type");
+					final Export export;
+					if (type.equals("aggregate")) {
+						export = new ExportAggregate(exportElem, path);
+					} else if (type.equals("individual")) {
+						export = new ExportIndividual(exportElem, path);
+					} else {
+						export = null;
+						throw new RuntimeException("Unknown type: " + type);
 					}
+
+					this.exports.add(export);
 				}
-			}
-			try {
-				final FileWriter writer = new FileWriter(outputFile, true);
-				for (Expression query : exports) {
-					writer.write(query.getQuery() + ";");
-				}
-				writer.write(rc);
-				writer.close();
-			} catch (IOException e) {
-				e.printStackTrace();
+
 			}
 		}
 	}
@@ -280,6 +535,41 @@ public class BasicDataManager {
 	 */
 	public MacroDatabase getMacroDatabase() {
 		return this.macroDatabase;
+	}
+
+	/**
+	 * Creates and returns a collection of expressions providing access to the MacroDataBase.
+	 * @param elem the XML description of the expressions to be created.
+	 * @return a collection of expressions.
+	 * @throws InitializationException if something goes wrong.
+	 */
+	public Map<String, Expression> getNewDataMap(Element elem) throws InitializationException {
+		/*
+		 * 2016-03-17 / Creation d'un registre contenant les données
+		 * statistiques qui peuvent être délivrées aux agents du modèle. Par
+		 * exemple, la banque peut avoir besoin de connaître l'inflation pour
+		 * calculer son taux d'intérêt nominal.
+		 * 2016-05-01 / Deplacement de cette methode de BasicCircuit vers BasicDataManager.
+		 */
+		final Map<String, Expression> result = new HashMap<String, Expression>();
+		final Element queriesNode = (Element) elem.getElementsByTagName("queries").item(0);
+		if (queriesNode != null) {
+			final NodeList queriesList = queriesNode.getChildNodes();
+			for (int i = 0; i < queriesList.getLength(); i++) {
+				final Node item = queriesList.item(i);
+				if (item.getNodeType() == Node.ELEMENT_NODE) {
+					final Element element = (Element) item;
+					final String query = element.getNodeName();
+					final String value = element.getAttribute("value");
+					if (value == null) {
+						throw new InitializationException(query + ". Value is missing.");
+					}
+					final Expression expression = this.getMacroDatabase().newQuery(value);
+					result.put(query, expression);
+				}
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -476,69 +766,20 @@ public class BasicDataManager {
 	 */
 	public void update() {
 		this.updateSeries();
-		try {
-			this.exportData();
-		} catch (IOException e) {
-			e.printStackTrace();
+		// Exports the data into the output file.
+		for (Export export : exports) {
+			export.run();
 		}
-		for (Element event:exportEvents) {
+		/*
+		 * 2016-05-01: inutile.
+		 * for (Element event : exportEvents) {
 			try {
-				truc(event);
+				exportData(event);
 			} catch (IOException e) {
-				throw new RuntimeException("Something went wrong while exporting data.",e);
+				throw new RuntimeException("Something went wrong while exporting data.", e);
 			}
 		}
-		exportEvents.clear();
-	}
-	
-	 void truc(Element event) throws IOException {
-		
-		final int period = Integer.parseInt(event.getAttribute("period"));
-		if (period!=this.timer.getPeriod().intValue()) {
-			throw new IllegalArgumentException("Bad period: "+period);
-		}
-		final String fileName = event.getAttribute("file");
-		final File exportFile = new File(fileName);
-		if (exportFile.exists()) {
-			exportFile.delete();
-		}
-		try {
-			final File parentFile = exportFile.getParentFile();
-			if (!parentFile.exists()) {
-				parentFile.mkdirs();
-			}
-			exportFile.createNewFile();
-		} catch (IOException e) {
-			throw new RuntimeException("Something went wrong while creating the file: "+fileName,e);
-		}
-		final NodeList nodes = event.getChildNodes();
-		final FileWriter writer = new FileWriter(exportFile, true);
-		for(int i=0; i<nodes.getLength(); i++) {
-			final String nodeName = nodes.item(i).getNodeName();
-			if (nodeName.equals("forEach")) {
-				Element elem = (Element) nodes.item(i);
-				final String sector = elem.getAttribute("sector");
-				final String keys = elem.getAttribute("data");
-				final String select = elem.getAttribute("select");
-				Object[][] data = this.macroDatabase.getData(sector, keys, timer.getPeriod().intValue(), select);
-				if (data==null) {
-					writer.close();
-					throw new RuntimeException("Something went wrong while exporting data.");
-				}
-				for (int j=0; j<data.length; j++) {
-					for (int k=0; k<data[j].length; k++) {
-						writer.write(data[j][k].toString() + ";");
-					}
-					writer.write(rc);
-				}
-			}
-		}
-		writer.write(rc);
-		writer.close();
-	}
-
-	public void export(Element event) {		
-		this.exportEvents.add(event);
+		exportEvents.clear();*/
 	}
 
 }

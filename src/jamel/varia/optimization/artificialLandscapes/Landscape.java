@@ -30,7 +30,7 @@ public abstract class Landscape implements Sector {
 	private final String name;
 
 	/** The parameters of the sector. */
-	private final JamelParameters params = new BasicParameters();
+	private final JamelParameters params;
 
 	/**
 	 * Creates a new sector.
@@ -42,6 +42,12 @@ public abstract class Landscape implements Sector {
 	 */
 	public Landscape(String name, Circuit circuit) {
 		this.name = name;
+		this.params = new BasicParameters(name);
+	}
+
+	@Override
+	public Object askFor(String key) {
+		throw new RuntimeException("Not used.");
 	}
 
 	@Override
@@ -62,6 +68,12 @@ public abstract class Landscape implements Sector {
 
 			@Override
 			public Double getAgentValue(String string1, String string2) {
+				// Not used.
+				throw new RuntimeException("Not yet implemented");
+			}
+
+			@Override
+			public Object[][] getData(String[] dataKeys, String select) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
 			}
@@ -133,12 +145,6 @@ public abstract class Landscape implements Sector {
 
 			@Override
 			public void putSectorialValue(String string, Number n) {
-				// Not used.
-				throw new RuntimeException("Not yet implemented");
-			}
-
-			@Override
-			public Object[][] getData(String keys, String select) {
 				// Not used.
 				throw new RuntimeException("Not yet implemented");
 			}

@@ -2,14 +2,15 @@
 
 <charts
 	content="Configuration of the chart panels for the Beale scenario"
-	date="21-07-2015">
+	date="21-07-2015"
+>
 
-	<panel
-		title="Main">
+	<panel title="Main">
 
 		<chart
 			title="Landscape"
-			type="scatter chart">
+			type="scatter chart"
+		>
 			<series
 				sector="Simplex0"
 				x="x"
@@ -40,13 +41,15 @@
 				y="y"
 				color="cyan"
 				label="Simplex 4" />
-			<series xyBlockSeries="true"
+			<series
+				xyBlockSeries="true"
 				sector="Landscape"
 				x="x"
 				y="y"
 				z="z"
 				blockWidth="0.05"
-				blockHeight="0.05">
+				blockHeight="0.05"
+			>
 				<scale
 					type="colorScale"
 					lowerBound="0"
@@ -69,7 +72,12 @@
 				max="5" />
 		</chart>
 
-		<chart title="Fitness" type ="time chart">
+		<col />
+
+		<chart
+			title="Fitness"
+			type="time chart"
+		>
 			<series
 				value="mean(Simplex0,fitness,t)"
 				color="red"
@@ -93,40 +101,14 @@
 			<yAxis
 				min="0"
 				max="100"
-				logarithmic="true"/>
+				logarithmic="true" />
 		</chart>
 
 	</panel>
 
-<panel title="Info">
-		<html>
-			<center>
-				<h3>
-					<jamel.version />
-				</h3>
-				By
-				<a href="http://p.seppecher.free.fr/">Dr P. Seppecher</a>
-				(original author, U. of Paris 13 and U. of Nice Sophia Antipolis), 
-				<a
-					href="http://www.uva.nl/en/about-the-uva/organisation/staff-members/content/s/a/i.l.salle/i.l.salle.html">
-					Dr I. Salle
-				</a>
-				(U. of Amsterdam) and 
-				<a
-					href="http://www.austrian-models.net/">
-					Dr H. Hagedorn
-				</a>  (Business and Information Technology School, Berlin, Germany).
-				<h1>Java Agent-based MacroEconomic Laboratory</h1>
-				&#169; 2007-2015, P. Seppecher and Contributors.
-				<br />
-				<br />
-				Source code:
-				<a href="https://github.com/pseppecher/jamel">https://github.com/pseppecher/jamel</a>
-				<br />
-				Javadoc:
-				<a href="http://p.seppecher.free.fr/jamel/javadoc/index.html">http://p.seppecher.free.fr/jamel/javadoc/index.html</a>
-			</center>
-		</html>
+	<panel title="Info">
+		<html source="../../../util/about.xml" />
 	</panel>
-	
+
+
 </charts>

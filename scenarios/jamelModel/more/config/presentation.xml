@@ -1,0 +1,56 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<html
+	content="Presentation: Is the market really a good teacher?"
+	date="2016-04-28"
+>
+	<style> .centered { width: 500px; text-align: center; } .justified {
+		width: 500px; text-align: justify; }
+	</style>
+	<br />
+	<br />
+	<h1 class="centered"> Is the market really a good teacher?</h1>
+	<h2 class="centered">
+		Market selection, collective adaptation
+		<br />
+		and financial instability
+	</h2>
+	<br />
+	<h3 class="centered">
+		Pascal Seppecher, Isabelle Salle, Dany Lang
+		<br />
+		28th April 2016
+	</h3>
+	<p class="justified">
+		<b>Abstract:</b>
+		This paper proposes to model market mechanisms as a collective
+		learning process for firms in a complex adaptive system, namely
+		<i>Jamel,</i>
+		an agent-based, stock-flow consistent macroeconomic model. Inspired by
+		Alchian's (1950) "blanketing shotgun process" idea, our learning model
+		is an ever-adapting process that puts a significant weight on
+		exploration
+		<i>vis-à-vis</i>
+		exploitation. We show that decentralized market selection allows firms
+		to collectively adapt their overall debt strategies to the changes in
+		the macroeconomic environment so that the system sustains itself, but
+		at the cost of recurrent deep downturns. We conclude that, in complex
+		evolving economies, market processes do not lead to the selection of
+		optimal behaviors, as the characterization of successful behaviors
+		itself constantly evolves as a result of the market conditions that
+		these behaviors contribute to shape. Heterogeneity in behavior remains
+		essential to adaptation in such an ever-changing environment. We come
+		to an evolutionary characterization of a crisis, as the point where
+		the evolution of the macroeconomic system becomes faster than the
+		adaptation capabilities of the agents that populate it, and the so far
+		selected performing behaviors suddenly cease to be, and become instead
+		undesirable.
+	</p>
+	<p class="justified">
+		<b>Keywords:</b>
+		Evolutionary economics, Learning, Firms' adaptation, Business cycles.
+	</p>
+	<p class="justified">
+		<b>JEL classification codes:</b>
+		B52, C63, D83, E32.
+	</p>
+</html>

@@ -1,5 +1,6 @@
 package jamel.basic;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -8,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import javax.swing.SwingUtilities;
+
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -15,12 +18,14 @@ import org.w3c.dom.NodeList;
 import jamel.Jamel;
 import jamel.basic.data.BasicDataManager;
 import jamel.basic.data.BasicSectorDataset;
+import jamel.basic.data.Expression;
 import jamel.basic.data.SectorDataset;
 import jamel.basic.gui.GUI;
 import jamel.basic.sector.Phase;
 import jamel.basic.sector.Sector;
 import jamel.basic.util.BasicTimer;
 import jamel.basic.util.InitializationException;
+import jamel.basic.util.InputParameterDialog;
 import jamel.basic.util.Period;
 import jamel.basic.util.Timer;
 
@@ -108,17 +113,34 @@ public class BasicCircuit implements Circuit {
 	/**
 	 * Returns a new Random.
 	 * 
+	 * @param circuitName
+	 *            the name of the Circuit.
 	 * @param settings
 	 *            a XML element that contains the settings.
 	 * @return a new Random.
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	private static Random getNewRandom(Element settings) throws InitializationException {
+	private static Random getNewRandom(String circuitName, Element settings) throws InitializationException {
+		final String key = "randomSeed";
 		Random result = null;
-		final String randomSeed = settings.getAttribute("randomSeed");
+		String randomSeed = settings.getAttribute(key);
 		if ("".equals(randomSeed)) {
-			throw new InitializationException("Circuit settings: Missing attribute: \"randomSeed\"");
+
+			// Si le paramètre est manquant on le demande à l'utilisateur.
+
+			final InputParameterDialog input = new InputParameterDialog(circuitName, key);
+
+			try {
+				SwingUtilities.invokeAndWait(input);
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+
+			randomSeed = input.getValue();
+
 		}
 		try {
 			final int seed = Integer.parseInt(randomSeed);
@@ -140,7 +162,7 @@ public class BasicCircuit implements Circuit {
 	 * @throws InitializationException
 	 *             If something goes wrong.
 	 */
-	private static LinkedHashMap<String, Sector> getNewSectors(Circuit circuit, Element params)
+	private static HashMap<String, Sector> getNewSectors(Circuit circuit, Element params)
 			throws InitializationException {
 		final LinkedHashMap<String, Sector> result = new LinkedHashMap<String, Sector>();
 		final Element sectorsNode = (Element) params.getElementsByTagName("sectors").item(0);
@@ -226,24 +248,6 @@ public class BasicCircuit implements Circuit {
 	}
 
 	/**
-	 * @param elem
-	 *            a XML element with the settings.
-	 * @param timer
-	 *            the timer.
-	 * @param path
-	 *            the path of scenario file.
-	 * @param name
-	 *            the name of the scenario file.
-	 * @return a new basic data manager.
-	 * @throws InitializationException
-	 *             If something goes wrong.
-	 */
-	protected static BasicDataManager getNewDataManager(Element elem, Timer timer, String path, String name)
-			throws InitializationException {
-		return new BasicDataManager(elem, timer, path, name);
-	}
-
-	/**
 	 * Returns a XML element that contains the settings of the circuit.
 	 * 
 	 * @param params
@@ -259,7 +263,7 @@ public class BasicCircuit implements Circuit {
 	private final Map<Integer, List<Element>> events;
 
 	/** The name of the scenario. */
-	final private String name;
+	final private String fileName;
 
 	/** A flag that indicates if the simulation is paused or not. */
 	private boolean pause;
@@ -271,6 +275,11 @@ public class BasicCircuit implements Circuit {
 
 	/** The phases of the circuit. */
 	private final List<Phase> phases;
+
+	/**
+	 * A collection of data the agents can access (e.g. the inflation rate)
+	 */
+	private final Map<String, Expression> publicData;
 
 	/** The random. */
 	private final Random random;
@@ -311,42 +320,53 @@ public class BasicCircuit implements Circuit {
 	 *             If something goes wrong.
 	 */
 	public BasicCircuit(final Element elem, String path, String name) throws InitializationException {
-		this.name = name;
+		if (path == null) {
+			throw new IllegalArgumentException("Path is null");
+		}
+		this.fileName = name;
 		final String title = elem.getAttribute("title");
 		this.timer = new BasicTimer(0);
 		final Element settings = getSettings(elem);
-		this.random = getNewRandom(settings);
+		this.random = getNewRandom(name, settings);
 		this.sleep = getSleep(settings);
 		this.sectors = getNewSectors(this, elem);
 		initSectors(this.sectors, elem);
 		this.phases = getNewPhases(this.sectors, elem);
 		this.events = getNewEvents(elem);
-		this.dataManager = getNewDataManager(elem, timer, path, name);
-		this.gui = new GUI(title + " (" + name + ")", this, this.dataManager, this.timer, settings, path);
+		this.dataManager = new BasicDataManager(elem, timer, path, name);// getNewDataManager(elem,
+																			// timer,
+																			// path,
+																			// name);
+		this.publicData = dataManager.getNewDataMap(elem);
+		final String hasGui = settings.getAttribute("hasGui");
+		if (hasGui.equals("true") || hasGui.equals("")) {
+			this.gui = new GUI(title + " (" + name + ")", this, this.dataManager, this.timer, settings, path);
+		} else if (hasGui.equals("false")) {
+			this.gui = null;
+		} else {
+			throw new InitializationException("Circuit settings: hasGui: unexpected value: " + hasGui);
+		}
 	}
 
 	/**
 	 * Executes the events of the simulation.
 	 */
 	private void doEvents() {
+		// 2016-03-27: simplification de la procédure et de la syntaxe des
+		// événements
 		final List<Element> eventList = this.events.get(this.timer.getPeriod().intValue());
 		if (eventList != null) {
 			for (Element event : eventList) {
+				final String eventName = event.getNodeName();
 				final String markerMessage = event.getAttribute("marker");
 				if (!"".equals(markerMessage)) {
 					this.gui.addMarker(markerMessage, this.timer.getPeriod().intValue());
 				}
-				final String sectorName = event.getAttribute("sector");
-				if ("".equals(sectorName)) {
-					this.doEvents(event);
-				} else {
-					final Sector sector = this.sectors.get(sectorName);
-					if (sector == null) {
-						final Throwable cause = new Throwable("Sector not found: \"" + sectorName + "\"");
-						throw new RuntimeException("Something wrong with the event: \"" + event.getTagName() + "\"",
-								cause);
-					}
+				final Sector sector = this.sectors.get(eventName);
+				if (sector != null) {
 					sector.doEvent(event);
+				} else {
+					this.doEvent(event);
 				}
 			}
 		}
@@ -358,11 +378,17 @@ public class BasicCircuit implements Circuit {
 	 * @param event
 	 *            a XML element that describes the event to be executed.
 	 */
-	private void doEvents(Element event) {
+	private void doEvent(Element event) {
 		if (event.getNodeName().equals("pause")) {
 			setPause(true);
-		} else if (event.getNodeName().equals("export")) {
-			this.dataManager.export(event);
+			// 2016-05-01
+			// } else if (event.getNodeName().equals("export")) {
+			// this.dataManager.export(event);
+		} else if (event.getNodeName().equals("end")) {
+			this.run = false;
+		} else if (event.getNodeName().equals("marker")) {
+			// 2016-03-27
+			// Does nothing (a marker is added to the charts).
 		} else {
 			throw new RuntimeException("Unknown event: " + event.getNodeName());
 		}
@@ -394,9 +420,11 @@ public class BasicCircuit implements Circuit {
 	private void doPeriod() {
 		this.doEvents();
 		this.updateData();
-		this.gui.update();
-		sleep(this.sleep);
-		this.doPause();
+		if (gui != null) {
+			this.gui.update();
+			sleep(this.sleep);
+			this.doPause();
+		}
 		timer.next();
 		for (Phase phase : phases) {
 			try {
@@ -446,13 +474,23 @@ public class BasicCircuit implements Circuit {
 	}
 
 	@Override
+	public Object askFor(String key) {
+		/*
+		 * 2016-03-17 / Pour permettre à la banque d'accéder au taux
+		 * d'inflation.
+		 */
+		this.publicData.get(key).value();
+		return this.publicData.get(key).value();
+	}
+
+	@Override
 	public Period getCurrentPeriod() {
 		return this.timer.getPeriod();
 	}
 
 	@Override
 	public String getName() {
-		return this.name;
+		return this.fileName;
 	}
 
 	@Override

@@ -1,0 +1,203 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<html
+	title="Balance sheet matrice"
+	content="Is the market really a good teacher?"
+	date="2016-04-30"
+>
+	<style>
+		.boldtable,
+		.boldtable td,
+		.boldtable th {
+		font-family:sans-serif;
+		font-size:12pt;
+		}
+	</style>
+
+	<br />
+	<br />
+	<br />
+	<br />
+	<table
+		border="0"
+		align="center"
+		class="boldtable"
+		cellspacing="10"
+	>
+		<caption>
+			Balance Sheet Matrix (period
+			<data value="time()" />
+			)
+		</caption>
+		<tr>
+			<td colspan="6">
+				<hr />
+			</td>
+		</tr>
+		<tr>
+			<th
+				WIDTH="120"
+				align="center" />
+			<th
+				WIDTH="110"
+				align="center"
+			>Households</th>
+			<th
+				WIDTH="110"
+				align="center"
+			>Firms</th>
+			<th
+				WIDTH="110"
+				align="center"
+			>Banks</th>
+			<th
+				WIDTH="110"
+				align="center"
+			>&#931;</th>
+		</tr>
+		<tr>
+			<td colspan="6">
+				<hr />
+			</td>
+		</tr>
+		<tr align="right">
+			<th>In Process</th>
+			<td />
+			<td>
+				<data value="sum ( Industry , inventories.inProcess.val , t ) " />
+			</td>
+			<td />
+			<td>
+				<data value="sum ( Industry , inventories.inProcess.val , t ) " />
+			</td>
+		</tr>
+		<tr align="right">
+			<th>Finished Goods</th>
+			<td />
+			<td>
+				<data value="sum ( Industry , inventories.fg.val , t ) " />
+			</td>
+			<td />
+			<td>
+				<data value="sum ( Industry , inventories.fg.val , t ) " />
+			</td>
+		</tr>
+		<tr align="right">
+			<th>Equipment</th>
+			<td />
+			<td>
+				<data value="sum ( Industry , machinery.val , t ) " />
+			</td>
+			<td />
+			<td>
+				<data value="sum ( Industry , machinery.val , t ) " />
+			</td>
+		</tr>
+		<tr align="right">
+			<th>Deposits</th>
+			<td>
+				<data value="sum ( Households , money , t ) " />
+			</td>
+			<td>
+				<data value="sum ( Industry , cash , t ) " />
+			</td>
+			<td>
+				<data value="-sum ( Banks , liabilities , t ) " />
+			</td>
+			<td>
+				<data
+					value="sum ( Households , money , t ) 
+						+ sum ( Industry , cash , t ) 
+						- sum ( Banks , liabilities , t ) " />
+			</td>
+		</tr>
+		<tr align="right">
+			<th>Short Term Loans</th>
+			<td />
+			<td>
+				<data value="-sum ( Industry , debt.shortTerm , t ) " />
+			</td>
+			<td>
+				<data value="sum ( Banks , loans.shortTerm , t ) " />
+			</td>
+			<td>
+				<data
+					value="sum ( Banks , loans.shortTerm , t )
+						- sum ( Industry , debt.shortTerm , t ) " />
+			</td>
+		</tr>
+		<tr align="right">
+			<th>Long Term Loans</th>
+			<td />
+			<td>
+				<data value="-sum ( Industry , debt.longTerm , t ) " />
+			</td>
+			<td>
+				<data value="sum ( Banks , loans.longTerm , t ) " />
+			</td>
+			<td>
+				<data
+					value="sum ( Banks , loans.longTerm , t ) 
+						- sum ( Industry , debt.longTerm , t ) " />
+			</td>
+		</tr>
+		<tr align="right">
+			<th>Equities</th>
+			<td>
+				<data value="sum ( Households , equities , t ) " />
+			</td>
+			<td>
+				<data value="-sum ( Industry , capital , t ) " />
+			</td>
+			<td>
+				<data value="-sum ( Banks , capital , t ) " />
+			</td>
+			<td>
+				<data
+					value="sum ( Households , equities , t )
+						- sum ( Industry , capital , t ) 
+						- sum ( Banks , capital , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<td colspan="6">
+				<hr />
+			</td>
+		</tr>
+		<tr align="right">
+			<th>&#931;</th>
+			<td>
+				<data
+					value="sum ( Households , money , t ) 
+						+ sum ( Households , equities , t ) " />
+			</td>
+			<td>
+				<data
+					value="sum ( Industry , inventories.inProcess.val , t ) 
+						+ sum ( Industry , inventories.fg.val , t ) 
+						+ sum ( Industry , machinery.val , t ) 
+						+ sum ( Industry , cash , t ) 
+						- sum ( Industry , liabilities , t ) 
+						- sum ( Industry , capital , t ) " />
+			</td>
+			<td>
+				<data
+					value="- sum ( Banks , liabilities , t ) 
+						+ sum ( Banks , assets , t ) 
+						- sum ( Banks , capital , t ) " />
+			</td>
+			<td>
+				<data
+					value="sum ( Industry , inventories.inProcess.val , t ) 
+						+ sum ( Industry , inventories.fg.val , t ) 
+						+ sum ( Industry , machinery.val , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<td colspan="6">
+				<hr />
+			</td>
+		</tr>
+
+	</table>
+
+</html>

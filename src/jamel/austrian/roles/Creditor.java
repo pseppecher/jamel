@@ -1,18 +1,18 @@
 package jamel.austrian.roles;
 
 import jamel.austrian.roles.Offerer;
-import jamel.austrian.widgets.Cheque;
+import jamel.austrian.widgets.AbstractCheque;
 import jamel.austrian.widgets.CreditContract;
 import jamel.austrian.widgets.TimeDeposit;
 
 
 public interface Creditor extends Offerer {
 
-	Cheque acceptDebtor(CreditContract newContract);
+	AbstractCheque acceptDebtor(CreditContract newContract);
 
-	void receiveInterestPayment(Cheque cheque);
+	void receiveInterestPayment(AbstractCheque cheque);
 
-	void receiveRedemption(Cheque cheque);
+	void receiveRedemption(AbstractCheque cheque);
 
 	void notifyDefault(TimeDeposit timeDeposit);
 	

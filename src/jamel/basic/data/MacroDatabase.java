@@ -18,6 +18,21 @@ public interface MacroDatabase {
 	public void clear();
 
 	/**
+	 * Returns sector data at individual level.
+	 * 
+	 * @param sector
+	 *            the sector.
+	 * @param keys
+	 *            the keys of the data to be returned.
+	 * @param t
+	 *            the period of the data to be returned.
+	 * @param select
+	 *            selection mode.
+	 * @return a dataset of individual data.
+	 */
+	public Object[][] getData(String sector, String[] keys, int t, String select);
+
+	/**
 	 * Returns an array of double that contains the specified value for each
 	 * agent selected.
 	 * 
@@ -60,6 +75,13 @@ public interface MacroDatabase {
 	 * @return the specified message.
 	 */
 	public String getMessage(String sector, String agent, String key, int lag);
+
+	/**
+	 * Returns the int value of the current period.
+	 * 
+	 * @return the int value of the current period.
+	 */
+	public int getPeriod();
 
 	/**
 	 * Returns a list of {@link XYDataItem} that contains the specified values
@@ -122,8 +144,6 @@ public interface MacroDatabase {
 	 *            sector.
 	 */
 	public void putData(String sector, SectorDataset sectorDataset);
-
-	public Object[][] getData(String sector, String keys, int t, String select);
 
 }
 

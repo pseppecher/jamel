@@ -20,14 +20,25 @@ import jamel.jamel.roles.AccountHolder;
 import jamel.jamel.roles.Corporation;
 import jamel.jamel.roles.Shareholder;
 import jamel.jamel.util.AnachronismException;
+import jamel.jamel.util.Memory;
 import jamel.jamel.widgets.BankAccount;
 import jamel.jamel.widgets.Chequable;
 import jamel.jamel.widgets.Cheque;
 
 /**
- * A basic bank.
+ * A bank with a Taylor Rule.
+ * 
+ * @author pascal
+ *
  */
 class BasicBank implements Bank, Corporation {
+
+	/*
+	 * 2016-03-17: Une banque qui utilise la règle de Taylor pour fixer les
+	 * taux d'intérêt. Via leur compte en banque, les emprunteurs peuvent
+	 * connaître le taux d'intérêt réel avant d'emprunter (utilisé pour le
+	 * calcul de la VAN).
+	 */
 
 	/**
 	 * Represents a current account.
@@ -38,7 +49,7 @@ class BasicBank implements Bank, Corporation {
 		 * An abstract loan.
 		 */
 		private abstract class AbstractLoan implements Loan {
-			
+
 			/**
 			 * Some info about this loan.
 			 */
@@ -50,7 +61,7 @@ class BasicBank implements Bank, Corporation {
 			private double remainder = 0;
 
 			/** The maturity date. */
-			protected final int maturityDate;
+			protected int maturityDate;
 
 			/**
 			 * The period when the principal was taken out.
@@ -150,8 +161,12 @@ class BasicBank implements Bank, Corporation {
 			@Override
 			public void cancel(long amount) {
 				if (amount > this.principal) {
+					Jamel.println("***");
+					Jamel.println("this.principal: " + this.principal);
+					Jamel.println("amount: " + amount);
+					Jamel.println("***");
 					throw new IllegalArgumentException(
-							"The amount to be canceled is larger than the principal of this loan.");
+							"The amount to be canceled " + "is larger than the principal of this loan.");
 				}
 				this.principal -= amount;
 				Account.this.canceledDebt += amount;
@@ -295,13 +310,11 @@ class BasicBank implements Bank, Corporation {
 			 *            the principal.
 			 * @param rate
 			 *            the rate of interest.
-			 * @param term
-			 *            the term.
 			 * @param info
 			 *            some info about this loan.
 			 */
-			public NonPerformingLoan(long principal, double rate, int term, String info) {
-				super(principal, rate, term, info);
+			public NonPerformingLoan(long principal, double rate, String info) {
+				super(principal, rate, 1, info);
 			}
 
 			@Override
@@ -316,6 +329,11 @@ class BasicBank implements Bank, Corporation {
 
 				if (this.principal > 0) {
 					isDoubtful = true;
+					/*
+					 * 2016-04-04
+					 * Updates the maturity date of the loan.
+					 */
+					this.maturityDate = currentPeriod + 1;
 				}
 
 				/*
@@ -347,9 +365,6 @@ class BasicBank implements Bank, Corporation {
 		/** The canceled debt of the period. */
 		private long canceledDebt = 0l;
 
-		/** The canceled money of the period. */
-		private long canceledMoney = 0l;
-
 		/** A flag that indicates if the account is canceled or not. */
 		private boolean cancelled = false;
 
@@ -369,13 +384,15 @@ class BasicBank implements Bank, Corporation {
 
 			@Override
 			public void cancel() {
-				if (this.amount > 0) {
-					BasicBank.this.canceledDeposits += this.amount;
-					BasicBank.this.liabilities -= this.amount;
-					BasicBank.this.capital += this.amount;
+				// 2016-04-03: not used.
+				throw new RuntimeException("Not used");
+				/*if (this.amount > 0) {
+					BasicBank2.this.canceledDeposits += this.amount;
+					BasicBank2.this.liabilities -= this.amount;
+					BasicBank2.this.capital += this.amount;
 					Account.this.canceledMoney += this.amount;
 					this.amount = 0;
-				}
+				}*/
 			}
 
 			@Override
@@ -422,12 +439,6 @@ class BasicBank implements Bank, Corporation {
 		/** The list of loans for this account. */
 		private final List<Loan> loans = new LinkedList<Loan>();
 
-		/**
-		 * The total debt of the account (equals the sum of the principal of the
-		 * loans).
-		 */
-		// private Long longTermDebt = null;
-
 		/** The new debt of the period. */
 		private long newDebt = 0;
 
@@ -454,24 +465,6 @@ class BasicBank implements Bank, Corporation {
 		}
 
 		/**
-		 * Definitely closes the account. Cancels all the loans associated with
-		 * this account. Called in case of a bankruptcy.
-		 */
-		private void cancel() {
-			if (cancelled) {
-				throw new RuntimeException("This account is already cancelled.");
-			}
-			this.deposit.cancel();
-			for (Loan loan : loans) {
-				loan.cancel();
-			}
-			// this.longTermDebt = 0l;
-			// this.shortTermDebt = 0l;
-			this.loans.clear();
-			this.cancelled = true;
-		}
-
-		/**
 		 * Cancels the specified amount of debt.
 		 * 
 		 * @param amount
@@ -481,23 +474,58 @@ class BasicBank implements Bank, Corporation {
 			if (!open) {
 				throw new RuntimeException("This account is closed.");
 			}
-			// this.longTermDebt = 0l;
-			// this.shortTermDebt = 0l;
+			if (amount > debt) {
+				Jamel.println("Amount: " + amount);
+				Jamel.println("Debt: " + debt);
+				throw new RuntimeException("Amount>debt");
+			}
 			Collections.sort(loans, compareMaturity);
 			long remainder = amount;
+
+			/* 2016-04-04
+			 * Modification de la procédure.
+			 * Les NPL doivent être annulés en priorité.
+			 * On travaille maintenant en 2 passes:
+			 * 1st pass: non performing loans,
+			 * 2nd pass: other loans.
+			 */
+
+			// 1st pass: non performing loans
+
 			for (Loan loan : loans) {
-				if (loan.getPrincipal() <= remainder) {
-					remainder -= loan.getPrincipal();
-					loan.cancel();
-				} else {
-					loan.cancel(remainder);
-					remainder = 0;
+				if (loan instanceof NonPerformingLoan) {
+					if (loan.getPrincipal() < remainder) {
+						remainder -= loan.getPrincipal();
+						loan.cancel();
+					} else {
+						loan.cancel(remainder);
+						remainder = 0;
+						break;
+					}
 				}
-				/*
-				 * if (loan.getMaturity() - period > shortTermLimit) {
-				 * this.longTermDebt += loan.getPrincipal(); } else {
-				 * this.shortTermDebt += loan.getPrincipal(); }
-				 */
+			}
+
+			// 2nd pass: other loans
+
+			if (remainder > 0) {
+				for (Loan loan : loans) {
+					if (loan.getPrincipal() > 0) {
+						if (loan.getPrincipal() < remainder) {
+							remainder -= loan.getPrincipal();
+							loan.cancel();
+						} else {
+							loan.cancel(remainder);
+							remainder = 0;
+							break;
+						}
+					}
+				}
+			}
+
+			if (remainder > 0) {
+				Jamel.println("Debt: " + debt);
+				Jamel.println("remainder: " + remainder);
+				throw new RuntimeException("Remainder>0");
 			}
 		}
 
@@ -515,7 +543,8 @@ class BasicBank implements Bank, Corporation {
 			this.accountInfo.append("<hr />");
 			final int now = timer.getPeriod().intValue();
 			for (Loan loan : loans) {
-				this.accountInfo.append("Loan: " + loan.getPrincipal() + ", " + (loan.getMaturity() - now) + ", " + loan.getInfo());
+				this.accountInfo.append(
+						"Loan: " + loan.getPrincipal() + ", " + (loan.getMaturity() - now) + ", " + loan.getInfo());
 				if (loan.getMaturity() > now + shortTermLimit) {
 					this.accountInfo.append(" (LT)<br />");
 				} else {
@@ -528,43 +557,20 @@ class BasicBank implements Bank, Corporation {
 		 * Debt recovery (interest+principal).
 		 */
 		private void debtRecovery() {
-
 			this.loans.addAll(this.newLoans);
 			this.newLoans.clear();
-
 			final Iterator<Loan> itr = this.loans.iterator();
 			while (itr.hasNext()) {
 				Loan loan = itr.next();
 				loan.payBack();
-				/*
-				 * if (loan.getMaturity() - period > shortTermLimit) {
-				 * this.longTermDebt += loan.getPrincipal(); } else {
-				 * this.shortTermDebt += loan.getPrincipal(); }
-				 */
 				if (loan.getPrincipal() == 0) {
 					itr.remove();
 				}
 			}
-
 			for (Loan loan : this.newLoans) {
-				/*
-				 * if (loan.getMaturity() - period > shortTermLimit) {
-				 * this.longTermDebt += loan.getPrincipal(); } else {
-				 * this.shortTermDebt += loan.getPrincipal(); }
-				 */
 				this.loans.add(loan);
 			}
 			this.newLoans.clear();
-
-			/*
-			 * this.shortTermDebt = 0l; this.longTermDebt = 0l; for (Loan loan :
-			 * this.newLoans) { if (loan.getMaturity() - period >
-			 * shortTermLimit) { this.longTermDebt += loan.getPrincipal(); }
-			 * else { this.shortTermDebt += loan.getPrincipal(); } }
-			 * 
-			 * if (this.longTermDebt + this.shortTermDebt != this.debt) { throw
-			 * new RuntimeException("Inconstistency."); }
-			 */
 		}
 
 		/**
@@ -601,8 +607,7 @@ class BasicBank implements Bank, Corporation {
 		 *            the principal.
 		 */
 		private void newNonPerformingLoan(long principal) {
-			this.newLoans.add(new NonPerformingLoan(principal, bankingSector.getParam(PENALTY_RATE),
-					bankingSector.getParam(EXTENDED_TERM).intValue(),"Non Performing Loan"));
+			this.newLoans.add(new NonPerformingLoan(principal, ratePenalty, "Non Performing Loan"));
 		}
 
 		/**
@@ -629,7 +634,7 @@ class BasicBank implements Bank, Corporation {
 			this.interestPaid = 0;
 			this.newDebt = 0;
 			this.canceledDebt = 0;
-			this.canceledMoney = 0;
+			// this.canceledMoney = 0;
 			// this.longTermDebt = null;
 			// this.shortTermDebt = null;
 			this.accountInfo = new StringBuilder();
@@ -684,7 +689,8 @@ class BasicBank implements Bank, Corporation {
 
 		@Override
 		public long getCanceledMoney() {
-			return this.canceledMoney;
+			throw new RuntimeException("Not used");
+			// return this.canceledMoney;
 		}
 
 		@Override
@@ -720,6 +726,17 @@ class BasicBank implements Bank, Corporation {
 		}
 
 		@Override
+		public float getRealRate() {
+			final float result;
+			if (realRate != null) {
+				result = realRate;
+			} else {
+				result = rateNormal;
+			}
+			return result;
+		}
+
+		@Override
 		public long getRepaidDebt() {
 			return this.repaidDebt;
 		}
@@ -749,7 +766,7 @@ class BasicBank implements Bank, Corporation {
 			if (cancelled) {
 				throw new RuntimeException("This account is cancelled.");
 			}
-			if (amount<=0) {
+			if (amount <= 0) {
 				throw new RuntimeException("Negative amount.");
 			}
 			return new Cheque() {
@@ -789,14 +806,14 @@ class BasicBank implements Bank, Corporation {
 
 		@Override
 		public void newLoan(long principal, int term, boolean amortized) {
-			if (principal<=0) {
+			if (principal <= 0) {
 				throw new IllegalArgumentException("Principal must be positive.");
 			}
 			final Loan newLoan;
 			if (amortized) {
-				newLoan = new AmortizingLoan(principal, bankingSector.getParam(RATE), term, "Amortized");
+				newLoan = new AmortizingLoan(principal, rateNormal, term, "Amortized");
 			} else {
-				newLoan = new NonAmortizingLoan(principal, bankingSector.getParam(RATE), term, "Non Amortized");
+				newLoan = new NonAmortizingLoan(principal, rateNormal, term, "Non Amortized");
 			}
 			this.newLoans.add(newLoan);
 		}
@@ -842,22 +859,13 @@ class BasicBank implements Bank, Corporation {
 
 	};
 
-	@SuppressWarnings("javadoc")
-	private final static String EXTENDED_TERM = "term.extended";
-
 	/**
 	 * The max value of liabilities (to avoid overflow).
 	 */
-	private static final long MAX_VALUE = (long) (0.95f * Long.MAX_VALUE);
+	private static final long MAX_VALUE = (long) (0.95 * Long.MAX_VALUE);
 
 	@SuppressWarnings("javadoc")
 	private final static String PATIENCE = "patience";
-
-	@SuppressWarnings("javadoc")
-	private final static String PENALTY_RATE = "rate.penalty";
-
-	@SuppressWarnings("javadoc")
-	private final static String RATE = "rate.normal";
 
 	/** The list of customers accounts. */
 	private final List<Account> accounts = new ArrayList<Account>(1000);
@@ -883,11 +891,6 @@ class BasicBank implements Bank, Corporation {
 	private long canceledDebts;
 
 	/**
-	 * The amount of deposits cancelled for the current period.
-	 */
-	private long canceledDeposits;
-
-	/**
 	 * The amount of capital of this bank.
 	 */
 	private long capital;
@@ -909,6 +912,22 @@ class BasicBank implements Bank, Corporation {
 	private long dividends;
 
 	/**
+	 * The value of the firms sold in the case of foreclosure since the
+	 * beginning of the period.
+	 */
+	private long foreclosureVal = 0;
+
+	/**
+	 * The inflation rate.
+	 */
+	private Double inflation = null;
+
+	/**
+	 * The capital at the beginning of the period.
+	 */
+	private long initialCapital;
+
+	/**
 	 * The amount of interests paid to this bank for the current period.
 	 */
 	private long interest;
@@ -926,12 +945,15 @@ class BasicBank implements Bank, Corporation {
 	/**
 	 * The total amount of long term loans.
 	 */
-	// private long longTermLoans = 0;
-
 	private Long longTermLoans = null;
 
 	/** The sector name. */
 	private final String name;
+
+	/**
+	 * The memory of past net profits.
+	 */
+	private Memory<Long> netProfitMemory = new Memory<Long>(12);
 
 	/**
 	 * The amount of new loans issued by this bank for the current period.
@@ -944,13 +966,48 @@ class BasicBank implements Bank, Corporation {
 	 */
 	private boolean ownership = false;
 
+	/**
+	 * The risk premium on doubtful debt.
+	 */
+	private final float penaltyPremium;
+
 	/** The random. */
 	private final Random random;
+
+	/**
+	 * The rate of interest on bank loans (nominal)
+	 */
+	private Float rateNormal = null;
+
+	/**
+	 * The rate of interest on doubtful loans (=normal+premium)
+	 */
+	private Float ratePenalty = null;
+
+	/**
+	 * The real rate of interest
+	 */
+	private Float realRate = null;
+
+	/**
+	 * Recapitalization rate (for insolvent firms)
+	 */
+	private final float recapitalizationTargetDebtRatio;
 
 	/**
 	 * The total amount of short term loans.
 	 */
 	private Long shortTermLoans = null;
+
+	/**
+	 * 
+	 */
+	private final double taylorCoef;
+
+	/**
+	 * 
+	 */
+	private final double taylorTarget;
 
 	/** The timer. */
 	private final Timer timer;
@@ -974,6 +1031,10 @@ class BasicBank implements Bank, Corporation {
 		this.timer = timer;
 		this.dataset = new BasicAgentDataset(name);
 		this.updateDataset();
+		this.recapitalizationTargetDebtRatio = this.bankingSector.getParam("recapitalization.debtRatio.target");
+		this.taylorCoef = this.bankingSector.getParam("taylorRule.coef");
+		this.taylorTarget = this.bankingSector.getParam("taylorRule.target");
+		this.penaltyPremium = this.bankingSector.getParam("penalty.premium");
 	}
 
 	/**
@@ -1027,52 +1088,44 @@ class BasicBank implements Bank, Corporation {
 		final Firm firm = (Firm) accountHolder;
 		if (firm.getSize() > 0) {
 			final long firmAssets = firm.getValueOfAssets();
-			final long targetedLiabilites=(long) (0.8 * firmAssets);
-			//final long targetedLiabilites=Math.max((long) (0.8 * firmAssets),firmAssets-200);
-			// TODO: 0.8 should be a parameter;
-			final long debtToBeCancelled = firm.getValueOfLiabilities() - targetedLiabilites;
+			final long targetedCapital = (long) ((1f - this.recapitalizationTargetDebtRatio) * firmAssets) + 1;
+			final long bookValue = firm.getBookValue();
+			final long debtToBeCancelled = Math.min(targetedCapital - bookValue, firm.getValueOfLiabilities());
 			account.cancelDebt(debtToBeCancelled);
 			final Cheque[] cheques;
 			try {
 				cheques = this.bankingSector.sellCorporation(firm);
 			} catch (Exception e) {
 				Jamel.println();
-				Jamel.println("***********************");
+				Jamel.println("***");
 				Jamel.println();
 				Jamel.println("firmAssets = " + firmAssets);
-				Jamel.println("targetedLiabilites = " + targetedLiabilites);
 				Jamel.println("debtToBeCancelled = " + debtToBeCancelled);
+				Jamel.println("firm.getValueOfLiabilities() = " + firm.getValueOfLiabilities());
+				Jamel.println("bookValue = " + bookValue);
+				Jamel.println("firm.getBookValue() = " + firm.getBookValue());
 				Jamel.println();
-				Jamel.println("***********************");
+				Jamel.println("***");
 				Jamel.println();
 				throw new RuntimeException("Something went wrong while selling the firm.", e);
 			}
-			double foreclosures = this.dataset.get("foreclosures");
-			// TODO: foreclosures should be a field.
+
 			for (Cheque cheque : cheques) {
-				foreclosures += cheque.getAmount();
+				this.foreclosureVal += cheque.getAmount();
 				cheque.payment();
 			}
-			this.dataset.put("foreclosures", foreclosures);
 			account.setBankrupt(false);
-			/*
-			 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
-			 * account.getDebt()) { throw new RuntimeException("Inconsistency");
-			 * }
-			 */
 		} else {
-			account.cancel();
-			firm.goBankrupt();
-			/*
-			 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
-			 * account.getDebt()) { throw new RuntimeException("Inconsistency");
-			 * }
-			 */
+
+			// 2016-03-27: ça ne devrait pas arriver, les entreprises n'ont
+			// jamais une taille nulle.
+
+			throw new RuntimeException("Not implemented");
+
+			// account.cancel();
+			// firm.goBankrupt();
+
 		}
-		/*
-		 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
-		 * account.getDebt()) { throw new RuntimeException("Inconsistency"); }
-		 */
 	}
 
 	/**
@@ -1147,9 +1200,10 @@ class BasicBank implements Bank, Corporation {
 		this.dataset.put("bankruptcies", this.bankruptcies);
 		this.dataset.put("interest", this.interest);
 		this.dataset.put("canceledDebts", this.canceledDebts);
-		this.dataset.put("canceledDeposits", this.canceledDeposits);
 		this.dataset.put("loans.new", this.newLoansAmount);
 		this.dataset.put("loans.repayment", this.loansRepayment);
+		this.dataset.put("foreclosures.val", this.foreclosureVal);
+		this.dataset.put("netProfit", this.netProfitMemory.getMean());
 	}
 
 	/**
@@ -1173,6 +1227,41 @@ class BasicBank implements Bank, Corporation {
 	}
 
 	/**
+	 * Updates the interest rates according to the Taylor rule.
+	 */
+	private void updateRates() {
+
+		/*
+		 * 2016-03-17 / Calcul du taux d'intéret selon la règle de Taylor.
+		 */
+
+		// TODO / A revoir, c'est un peu bricolé tout ça
+
+		this.inflation = (Double) this.bankingSector.askFor("inflation");
+		if (inflation != null && inflation.isNaN()) {
+			inflation = null;
+		}
+		final Double interestRate;
+		if (inflation != null) {
+			interestRate = taylorCoef * (inflation - taylorTarget);
+			if (interestRate > 0) {
+				this.rateNormal = (float) (interestRate / 12);
+			} else {
+				this.rateNormal = 0f;
+			}
+			this.ratePenalty = this.rateNormal + this.penaltyPremium;
+			this.realRate = (float) (this.rateNormal - inflation / 12);
+		} else {
+			this.rateNormal = 0f;
+			this.ratePenalty = 0f;
+			this.realRate = null;
+		}
+		this.dataset.put("rate.normal.nominal", this.rateNormal);
+		this.dataset.put("inflation", inflation);
+		this.dataset.put("rate.normal.real", this.realRate);
+	}
+
+	/**
 	 * Close the bank.
 	 * <p>
 	 * The data of the period are computed.
@@ -1183,12 +1272,14 @@ class BasicBank implements Bank, Corporation {
 		for (Account account : this.accounts) {
 			account.close();
 		}
+		this.netProfitMemory.add(this.capital - this.initialCapital + this.dividends);
 		this.updateDataset();
-		if (!checkConsistency()) { // TODO faut-il v�rifier la coh�rence
-			// automatiquement ? r�fl�chir � �a.
+		if (!checkConsistency()) {
+			// TODO faut-il vérifier la cohérence
+			// automatiquement ? réfléchir à ça.
 			throw new RuntimeException("Inconsistency");
 		}
-		if (this.capital<0) {
+		if (this.capital < 0) {
 			throw new RuntimeException("Bank Failure");
 		}
 	}
@@ -1209,11 +1300,6 @@ class BasicBank implements Bank, Corporation {
 		while (iterAccount.hasNext()) {
 			Account account = iterAccount.next();
 			account.debtRecovery();
-			/*
-			 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
-			 * account.getDebt()) { throw new RuntimeException("Inconsistency");
-			 * }
-			 */
 			if (!account.isSolvent()) {
 				if (now - account.creation > this.bankingSector.getParam(PATIENCE)) {
 					account.bankrupt = true;
@@ -1222,35 +1308,19 @@ class BasicBank implements Bank, Corporation {
 			if (account.bankrupt) {
 				if (account.isSolvent()) {
 					throw new RuntimeException("This account is solvent.");
-					// TODO: en fait il pourrait y avoir faillite d'un agent
+					// En fait il pourrait y avoir faillite d'un agent
 					// solvable, s'il n'est pas liquide.
-					// TO IMPLEMENT LATER
+					// A voir.
 				}
 				this.bankruptcies++;
 				foreclosure(account);
-				/*
-				 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
-				 * account.getDebt()) { throw new
-				 * RuntimeException("Inconsistency"); }
-				 */
 				if (account.bankrupt) {
 					iterAccount.remove();
-					// throw new RuntimeException("Not yet implemented.");
 				}
-				/*
-				 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
-				 * account.getDebt()) { throw new
-				 * RuntimeException("Inconsistency"); }
-				 */
 			}
 			this.shortTermLoans += account.getShortTermDebt();
 			this.longTermLoans += account.getLongTermDebt();
 			totalDebt += account.getDebt();
-			/*
-			 * if (account.getShortTermDebt() + account.getLongTermDebt() !=
-			 * account.getDebt()) { throw new RuntimeException("Inconsistency");
-			 * }
-			 */
 		}
 
 		if (totalDebt != this.assets) {
@@ -1315,18 +1385,19 @@ class BasicBank implements Bank, Corporation {
 			this.currentPeriod++;
 		}
 		updateOwnership();
+		this.initialCapital = this.capital;
 		this.capitalStock.open();
 		this.bankruptcies = 0;
 		this.canceledDebts = 0;
-		this.canceledDeposits = 0;
 		this.dividends = 0;
 		this.interest = 0;
 		this.loansRepayment = 0;
 		this.newLoansAmount = 0;
 		this.shortTermLoans = null;
 		this.longTermLoans = null;
+		this.foreclosureVal = 0;
 		this.dataset = new BasicAgentDataset(this.name);
-		this.dataset.put("foreclosures", 0d);
+		this.updateRates();
 		for (Account account : this.accounts) {
 			account.open();
 		}

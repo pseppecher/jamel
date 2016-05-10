@@ -1,0 +1,379 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<html
+	content="Presentation: Is the market really a good teacher?"
+	date="2016-04-28"
+>
+	<style>
+		.centered { width: 500px; text-align: center; }
+		.justified
+		{width: 500px; text-align: justify; }
+		p {width: 500px; text-align:
+		justify; }
+		.boldtable{
+		font-family:sans-serif;
+		font-size:12pt;
+		}
+		td {
+		height: 8px;
+		vertical-align: center;
+		}
+	</style>
+
+	<h1 class="centered">Stock-flow consistency</h1>
+
+	<p>
+		Stock-flow consistency links all agents' balance sheets together and
+		guarantees that micro behaviors are correctly aggregated (Godley &#38;
+		Lavoie 2007).
+	</p>
+
+	<table
+		border="0"
+		align="center"
+		class="boldtable"
+		cellspacing="2"
+	>
+		<tr>
+			<td colspan="3">
+				<hr />
+			</td>
+		</tr>
+		<tr>
+			<th colspan="3">
+				Stocks
+			</th>
+		</tr>
+		<tr>
+			<th>Households</th>
+			<td>
+				M<sub>h</sub>
+				+ E = NW
+			</td>
+			<td>
+				<test
+					label="Households"
+					val1="sum ( Households , money , t ) 
+						+ sum ( Households , equities , t ) "
+					val2="sum ( Households , netWorth , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Firms</th>
+			<td>
+				WIP + IN + K +M<sub>f</sub>
+				= L<sub>f</sub>
+				+ E<sub>f</sub>
+			</td>
+			<td>
+				<test
+					label="Sector: Industry"
+					val1="sum ( Industry , inventories.inProcess.val , t ) 
+						+ sum ( Industry , inventories.fg.val , t ) 
+						+ sum ( Industry , machinery.val , t ) 
+						+ sum ( Industry , cash , t ) "
+					val2="sum ( Industry , liabilities , t ) 
+						+ sum ( Industry , capital , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Banks</th>
+			<td>
+				L = M + E<sub>b</sub>
+			</td>
+			<td>
+				<test
+					label="Sector: Banks"
+					val1="sum ( Banks , assets , t ) "
+					val2="sum ( Banks , liabilities , t )
+						+ sum ( Banks , capital , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Deposits</th>
+			<td>
+				M = M<sub>h</sub>
+				+M<sub>f</sub>
+			</td>
+			<td>
+				<test
+					label="Cross-sectoral: Deposits"
+					val1="sum ( Households , money , t )
+						+ sum ( Industry , cash , t ) "
+					val2="sum ( Banks , liabilities , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Loans</th>
+			<td>
+				L = L<sub>f</sub>
+			</td>
+			<td>
+				<test
+					label="Cross-sectoral: Loans"
+					val1="sum ( Industry , liabilities , t ) "
+					val2="sum ( Banks , assets , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Equities</th>
+			<td>
+				E = E<sub>f</sub>
+				+ E<sub>b</sub>
+			</td>
+			<td>
+				<test
+					label="Cross-sectoral: Capital"
+					val1="sum ( Households , equities , t ) "
+					val2="sum ( Industry , capital , t ) 
+						+ sum ( Banks , capital , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Closure</th>
+			<td>NW = WIP + IN + K</td>
+			<td>
+				<test
+					label="Cross-sectoral: Net Worth"
+					val1="sum ( Households , netWorth , t ) "
+					val2="sum ( Industry , inventories.inProcess.val , t ) 
+						+ sum ( Industry , inventories.fg.val , t ) 
+						+ sum ( Industry , machinery.val , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3">
+				<hr />
+			</td>
+		</tr>
+		<tr>
+			<th colspan="3">
+				Flows
+			</th>
+		</tr>
+		<tr>
+			<th>Households Deposits</th>
+			<td>
+				&#916;M<sub>h</sub>
+				= WB + FD<sub>f</sub>
+				+ FD<sub>b</sub>
+				- C - CAP
+			</td>
+			<td>
+				<test
+					label="Money deposits held by households"
+					val1="sum ( Households , money , t ) 
+						- sum ( Households , money , t-1 ) "
+					val2="sum ( Households , wages , t ) 
+						+ sum ( Households , dividends , t ) 
+						- sum ( Households , consumption.val , t ) 
+						- sum ( Households , sharePurchase , t ) " />
+
+			</td>
+		</tr>
+		<tr>
+			<th>Households Equities</th>
+			<td>
+				&#916;E = C + I - S - FD<sub>f</sub>
+				- FD<sub>b</sub>
+				- K<sub>dep</sub>
+				+ CAP
+			</td>
+			<td>
+				<test
+					label="Equities held by households"
+					val1="sum ( Households , equities , t ) 
+						- sum ( Households , equities , t-1 ) "
+					val2="sum ( Industry , grossProfit , t ) 
+						- sum ( Industry , dividends , t ) 
+						- sum ( Industry , fixedCapital.depreciation , t ) 
+						- sum ( Industry , inventories.depreciation , t ) 
+						- sum ( Banks , dividends , t ) 
+						+ sum ( Banks , foreclosures.val , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Households net worth</th>
+			<td>
+				&#916;NW = WB + I - K<sub>dep</sub>
+				- S
+			</td>
+			<td>
+				<test
+					label="Stocks and flows: Households Net Worth"
+					val1="sum ( Households , netWorth , t ) 
+						- sum ( Households , netWorth , t-1 ) "
+					val2="sum ( Industry , wageBill , t ) 
+						+ sum ( Industry , investment.val , t ) 
+						- sum ( Industry , fixedCapital.depreciation , t ) 
+						- sum ( Industry , inventories.depreciation , t )
+						- sum ( Industry , sales.cost , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Firms' work in progress</th>
+			<td>&#916;WIP = WB - PROD</td>
+			<td>
+				<test
+					label="Stocks and flows: Work In Progress "
+					val1="sum ( Industry , inventories.inProcess.val , t ) 
+						- sum ( Industry , inventories.inProcess.val , t-1 ) "
+					val2="sum ( Industry , wageBill , t ) 
+						- sum ( Industry , production.val , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Firms' inventories</th>
+			<td>&#916;IN = PROD - S</td>
+			<td>
+				<test
+					label="Stocks and flows: Inventories "
+					val1="sum ( Industry , inventories.fg.val , t ) 
+						- sum ( Industry , inventories.fg.val , t-1 ) "
+					val2="sum ( Industry , production.val , t ) 
+						- sum ( Industry , sales.cost , t ) 
+						- sum ( Industry , inventories.depreciation , t )" />
+			</td>
+		</tr>
+		<tr>
+			<th>Firms' fixed capital</th>
+			<td>
+				&#916;K = I - K<sub>dep</sub>
+			</td>
+			<td>
+				<test
+					label="Stocks and flows: Fixed Capital"
+					val1="sum ( Industry , machinery.val , t )
+						- sum ( Industry , machinery.val , t-1 ) "
+					val2="sum ( Industry , investment.val , t ) 
+						- sum ( Industry , fixedCapital.depreciation , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Firms' Deposits</th>
+			<td>
+				&#916;M<sub>f</sub>
+				= L<sub>new</sub>
+				- L<sub>back</sub>
+				+ C - WB - INT
+			</td>
+			<td>
+				<test
+					label="Stocks and flows: Firms Deposits"
+					val1="sum ( Industry , cash , t ) 
+						- sum ( Industry , cash , t-1 ) "
+					val2="sum ( Industry , liabilities.new , t ) 
+						- sum ( Industry , liabilities.repayment , t ) 
+						+ sum ( Industry , sales.val , t ) 
+						- sum ( Industry , wageBill , t ) 
+						- sum ( Industry , investment.val , t ) 
+						- sum ( Industry , dividends , t ) 
+						- sum ( Industry , interest , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Firms' Debts</th>
+			<td>
+				&#916;L = L<sub>new</sub>
+				- L<sub>back</sub>
+				- L<sub>np</sub>
+			</td>
+			<td>
+				<test
+					label="Stocks and flows: Firms Debts"
+					val1="sum ( Industry , liabilities , t ) 
+						- sum ( Industry , liabilities , t-1 ) "
+					val2="sum ( Industry , liabilities.new , t ) 
+						- sum ( Industry , liabilities.repayment , t ) 
+						- sum ( Industry , canceledDebts , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Firms equities</th>
+			<td>
+				&#916;E<sub>f</sub>
+				= C + I - S - FD<sub>f</sub>
+				- K<sub>dep</sub>
+				- INT + L<sub>np</sub>
+			</td>
+			<td>
+				<test
+					label="Stocks and flows: Firms Capital"
+					val1="sum ( Industry , capital , t ) 
+						- sum ( Industry , capital , t-1 ) "
+					val2="sum ( Industry , grossProfit , t ) 
+						- sum ( Industry , dividends , t ) 
+						- sum ( Industry , fixedCapital.depreciation , t ) 
+						- sum ( Industry , interest , t ) 
+						- sum ( Industry , inventories.depreciation , t ) 
+						+ sum ( Industry , canceledDebts , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Bank deposits: </th>
+			<td>
+				&#916;M = L<sub>new</sub>
+				- L<sub>back</sub>
+				- INT - CAP
+			</td>
+			<td>
+				<test
+					label="Stocks and flows: Banks Deposits"
+					val1="sum ( Banks , liabilities , t ) 
+						- sum ( Banks , liabilities , t-1 ) "
+					val2="sum ( Banks , loans.new , t ) 
+						+ sum ( Banks , dividends , t ) 
+						- sum ( Banks , loans.repayment , t ) 
+						- sum ( Banks , interest , t ) 
+						- sum ( Banks , foreclosures.val , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Bank loans</th>
+			<td>
+				&#916;L = L<sub>new</sub>
+				- L<sub>back</sub>
+				- L<sub>np</sub>
+			</td>
+			<td>
+				<test
+					label="Stocks and flows: Banks Loans"
+					val1="sum ( Banks , assets , t ) 
+						- sum ( Banks , assets , t-1 ) "
+					val2="sum ( Banks , loans.new , t ) 
+						- sum ( Banks , loans.repayment , t ) 
+						- sum ( Banks , canceledDebts , t ) " />
+			</td>
+		</tr>
+		<tr>
+			<th>Bank equities</th>
+			<td>
+				&#916;E<sub>b</sub>
+				= INT - FD<sub>b</sub>
+				- L<sub>np</sub>
+				+ CAP
+			</td>
+			<td>
+				<test
+					label="Stocks and flows: Banks Capital"
+					val1="sum ( Banks , capital , t ) 
+						- sum ( Banks , capital , t-1 ) "
+					val2="sum ( Banks , interest , t ) 
+						- sum ( Banks , dividends , t ) 
+						- sum ( Banks , canceledDebts , t ) 
+						+ sum ( Banks , foreclosures.val , t ) " />
+
+			</td>
+		</tr>
+		<tr>
+			<td colspan="3">
+				<hr />
+			</td>
+		</tr>
+	</table>
+	<p>
+		Accounting identities are checked at the end of each
+		period. If an error occurs, details are printed in the log file.
+	</p>
+
+
+</html>

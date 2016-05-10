@@ -102,6 +102,14 @@ class BasicMaterials implements Materials {
 		return false;
 	}
 
+	@Override
+	public void setValue(long newValue) {
+		if (newValue<0) {
+			throw new IllegalArgumentException("Negative value");
+		}
+		this.value = newValue;
+	}
+
 }
 
 // ***

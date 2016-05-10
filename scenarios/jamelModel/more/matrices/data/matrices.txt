@@ -1,0 +1,6 @@
+t Firms.work.in.process Firms.inventories Firms.capital.fixed Households.deposits Firms.deposits Banks.deposits Firms.debt.short Firms.debt.long Households.equities Firms.equities Banks.equities Households.netWorth Sum.sum 
+t Firms.work.in.process Firms.inventories Firms.capital.fixed Households.deposits Firms.deposits Banks.deposits Firms.debt.short Firms.debt.long Households.equities Firms.equities Banks.equities Households.netWorth Sum.sum 
+t Firms.work.in.process Firms.inventories Firms.capital.fixed Households.deposits Firms.deposits Banks.deposits Firms.debt.short Firms.debt.long Households.equities Firms.equities Banks.equities Households.netWorth Sum.sum 
+1000 828809.2891 766196.5665 1526549.4276 nan 855523.6725 -2268873.3095 -1672184.9185 -875731.3135 nan -1429162.7237 -279042.9225 nan 3121555.2832 
+1050 700091.6041 878428.6004 586028.5245 nan 603749.4761 -1643209.8928 -1529421.2428 -312271.7402 nan -926605.222 -198483.0903 nan 2164548.729 
+1100 427341.0871 508426.8018 865389.3742 nan 498855.3719 -1101658.6531 -807850.0569 -418886.7643 nan -1073275.8137 -125078.1682 nan 1801157.2631 

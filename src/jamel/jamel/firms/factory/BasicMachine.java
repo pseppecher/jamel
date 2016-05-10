@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import jamel.basic.util.Timer;
@@ -13,18 +14,15 @@ import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.LaborPower;
 
 /**
- * A basic machine.
+ * A machine that uses external resources (inputs) in the production process.
  */
 public class BasicMachine implements Machine {
 
 	/**
-	 * The type of production.
-	 */
-	private final String typeOfProduction;
-
-	/**
 	 * Creates and returns the specified materials.
 	 * 
+	 * @param type
+	 *            the type of product.
 	 * @param volume
 	 *            the volume of materials to be created.
 	 * @param value
@@ -35,8 +33,8 @@ public class BasicMachine implements Machine {
 	 *            the timer.
 	 * @return the new materials.
 	 */
-	private static Materials getNewMaterials(String typeOfProduction,final long volume, final long value, final Rational completion,
-			final Timer timer) {
+	private static Materials getNewMaterials(final String type, final long volume, final long value,
+			final Rational completion, final Timer timer) {
 		if (volume < 0) {
 			throw new IllegalArgumentException("Bad volume: " + volume);
 		}
@@ -45,9 +43,9 @@ public class BasicMachine implements Machine {
 		}
 		final Materials result;
 		if (completion.equals(1)) {
-			result = new FinishedGoods(typeOfProduction, volume, value);
+			result = new FinishedGoods(type, volume, value);
 		} else {
-			result = new BasicMaterials(typeOfProduction, volume, value, completion, timer);
+			result = new BasicMaterials(type, volume, value, completion, timer);
 		}
 		return result;
 	}
@@ -56,6 +54,12 @@ public class BasicMachine implements Machine {
 	 * The book value of this machine.
 	 */
 	private long bookValue;
+
+	/**
+	 * The cancellation date (when the depreciation process will lead the book
+	 * value of this machine to zero).
+	 */
+	private int cancellationDate;
 
 	/**
 	 * A flag that indicates whether this machine is cancelled or not.
@@ -77,94 +81,111 @@ public class BasicMachine implements Machine {
 	 * The productivity, or the volume of finished goods the machine can produce
 	 * each period on average.
 	 */
-	private double productivity;
+	final private double productivity;
 
 	/**
-	 * The random.
+	 * The external resources used as inputs in the production process.
 	 */
-	private final Random random;
+	private final Map<String, Commodities> resources = new HashMap<String, Commodities>();
 
 	/**
 	 * The date when this machine was created. The start of its depreciation
 	 * process.
 	 */
-	private final int startDate;
+	private final int start;
+
+	/**
+	 * A map that associates input-keys to technical coefficient values.
+	 */
+	private final Map<String, Float> technicalCoefficients = new HashMap<String, Float>();
+
+	/**
+	 * The timelife of the machine.
+	 */
+	private final int timelife;
 
 	/** The timer. */
 	private final Timer timer;
 
 	/**
-	 * The technical coefficients (empty).
+	 * The type of production.
 	 */
-	final private Map<String, Float> technicalCoefficients= new HashMap<String, Float>();
+	private final String typeOfProduction;
 
 	/**
-	 * Constructs a new basic machine.
-	 * 
-	 * @param productionTime
-	 *            the production time.
-	 * @param productivity
-	 *            the productivity.
-	 * @param acquisitionCost
-	 *            the acquisition cost of the new machine.
-	 * @param timer
-	 *            the timer.
-	 * @param random
-	 *            the random.
-	 */
-	public BasicMachine(String typeOfProduction, int productionTime, long productivity, long acquisitionCost, Timer timer, Random random) {
-		this.typeOfProduction = typeOfProduction;
-		this.random = random;
-		this.productionTime = productionTime;
-		this.productivity = productivity;
-		this.increment = new Rational(1, productionTime);
-		if (acquisitionCost < 0) {
-			throw new IllegalArgumentException("Illegal value: " + acquisitionCost);
-		}
-		this.bookValue = acquisitionCost;
-		this.timer = timer;
-		if (timer.getPeriod().intValue() == 0) {
-			this.startDate = timer.getPeriod().intValue() - random.nextInt(100);
-		} else {
-			this.startDate = timer.getPeriod().intValue();
-		}
-		this.cancelled = false;
-	}
-
-	/**
-	 * Constructs a new basic machine.
+	 * Creates a new final machine.
 	 * 
 	 * @param technology
-	 *            the technology of the new machine.
-	 * 
+	 *            the technology.
 	 * @param input
-	 *            the raw materials used to create the new machine.
+	 *            the input to consumed in the creation of this machine.
 	 * @param timer
 	 *            the timer.
 	 * @param random
 	 *            the random.
 	 */
 	public BasicMachine(Technology technology, Commodities input, Timer timer, Random random) {
-		this(technology.getTypeOfProduction(), technology.getProductionTime(), technology.getProductivity(), input.getValue(), timer, random);
-		if (input.getVolume() > technology.getInputVolumeForANewMachine()) {
-			throw new IllegalArgumentException("To many input to create this machine.");
+
+		if (technology == null) {
+			throw new IllegalArgumentException("Technology is null.");
 		}
-		if (input.getVolume() < technology.getInputVolumeForANewMachine()) {
-			throw new IllegalArgumentException("Not enough input to create this machine.");
+		final long acquisitionCost;
+		if ((input == null && timer.getPeriod().intValue() == 0)) {
+			acquisitionCost = 0;
+		} else {
+			if (input.getVolume() > technology.getInputVolumeForANewMachine()) {
+				throw new IllegalArgumentException("To many input to create this machine.");
+			}
+			if (input.getVolume() < technology.getInputVolumeForANewMachine()) {
+				throw new IllegalArgumentException("Not enough input to create this machine.");
+			}
+			if (input.getValue() < 0) {
+				throw new IllegalArgumentException("Illegal value: " + input.getValue());
+			}
+			acquisitionCost = input.getValue();
+			input.consume();
 		}
-		input.consume();
+		this.typeOfProduction = technology.getTypeOfProduction();
+		this.productionTime = technology.getProductionTime();
+		this.productivity = technology.getProductivity();
+		this.increment = new Rational(1, productionTime);
+		this.bookValue = acquisitionCost;
+		this.timer = timer;
+		if (timer.getPeriod().intValue() == 0) {
+			this.start = timer.getPeriod().intValue() - random.nextInt((int) technology.getTimelifeMean());
+		} else {
+			this.start = timer.getPeriod().intValue();
+		}
+		this.cancelled = false;
+
+		this.cancellationDate = this.start + (int) technology.getTimelifeMean();
+
+		this.timelife = (int) (technology.getTimelifeMean() + random.nextGaussian() * technology.getTimelifeStDev());
+		final Map<String, Float> techCoef = technology.getTechnicalCoefficients();
+		for (String resourceKey : techCoef.keySet()) {
+			this.technicalCoefficients.put(resourceKey, techCoef.get(resourceKey));
+			this.resources.put(resourceKey, new FinishedGoods(resourceKey));
+		}
 	}
 
+	/**
+	 * Adds an input resource.
+	 * 
+	 * @param input
+	 *            the input resource.
+	 */
 	@Override
 	public void addResource(Commodities input) {
-		throw new RuntimeException("Not used");
+		final String key = input.getType();
+		if (!technicalCoefficients.containsKey(key)) {
+			throw new RuntimeException();
+		}
+		this.resources.put(key, input);
 	}
 
 	@Override
 	public long depreciate() {
-		final double age = timer.getPeriod().intValue() - startDate;
-		final double cancellationProbability = Math.pow((age - 50) / 150, 3);
-		if (this.random.nextFloat() < cancellationProbability) {
+		if (timer.getPeriod().intValue() > this.start + this.timelife) {
 			this.cancelled = true;
 		}
 		final long depreciation;
@@ -172,7 +193,6 @@ public class BasicMachine implements Machine {
 			depreciation = this.bookValue;
 			this.bookValue = 0;
 		} else {
-			final int cancellationDate = this.startDate + 120;
 			final int remainingTime = cancellationDate - timer.getPeriod().intValue();
 			if (remainingTime > 0) {
 				depreciation = this.bookValue / remainingTime;
@@ -202,22 +222,37 @@ public class BasicMachine implements Machine {
 
 	@Override
 	public String[] getResources() {
-		return null;
+		return this.technicalCoefficients.keySet().toArray(new String[0]);
+	}
+
+	@Override
+	public HashMap<String, Float> getTechnicalCoefficients() {
+		return new HashMap<String, Float>(this.technicalCoefficients);
 	}
 
 	@Override
 	public String getTypeOfProduction() {
-		return typeOfProduction;
+		return this.typeOfProduction;
 	}
 
 	@Override
-	public Double getUnitProductCost(Map<String,Double> costs) {
-		final Double result;
+	public Double getUnitProductCost(Map<String, Double> costs) {
+		// TODO verifier le bon fonctionnement de cette methode.
+		Double result;
 		final Double wage = costs.get("Wage");
-		if (wage==null) {
+		if (wage == null) {
 			result = null;
 		} else {
-			result = productivity/wage;
+			result = productivity / wage;
+			for (String resourceKey : technicalCoefficients.keySet()) {
+				Commodities resource = resources.get(resourceKey);
+				if (resource == null) {
+					result = null;
+					break;
+				}
+				// FIXME: what if resource.getVolume()==0 ?
+				result += resource.getUnitCost() * technicalCoefficients.get(resourceKey);
+			}
 		}
 		return result;
 	}
@@ -229,7 +264,7 @@ public class BasicMachine implements Machine {
 
 	@Override
 	public FinishedGoods scrap() {
-		throw new RuntimeException("Not used.");
+		throw new RuntimeException("Not used");
 		/*
 		 * if (isCancelled()) { throw new RuntimeException(
 		 * "This machine is already cancelled."); } final FinishedGoods result =
@@ -239,81 +274,105 @@ public class BasicMachine implements Machine {
 	}
 
 	/**
-	 * The production function.
-	 * <p>
-	 * This production function implements important features:
-	 * <ul>
-	 * <li>Production takes time;</li>
-	 * <li>Inventories are valuated at production cost.</li>
-	 * </ul>
+	 * The production function. La différence avec la méthode de la classe
+	 * supérieure, c'est que cette méthode consomme des biens intermédiaires
+	 * comme inputs.
 	 * 
 	 * @param laborPower
 	 *            {@link LaborPower} of a worker.
 	 * @param workInProcess
-	 *            list of inputs.
+	 *            list of materials.
 	 * @return list of outputs.
 	 */
 	@Override
 	public List<Materials> work(final LaborPower laborPower, Materials... workInProcess) {
+		if (timer.getPeriod().intValue() > this.start + this.timelife) {
+			throw new IllegalArgumentException("Broken machine.");
+		}
 		if (laborPower.isExhausted()) {
 			throw new IllegalArgumentException("This labor power is exhausted.");
 		}
 		if (this.lastUsed == this.timer.getPeriod().intValue()) {
 			throw new AnachronismException("This machine has already been used in this period.");
 		}
+
 		this.lastUsed = this.timer.getPeriod().intValue();
-		final List<Materials> result = new LinkedList<Materials>();
-		long wageCost = laborPower.getWage();
+
+		// On calcule la valeur des intrants: force de travail et inputs
+		// matériels.
+
+		long inputValue = laborPower.getWage();
+
+		// Depense de la force de travail.
+
 		laborPower.expend();
+
+		// Consommation des inputs.
+
+		for (Entry<String, Float> entry : technicalCoefficients.entrySet()) {
+			final String inputKey = entry.getKey();
+			final float coef = entry.getValue();
+			final long inputVolume = (long) (this.productivity * coef);
+			final Commodities input = resources.get(inputKey).detach(inputVolume);
+			inputValue += input.getValue();
+			input.consume();
+		}
+
+		// Completion des materiaux.
+
+		final List<Materials> outputs = new LinkedList<Materials>();
 		long newVolume = (long) (this.productivity) * this.productionTime;
-		for (Materials input : workInProcess) {
-			if (input != null && input.getVolume() > 0) {
-				if (input.getProductionPeriod() >= this.timer.getPeriod().intValue()) {
+		for (Materials materials : workInProcess) {
+			if (materials != null && materials.getVolume() > 0) {
+				if (!materials.getType().equals(typeOfProduction)) {
+					throw new RuntimeException(
+							"Input bad type: " + materials.getType() + "; expected: " + typeOfProduction);
+				}
+				if (materials.getProductionPeriod() >= this.timer.getPeriod().intValue()) {
 					throw new AnachronismException(
 							"Materials cannot be used as input in the same period they were produced.");
 				}
-				final long inputVolume = input.getVolume();
-				final Rational inputCompletion = input.getCompletion();
-				final Rational outputCompletion = inputCompletion.add(increment);
+				final long materialsVolume = materials.getVolume();
+				final Rational materialsCompletion = materials.getCompletion();
+				final Rational outputCompletion = materialsCompletion.add(increment);
 				final Materials output;
-				if (inputVolume == newVolume) {
-					output = getNewMaterials(this.typeOfProduction, newVolume, input.getBookValue() + wageCost, outputCompletion, timer);
-					input.delete();
+				if (materialsVolume == newVolume) {
+					output = getNewMaterials(this.typeOfProduction, newVolume, materials.getBookValue() + inputValue,
+							outputCompletion, timer);
+					materials.delete();
 					newVolume = 0;
-					wageCost = 0;
-					result.add(output);
+					inputValue = 0;
+					outputs.add(output);
 					break;
-				} else if (inputVolume > newVolume) {
-					final long inputValue = (long) (1d * input.getBookValue() * newVolume / inputVolume);
-					output = getNewMaterials(this.typeOfProduction, newVolume, inputValue + wageCost, outputCompletion, timer);
-					input.delete(newVolume, inputValue);
+				} else if (materialsVolume > newVolume) {
+					final long materialsValue = (long) (1d * materials.getBookValue() * newVolume / materialsVolume);
+					output = getNewMaterials(this.typeOfProduction, newVolume, materialsValue + inputValue,
+							outputCompletion, timer);
+					materials.delete(newVolume, materialsValue);
 					newVolume = 0;
-					wageCost = 0;
-					result.add(output);
+					inputValue = 0;
+					outputs.add(output);
 					break;
 				} else {
-					final long wageCost2 = wageCost * inputVolume / newVolume;
-					final long outputValue = input.getBookValue() + wageCost2;
-					output = getNewMaterials(this.typeOfProduction, inputVolume, outputValue, outputCompletion, timer);
-					input.delete();
-					newVolume -= inputVolume;
-					wageCost -= wageCost2;
-					result.add(output);
+					final long inputValue2 = inputValue * materialsVolume / newVolume;
+					output = getNewMaterials(this.typeOfProduction, materialsVolume,
+							materials.getBookValue() + inputValue2, outputCompletion, timer);
+					materials.delete();
+					newVolume -= materialsVolume;
+					inputValue -= inputValue2;
+					outputs.add(output);
 				}
 			}
 		}
 		if (newVolume > 0) {
-			final Materials output = new BasicMaterials(typeOfProduction, newVolume, wageCost, increment, timer);
-			result.add(output);
+			final Materials output = new BasicMaterials(typeOfProduction, newVolume, inputValue, increment, timer);
+			outputs.add(output);
+			inputValue = 0;
 		}
-		return result;
-	}
-
-	@Override
-	public Map<String, Float> getTechnicalCoefficients() {
-		return this.technicalCoefficients;
+		if (inputValue > 0) {
+			throw new RuntimeException("Residual value should be zero.");
+		}
+		return outputs;
 	}
 
 }
-
-// ***

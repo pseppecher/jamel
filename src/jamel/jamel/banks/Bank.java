@@ -40,3 +40,5 @@ interface Bank extends Agent {
 	void payDividend();
 
 }
+
+// ***

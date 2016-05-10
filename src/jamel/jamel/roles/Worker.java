@@ -10,16 +10,26 @@ import jamel.jamel.widgets.LaborPower;
 public interface Worker extends Agent {
 
 	/**
-	 * Receives a cheque in exchange for work done. 
-	 * @param paycheck the cheque.
+	 * Receives a cheque in exchange for work done.
+	 * 
+	 * @param paycheck
+	 *            the cheque.
 	 */
 	void earnWage(Cheque paycheck);
 
 	/**
 	 * Returns the labor power of the worker.
+	 * 
 	 * @return the labor power.
 	 */
 	LaborPower getLaborPower();
+
+	/**
+	 * Returns <code>true</code> if this worker is currently employed
+	 * 
+	 * @return <code>true</code> if this worker is currently employed.
+	 */
+	boolean isEmployed();
 
 	/**
 	 * Searches for a job.

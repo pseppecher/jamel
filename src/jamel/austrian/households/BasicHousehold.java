@@ -5,7 +5,8 @@ package jamel.austrian.households;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-import jamel.austrian.banks.Bank;
+import org.w3c.dom.Element;
+
 import jamel.austrian.banks.CommercialBank;
 import jamel.austrian.markets.Market;
 import jamel.austrian.roles.AccountHolder;
@@ -16,7 +17,7 @@ import jamel.austrian.roles.Seller;
 import jamel.austrian.sfc.SFCAgent;
 import jamel.austrian.sfc.SFCSector;
 import jamel.austrian.util.Alphabet;
-import jamel.austrian.widgets.Cheque;
+import jamel.austrian.widgets.AbstractCheque;
 import jamel.austrian.widgets.CreditContract;
 import jamel.austrian.widgets.Offer;
 import jamel.austrian.widgets.TimeDeposit;
@@ -26,43 +27,6 @@ import jamel.basic.Circuit;
  * The representation of a household.
  */
 public class BasicHousehold extends SFCAgent implements Household{
-	
-	
-	@SuppressWarnings("javadoc")
-	private final static String STRUCTURE_LENGTH = "prefs.structureLength";
-	
-	@SuppressWarnings("javadoc")
-	private final static String TYPE_RANGE = "prefs.typeRange";
-	
-	@SuppressWarnings("javadoc")
-	private final static String SKEWNESS = "prefs.skewness";
-	
-	@SuppressWarnings("javadoc")
-	private final static String SAVINGS = "prefs.savings";
-	
-	@SuppressWarnings("javadoc")
-	private final static String HORIZONS = "prefs.horizons";
-	
-	@SuppressWarnings("javadoc")
-	private final static String EQUITY = "prefs.equity";
-	
-	@SuppressWarnings("javadoc")
-	private final static String MONEY_DEMAND = "prefs.moneyDemand";
-	
-	@SuppressWarnings("javadoc")
-	private final static String TIME_PREF = "prefs.timePref";
-	
-	@SuppressWarnings("javadoc")
-	private final static String TIME_PREFFLEX = "prefs.timePrefFlex";
-	
-	@SuppressWarnings("javadoc")
-	private final static String WAGE_OFFSET = "prefs.wageOffset";
-	
-	@SuppressWarnings("javadoc")
-	private final static String WAGE_LEISUREFLEX = "prefs.wageLeisureFlex";
-	
-	@SuppressWarnings("javadoc")
-	private final static String WAGE_WEALTHFLEX = "prefs.wageWealthFlex";	
 	
 	/** Enumerates the employment status of the household.*/
 	public enum EmploymentStatus {
@@ -81,16 +45,22 @@ public class BasicHousehold extends SFCAgent implements Household{
 			return (this==VOLONTARILY_UNEMPLOYED);
 		}
 	}
+	
+	/** The consumption preferences of the household.<p>
+	 * 	Contains the keys to the markets in which the desired goods are sold. */
+	private LinkedList<String> preferences ;
+	
+	/** The time preference parameters of the household. */
+	private HashMap<String, Float> timePreferences ;
+	
+	/** The work preference parameters of the household. */
+	private HashMap<String, Float> workPreferences ;
 
 	/** The bank which manages the payments of the household. */
 	private CommercialBank bank ;
 	
 	/** The list of time deposits. */
 	private final LinkedList<TimeDeposit> timeDeposits;
-
-	/** The preferences of the household.<p>
-	 * 	Contains the keys to the markets in which the desired goods are sold. */
-	private LinkedList<String> preferences ;
 	
 	/** The list of the companies and banks that the household holds shares of. */
 	private LinkedList<Debtor> equityHoldings ;
@@ -160,7 +130,7 @@ public class BasicHousehold extends SFCAgent implements Household{
 	public BasicHousehold(String name, Circuit aCircuit, SFCSector sector) {
 		super(name, aCircuit, sector);
 		this.bank = getBankingSector().selectRandomBank();
-		this.bank.getNewAccount(this, initialConditions.initialMoney);
+		this.bank.getNewAccount(this, sector.getParam("initialMoney").intValue());
 		this.timeDeposits = new LinkedList<TimeDeposit>();
 		this.employmentStatus = EmploymentStatus.VOLONTARILY_UNEMPLOYED;
 		this.equityHoldings = new LinkedList<Debtor>();
@@ -173,25 +143,26 @@ public class BasicHousehold extends SFCAgent implements Household{
 			equityRecord.add(0);
 		}
 		this.rejectionList = new LinkedList<Offerer>();
-		setPreferences();
+		setPreferences(sector.getParam("prefs.structureLength").intValue(),
+				sector.getParam("prefs.typeRange").intValue(),
+				sector.getParam("prefs.skewness"),
+				sector.getParam("prefs.savings").intValue(),
+				sector.getParam("prefs.horizons").intValue(),
+				sector.getParam("prefs.equity").intValue(),
+				sector.getParam("prefs.moneyDemand").intValue());
+		setWorkPreferences(sector.getParam("prefs.wageOffset"),
+				sector.getParam("prefs.wageWealthFlex"),
+				sector.getParam("prefs.wageLeisureFlex"));
+		setTimePreferences(sector.getParam("prefs.timePref"),
+				sector.getParam("prefs.timePrefFlex"));
 	}
 
-
-
-	
 
 	/**
 	 * Initializes the preferences of a household.<br>
 	 * The preferences must be specified as settings = "x,y,z,w";		
 	 */
-	private void setPreferences() {							
-		int structureLength = sector.getParam(STRUCTURE_LENGTH).intValue();
-		int typeRange = sector.getParam(TYPE_RANGE).intValue();
-		float skewness = sector.getParam(SKEWNESS);
-		int savings = sector.getParam(SAVINGS).intValue();
-		int horizons = sector.getParam(HORIZONS).intValue();
-		int equity = sector.getParam(EQUITY).intValue();
-		int moneyDemand = sector.getParam(MONEY_DEMAND).intValue();
+	private void setPreferences(int structureLength, int typeRange, float skewness, int savings, int horizons, int equity, int moneyDemand) {							
 		
 		this.preferences = new LinkedList<String>();
 		this.moneyDemand = new HashMap<String, Integer>();
@@ -224,6 +195,55 @@ public class BasicHousehold extends SFCAgent implements Household{
 		
 		for (String type:occurenceOfPreference.keySet()){
 			this.moneyDemand.put(type, moneyDemand/occurenceOfPreference.get(type));
+		}
+	}
+	
+	
+	private void setWorkPreferences(float wageOffset, float wageWealthFlex, float wageLeisureFlex){
+		this.workPreferences = new HashMap<String, Float>();
+		workPreferences.put("wageOffset", wageOffset);
+		workPreferences.put("wageWealthFlex", wageWealthFlex);
+		workPreferences.put("wageLeisureFlex", wageLeisureFlex);
+	}
+	
+	
+	private void setTimePreferences(float timePref, float timePrefFlex){
+		this.timePreferences = new HashMap<String, Float>();
+		timePreferences.put("timePref", timePref);
+		timePreferences.put("timePrefFlex", timePrefFlex);
+	}
+	
+
+	@Override
+	public void changePreference(Element event) {
+		if (event.getAttribute("type").equals("consumerPref")){
+			int structureLength = Integer.parseInt("prefs.structureLength");
+			int typeRange = Integer.parseInt("prefs.typeRange");
+			float skewness = Float.parseFloat("prefs.skewness");
+			int savings = Integer.parseInt("prefs.savings");
+			int horizons = Integer.parseInt("prefs.horizons");
+			int equity = Integer.parseInt("prefs.equity");
+			int moneyDemand = Integer.parseInt("prefs.moneyDemand");
+			setPreferences(structureLength, typeRange, skewness, savings, horizons, equity, moneyDemand);
+		}
+		if (event.getAttribute("type").equals("workPref")){
+			float wageOffset = Float.parseFloat("prefs.wageOffset");
+			float wageWealthFlex = Float.parseFloat("prefs.wageWealthFlex");
+			float wageLeisureFlex = Float.parseFloat("prefs.wageLeisureFlex");
+			setWorkPreferences(wageOffset, wageWealthFlex, wageLeisureFlex);
+		}
+		if (event.getAttribute("type").equals("timePref")){
+			float timePref = Float.parseFloat(event.getAttribute("prefs.timePref"));
+			float timePrefFlex = Float.parseFloat(event.getAttribute("prefs.timePrefFlex"));
+			setTimePreferences(timePref, timePrefFlex);
+		}
+		if (event.getAttribute("type").equals("order")){
+			int element = Integer.parseInt(event.getAttribute("element"));
+			int horizon = Integer.parseInt(event.getAttribute("horizon"));
+			int horizon2 = 1 + random.nextInt(horizon-1);
+			String preference = "savings,"+horizon2;
+			preferences.remove(element);
+			preferences.add(element, preference);
 		}
 	}
 	
@@ -301,9 +321,9 @@ public class BasicHousehold extends SFCAgent implements Household{
 	public void setReservationWage() {
 		//Expected consumption if the household abstains from work
 		int expectedConsumption = (int) (totalBudget*purchasingPowerEstimate);
-		reservationWage= (float) (sector.getParam(WAGE_OFFSET)					
-				+ Math.log(1+sector.getParam(WAGE_WEALTHFLEX) * expectedConsumption) 
-				+ sector.getParam(WAGE_LEISUREFLEX) * employmentDuration);	
+		reservationWage= (float) (workPreferences.get("wageOffset")					
+				+ Math.log(1+workPreferences.get("wageWealthFlex") * expectedConsumption) 
+				+ workPreferences.get("wageLeisureFlex") * employmentDuration);	
 	}
 
 	
@@ -373,7 +393,7 @@ public class BasicHousehold extends SFCAgent implements Household{
 	 * Takes note of an employment contract and receives the wage.<br>
 	 * The wage income may be spent in the same time period.
 	 */
-	public void notifyHiring(Cheque cheque) {
+	public void notifyHiring(AbstractCheque cheque) {
 		jobs++;
 		if (jobs>1) throw new RuntimeException("Multiple jobs."); 
 		bank.deposit(this,cheque) ;
@@ -423,17 +443,17 @@ public class BasicHousehold extends SFCAgent implements Household{
 				while (intendedActions.remove(preference))
 				return;
 			}
-
+			
 			String[] savings = preference.split(",");
 			int duration = Integer.parseInt(savings[1]);	// duration means deposited time excluding the current period.
 			int faceValue = parameters.timeDepositSize;
 			int price = (int) (faceValue / Math.pow(1+offer.getPrice(),duration));
-			float timePreference = sector.getParam(TIME_PREF) + getExpectedFutureMoney(duration) /  sector.getParam(TIME_PREFFLEX);
+			float timePreference = timePreferences.get("timePref") + getExpectedFutureMoney(duration) /  timePreferences.get("timePrefFlex");
 			int reservationPrice = (int) (faceValue / Math.pow(1+timePreference,duration)); 
 			if (price > reservationPrice | price > money){
-				float lowestPossiblePrice =  (int) (faceValue / Math.pow(1+sector.getParam(TIME_PREF),duration)); 
+				float lowestPossiblePrice =  (int) (faceValue / Math.pow(1+timePreferences.get("timePref"),duration)); 
 				if (price > lowestPossiblePrice ) {		//TODO: that's a bit direct, maybe.
-					Bank bank = (Bank) offer.getOfferer();
+					CommercialBank bank = (CommercialBank) offer.getOfferer();
 					bank.notifyRejection();
 				}
 				while (intendedActions.remove(preference))
@@ -442,7 +462,7 @@ public class BasicHousehold extends SFCAgent implements Household{
 			
 			Debtor debtor = (Debtor) offer.getOfferer();
 			TimeDeposit timeDeposit = new TimeDeposit(this, debtor, faceValue, faceValue-price, offer.getPrice(), duration, timer);
-			Cheque cheque = bank.newCheque(this, price);
+			AbstractCheque cheque = bank.newCheque(this, price);
 			debtor.acquireFunding(timeDeposit, cheque);
 			timeDeposits.add(timeDeposit);
 			newTimeDeposits +=1;
@@ -464,7 +484,7 @@ public class BasicHousehold extends SFCAgent implements Household{
 			float expectedPayoff;
 			if (!Float.isNaN(returnOnEquityEstimate)) expectedPayoff = returnOnEquityEstimate;
 			else expectedPayoff = 0.05f; // a placeholder
-			float timePreference = sector.getParam(TIME_PREF) + getExpectedFutureMoney(1) /  sector.getParam(TIME_PREFFLEX);
+			float timePreference = timePreferences.get("timePref") + getExpectedFutureMoney(1) /  timePreferences.get("timePrefFlex");
 			int reservationPrice = (int) (price * expectedPayoff / timePreference);
 			if (price > reservationPrice | price > money){
 				while (intendedActions.remove(preference))
@@ -526,7 +546,7 @@ public class BasicHousehold extends SFCAgent implements Household{
 	/**
 	 * Receives a dividend from a bank or a firm.
 	 */
-	public void receiveDividend(Cheque cheque) {
+	public void receiveDividend(AbstractCheque cheque) {
 		final int dividend = cheque.getAmount();
 		bank.deposit(this,cheque);
 		totalBudget += dividend;
@@ -545,7 +565,7 @@ public class BasicHousehold extends SFCAgent implements Household{
 	/**
 	 * Receives an interest payment from a bank.
 	 */
-	public void receiveInterestPayment(Cheque cheque) {
+	public void receiveInterestPayment(AbstractCheque cheque) {
 		bank.deposit(this,cheque);
 	}
 	
@@ -553,7 +573,7 @@ public class BasicHousehold extends SFCAgent implements Household{
 	/**
 	 * Receives a redemption payment from a bank.
 	 */
-	public void receiveRedemption(Cheque cheque) {
+	public void receiveRedemption(AbstractCheque cheque) {
 		bank.deposit(this,cheque);
 	}
 	
@@ -707,7 +727,7 @@ public class BasicHousehold extends SFCAgent implements Household{
 	 * Never called.
 	 */
 	@Override
-	public Cheque acceptDebtor(CreditContract newContract){
+	public AbstractCheque acceptDebtor(CreditContract newContract){
 		throw new RuntimeException("Never called.");
 	}
 	

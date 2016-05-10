@@ -5,7 +5,7 @@ import jamel.basic.data.AgentDataset;
 import jamel.basic.data.BasicAgentDataset;
 import jamel.basic.util.Timer;
 import jamel.jamel.firms.managers.AbstractManager;
-import jamel.jamel.widgets.Asset;
+import jamel.jamel.util.Memory;
 import jamel.jamel.widgets.Commodities;
 import jamel.jamel.widgets.LaborPower;
 
@@ -30,7 +30,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 	 * TODO: objet � supprimer, remplacer par une classe anonyme. TODO:
 	 * externaliser l'interface.
 	 */
-	private class BasicWorkInProgress extends HashMap<Rational, Materials>implements WorkInProgress {
+	private class BasicWorkInProgress extends HashMap<Rational, Materials> implements WorkInProgress {
 
 		/**
 		 * Creates a new {@link BasicWorkInProgress}.
@@ -52,6 +52,14 @@ public class BasicFactory extends AbstractManager implements Factory {
 		public void delete() {
 			for (Materials material : this.values()) {
 				material.delete();
+			}
+		}
+
+		@Override
+		public void depreciate(double d) {
+			for (Materials materials : this.values()) {
+				final long newValue = (long) (materials.getBookValue() * d);
+				materials.setValue(newValue);
 			}
 		}
 
@@ -116,64 +124,6 @@ public class BasicFactory extends AbstractManager implements Factory {
 	}
 
 	/**
-	 * An interface for the work-in-progress materials.
-	 * <p>
-	 * "Material that has entered the production process but is not yet a
-	 * finished product. Work in progress (WIP) therefore refers to all
-	 * materials and partly finished products that are at various stages of the
-	 * production process. WIP excludes inventory of raw materials at the start
-	 * of the production cycle and finished products inventory at the end of the
-	 * production cycle." (ref:
-	 * <a href="http://www.investopedia.com/terms/w/workinprogress.asp">www.
-	 * investopedia.com</a>)
-	 */
-	private interface WorkInProgress extends Asset {
-
-		/**
-		 * Deletes the content of this WIP.
-		 */
-		void delete();
-
-		/**
-		 * Returns a heap of materials of the specified completion.
-		 * 
-		 * @param completion
-		 *            the completion of the materials to be returned.
-		 * @return a heap of materials of the specified completion.
-		 */
-		Materials get(Rational completion);
-
-		/**
-		 * Returns an array of materials, sorted by completion in descending
-		 * order.
-		 * 
-		 * @param maxCompletion
-		 *            the completion of the most advanced materials to be
-		 *            returned.
-		 * @return an array of materials, sorted by completion in descending
-		 *         order.
-		 */
-		Materials[] getStuff(int maxCompletion);
-
-		/**
-		 * Puts all materials of the specified WIP into this WIP.
-		 * 
-		 * @param workInProgress
-		 *            the materials to be added.
-		 */
-		void put(WorkInProgress workInProgress);
-
-		/**
-		 * Puts the specified stuff into this WIP.
-		 * 
-		 * @param stuff
-		 *            the materials to be added.
-		 */
-		void putStuff(Materials stuff);
-
-	}
-
-	/**
 	 * A comparator to sort the machinery according to the productivity of the
 	 * machines (higher productivities first).
 	 */
@@ -193,6 +143,19 @@ public class BasicFactory extends AbstractManager implements Factory {
 		}
 	};
 
+	/** A flag that indicates either the factory is closed or not. */
+	private boolean canceled = false;
+
+	/**
+	 * Memory of past depreciations.
+	 */
+	private Memory<Long> depreciationMemory = new Memory<Long>(12);
+
+	/**
+	 * The rate of depreciation of inventories.
+	 */
+	private float depreciationRate;
+
 	/**
 	 * Finished goods inventory.
 	 * <p>
@@ -206,8 +169,28 @@ public class BasicFactory extends AbstractManager implements Factory {
 	 */
 	private final Commodities finishedGoods;
 
+	/**
+	 * The value of the depreciation of the fixed capital.
+	 */
+	private long fixedCapitalDepreciation = 0;
+
+	/**
+	 * The value of the depreciation of the inventories.
+	 */
+	private long inventoriesDepreciation = 0;
+
 	/** The machinery (a collection of machines) */
 	private final List<Machine> machinery = new ArrayList<Machine>();
+
+	/**
+	 * The targeted proportion of inventories (months of production).
+	 */
+	private Float normalLevel = null;
+
+	/**
+	 * The potential output of the past periods.
+	 */
+	private Memory<Double> potentialOutputMemory = new Memory<Double>(12);
 
 	/**
 	 * The minimum duration of the production process (the number of stages of
@@ -226,21 +209,18 @@ public class BasicFactory extends AbstractManager implements Factory {
 	private final Map<String, Commodities> resources = new HashMap<String, Commodities>();
 
 	/**
+	 * L'objectif de taille des stocks de ressources, exprimé en nombre de mois
+	 * à pleine utilisation des capacités de production.
+	 */
+	private final float resourcesTarget = 2f;
+
+	/**
 	 * The type of production.
 	 */
 	private final String typeOfProduction;
 
 	/** The work in progress. */
 	private final WorkInProgress workInProgress;
-
-	/** A flag that indicates either the factory is closed or not. */
-	protected boolean canceled = false;
-
-	/**
-	 * L'objectif de taille des stocks de ressources, exprimé en nombre de mois
-	 * à pleine utilisation des capacités de production.
-	 */
-	private final float resourcesTarget = 2f;
 
 	/**
 	 * Creates a new {@link BasicFactory}.
@@ -271,25 +251,43 @@ public class BasicFactory extends AbstractManager implements Factory {
 	 * Depreciates the machines.
 	 */
 	private void depreciation() {
-		long depreciation = 0;
+		/*
+		 * 2016-04-03:
+		 * Refactoring.
+		 */
+
 		final List<Machine> cancelled = new LinkedList<Machine>();
 		for (Machine machine : machinery) {
-			depreciation += machine.depreciate();
+			fixedCapitalDepreciation += machine.depreciate();
 			if (machine.isCancelled()) {
 				cancelled.add(machine);
 			}
 		}
-		this.machinery.removeAll(cancelled);
-		this.dataset.put("machines.deleted", cancelled.size());
-		this.dataset.put("depreciation", depreciation);
-	}
-
-	private Long getResourcesValue() {
-		long value = 0;
-		for (Commodities res : this.resources.values()) {
-			value += res.getValue();
+		/*
+		 * 2016-03-16:
+		 * L'entreprise procède à la dépréciation des invendus.
+		 * 
+		 * 2016-04-03:
+		 * Refactoring.
+		 */
+		// if (this.depreciationRate > 0)
+		{
+			final long value1 = this.finishedGoods.getValue();
+			if (value1 > 0) {
+				final double inventoryRatio = getInventoryRatio();
+				if (inventoryRatio > 1) {
+					final float r = 1 - this.depreciationRate;
+					final long value2 = Math.max(1, (long) (value1 * (1 + inventoryRatio * r - r) / inventoryRatio));
+					this.finishedGoods.setValue(value2);
+					this.inventoriesDepreciation += value1 - value2;
+				}
+			}
 		}
-		return value;
+
+		// ***
+
+		this.machinery.removeAll(cancelled);
+
 	}
 
 	/**
@@ -328,6 +326,19 @@ public class BasicFactory extends AbstractManager implements Factory {
 	}
 
 	/**
+	 * Returns the total values of the resources.
+	 * 
+	 * @return the total values of the resources.
+	 */
+	private Long getResourcesValue() {
+		long value = 0;
+		for (Commodities res : this.resources.values()) {
+			value += res.getValue();
+		}
+		return value;
+	}
+
+	/**
 	 * Updates the needs in resources according to the technical coefficients of
 	 * each machine. The need is the volume of each input required to run the
 	 * machine.
@@ -349,17 +360,6 @@ public class BasicFactory extends AbstractManager implements Factory {
 				this.resourceNeeds.put(key, volume);
 			}
 		}
-	}
-
-	@Override
-	public Map<String, Long> getNeeds() {
-		final Map<String, Long> needs = new LinkedHashMap<String, Long>();
-		for (String inputKey : this.resourceNeeds.keySet()) {
-			final long inputVol = Math.max(0,
-					(long) (this.resourceNeeds.get(inputKey) * this.resourcesTarget) - this.resources.get(inputKey).getVolume());
-			needs.put(inputKey, inputVol);
-		}
-		return needs;
 	}
 
 	/**
@@ -409,17 +409,32 @@ public class BasicFactory extends AbstractManager implements Factory {
 	@Override
 	public void close() {
 		checkConsistency();
+		this.potentialOutputMemory.add(this.getPotentialOutput());
 		this.dataset.put("machinery.val", this.getMachineryValue());
 		this.dataset.put("inventories.input.val", this.getResourcesValue());
 		this.dataset.put("inventories.inProcess.val", this.workInProgress.getBookValue());
 		this.dataset.put("inventories.fg.val", this.finishedGoods.getValue());
 		this.dataset.put("inventories.fg.vol", this.finishedGoods.getVolume());
+
+		this.dataset.put("fixedCapital.depreciation", this.fixedCapitalDepreciation);
+		this.dataset.put("inventories.depreciation", this.inventoriesDepreciation);
+		this.depreciationMemory.add(this.fixedCapitalDepreciation);
 	}
 
 	@Override
 	public void delete() {
+		throw new RuntimeException("Not yet implemented.");
+		/*
+		 * 2016-04-03: Pas utilisé, désactivé.
+		 * A supprimer ?
+		 * 
 		checkConsistency();
-		this.dataset.put("inventories.losses.val", this.getValue());
+		this.dataset.put("inventories.losses.val", this.getValue());// FIXME
+																	// C'est
+																	// faux !!!
+																	// Et les
+																	// machines
+																	// ?
 		this.dataset.put("inventories.fg.losses", this.finishedGoods.getValue());
 		this.dataset.put("inventories.inProcess.losses", this.workInProgress.getBookValue());
 		this.dataset.put("inventories.fg.losses.vol", this.finishedGoods.getVolume());
@@ -427,7 +442,7 @@ public class BasicFactory extends AbstractManager implements Factory {
 		this.workInProgress.delete();
 		if (this.machinery.size() > 0) {
 			throw new RuntimeException("The destruction of the machinery is not yet implemented.");
-		}
+		}*/
 	}
 
 	@Override
@@ -510,32 +525,63 @@ public class BasicFactory extends AbstractManager implements Factory {
 
 	@Override
 	public long getInventoryLosses() {
-		return this.dataset.get("inventories.losses.val").longValue();
+		throw new RuntimeException("Never called ?");
+		// 2016-04-03: jamais appelé: A supprimer ?
+		// return this.dataset.get("inventories.losses.val").longValue();
 		// TODO use askable ?
 	}
 
 	@Override
-	public double getInventoryRatio(float normalLevel) { // TODO use askable ?
+	public double getInventoryRatio() { // TODO use askable ?
 		checkConsistency();
-		final double normalVolume = normalLevel * this.getMaxUtilAverageProduction();
+		final double normalVolume = normalLevel * this.getPotentialOutput();
 		this.dataset.put("inventories.fg.vol.normal", normalVolume);
 		return (this.getFinishedGoodsVolume()) / normalVolume;
 	}
 
 	@Override
-	public double getMaxUtilAverageProduction() {
+	public Map<String, Long> getNeeds() {
+		final Map<String, Long> needs = new LinkedHashMap<String, Long>();
+		for (String inputKey : this.resourceNeeds.keySet()) {
+			final long inputVol = Math.max(0, (long) (this.resourceNeeds.get(inputKey) * this.resourcesTarget)
+					- this.resources.get(inputKey).getVolume());
+			needs.put(inputKey, inputVol);
+		}
+		return needs;
+	}
+
+	@Override
+	public double getOverheadCostByUnit() {
+		final double overheadCostByUnit;
+		final double normalOutput = 0.8 * this.potentialOutputMemory.getSum();
+		if (normalOutput == 0) {
+			overheadCostByUnit = 0;
+		} else {
+			overheadCostByUnit = this.depreciationMemory.getSum() / normalOutput;
+		}
+		return overheadCostByUnit;
+	}
+
+	/**
+	 * Returns the average volume of production (finished goods) at the maximum
+	 * utilization of the production capacity.
+	 * 
+	 * @return a volume.
+	 */
+	@Override
+	public double getPotentialOutput() {
 		checkConsistency();
-		final Double potentialOutPut;
+		final Double potentialOutput;
 		if (this.machinery.size() == 0) {
-			potentialOutPut = 0.;
+			potentialOutput = 0.;
 		} else {
 			double sum = 0;
 			for (Machine machine : this.machinery) {
 				sum += machine.getProductivity();
 			}
-			potentialOutPut = sum;
+			potentialOutput = sum;
 		}
-		return potentialOutPut;
+		return potentialOutput;
 	}
 
 	@Override
@@ -546,7 +592,8 @@ public class BasicFactory extends AbstractManager implements Factory {
 
 	@Override
 	public long getValue() {
-		final long val = getResourcesValue() + this.workInProgress.getBookValue() + this.finishedGoods.getValue() + getMachineryValue();
+		final long val = getResourcesValue() + this.workInProgress.getBookValue() + this.finishedGoods.getValue()
+				+ getMachineryValue();
 		if (val < 0) {
 			Jamel.println("this.workInProgress.getBookValue()", this.workInProgress.getBookValue());
 			Jamel.println("this.finishedGoods.getValue()", this.finishedGoods.getValue());
@@ -560,13 +607,15 @@ public class BasicFactory extends AbstractManager implements Factory {
 	public void open() {
 		super.open();
 		this.dataset = new BasicAgentDataset("Factory");
-		this.dataset.put("inventories.losses.val", 0);
-		this.dataset.put("inventories.fg.losses", 0);
-		this.dataset.put("inventories.inProcess.losses", 0);
-		this.dataset.put("inventories.fg.losses.vol", 0);
-		this.dataset.put("desinvestment.val", 0);
-		this.dataset.put("scrap.val", 0);
-		this.dataset.put("scrap.vol", 0);
+		// this.dataset.put("inventories.losses.val", 0);
+		// this.dataset.put("inventories.fg.losses", 0);
+		// this.dataset.put("inventories.inProcess.losses", 0);
+		// this.dataset.put("inventories.fg.losses.vol", 0);
+		// this.dataset.put("desinvestment.val", 0);
+		// this.dataset.put("scrap.val", 0);
+		// this.dataset.put("scrap.vol", 0);
+		this.inventoriesDepreciation = 0;
+		this.fixedCapitalDepreciation = 0;
 		depreciation();
 		updateResourceNeeds();
 	}
@@ -670,11 +719,16 @@ public class BasicFactory extends AbstractManager implements Factory {
 			this.dataset.put("productivity", (double) this.getProductivity());
 		}
 		this.dataset.put("capacity", (double) this.machinery.size());
-		this.dataset.put("production.vol.atFullCapacity", this.getMaxUtilAverageProduction());
+		this.dataset.put("production.vol.atFullCapacity", this.getPotentialOutput());
 
 		this.finishedGoods.put(production);
 		this.workInProgress.put(newWorkInProgress);
 
+	}
+
+	@Override
+	public void putResources(Commodities input) {
+		this.resources.get(input.getType()).put(input);
 	}
 
 	@Override
@@ -704,10 +758,19 @@ public class BasicFactory extends AbstractManager implements Factory {
 		 */
 	}
 
+	/**
+	 * Sets the depreciation rate of inventories.
+	 * 
+	 * @param depreciationRate
+	 *            the depreciation rate to be set.
+	 */
+	public void setInventoriesDepreciationRate(float depreciationRate) {
+		this.depreciationRate = depreciationRate;
+	}
+
 	@Override
-	public void putResources(String key, Commodities input) {
-		this.resources.get(key).put(input);
-		// Vérifier cette methode.
+	public void setInventoryNormalLevel(float normalLevel) {
+		this.normalLevel = normalLevel;
 	}
 
 }

@@ -37,18 +37,16 @@ import jamel.basic.util.Timer;
  * Represents a credit contract.
  * <p>
  * Encapsulates the reference to the creditor and the debtor, the interest and the end of the contract.
- * <p>
- * Last update: 8-Feb-2013.
  */
 public class CreditContract  {
 
 	/** The timer. */
 	protected Timer timer;
 	
-	/** The debtor. */
+	/** The creditor. */
 	private final Creditor creditor;
 
-	/** The creditor. */
+	/** The debtor. */
 	private final Debtor debtor;
 	
 	/** The face value of the contract. */
@@ -61,7 +59,7 @@ public class CreditContract  {
 	/** The interest rate (monthly). */
 	private final float interest;
 	
-	/** The number of time periods between the signing of the contract and the first installment. */
+	/** The time period in which the contract is signed. */
 	private int signingPeriod;
 	
 	/** The period in which the first payment is due. */
@@ -259,7 +257,7 @@ public class CreditContract  {
 	/**
 	 * Returns the interest rate of the contract.
 	 */
-	public float getInterest() { 
+	public float getInterestRate() { 
 		return interest; 
 	}
 	

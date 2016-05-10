@@ -27,7 +27,7 @@
 
 package jamel.austrian.roles;
 
-import jamel.austrian.widgets.Cheque;
+import jamel.austrian.widgets.AbstractCheque;
 
 /**
  * A capital owner is an agent that can hold an account, 
@@ -36,7 +36,7 @@ import jamel.austrian.widgets.Cheque;
  */
 public interface Shareholder extends AccountHolder {
 
-	void receiveDividend(Cheque cheque);
+	void receiveDividend(AbstractCheque cheque);
 	
 	void newEquityHolding(Debtor newDebtor);
 	

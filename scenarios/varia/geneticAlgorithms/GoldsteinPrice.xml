@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<circuit
+	title="GA - Goldstein-Price artificial landscape"
+	type="jamel.basic.BasicCircuit"
+	content="Testing genetic algorithms on the Goldstein-Price artificial landscape"
+	date="03-07-2015"
+>
+
+	<settings
+		randomSeed="0"
+		chartsConfigFile="GoldsteinPrice/charts.xml" />
+
+	<sectors>
+
+		<Landscape
+			type="jamel.varia.optimization.artificialLandscapes.GoldsteinPrice"
+		>
+			<settings
+				top="2.5"
+				bottom="-2.5"
+				left="-2.5"
+				right="2.5"
+				blockWidth="0.025"
+				blockHeight="0.025" />
+		</Landscape>
+
+		<Algo0
+			type="jamel.varia.optimization.genetic.BasicGA"
+			agentType="jamel.varia.optimization.genetic.BasicIndividual"
+		>
+			<settings
+				nAgents="100"
+				top="-2"
+				bottom="-2.5"
+				left="-2.5"
+				right="-2"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo0>
+
+		<Algo1
+			type="jamel.varia.optimization.genetic.BasicGA"
+			agentType="jamel.varia.optimization.genetic.SatisficingIndividual"
+		>
+			<settings
+				nAgents="100"
+				top="-2"
+				bottom="-2.5"
+				left="-2.5"
+				right="-2"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo1>
+
+		<Algo2
+			type="jamel.varia.optimization.genetic.BasicGA"
+			agentType="jamel.varia.optimization.genetic.PyramidingIndiv"
+		>
+			<settings
+				nAgents="100"
+				top="-2"
+				bottom="-2.5"
+				left="-2.5"
+				right="-2"
+				curiosity="5"
+				tournamentSize="10" />
+			<dependencies>
+				<landscape value="Landscape" />
+			</dependencies>
+		</Algo2>
+
+	</sectors>
+
+	<phases>
+		<Algo0 action="tournament" />
+		<Algo1 action="tournament" />
+		<Algo2 action="tournament" />
+		<Algo0 action="adaptation" />
+		<Algo1 action="adaptation" />
+		<Algo2 action="adaptation" />
+	</phases>
+
+	<events>
+		<pause period="0" />
+		<pause period="300" />
+	</events>
+
+</circuit>

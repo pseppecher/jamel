@@ -22,10 +22,13 @@ import jamel.jamel.widgets.JobOffer;
 import jamel.jamel.widgets.Supply;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import org.w3c.dom.Attr;
@@ -38,6 +41,103 @@ import org.w3c.dom.NodeList;
  * A basic household sector.
  */
 public class BasicHouseholdSector implements HouseholdSector, Capitalists {
+
+	/**
+	 * A class to manage multiple employers.
+	 */
+	private class MultiSectoralEmployers implements Employers {
+	
+		/**
+		 * The employer sectors.
+		 */
+		private final Map<String, Employers> sectors = new LinkedHashMap<String, Employers>();
+	
+		/**
+		 * The total size (= the total of potential jobs).
+		 */
+		private int totalSize = 0;
+	
+		/**
+		 * The weight of the each sector.
+		 */
+		private final Map<String, Integer> weight = new HashMap<String, Integer>();
+	
+		@Override
+		public JobOffer[] getJobOffers(final int size) {
+			final JobOffer[] result;
+			if (this.sectors.isEmpty()) {
+				throw new RuntimeException("There is no employer sector.");
+			}
+			final List<JobOffer> offers = new LinkedList<JobOffer>();			
+			for(Entry<String,Employers> entry: this.sectors.entrySet()) {
+				final int n = Math.max(1,size*this.weight.get(entry.getKey())/totalSize);
+				final JobOffer[] offer = entry.getValue().getJobOffers(n);
+				for(JobOffer jobOffer: offer) {
+					offers.add(jobOffer);
+				}
+			}
+			Collections.shuffle(offers,random);
+			if (offers.size()>size) {
+				result = offers.subList(0, size).toArray(new JobOffer[0]);
+			}
+			else {
+				result = offers.toArray(new JobOffer[0]);
+			}
+			return result;
+		}
+	
+		@Override
+		public int getSize() {
+			return this.totalSize;
+		}
+	
+		/**
+		 * Returns <tt>true</tt> if this record contains no employer.
+		 *
+		 * @return <tt>true</tt> if this record contains no employer.
+		 */
+		public boolean isEmpty() {
+			return this.sectors.isEmpty();
+		}
+	
+		/**
+		 * Associates the specified employer with the specified key in this map.
+		 *
+		 * @param key
+		 *            key with which the specified employer is to be associated.
+		 * @param employer
+		 *            employer to be associated with the specified key.
+		 */
+		public void register(String key, Employers employer) {
+			if (key == null) {
+				throw new IllegalArgumentException("Key cannot be null.");
+			}
+			if (employer == null) {
+				throw new IllegalArgumentException("Employer cannot be null.");
+			}
+			if (this.sectors.containsKey(key)) {
+				throw new IllegalArgumentException("This employer is already registred.");
+			}
+			this.sectors.put(key, employer);
+			this.weight.put(key, 1);
+			this.totalSize++;
+		}
+	
+		/**
+		 * Updates the weight of each sector.
+		 */
+		public void updateWeight() {
+			this.totalSize = 0;
+			for (Entry<String, Employers> entry : sectors.entrySet()) {
+				final String key = entry.getKey();
+				final Employers employer = entry.getValue();
+				final int size = employer.getSize();
+				this.weight.put(key, size);
+				this.totalSize+=size;
+			}
+		}
+	
+	}
 
 	/** The key word for the "consumption" phase. */
 	private static final String PHASE_CONSUMPTION = "consumption";
@@ -78,7 +178,7 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 	protected int countAgents;
 
 	/** The employers. */
-	protected Employers employers ;
+	protected Employers employers;
 
 	/** The collection of agents. */
 	protected final AgentSet<Household> households;
@@ -130,7 +230,7 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 		final List<Household> list = new ArrayList<Household>(lim);
 		for (int index = 0; index < lim; index++) {
 			this.countAgents++;
-			final String householdName = this.name + "-" + this.countAgents;
+			final String householdName = "Household" + this.countAgents;
 			try {
 				list.add((Household) Class.forName(type, false, ClassLoader.getSystemClassLoader())
 						.getConstructor(String.class, HouseholdSector.class).newInstance(householdName, this));
@@ -141,46 +241,15 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 		return list;
 	}
 
-	/**
-	 * Creates and returns a closure phase.
-	 * 
-	 * @return a closure phase.
-	 */
-	protected Phase getClosurePhase() {
-		return new AbstractPhase(PHASE_CLOSURE, this) {
-			@Override
-			public void run() {
-				for (final Household household : households.getList()) {
-					household.close();
-				}
-			}
-		};
-	}
-
-	/**
-	 * Initializes the employer sector.
-	 * 
-	 * @param nodeList
-	 *            the list of the employers.
-	 * @throws InitializationException
-	 *             if something goes wrong.
-	 */
-	protected void initEmployers(NodeList nodeList) throws InitializationException {
-		final Element element = (Element) nodeList.item(0);
-		if (element == null) {
-			throw new InitializationException("Element not found: Employers");
-		}
-		final String key = element.getAttribute("value");
-		if (key == "") {
-			throw new InitializationException("Missing attribute: value");
-		}
-		this.employers = (Employers) circuit.getSector(key);
+	@Override
+	public Object askFor(String key) {
+		throw new RuntimeException("Not yet implemented");
 	}
 
 	@Override
 	public Cheque[] buyCorporation(Corporation firm) {
 		final long firmValue = firm.getBookValue();
-		if (firmValue <= 0) {
+		if (firmValue < 0) {
 			throw new RuntimeException("firmValue: " + firmValue);
 		}
 		final List<Shareholder> all = new LinkedList<Shareholder>(this.households.getShuffledList());
@@ -189,8 +258,9 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 		final List<Integer> shares = new ArrayList<Integer>(10);
 		long priceOfOneShare = firmValue / 100;
 		if (priceOfOneShare < 2) {
-			priceOfOneShare=1;
-			//throw new RuntimeException("priceOfOneShare: " + priceOfOneShare);
+			priceOfOneShare = 1;
+			// throw new RuntimeException("priceOfOneShare: " +
+			// priceOfOneShare);
 			// FIXME
 		}
 
@@ -274,10 +344,13 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 
 	@Override
 	public void doEvent(Element event) {
-		if (event.getNodeName().equals("new")) {
+		// 2016-03-27: changement de la syntaxe des événements
+		final String eventType = event.getAttribute("event"); 
+		if (eventType.equals("Create new households")) {
 			final int size = Integer.parseInt(event.getAttribute("size"));
 			this.households.putAll(this.createHouseholds(this.agentType, size));
-		} else if (event.getNodeName().equals("shock")) {
+		} else if (eventType.equals("shock")) {
+			// 2016-03-27: TODO: à vérifier			
 			final NodeList nodes = event.getChildNodes();
 			for (int i = 0; i < nodes.getLength(); i++) {
 				if (nodes.item(i).getNodeType() == Node.ELEMENT_NODE) {
@@ -483,6 +556,60 @@ public class BasicHouseholdSector implements HouseholdSector, Capitalists {
 	@Override
 	public List<Shareholder> selectRandomCapitalOwners(int n) {
 		return new ArrayList<Shareholder>(households.getSimpleRandomSample(n));
+	}
+
+	@Override
+	public List<Household> selectRandomSample(int n) {
+		return new ArrayList<Household>(households.getSimpleRandomSample(n));
+	}
+
+
+	/**
+	 * Creates and returns a closure phase.
+	 * 
+	 * @return a closure phase.
+	 */
+	protected Phase getClosurePhase() {
+		return new AbstractPhase(PHASE_CLOSURE, this) {
+			@Override
+			public void run() {
+				for (final Household household : households.getList()) {
+					household.close();
+				}
+				((MultiSectoralEmployers) employers).updateWeight();
+			}
+		};
+	}
+
+	/**
+	 * Initializes the employer sectors.
+	 * 
+	 * @param list
+	 *            the list of the employers.
+	 * @throws InitializationException
+	 *             if something goes wrong.
+	 */
+	protected void initEmployers(NodeList list) throws InitializationException {
+		final MultiSectoralEmployers multiEmployers = new MultiSectoralEmployers();
+		for (int i = 0; i < list.getLength(); i++) {
+			final Element element = (Element) list.item(i);
+			final String key = element.getAttribute("value");
+			final Employers newEmployer = (Employers) circuit.getSector(key);
+			if (newEmployer == null) {
+				throw new InitializationException("Employers sector not found: " + key);
+			}
+			multiEmployers.register(key, newEmployer);
+		}
+		
+		if (multiEmployers.isEmpty()) {
+			// TODO: Faut-il obligatoirement des employeurs ? Par exemple un
+			// secteur de ménages capitalistes ne devrait pas avoir besoin
+			// d'employeurs.
+			// On devrait donc accepter qu'il n'y en n'ait pas.
+			// A décider sans doute en amont de cette procédure.
+			throw new InitializationException("Employers not found.");
+		}
+		this.employers = multiEmployers;
 	}
 
 }

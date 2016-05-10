@@ -9,10 +9,15 @@ import java.util.Map.Entry;
 
 import org.jfree.data.xy.XYDataItem;
 
+import jamel.Jamel;
+
 /**
  * A basic implementation of the {@link SectorDataset} interface.
  */
 public class BasicSectorDataset implements SectorDataset {
+
+	@SuppressWarnings("javadoc")
+	private static final String GINI = "gini";
 
 	@SuppressWarnings("javadoc")
 	private static final int MAX = 2;
@@ -22,9 +27,6 @@ public class BasicSectorDataset implements SectorDataset {
 
 	@SuppressWarnings("javadoc")
 	private static final int MIN = 3;
-
-	@SuppressWarnings("javadoc")
-	private static final String GINI = "gini";
 
 	@SuppressWarnings("javadoc")
 	private static final int SUM = 0;
@@ -162,7 +164,7 @@ public class BasicSectorDataset implements SectorDataset {
 				final String value = term[1];
 				result = new HashMap<String, AgentDataset>();
 				for (AgentDataset agentData : data.values()) {
-					if (agentData.get(key)!=null && !agentData.get(key).equals(Double.valueOf(value))) {
+					if (agentData.get(key) != null && !agentData.get(key).equals(Double.valueOf(value))) {
 						result.put(agentData.getName(), agentData);
 					}
 				}
@@ -173,9 +175,10 @@ public class BasicSectorDataset implements SectorDataset {
 				result = new HashMap<String, AgentDataset>();
 				for (AgentDataset agentData : data.values()) {
 					final Double agentValue = agentData.get(key);
-					/*if (agentValue == null) {
-						throw new NullPointerException("agent: " + agentData.getName() + "; field: " + key);
-					}*/
+					/*
+					 * if (agentValue == null) { throw new NullPointerException(
+					 * "agent: " + agentData.getName() + "; field: " + key); }
+					 */
 					if (agentValue != null && agentValue.equals(selectValue)) {
 						result.put(agentData.getName(), agentData);
 					}
@@ -267,7 +270,7 @@ public class BasicSectorDataset implements SectorDataset {
 		Double max = null;
 		Double min = null;
 		final Map<String, AgentDataset> selection = select(this.agentsData, select);
-		if (selection==null) {
+		if (selection == null) {
 			throw new RuntimeException("Selection is null");
 		}
 		int count = 0;
@@ -275,6 +278,11 @@ public class BasicSectorDataset implements SectorDataset {
 			final Double val = agentDataset.get(data);
 			if (val != null) {
 				if (Double.isNaN(val)) {
+					Jamel.println("***");
+					Jamel.println("data: " + data);
+					Jamel.println("select: " + select);
+					Jamel.println("val: " + val);
+					Jamel.println("***");
 					throw new RuntimeException("The value is not a number.");
 				}
 				if (sum == null) {
@@ -308,6 +316,18 @@ public class BasicSectorDataset implements SectorDataset {
 	}
 
 	@Override
+	public String getAgentInfo(String agentName, String key) {
+		final String result;
+		final AgentDataset data = this.agentsData.get(agentName);
+		if (data != null) {
+			result = data.getInfo(key);
+		} else {
+			result = null;
+		}
+		return result;
+	}
+
+	@Override
 	public Double getAgentValue(String dataKey, String agentName) {
 		final Double result;
 		final AgentDataset data = this.agentsData.get(agentName);
@@ -320,13 +340,21 @@ public class BasicSectorDataset implements SectorDataset {
 	}
 
 	@Override
-	public String getAgentInfo(String agentName, String key) {
-		final String result;
-		final AgentDataset data = this.agentsData.get(agentName);
-		if (data != null) {
-			result = data.getInfo(key);
-		} else {
-			result = null;
+	public Object[][] getData(String[] dataKeys, String select) {
+		final Map<String, AgentDataset> selection = select(this.agentsData, select);
+		final Object[][] result = new Object[selection.size()][dataKeys.length];
+		int i = 0;
+		for (Entry<String, AgentDataset> entry : selection.entrySet()) {
+			int j = 0;
+			for (String dataKey : dataKeys) {
+				if (dataKey.trim().equals("name")) {
+					result[i][j] = entry.getKey();
+				} else {
+					result[i][j] = entry.getValue().get(dataKey.trim());
+				}
+				j++;
+			}
+			i++;
 		}
 		return result;
 	}
@@ -349,22 +377,27 @@ public class BasicSectorDataset implements SectorDataset {
 	}
 
 	@Override
-	public Object[][] getData(String keys, String select) {
-		final Map<String, AgentDataset> selection = select(this.agentsData, select);
-		final String[] dataKeys = keys.split(",");
-		final Object[][] result = new Object[selection.size()][dataKeys.length];
-		int i=0;
-		for(Entry<String, AgentDataset> entry: selection.entrySet()) {
-			int j=0;
-			for(String dataKey:dataKeys) {
-				if (dataKey.trim().equals("name")) {
-					result[i][j]=entry.getKey();
-				} else {
-					result[i][j]=entry.getValue().get(dataKey.trim());
+	public Double getGini(String key, String select) {
+		final Double result;
+		final String query = GINI + "(" + key + "," + select + ")";
+		if (this.cache.containsKey(query)) {
+			result = this.cache.get(query);
+		} else {
+			final Double total = this.getSum(key, select);
+			if (total != null) {
+				Double[] values = this.getField(key, select);
+				Arrays.sort(values);
+				double sum1 = 0;
+				double sum2 = 0;
+				final int n = values.length;
+				for (Double value : values) {
+					sum1 += sum1 + total / n;
+					sum2 += sum2 + value;
 				}
-				j++;
+				result = (sum1 - sum2) / sum1;
+			} else {
+				result = null;
 			}
-			i++;
 		}
 		return result;
 	}
@@ -406,32 +439,6 @@ public class BasicSectorDataset implements SectorDataset {
 	}
 
 	@Override
-	public Double getGini(String key, String select) {
-		final Double result;
-		final String query = GINI + "(" + key + "," + select + ")";
-		if (this.cache.containsKey(query)) {
-			result = this.cache.get(query);
-		} else {
-			final Double total = this.getSum(key, select);
-			if (total!=null) {
-				Double[] values = this.getField(key, select);
-				Arrays.sort(values);
-				double sum1 = 0;
-				double sum2 = 0;
-				final int n = values.length;
-				for (Double value:values) {
-					sum1 += sum1+total/n;
-					sum2 += sum2+value;
-				}
-				result=(sum1-sum2)/sum1;
-			} else {
-				result = null;
-			}
-		}
-		return result;
-	}
-
-	@Override
 	public List<XYDataItem> getScatter(String xKey, String yKey, String select) {
 		final List<XYDataItem> result;
 		final Map<String, AgentDataset> selection = select(this.agentsData, select);
@@ -440,7 +447,7 @@ public class BasicSectorDataset implements SectorDataset {
 			for (AgentDataset data : selection.values()) {
 				final Double x = data.get(xKey);
 				final Double y = data.get(yKey);
-				if (x!=null && y!=null) {
+				if (x != null && y != null) {
 					final XYDataItem item = new XYDataItem(data.get(xKey), data.get(yKey));
 					result.add(item);
 				}
@@ -492,10 +499,10 @@ public class BasicSectorDataset implements SectorDataset {
 	@Override
 	public void putSectorialValue(String key, Number value) {
 		final Double d;
-		if (value==null) {
-			d=null;
+		if (value == null) {
+			d = null;
 		} else {
-			d=value.doubleValue();
+			d = value.doubleValue();
 		}
 		this.sectorialData.put(key, d);
 	}

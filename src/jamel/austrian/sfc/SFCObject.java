@@ -2,9 +2,8 @@ package jamel.austrian.sfc;
 
 import java.util.Random;
 
-import jamel.austrian.InitialConditions;
 import jamel.austrian.Parameters;
-import jamel.austrian.banks.BankingSector;
+import jamel.austrian.banks.AbstractBankingSector;
 import jamel.austrian.banks.InvestmentBank;
 import jamel.austrian.firms.FirmSector;
 import jamel.austrian.households.HouseholdSector;
@@ -37,9 +36,6 @@ public abstract class SFCObject {
 	/** The production function of the economy. */
 	protected static ProductionFunction productionFunction;
 	
-	/** The initial conditions of the system. */
-	protected static InitialConditions initialConditions;
-
 	
 	/**
 	 * Creates a new sector for households.
@@ -51,7 +47,6 @@ public abstract class SFCObject {
 		circuit = aCircuit;
 		parameters = new Parameters();
 		productionFunction = new ProductionFunction(parameters);
-		initialConditions = new InitialConditions();
 		random = circuit.getRandom();
 		timer = circuit.getTimer();
 	}
@@ -104,8 +99,8 @@ public abstract class SFCObject {
 	/**
 	 * Returns the banking sector.
 	 */
-	public BankingSector getBankingSector() {
-		return (BankingSector) circuit.getSector("Banks");
+	public AbstractBankingSector getBankingSector() {
+		return (AbstractBankingSector) circuit.getSector("Banks");
 	}
 	
 	

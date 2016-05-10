@@ -93,21 +93,16 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 		final long productivity = Long.parseLong(element.getAttribute("production.productivity"));
 		final Map<String, Float> techCoefs = new HashMap<String, Float>();
 		final Element techCoeficients = (Element) element.getElementsByTagName("techCoeficients").item(0);
-		if (techCoeficients!=null) {
+		if (techCoeficients != null) {
 			final NodeList nodeList = techCoeficients.getElementsByTagName("input");
 			for (int i = 0; i < nodeList.getLength(); i++) {
 				final Element elem = (Element) nodeList.item(i);
 				final String type = elem.getAttribute("type");
 				final Float value = Float.parseFloat(elem.getAttribute("coef"));
 				techCoefs.put(type, value);
-			}			
+			}
 		}
 		return new Technology() {
-
-			@Override
-			public Map<String, Float> get(String string) {
-				return techCoefs;
-			}
 
 			@Override
 			public long getInputVolumeForANewMachine() {
@@ -125,6 +120,11 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 			}
 
 			@Override
+			public Map<String, Float> getTechnicalCoefficients() {
+				return techCoefs;
+			}
+
+			@Override
 			public double getTimelifeMean() {
 				return timelifeMean;
 			}
@@ -135,13 +135,13 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 			}
 
 			@Override
-			public String getTypeOfProduction() {
-				return typeOfProduction;
+			public String getTypeOfInputForMachineCreation() {
+				return typeOfInputForMachineCreation;
 			}
 
 			@Override
-			public String getTypeOfInputForMachineCreation() {
-				return typeOfInputForMachineCreation;
+			public String getTypeOfProduction() {
+				return typeOfProduction;
 			}
 
 		};
@@ -159,11 +159,22 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	/** The macroeconomic circuit. */
 	private final Circuit circuit;
 
+	/**
+	 * To count the number of firms created since the start of the simulation.
+	 */
+	private int countFirms;
+
 	/** The sector dataset (collected at the end of the previous period). */
 	private SectorDataset dataset;
 
+	/** The collection of firms. */
+	private final AgentSet<Firm> firms;
+
 	/** The name of this sector. */
 	private final String name;
+
+	/** The parameters of this sector. */
+	private final JamelParameters parameters;
 
 	/** The random. */
 	final private Random random;
@@ -190,17 +201,6 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	final private Timer timer;
 
 	/**
-	 * To count the number of firms created since the start of the simulation.
-	 */
-	protected int countFirms;
-
-	/** The collection of firms. */
-	protected final AgentSet<Firm> firms;
-
-	/** The parameters of this sector. */
-	protected final JamelParameters parameters = new BasicParameters();
-
-	/**
 	 * Creates a new industrial sector.
 	 * 
 	 * @param name
@@ -210,11 +210,109 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 	 */
 	public BasicIndustrialSector(String name, Circuit circuit) {
 		this.name = name;
+		this.parameters = new BasicParameters(name);
 		this.circuit = circuit;
 		this.timer = this.circuit.getTimer();
 		this.random = this.circuit.getRandom();
 		this.firms = new BasicAgentSet<Firm>(this.random);
 		this.dataset = this.firms.collectData();
+	}
+
+	/**
+	 * Closes the sector at the end of the period.
+	 */
+	private void close() {
+		for (final Firm firm : firms.getList()) {
+			firm.close();
+		}
+		this.dataset = this.firms.collectData();
+		final Double[] truc = this.dataset.getField("capacity", "");
+		if (truc.length > 0) {
+			// Herfindahl–Hirschman Index
+			double sum = 0;
+			for (double d : truc) {
+				sum += d;
+			}
+			double hhi = 0;
+			for (double d : truc) {
+				hhi += Math.pow(d / sum, 2);
+			}
+			this.dataset.putSectorialValue("hhi", hhi);
+		}
+	}
+
+	/**
+	 * Creates firms.
+	 * 
+	 * @param type
+	 *            the type of firms to create.
+	 * @param lim
+	 *            the number of firms to create.
+	 * @return a list containing the new firms.
+	 */
+	private List<Firm> createFirms(String type, int lim) {
+		final List<Firm> result = new ArrayList<Firm>(lim);
+		try {
+			for (int index = 0; index < lim; index++) {
+				this.countFirms++;
+				final String firmName = "Firm" + this.countFirms;
+				final Firm firm = (Firm) Class.forName(type, false, ClassLoader.getSystemClassLoader())
+						.getConstructor(String.class, IndustrialSector.class).newInstance(firmName, this);
+				result.add(firm);
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("Firm creation failure", e);
+		}
+		return result;
+	}
+
+	/**
+	 * Initializes the suppliers sectors.
+	 * 
+	 * @param list
+	 *            list of the supplier sectors.
+	 * @throws InitializationException
+	 *             if something goes wrong.
+	 */
+	private void initSuppliers(final NodeList list) throws InitializationException {
+		for (int i = 0; i < list.getLength(); i++) {
+			final Element elem = (Element) list.item(i);
+			final String sector = elem.getAttribute("sector");
+			final String supply = elem.getAttribute("supply");
+			final Suppliers supplier = (Suppliers) circuit.getSector(sector);
+			if (supplier == null) {
+				throw new InitializationException("Supplier sector not found: " + sector);
+			}
+			this.suppliers.put(supply, supplier);
+		}
+	}
+
+	/**
+	 * The inputs purchase phase: when firms buy raw materials and other inputs.
+	 */
+	private void inputsPurchase() {
+		for (final Firm firm : firms.getShuffledList()) {
+			firm.inputsPurchase();
+		}
+	}
+
+	/**
+	 * Opens each firm in the sector.
+	 */
+	private void open() {
+		this.size = 0;
+		regenerate();
+		final List<Firm> bankrupted = new LinkedList<Firm>();
+		for (final Firm firm : firms.getShuffledList()) {
+			firm.open();
+			if (firm.isBankrupted()) {
+				bankrupted.add(firm);
+				// prepareRegeneration();
+			} else {
+				this.size += firm.getSize();
+			}
+		}
+		this.firms.removeAll(bankrupted);
 	}
 
 	/**
@@ -245,108 +343,20 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 		}
 	}
 
-	/**
-	 * Closes the sector at the end of the period.
-	 */
-	protected void close() {
-		for (final Firm firm : firms.getList()) {
-			firm.close();
-		}
-		this.dataset = this.firms.collectData();
-		final Double[] truc = this.dataset.getField("capacity", "");
-		if (truc.length > 0) {
-			// Herfindahl–Hirschman Index
-			double sum = 0;
-			for (double d : truc) {
-				sum += d;
-			}
-			double hhi = 0;
-			for (double d : truc) {
-				hhi += Math.pow(d / sum, 2);
-			}
-			this.dataset.putSectorialValue("hhi", hhi);
-		}
-	}
-
-	/**
-	 * Creates firms.
-	 * 
-	 * @param type
-	 *            the type of firms to create.
-	 * @param lim
-	 *            the number of firms to create.
-	 * @return a list containing the new firms.
-	 */
-	protected List<Firm> createFirms(String type, int lim) {
-		final List<Firm> result = new ArrayList<Firm>(lim);
-		try {
-			for (int index = 0; index < lim; index++) {
-				this.countFirms++;
-				final String firmName = "Firm" + this.countFirms;
-				final Firm firm = (Firm) Class.forName(type, false, ClassLoader.getSystemClassLoader())
-						.getConstructor(String.class, IndustrialSector.class).newInstance(firmName, this);
-				result.add(firm);
-			}
-		} catch (Exception e) {
-			throw new RuntimeException("Firm creation failure", e);
-		}
-		return result;
-	}
-
-	/**
-	 * Initializes the suppliers sectors.
-	 * 
-	 * @param list
-	 *            list of the supplier sectors.
-	 * @throws InitializationException
-	 *             if something goes wrong.
-	 */
-	protected void initSuppliers(final NodeList list) throws InitializationException {
-		for (int i = 0; i < list.getLength(); i++) {
-			final Element elem = (Element) list.item(i);
-			final String sector = elem.getAttribute("sector");
-			final String supply = elem.getAttribute("supply");
-			final Suppliers supplier = (Suppliers) circuit.getSector(sector);
-			if (supplier == null) {
-				throw new InitializationException("Supplier sector not found: " + sector);
-			}
-			this.suppliers.put(supply, supplier);
-		}
-	}
-
-	/**
-	 * The inputs purchase phase: when firms buy raw materials and other inputs.
-	 */
-	protected void inputsPurchase() {
-		throw new RuntimeException("Not used.");
-	}
-
-	/**
-	 * Opens each firm in the sector.
-	 */
-	protected void open() {
-		this.size = 0;
-		regenerate();
-		final List<Firm> bankrupted = new LinkedList<Firm>();
-		for (final Firm firm : firms.getShuffledList()) {
-			firm.open();
-			if (firm.isBankrupted()) {
-				bankrupted.add(firm);
-				// prepareRegeneration();
-			}
-			else {
-				this.size += firm.getSize();				
-			}
-		}
-		this.firms.removeAll(bankrupted);
+	@Override
+	public Object askFor(String key) {
+		throw new RuntimeException("Not yet implemented");
 	}
 
 	@Override
 	public void doEvent(Element event) {
-		if (event.getNodeName().equals("new")) {
+		// 2016-03-27: changement de la syntaxe des événements
+		final String eventType = event.getAttribute("event");
+		if (eventType.equals("Create new firms")) {
 			final int newFirms = Integer.parseInt(event.getAttribute("size"));
 			this.firms.putAll(this.createFirms(this.agentType, newFirms));
-		} else if (event.getNodeName().equals("shock")) {
+		} else if (eventType.equals("shock")) {
+			// 2016-03-27: TODO: à vérifier
 			final NodeList nodes = event.getChildNodes();
 			for (int i = 0; i < nodes.getLength(); i++) {
 				if (nodes.item(i).getNodeType() == Node.ELEMENT_NODE) {
@@ -461,6 +471,17 @@ public class BasicIndustrialSector implements IndustrialSector, Suppliers, Emplo
 				@Override
 				public void run() {
 					BasicIndustrialSector.this.close();
+				}
+			};
+		}
+
+		else if ("investment".equals(phaseName)) {
+			result = new AbstractPhase(phaseName, this) {
+				@Override
+				public void run() {
+					for (final Firm firm : firms.getShuffledList()) {
+						firm.invest();
+					}
 				}
 			};
 		}

@@ -27,7 +27,7 @@ import jamel.jamel.widgets.BankAccount;
 import jamel.jamel.widgets.Cheque;
 
 /**
- * An experimental banking sector.
+ * A clone of Basic banking sector. Uses Bank2 (and not BasicBank).
  */
 public class BasicBankingSector implements BankingSector {
 
@@ -62,7 +62,7 @@ public class BasicBankingSector implements BankingSector {
 	private final String name;
 
 	/** The parameters of this sector. */
-	private final JamelParameters parameters = new BasicParameters();
+	private final JamelParameters parameters;
 
 	/** The random. */
 	final private Random random;
@@ -80,11 +80,11 @@ public class BasicBankingSector implements BankingSector {
 	 */
 	public BasicBankingSector(String name, Circuit circuit) {
 		this.name = name;
+		this.parameters = new BasicParameters(name);
 		this.circuit = circuit;
 		this.timer = this.circuit.getTimer();
 		this.random = this.circuit.getRandom();
 		this.banks = new BasicAgentSet<Bank>(this.random);
-		this.banks.put(new BasicBank("Bank0", this, random, timer));
 		this.dataset = this.banks.collectData();
 	}
 
@@ -105,6 +105,14 @@ public class BasicBankingSector implements BankingSector {
 		for (final Bank bank : banks.getList()) {
 			bank.open();
 		}
+	}
+
+	@Override
+	public Object askFor(String key) {
+		/*
+		 * 2016-03-17 / Utilisé par la banque pour accéder au taux d'inflation.
+		 */
+		return circuit.askFor(key);
 	}
 
 	@Override
@@ -144,8 +152,8 @@ public class BasicBankingSector implements BankingSector {
 	@Override
 	public BankAccount getNewAccount(AccountHolder accountHolder) {
 		final List<Bank> list = this.banks.getList();
-		if (list.size()==0) {
-			throw new RuntimeException("The sector is empty: "+this.name);
+		if (list.size() == 0) {
+			throw new RuntimeException("The sector is empty: " + this.name);
 		}
 		return this.banks.getList().get(0).getNewAccount(accountHolder);
 	}
@@ -205,7 +213,7 @@ public class BasicBankingSector implements BankingSector {
 
 		return result;
 	}
-	
+
 	@Override
 	public void init(Element element) throws InitializationException {
 		// Initialization of the dependencies:
@@ -242,6 +250,10 @@ public class BasicBankingSector implements BankingSector {
 				}
 			}
 		}
+
+		// 2016-04-03: creation de la banque unique qui peuple le secteur.
+		
+		this.banks.put(new BasicBank("Bank0", this, random, timer));
 	}
 
 	@Override

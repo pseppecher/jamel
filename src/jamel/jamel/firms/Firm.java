@@ -50,6 +50,11 @@ public interface Firm extends AccountHolder, Corporation, Supplier, Askable {
 	void inputsPurchase();
 
 	/**
+	 * Invests.
+	 */
+	void invest();
+
+	/**
 	 * Opens the firm at the beginning of the period.
 	 */
 	void open();
@@ -68,6 +73,7 @@ public interface Firm extends AccountHolder, Corporation, Supplier, Askable {
 	 * Implements the production.
 	 */
 	void production();
+
 
 }
 

@@ -16,7 +16,7 @@ public class Memory<N extends Number> {
 	/**
 	 * The maximum number of elements in memory.
 	 */
-	private int maxSize = 12;
+	final private int maxSize;
 
 	/**
 	 * Creates a new memory.

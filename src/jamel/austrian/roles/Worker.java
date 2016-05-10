@@ -28,12 +28,12 @@
 package jamel.austrian.roles;
 
 
-import jamel.austrian.widgets.Cheque;
+import jamel.austrian.widgets.AbstractCheque;
 
 
 public interface Worker extends Offerer {
 
-	void notifyHiring(Cheque cheque);
+	void notifyHiring(AbstractCheque cheque);
 
 	void notifyRejection(Offerer offerer);
 

@@ -38,7 +38,7 @@ public class BasicGA implements Sector {
 	private final String name;
 
 	/** The parameters of the sector. */
-	private final JamelParameters params = new BasicParameters();
+	private final JamelParameters params;
 
 	/** The agents. */
 	private final AgentSet<Individual> population;
@@ -58,9 +58,16 @@ public class BasicGA implements Sector {
 	 */
 	public BasicGA(String name, Circuit circuit) throws InitializationException {
 		this.name = name;
+		this.params = new BasicParameters(name);
 		this.circuit = circuit;
 		this.random = circuit.getRandom();
 		this.population = new BasicAgentSet<Individual>(random);
+	}
+
+	@Override
+	public Object askFor(String key) {
+		// Not used.
+		throw new RuntimeException("Not yet implemented");
 	}
 
 	@Override

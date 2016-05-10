@@ -1,0 +1,442 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+
+<charts
+	content="Is the market really a good teacher?"
+	date="2016-05-09"
+>
+
+	<panel title="Presentation">
+		<html source="presentation.xml" />
+	</panel>
+
+	<panel title="Charts p. 26 &#38; 29">
+
+		<chart
+			title="GDP growth and unemployment"
+			type="time chart"
+		>
+
+			<subplot>
+				<series
+					value="
+						sum ( Households , unemployed , t ) 
+						: sum ( Households , agents , t ) "
+					color="red"
+					label="Unemployment" />
+				<yAxis
+					min="0"
+					max="0.7" />
+
+			</subplot>
+			<subplot yZeroBaselineVisible="true">
+				<series
+					value="
+						sum ( Industry , production.vol , t-11...t ) 
+						: 
+						sum ( Industry , production.vol , t-23...t-12 ) 
+						-1"
+					label="Output growth"
+					color="blue" />
+				<yAxis
+					min="-0.2"
+					max="0.2" />
+			</subplot>
+		</chart>
+		<chart
+			title="Phillips curve"
+			type="time scatter chart"
+		>
+			<series
+				x="sum ( Households , unemployed , t-11...t ) 
+					: sum ( Households , agents , t-11...t ) "
+				y=" ( sum ( Households , wages , t-11...t ) 
+					* sum ( Households , employed , t-23...t-12 ) ) 
+					: ( sum ( Households , employed , t-11...t ) 
+					* sum ( Households , wages , t-23...t-12 ) ) -1"
+				mod="12"
+				color="transparentRed"
+				label="Wages" />
+			<xAxis
+				min="0"
+				max="0.6"
+				label="Unemployment" />
+			<yAxis
+				min="-0.1"
+				max="0.3"
+				label="Inflation" />
+			<legend />
+		</chart>
+		<chart
+			title="Bankruptcies"
+			type="time chart"
+		>
+
+			<subplot>
+				<series
+					label="Bankruptcy rate"
+					value="sum ( Industry , management.change , t-11...t ) 
+						: sum ( Industry , firms , t-11...t ) "
+					mod="12"
+					color="red" />
+				<yAxis
+					min="0"
+					max="0.005" />
+
+			</subplot>
+			<subplot yZeroBaselineVisible="true">
+				<series
+					value="
+						sum ( Industry , production.vol.atFullCapacity , t-11...t ) 
+						: 
+						sum ( Industry , production.vol.atFullCapacity , t-23...t-12 ) 
+						-1"
+					label="potential output growth"
+					color="blue" />
+				<yAxis
+					min="-0.2"
+					max="0.2" />
+			</subplot>
+		</chart>
+		<col />
+		<chart
+			title="Labor Market"
+			type="time chart"
+		>
+			<series
+				value="sum ( Industry , workforceTarget , t ) "
+				color="red"
+				label="Labor Demand" />
+			<series
+				value="sum ( Households , agents , t ) "
+				color="green"
+				label="Labor Supply" />
+			<series
+				value="sum ( Industry , capacity , t ) "
+				label="Capacity"
+				color="blue" />
+			<yAxis min="0" />
+		</chart>
+		<chart
+			title="Beveridge curve"
+			type="time scatter chart"
+		>
+			<series
+				x="sum ( Households , unemployed , t-11...t ) : sum ( Households , agents , t-11...t ) "
+				y=" sum ( Industry , jobVacancies , t-11...t ) : sum ( Industry , workforceTarget , t-11...t ) "
+				mod="12"
+				color="transparentGreen" />
+			<xAxis
+				min="0"
+				max="0.6"
+				label="Unemployment" />
+			<yAxis
+				min="-0."
+				max="0.3"
+				label="Vacancies" />
+			<legend />
+		</chart>
+		<chart
+			title="Interest Rates"
+			type="time chart"
+			yZeroBaselineVisible="true"
+		>
+			<series
+				value="sum ( Banks , rate.normal.nominal , t-11...t ) "
+				label="i (nominal)"
+				color="green" />
+			<series
+				value="sum ( Banks , rate.normal.real , t-11...t ) "
+				label="r (real)"
+				color="blue" />
+			<series
+				value="sum ( Banks , inflation , t ) "
+				label="Price inflation"
+				color="red" />
+		</chart>
+		<col />
+		<chart
+			title="Debt Ratios"
+			type="time chart"
+		>
+			<series
+				label="Debt Ratio"
+				value="sum ( Industry , liabilities , t ) : sum ( Industry , assets , t ) "
+				color="green" />
+			<series
+				label="Target"
+				value="mean ( Industry , targetDebtRatio , t ) "
+				color="red" />
+			<series
+				label="Target ( Weighted by Assets ) "
+				value="sum ( Industry , liabilities.target , t ) : sum ( Industry , assets , t ) "
+				color="blue" />
+			<yAxis
+				min="0.3"
+				max="0.9" />
+		</chart>
+		<chart
+			title="Financial Fragility"
+			type="time scatter chart"
+		>
+			<series
+				x="sum ( Industry , production.vol.atFullCapacity , t-11...t )"
+				y="
+					sum ( Industry , liabilities , t-11...t )
+					: ( 12 * 
+					( sum ( Industry , grossProfit , t-11...t )
+					- sum ( Industry , interest , t-11...t ) )
+					) 
+					"
+				mod="12"
+				color="transparentRed"
+				shapesVisibles="true" />
+			<yAxis
+				label="Financial Fragility"
+				min="0"
+				max="11" />
+			<xAxis
+				label="GDP"
+				min="3000000"
+				max="11000000" />
+			<legend />
+		</chart>
+		<chart
+			title="Income-debt relations"
+			type="scatter chart"
+		>
+			<xAxis
+				min="0"
+				max="1" />
+			<yAxis
+				min="0"
+				max="150" />
+			<series
+				sector="Industry"
+				x="targetDebtRatio"
+				y="capacity"
+				select="ponzi=1"
+				color="red"
+				label="Ponzi" />
+			<series
+				sector="Industry"
+				x="targetDebtRatio"
+				y="capacity"
+				select="speculative=1"
+				color="yellow"
+				label="Speculative" />
+			<series
+				sector="Industry"
+				x="targetDebtRatio"
+				y="capacity"
+				select="hedge=1"
+				color="veryLightBlue"
+				label="Hedge" />
+			<legend>
+				<item
+					label="Hedge"
+					color="veryLightBlue" />
+				<item
+					label="Speculative"
+					color="yellow" />
+				<item
+					label="Ponzi"
+					color="red" />
+			</legend>
+		</chart>
+	</panel>
+	<panel title="Charts p. 32">
+
+		<chart
+			title="GDP growth and unemployment"
+			type="time chart"
+		>
+
+			<subplot>
+				<series
+					value="
+						sum ( Households , unemployed , t ) 
+						: sum ( Households , agents , t ) "
+					color="red"
+					label="Unemployment" />
+				<yAxis
+					min="0"
+					max="0.7" />
+				<xAxis
+					min="750"
+					max="1250" />
+
+			</subplot>
+			<subplot yZeroBaselineVisible="true">
+				<series
+					value="
+						sum ( Industry , production.vol , t-11...t ) 
+						: 
+						sum ( Industry , production.vol , t-23...t-12 ) 
+						-1"
+					label="Output growth"
+					color="blue" />
+				<yAxis
+					min="-0.2"
+					max="0.2" />
+			</subplot>
+		</chart>
+		<chart
+			title="Interest Rates"
+			type="time chart"
+			yZeroBaselineVisible="true"
+		>
+			<series
+				value="sum ( Banks , rate.normal.nominal , t-11...t ) "
+				label="i (nominal)"
+				color="green" />
+			<series
+				value="sum ( Banks , rate.normal.real , t-11...t ) "
+				label="r (real)"
+				color="blue" />
+			<series
+				value="sum ( Banks , inflation , t ) "
+				label="Price inflation"
+				color="red" />
+			<xAxis
+				min="750"
+				max="1250" />
+		</chart>
+		<chart
+			title="Real assets and debt maturity structure"
+			type="time chart"
+		>
+			<series
+				value=" ( sum ( Industry , inventories.inProcess.val , t-11...t ) +
+					sum ( Industry , inventories.fg.val , t-11...t ) ) *
+					sum ( Industry , inventories.fg.vol , t-11...t ) :
+					sum ( Industry , inventories.fg.val , t-11...t ) "
+				color="red"
+				label="Circulating capital" />
+			<series
+				value="sum ( Banks , loans.shortTerm , t-11...t ) *
+					sum ( Industry , inventories.fg.vol , t-11...t ) :
+					sum ( Industry , inventories.fg.val , t-11...t ) "
+				color="orange"
+				label="Short term debt" />
+			<series
+				value="sum ( Industry , machinery.val , t-11...t ) :
+						mean ( Industry , prices , t-11...t ) "
+				color="blue"
+				label="Fixed capital" />
+			<series
+				value="sum ( Banks , loans.longTerm , t-11...t ) :
+						mean ( Industry , prices , t-11...t ) "
+				color="green"
+				label="Long term debt" />
+			<xAxis
+				min="750"
+				max="1250" />
+		</chart>
+		<col />
+		<chart
+			title="Bankruptcies"
+			type="time chart"
+		>
+
+			<subplot>
+				<series
+					label="Bankruptcy rate"
+					value="sum ( Industry , management.change , t-11...t ) 
+						: sum ( Industry , firms , t-11...t ) "
+					mod="12"
+					color="red" />
+				<yAxis
+					min="0"
+					max="0.005" />
+
+				<xAxis
+					min="750"
+					max="1250" />
+			</subplot>
+			<subplot yZeroBaselineVisible="true">
+				<series
+					value="
+						sum ( Industry , production.vol.atFullCapacity , t-11...t ) 
+						: 
+						sum ( Industry , production.vol.atFullCapacity , t-23...t-12 ) 
+						-1"
+					label="potential output growth"
+					color="blue" />
+				<yAxis
+					min="-0.2"
+					max="0.2" />
+				<xAxis
+					min="750"
+					max="1250" />
+			</subplot>
+		</chart>
+		<chart
+			title="Debt Ratios"
+			type="time chart"
+		>
+			<series
+				label="Debt Ratio (effective)"
+				value="sum ( Industry , liabilities , t ) : sum ( Industry , assets , t ) "
+				color="green" />
+			<series
+				label="Target (weighted by assets)"
+				value="sum ( Industry , liabilities.target , t ) : sum ( Industry , assets , t ) "
+				color="blue" />
+			<series
+				label="Target (average)"
+				value="mean ( Industry , targetDebtRatio , t ) "
+				color="red" />
+
+			<yAxis
+				min="0.3"
+				max="0.9" />
+			<xAxis
+				min="750"
+				max="1250" />
+		</chart>
+
+
+		<chart
+			title="Solvency Ratios"
+			type="time chart"
+		>
+			<series
+				label="Debt service coverage ratio"
+				value="
+					(
+					sum ( Industry , grossProfit , t-11...t )
+					- sum ( Industry , fixedCapital.depreciation , t-11...t )
+					)
+					:
+					sum ( Industry , debt.repaid , t-11...t )"
+				color="blue" />
+			<series
+				label="Solvency Ratio"
+				value="12 * sum ( Industry , grossProfit , t-11...t ) 
+						: sum ( Industry , liabilities , t-11...t ) "
+				color="red" />
+
+			<yAxis
+				min="0"
+				max="2" />
+			<xAxis
+				min="750"
+				max="1250" />
+		</chart>
+		<col />
+		<chart />
+
+	</panel>
+	<panel title="Balance Sheet">
+		<html source="balanceSheet.xml" />
+	</panel>
+	<panel title="Consistency">
+		<html source="consistency.xml" />
+	</panel>
+
+	<panel title="About Jamel">
+		<html source="../../../util/about.xml">
+		</html>
+	</panel>
+
+</charts>

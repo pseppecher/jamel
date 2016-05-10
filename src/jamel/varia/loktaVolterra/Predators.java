@@ -58,7 +58,7 @@ public class Predators implements Sector {
 	private final String name;
 
 	/** The parameters of the sector. */
-	private final JamelParameters params = new BasicParameters();
+	private final JamelParameters params;
 
 	/** The preys. */
 	private Preys preys = null;
@@ -78,9 +78,15 @@ public class Predators implements Sector {
 	 */
 	public Predators(String name, Circuit circuit) throws InitializationException {
 		this.name = name;
+		this.params = new BasicParameters(name);
 		this.circuit = circuit;
 		this.random = circuit.getRandom();
 		this.agents = new BasicAgentSet<Predator>(random);
+	}
+
+	@Override
+	public Object askFor(String key) {
+		throw new RuntimeException("Not used.");
 	}
 
 	@Override

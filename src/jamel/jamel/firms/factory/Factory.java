@@ -94,13 +94,15 @@ public interface Factory extends Askable {
 	 * If inventoryRatio lower than 1 : the volume of finished goods is under
 	 * the normal volume.
 	 * 
-	 * @param normalLevel
-	 *            the normal level, expressed as a number of period of
-	 *            production at full capacity.
-	 * 
 	 * @return the inventory ratio.
 	 */
-	double getInventoryRatio(float normalLevel);
+	double getInventoryRatio();
+
+	/**
+	 * Returns the list of the inputs this factory needs.
+	 * @return the list of the inputs this factory needs.
+	 */
+	Map<String, Long> getNeeds();
 
 	/**
 	 * Returns the average volume of production (finished goods) at the maximum
@@ -108,12 +110,7 @@ public interface Factory extends Askable {
 	 * 
 	 * @return a volume.
 	 */
-	double getMaxUtilAverageProduction();
-
-	/**
-	 * @return
-	 */
-	Map<String, Long> getNeeds();
+	double getPotentialOutput();
 
 	/**
 	 * Returns the unit cost of the finished goods in the inventory. The unit
@@ -152,11 +149,10 @@ public interface Factory extends Askable {
 	void process(LaborPower... laborPowers);
 
 	/**
-	 * 
-	 * @param inputKey
-	 * @param input
+	 * Provides this factory with the given input. 
+	 * @param input the input to be provided.
 	 */
-	void putResources(String inputKey, Commodities input);
+	void putResources(Commodities input);
 
 	/**
 	 * Scraps the specified number of machines.
@@ -165,6 +161,23 @@ public interface Factory extends Askable {
 	 *            the number of machines to be scrapped.
 	 */
 	void scrap(double nMachine);
+
+	/**
+	 * Sets the normal level of inventories.
+	 * 
+	 * @param normalLevel
+	 *            the normal level, expressed as a number of period of
+	 *            production at full capacity.
+	 * 
+	 */
+	void setInventoryNormalLevel(float normalLevel);
+
+	/**
+	 * Returns the overhead cost by unit.
+	 * 
+	 * @return the overhead cost by unit.
+	 */
+	public double getOverheadCostByUnit();
 
 }
 

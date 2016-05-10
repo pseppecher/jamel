@@ -162,6 +162,11 @@ public class Schelling implements Sector {
 	}
 
 	@Override
+	public Object askFor(String key) {
+		throw new RuntimeException("Not used");
+	}
+
+	@Override
 	public void doEvent(Element event) {
 		throw new RuntimeException("Not yet implemented");
 	}
@@ -267,7 +272,7 @@ public class Schelling implements Sector {
 		// Looking for the settings. 
 		final Element settingsElement = (Element) element.getElementsByTagName("settings").item(0);
 		final NamedNodeMap attributes = settingsElement.getAttributes();
-		final JamelParameters params = new BasicParameters();
+		final JamelParameters params = new BasicParameters(element.getNodeName());
 		for (int i=0; i< attributes.getLength(); i++) {
 			final Node node = attributes.item(i);
 			if (node.getNodeType()==Node.ATTRIBUTE_NODE) {

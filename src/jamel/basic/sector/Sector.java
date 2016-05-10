@@ -2,13 +2,14 @@ package jamel.basic.sector;
 
 import jamel.basic.data.SectorDataset;
 import jamel.basic.util.InitializationException;
+import jamel.jamel.firms.managers.Askable;
 
 import org.w3c.dom.Element;
 
 /**
  * The interface for the sector components of the macro-economic circuit. 
  */
-public interface Sector {
+public interface Sector extends Askable {
 	
 	/**
 	 * Executes the specified event.
