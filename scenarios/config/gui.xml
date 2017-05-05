@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 25 avril 2017 -->
+
+<gui className="jamel0.BasicGui">
+
+	<panel title="Panel 1">
+		<html title="Test">
+			<h1>Hello world!</h1>
+			<h2>Hello world!</h2>
+			<h3>Hello world!</h3>
+		</html>
+		<empty />
+		<col />
+		<html title="Test">
+			Current period: 
+			<data>period</data>
+		</html>
+		<empty />
+		<col />
+		<empty />
+	</panel>
+
+	<panel title="Panel 2">
+		<empty />
+		<col />
+		<empty />
+		<col />
+		<empty />
+	</panel>
+
+	<panel title="Panel 3">
+		<empty />
+	</panel>
+
+	<panel title="Panel 4">
+		<empty />
+	</panel>
+
+</gui>

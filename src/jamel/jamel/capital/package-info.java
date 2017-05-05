@@ -1,4 +1,0 @@
-/**
- * 
- */
-package jamel.jamel.capital;

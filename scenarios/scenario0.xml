@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 25 avril 2017 -->
+
+<multi-simulation>
+
+	<simulation
+		src="scenario1.xml"
+		repeat="10"
+	>
+		<replace
+			regex="ceci"
+			replacement="cela" />
+		<variable
+			key="$seed$"
+			values="0,1,2,3,4,5,6,7,8,9" />
+	</simulation>
+
+</multi-simulation>

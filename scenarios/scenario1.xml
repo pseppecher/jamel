@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 25 avril 2017 -->
+
+<simulation
+	name="Simulation 1"
+	className="jamel0.BasicSimulation"
+>
+
+	<randomSeed>
+		0
+	</randomSeed>
+
+	<gui src="config/gui.xml" />
+
+	<sectors>
+
+		<sector
+			name="Sector1"
+			className="jamel0.BasicSector"
+		>
+			<agentClassName>jamel0.BasicAgent</agentClassName>
+			<initialPopulation>10</initialPopulation>
+		</sector>
+
+		<sector
+			name="Sector2"
+			className="jamel0.BasicSector"
+		>
+			<agentClassName>
+				jamel0.BasicAgent
+			</agentClassName>
+			<initialPopulation>10</initialPopulation>
+		</sector>
+	</sectors>
+
+	<phases>
+
+		<phase name="opening">
+			<sector>
+				Sector1
+			</sector>
+			<sector>
+				Sector2
+			</sector>
+		</phase>
+
+		<phase name="closure">
+			<sector>
+				Sector1
+			</sector>
+			<sector>
+				Sector2
+			</sector>
+		</phase>
+
+	</phases>
+
+	<exports>
+		<export>
+			(2+2)*5;
+			5 * (2 + 2);
+			5*6;
+			-(-3+1)/5;
+			period;
+			value(Sector1,countAgent,t,sum)+
+			value(Sector2,countAgent,t,sum);
+		</export>
+	</exports>
+
+</simulation>
