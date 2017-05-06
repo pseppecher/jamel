@@ -1,4 +1,6 @@
-package jamel;
+package jamel.util;
+
+import java.util.Random;
 
 /**
  * An abstract class that provides convenience methods.
@@ -18,6 +20,15 @@ public abstract class JamelObject {
 	 */
 	public JamelObject(Simulation simulation) {
 		this.simulation = simulation;
+	}
+
+	/**
+	 * Returns the random.
+	 * 
+	 * @return the random.
+	 */
+	public Random getRandom() {
+		return this.simulation.getRandom();
 	}
 
 	/**

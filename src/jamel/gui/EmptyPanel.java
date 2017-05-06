@@ -1,4 +1,4 @@
-package jamel;
+package jamel.gui;
 
 import org.jfree.chart.ChartPanel;
 

@@ -1,4 +1,4 @@
-package jamel;
+package jamel.gui;
 
 /**
  * An interface for the dynamic JPanels.

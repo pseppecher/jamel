@@ -1,4 +1,4 @@
-package jamel;
+package jamel.gui;
 
 /**
  * Represents a HTML element.

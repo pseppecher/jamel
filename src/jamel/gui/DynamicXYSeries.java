@@ -1,13 +1,22 @@
-package jamel;
+package jamel.gui;
 
 import org.jfree.data.xy.XYSeries;
+
+import jamel.data.Expression;
 
 /**
  * A {@link XYSeries} that implements the {@link Updatable} interface.
  */
 public class DynamicXYSeries extends XYSeries implements Updatable {
 
+	/**
+	 * The expression for the x values.
+	 */
 	private Expression x;
+
+	/**
+	 * The expression for the y values.
+	 */
 	private Expression y;
 
 	/**

@@ -1,4 +1,4 @@
-package jamel;
+package jamel.gui;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -25,6 +25,9 @@ import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.w3c.dom.Text;
+
+import jamel.data.Expression;
+import jamel.util.Simulation;
 
 /**
  * A jPanel that contains Html text and dynamical data.
@@ -54,11 +57,11 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 	 * 
 	 * @param elem
 	 *            the XML element to be converted.
-	 * @param gui
-	 *            the parent gui.
+	 * @param simulation
+	 *            the parent simulation.
 	 * @return a new {@link HtmlElement}.
 	 */
-	private static HtmlElement getNewHtmlElement(Element elem, Gui gui) {
+	private static HtmlElement getNewHtmlElement(final Element elem, final Simulation simulation) {
 
 		final String tagName = elem.getTagName();
 		final NodeList list = elem.getChildNodes();
@@ -72,7 +75,6 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 
 		final List<HtmlElement> htmlElements = new LinkedList<>();
 		for (int i = 0; i < list.getLength(); i++) {
-			// final HtmlElement htmlElement = parseNode(list.item(i), gui);
 
 			// ***
 
@@ -80,7 +82,7 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 			if (list.item(i).getNodeType() == Node.ELEMENT_NODE) {
 				final Element elem2 = (Element) list.item(i);
 				if (elem2.getNodeName().equals("data")) {
-					final Expression expression = gui.getSimulation().getExpression(elem2.getTextContent());
+					final Expression expression = simulation.getExpression(elem2.getTextContent());
 					htmlElement = getNewDataElement(expression);
 					/*} else if (elem2.getNodeName().equals("test")) {
 						result = getNewTestElement(elem2, macroDatabase);
@@ -89,7 +91,7 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 					} else if (elem2.getNodeName().equals("jamel.version")) {
 						result = getNewJamelVersionElement();*/
 				} else {
-					htmlElement = getNewHtmlElement(elem2, gui);
+					htmlElement = getNewHtmlElement(elem2, simulation);
 				}
 			} else if (list.item(i).getNodeType() == Node.TEXT_NODE) {
 				final String string = ((Text) list.item(i)).getWholeText();
@@ -153,11 +155,6 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 	private boolean adjustScrollBar = true;
 
 	/**
-	 * The gui.
-	 */
-	final private Gui gui;
-
-	/**
 	 * The main html element.
 	 */
 	final private HtmlElement htmlElement;
@@ -193,8 +190,6 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 	public HtmlPanel(final Element elem, final Gui gui) {
 		super();
 
-		this.gui = gui;
-
 		final Element panelDescription;
 
 		if (elem.hasAttribute("src")) {
@@ -223,7 +218,7 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 
 		this.jEditorPane = new JEditorPane();
 		this.jEditorPane.setContentType("text/html");
-		this.htmlElement = getNewHtmlElement(panelDescription, this.gui);
+		this.htmlElement = getNewHtmlElement(panelDescription, gui.getSimulation());
 		this.jEditorPane.setText(this.htmlElement.getText());
 		this.jEditorPane.setEditable(false);
 		this.jEditorPane.addHyperlinkListener(new HyperlinkListener() {

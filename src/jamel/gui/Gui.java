@@ -1,6 +1,8 @@
-package jamel;
+package jamel.gui;
 
 import java.io.File;
+
+import jamel.util.Simulation;
 
 /**
  * An interface for the graphical user interface of the simulation.

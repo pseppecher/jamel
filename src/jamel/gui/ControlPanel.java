@@ -1,6 +1,5 @@
-package jamel;
+package jamel.gui;
 
-import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.net.URL;
@@ -11,25 +10,31 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
+import jamel.util.Simulation;
+
 /**
  * The control panel.
  */
 public class ControlPanel extends JPanel {
 
-	/** The context class loader. */
-	private final ClassLoader cl = Thread.currentThread().getContextClassLoader();
-
 	/** The pause button. */
 	private final JButton pauseButton;
-
-	/** The play button. */
-	private final JButton playButton;
 
 	/** The simulation. */
 	private final Simulation simulation;
 
 	/** The time counter. */
 	private final JTextField timeCounter = new JTextField(5);
+
+	/**
+	 * The suspend icon.
+	 */
+	private final ImageIcon suspendIcon;
+
+	/**
+	 * The resume icon.
+	 */
+	private final ImageIcon resumeIcon;
 
 	/**
 	 * Creates a new control panel.
@@ -39,19 +44,36 @@ public class ControlPanel extends JPanel {
 	 */
 	public ControlPanel(Simulation simulation) {
 		this.simulation = simulation;
+
+		this.suspendIcon = getIcon("resources/suspend_co.gif");
+		this.resumeIcon = getIcon("resources/resume_co.gif");
+
 		this.pauseButton = this.getPauseButton();
-		this.playButton = this.getPlayButton();
 		this.timeCounter.setHorizontalAlignment(SwingConstants.RIGHT);
 		this.timeCounter.setEditable(false);
+		this.timeCounter.setFocusable(false);
 		this.timeCounter.setText("");
-		this.setLayout(new GridLayout(0, 3));
-		final JPanel left = new JPanel();
-		final JPanel central = new JPanel();
-		central.add(playButton);
-		central.add(pauseButton);
-		central.add(timeCounter);
-		this.add(left);
-		this.add(central);
+		this.add(pauseButton);
+		this.add(timeCounter);
+	}
+
+	/**
+	 * Creates and returns an ImageIcon from the specified resource.
+	 * 
+	 * @param name
+	 *            the resource name.
+	 * @return an ImageIcon from the specified URL.
+	 */
+	private static ImageIcon getIcon(String name) {
+		final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		final URL url = cl.getResource(name);
+		final ImageIcon result;
+		if (url != null) {
+			result = new ImageIcon(url);
+		} else {
+			result = null;
+		}
+		return result;
 	}
 
 	/**
@@ -65,46 +87,15 @@ public class ControlPanel extends JPanel {
 				this.addActionListener(new ActionListener() {
 					@Override
 					public void actionPerformed(ActionEvent e) {
-						simulation.setPause(true);
-						playButton.requestFocusInWindow();
-						// ControlPanel.this.repaint();
-					}
-				});
-				final URL url = cl.getResource("resources/suspend_co.gif");
-				if (url != null) {
-					this.setIcon(new ImageIcon(url));
-					this.setText("");
-				}
-				this.setToolTipText("Pause " + simulation.getName());
-				// this.setEnabled(false);
-			}
-		};
-	}
-
-	/**
-	 * Creates and returns a new run button.
-	 * 
-	 * @return a new run button.
-	 */
-	private JButton getPlayButton() {
-		return new JButton("Run") {
-			{
-				this.addActionListener(new ActionListener() {
-					@Override
-					public void actionPerformed(ActionEvent e) {
-						simulation.setPause(false);
-						pauseButton.requestFocusInWindow();
+						simulation.pause();
 						ControlPanel.this.update();
-						// ControlPanel.this.repaint();
 					}
 				});
-				final URL url = cl.getResource("resources/resume_co.gif");
-				if (url != null) {
-					this.setIcon(new ImageIcon(url));
+				if (suspendIcon != null) {
+					this.setIcon(suspendIcon);
 					this.setText("");
+					this.setToolTipText("Pause ");
 				}
-				this.setToolTipText("Run " + simulation.getName());
-				this.setEnabled(false);
 			}
 		};
 	}
@@ -117,8 +108,26 @@ public class ControlPanel extends JPanel {
 		if (simulation != null) {
 			final boolean b = simulation.isPaused();
 			if (pauseButton != null) {
-				pauseButton.setEnabled(!b);
-				playButton.setEnabled(b);
+				if (b) {
+					if (resumeIcon != null) {
+						pauseButton.setIcon(resumeIcon);
+						pauseButton.setText("");
+						pauseButton.setToolTipText("Resume");
+					} else {
+						pauseButton.setText("Resume");
+					}
+				} else {
+					if (suspendIcon != null) {
+						pauseButton.setIcon(suspendIcon);
+						pauseButton.setText("");
+						pauseButton.setToolTipText("Pause");
+					} else {
+						pauseButton.setText("Pause");
+					}
+				}
+				// pauseButton.setEnabled(!b);
+				// pauseButton.setIcon(myIcon);
+				// playButton.setEnabled(b);
 			}
 		}
 		this.repaint();

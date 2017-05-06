@@ -1,4 +1,4 @@
-package jamel;
+package jamel.gui;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -22,6 +22,9 @@ import javax.swing.SwingUtilities;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import jamel.util.JamelObject;
+import jamel.util.Simulation;
 
 /**
  * A basic graphical user interface.
@@ -68,10 +71,8 @@ public class BasicGui extends JamelObject implements Gui {
 			if (elem.getNodeName().equals("empty")) {
 				result = new EmptyPanel();
 			} else if (elem.getNodeName().equals("chart")) {
-				throw new RuntimeException("Not yet implemented");
-				/*final JamelChartPanel chartPanel = ChartFactory.createChartPanel(elem, dataManager);
-				chartPanels.put(chartPanel, tabbedPaneName);
-				result = chartPanel;*/
+				final JamelChartPanel chartPanel = JamelChartFactory.createChartPanel(elem, gui.getSimulation());
+				result = chartPanel;
 			} else if (elem.getNodeName().equals("html")) {
 				result = new HtmlPanel(elem, gui);
 			} else {
@@ -92,6 +93,11 @@ public class BasicGui extends JamelObject implements Gui {
 	final private ControlPanel controlPanel;
 
 	/**
+	 * The list of the panels (charts and html).
+	 */
+	final private List<Component> panels = new LinkedList<>();
+
+	/**
 	 * The tabbedPane.
 	 */
 	private final JTabbedPane tabbedPane = new JTabbedPane();
@@ -100,11 +106,6 @@ public class BasicGui extends JamelObject implements Gui {
 	 * The window.
 	 */
 	final private JFrame window = new JFrame();
-
-	/**
-	 * The list of the panels (charts and html).
-	 */
-	final private List<Component> panels = new LinkedList<>();
 
 	/**
 	 * Creates a new basic gui.
@@ -128,7 +129,7 @@ public class BasicGui extends JamelObject implements Gui {
 
 		{
 
-			// Cette méthode devrait être commentée.
+			// Ce bloc devrait être commenté.
 
 			final NodeList panelNodeList = element.getElementsByTagName("panel");
 			for (int i = 0; i < panelNodeList.getLength(); i++) {
@@ -152,19 +153,9 @@ public class BasicGui extends JamelObject implements Gui {
 							col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
 							tabPanel.add(col);
 						} else if (node.getNodeType() == Node.ELEMENT_NODE) {
-							Component subPanel = null;
-							try {
-								subPanel = getNewPanel((Element) nodeList.item(j), this);
-							} catch (Exception e) {
-								throw new RuntimeException("Not yet implemented", e);
-								/*e.printStackTrace();
-								subPanel = HtmlPanel.getErrorPanel(
-										"Error:<br />" + e.toString() + "<br />See jamel.log file for more details.");*/
-							}
-							if (subPanel != null) {
-								this.panels.add(subPanel);
-								col.add(subPanel);
-							}
+							final Component subPanel = getNewPanel((Element) nodeList.item(j), this);
+							this.panels.add(subPanel);
+							col.add(subPanel);
 						}
 					}
 					this.tabbedPane.add(tabPanel);

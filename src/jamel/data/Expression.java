@@ -1,4 +1,4 @@
-package jamel;
+package jamel.data;
 
 /**
  * Represents an expression.

@@ -1,4 +1,4 @@
-package jamel;
+package jamel.util;
 
 import java.lang.reflect.Method;
 
@@ -55,6 +55,7 @@ public class BasicAgent extends JamelObject implements Agent {
 	/**
 	 * The parent sector.
 	 */
+	@SuppressWarnings("unused")
 	final private Sector sector;
 
 	/**
@@ -83,7 +84,8 @@ public class BasicAgent extends JamelObject implements Agent {
 	public void close() {
 		// C'est ici qu'on met à jour les données de la période.
 		this.dataset.put("countAgent", 1);
-		Jamel.println(this.sector.getName(), this.getName() + " is now closed");
+		this.dataset.put("alea", this.getRandom().nextGaussian());
+		//Jamel.println(this.sector.getName(), this.getName() + " is now closed");
 	}
 
 	@Override
@@ -95,7 +97,7 @@ public class BasicAgent extends JamelObject implements Agent {
 	 * Opens this agent.
 	 */
 	public void open() {
-		Jamel.println(this.sector.getName(), this.getName() + " is now open");
+		//Jamel.println(this.sector.getName(), this.getName() + " is now open");
 	}
 
 	@Override

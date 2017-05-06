@@ -4,7 +4,7 @@
 
 <simulation
 	name="Simulation 1"
-	className="jamel0.BasicSimulation"
+	className="jamel.util.BasicSimulation"
 >
 
 	<randomSeed>
@@ -17,20 +17,18 @@
 
 		<sector
 			name="Sector1"
-			className="jamel0.BasicSector"
+			className="jamel.util.BasicSector"
 		>
-			<agentClassName>jamel0.BasicAgent</agentClassName>
-			<initialPopulation>10</initialPopulation>
+			<agentClassName>jamel.util.BasicAgent</agentClassName>
+			<initialPopulation>100000</initialPopulation>
 		</sector>
 
 		<sector
 			name="Sector2"
-			className="jamel0.BasicSector"
+			className="jamel.util.BasicSector"
 		>
-			<agentClassName>
-				jamel0.BasicAgent
-			</agentClassName>
-			<initialPopulation>10</initialPopulation>
+			<agentClassName>jamel.util.BasicAgent</agentClassName>
+			<initialPopulation>100000</initialPopulation>
 		</sector>
 	</sectors>
 

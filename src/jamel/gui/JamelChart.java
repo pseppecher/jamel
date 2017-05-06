@@ -1,4 +1,4 @@
-package jamel;
+package jamel.gui;
 
 import java.awt.Color;
 import java.awt.Font;
@@ -8,15 +8,15 @@ import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.ValueMarker;
 
 /**
- * A convenient extension of JFreeChart.
- * 
- * @author pascal
+ * A convenient extension of JFreeChart. 
  */
-public abstract class JamelChart extends JFreeChart {
+public abstract class JamelChart extends JFreeChart implements Updatable {
 
 	// 2016-05-01: classe créée pour faciliter l'ajout de markers.
+	
+	// 2017-05-05: implements Updatable
 
-	/** A transparent color used for chart background. */
+	/** A transparent color used for chart background. TODO devrait être une Jamel Color !*/
 	private static final Color colorTransparent = new Color(0, 0, 0, 0);
 
 	/** The font for displaying the legend items. */

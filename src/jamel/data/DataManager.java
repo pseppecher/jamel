@@ -1,6 +1,9 @@
-package jamel;
+package jamel.data;
 
 import java.util.List;
+
+import jamel.util.Agent;
+import jamel.util.Sector;
 
 /**
  * A manager for sectorial data.
@@ -45,11 +48,19 @@ public class DataManager {
 
 			@Override
 			public Double getValue() {
-				Double value = 0d;
+				Double sum = null;
 				for (final Agent agent : DataManager.this.agents) {
-					value += agent.getData(dataKey, period);
+					final Double val = agent.getData(dataKey, period);
+					if (val!=null) {
+						if (sum==null) {
+							sum = val;							
+						} else {
+							sum += val;
+						}
+					}
+					
 				}
-				return value;
+				return sum;
 			}
 
 			@Override

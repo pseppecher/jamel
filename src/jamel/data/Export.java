@@ -1,9 +1,13 @@
-package jamel;
+package jamel.data;
 
 import java.util.LinkedList;
 import java.util.List;
 
 import org.w3c.dom.Element;
+
+import jamel.Jamel;
+import jamel.util.JamelObject;
+import jamel.util.Simulation;
 
 /**
  * Exports the data observed into an output file.

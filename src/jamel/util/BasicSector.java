@@ -1,4 +1,4 @@
-package jamel;
+package jamel.util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -8,6 +8,10 @@ import java.util.List;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
+import jamel.Jamel;
+import jamel.data.DataManager;
+import jamel.data.Expression;
 
 /**
  * A basic sector.

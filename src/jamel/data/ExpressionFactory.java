@@ -1,6 +1,10 @@
-package jamel;
+package jamel.data;
 
+import java.security.InvalidParameterException;
 import java.util.regex.Pattern;
+
+import jamel.util.JamelObject;
+import jamel.util.Simulation;
 
 /**
  * The expression factory.
@@ -59,11 +63,20 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified addition.
 	 */
 	private static Expression getAddition(final Expression arg1, final Expression arg2) {
+		if (arg1==null || arg2 ==null) {
+			throw new InvalidParameterException("Null expression");
+		}
 		final Expression result = new Expression() {
 
 			@Override
 			public Double getValue() {
-				return arg1.getValue() + arg2.getValue();
+				final Double val;
+				if (arg1.getValue()!=null&&arg2.getValue()!=null) {
+					val = arg1.getValue() + arg2.getValue();
+				} else {
+					val=null;
+				}
+				return val;
 			}
 
 			@Override
@@ -245,11 +258,11 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified expression.
 	 */
 	public Expression getExpression(final String query) {
-		
+
 		// Jamel.println("getExpression", "\'" + query + "\'");
-		
+
 		final Expression result;
-				
+
 		if (!isBalanced(query)) {
 			throw new RuntimeException("Not balanced: " + query);
 			// TODO Comment traiter cet incident ?

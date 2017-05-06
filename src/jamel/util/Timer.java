@@ -1,4 +1,4 @@
-package jamel;
+package jamel.util;
 
 /**
  * An interface for the timers.

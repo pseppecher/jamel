@@ -1,4 +1,4 @@
-package jamel;
+package jamel.util;
 
 import java.io.File;
 import java.util.Arrays;
@@ -14,6 +14,12 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
+
+import jamel.Jamel;
+import jamel.data.Export;
+import jamel.data.Expression;
+import jamel.data.ExpressionFactory;
+import jamel.gui.Gui;
 
 /**
  * A basic simulation.
@@ -203,17 +209,6 @@ public class BasicSimulation implements Simulation {
 			this.random = new Random(randomSeed);
 		}
 
-		// Looks for the gui.
-
-		{
-			final NodeList nodeList = this.scenario.getElementsByTagName("gui");
-			if (nodeList.getLength() == 0) {
-				this.gui = null;
-			} else {
-				this.gui = getNewGui((Element) nodeList.item(0), this);
-			}
-		}
-
 		// Looks for the sectors.
 
 		{
@@ -269,6 +264,38 @@ public class BasicSimulation implements Simulation {
 			}
 		}
 
+		// Looks for the gui.
+
+		{
+			final NodeList nodeList = this.scenario.getElementsByTagName("gui");
+			if (nodeList.getLength() == 0) {
+				this.gui = null;
+			} else {
+				this.gui = getNewGui((Element) nodeList.item(0), this);
+			}
+		}
+
+	}
+
+	/**
+	 * Pauses the simulation.
+	 */
+	private void doPause() {
+		if (isPaused()) {
+			// TODO clean up
+			// this.gui.repaintControls();
+			// final long startPause = new Date().getTime();
+			while (isPaused()) {
+				try {
+					Thread.sleep(500);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+			// final long endPause = new Date().getTime();
+			// this.pausedTime += endPause - startPause;
+			// this.gui.repaintControls(); TODO ??
+		}
 	}
 
 	/**
@@ -289,77 +316,10 @@ public class BasicSimulation implements Simulation {
 		// this.doEvents();
 		if (gui != null) {
 			this.gui.update();
-			this.pause();
+			this.doPause();
 		}
 		this.timer.next();
 		Jamel.println("period", this.timer.getPeriod());
-	}
-
-	/**
-	 * Pauses the simulation.
-	 */
-	private void pause() {
-		if (isPaused()) {
-			// this.gui.repaintControls();
-			// final long startPause = new Date().getTime();
-			while (isPaused()) {
-				try {
-					Thread.sleep(500);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				}
-			}
-			// final long endPause = new Date().getTime();
-			// this.pausedTime += endPause - startPause;
-			// this.gui.repaintControls(); TODO ??
-		}
-	}
-
-	@Override
-	public Expression getExpression(String key) {
-		return this.expressionFactory.getExpression(key);
-	}
-
-	@Override
-	public File getFile() {
-		return this.file;
-	}
-
-	@Override
-	public String getName() {
-		return this.name;
-	}
-
-	@Override
-	public int getPeriod() {
-		return this.timer.getPeriod();
-	}
-
-	/**
-	 * Returns the random.
-	 * 
-	 * @return the random.
-	 */
-	public Random getRandom() {
-		return random;
-	}
-
-	@Override
-	public boolean isPaused() {
-		return this.pause;
-	}
-
-	@Override
-	public void run() {
-		this.run = true;
-		while (this.run) {
-			this.period();
-		}
-	}
-
-	@Override
-	public void setPause(boolean b) {
-		this.pause = b;
 	}
 
 	@Override
@@ -392,9 +352,57 @@ public class BasicSimulation implements Simulation {
 			// de limiter la sélection à un sous ensemble des agents.
 			result = sector.getDataAccess(args);
 		} else {
-			throw new RuntimeException("Not yet implemented: " + key);
+			throw new RuntimeException("Not yet implemented: \'" + key + "\'");
 		}
 		return result;
+	}
+
+	@Override
+	public Expression getExpression(String key) {
+		return this.expressionFactory.getExpression(key);
+	}
+
+	@Override
+	public File getFile() {
+		return this.file;
+	}
+
+	@Override
+	public String getName() {
+		return this.name;
+	}
+
+	@Override
+	public int getPeriod() {
+		return this.timer.getPeriod();
+	}
+
+	/**
+	 * Returns the random.
+	 * 
+	 * @return the random.
+	 */
+	@Override
+	public Random getRandom() {
+		return random;
+	}
+
+	@Override
+	public boolean isPaused() {
+		return this.pause;
+	}
+
+	@Override
+	public void pause() {
+		this.pause = !this.pause;
+	}
+
+	@Override
+	public void run() {
+		this.run = true;
+		while (this.run) {
+			this.period();
+		}
 	}
 
 }

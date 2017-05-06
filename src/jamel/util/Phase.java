@@ -1,4 +1,4 @@
-package jamel;
+package jamel.util;
 
 /**
  * Represents a phase of period

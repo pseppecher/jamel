@@ -2,7 +2,7 @@
 
 <!-- 25 avril 2017 -->
 
-<gui className="jamel0.BasicGui">
+<gui className="jamel.gui.BasicGui">
 
 	<panel title="Panel 1">
 		<html title="Test">
@@ -13,11 +13,29 @@
 		<empty />
 		<col />
 		<html title="Test">
-			Current period: 
+			Current period:
 			<data>period</data>
+			<br />
+			value(Sector1,countAgent,t,sum) + value(Sector2,countAgent,t,sum):
+			<data>value(Sector1,countAgent,t,sum) +
+				value(Sector2,countAgent,t,sum)
+			</data>
 		</html>
 		<empty />
 		<col />
+		<chart title="Hello World">
+			<series>
+				<x>period</x>
+				<y>value(Sector1,countAgent,t,sum) + value(Sector2,countAgent,t,sum)
+				</y>
+			</series>
+		</chart>
+		<chart title="Hello World">
+			<series>
+				<x>period</x>
+				<y>value(Sector1,alea,t,sum) + value(Sector2,alea,t,sum)</y>
+			</series>
+		</chart>
 		<empty />
 	</panel>
 

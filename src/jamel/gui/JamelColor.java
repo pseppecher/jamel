@@ -1,4 +1,4 @@
-package jamel;
+package jamel.gui;
 
 import java.awt.Color;
 import java.awt.Paint;
@@ -9,7 +9,7 @@ import org.jfree.chart.ChartColor;
  * Enumerates the colors used by the charts.
  */
 public enum JamelColor {
-	
+
 	/** black */
 	black(Color.black),
 
@@ -41,8 +41,13 @@ public enum JamelColor {
 	red(Color.red),
 
 	/** The background color for panels. */
-	background(new Color(230,230,230)),
-	
+	background(new Color(230, 230, 230)),
+
+	/**
+	 * The background color for the tabed panels.
+	 */
+	transparent(new Color(0, 0, 0, 0)),
+
 	/** transparent blue */
 	transparentBlue(new Color(0x80, 0x80, 0xFF, 100)),
 
@@ -112,7 +117,7 @@ public enum JamelColor {
 
 	/** The color. */
 	private final Color color;
-	
+
 	/**
 	 * Creates a color.
 	 * 

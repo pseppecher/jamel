@@ -1,4 +1,4 @@
-package jamel;
+package jamel.util;
 
 /**
  * Represents an agent.

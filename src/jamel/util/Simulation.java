@@ -1,6 +1,9 @@
-package jamel;
+package jamel.util;
 
 import java.io.File;
+import java.util.Random;
+
+import jamel.data.Expression;
 
 /**
  * Represents a simulation.
@@ -48,6 +51,8 @@ public interface Simulation {
 	 */
 	int getPeriod();
 
+	Random getRandom();
+
 	/**
 	 * Returns <code>true</code> if this simulation is paused,
 	 * <code>false</code> otherwise.
@@ -57,18 +62,11 @@ public interface Simulation {
 	 */
 	boolean isPaused();
 
+	void pause();
+
 	/**
 	 * Runs the simulation.
 	 */
 	void run();
-
-	/**
-	 * Pauses or resumes this simulation.
-	 * 
-	 * @param b
-	 *            <code>true</code> pauses the simulation, if <code>false</code>
-	 *            resumes the simulation.
-	 */
-	void setPause(boolean b);
 
 }
