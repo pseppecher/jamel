@@ -29,6 +29,11 @@ public class BasicSector extends JamelObject implements Sector {
 	final private List<Agent> agents = new LinkedList<>();
 
 	/**
+	 * The data manager.
+	 */
+	final private DataManager dataManager;
+
+	/**
 	 * The number of agents created.
 	 */
 	private int nAgent = 0;
@@ -44,11 +49,6 @@ public class BasicSector extends JamelObject implements Sector {
 	final private Element specification;
 
 	/**
-	 * The data manager.
-	 */
-	final private DataManager dataManager;
-
-	/**
 	 * Creates a new basic sector.
 	 * 
 	 * @param specification
@@ -61,7 +61,7 @@ public class BasicSector extends JamelObject implements Sector {
 		super(simulation);
 		this.specification = specification;
 		this.name = this.specification.getAttribute("name");
-		this.dataManager=new DataManager(agents,this);
+		this.dataManager = new DataManager(agents, this);
 
 		// Inits the type of the agents.
 
@@ -119,6 +119,11 @@ public class BasicSector extends JamelObject implements Sector {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public void doEvent(Element event) {
+		throw new RuntimeException("Not yet implemented: " + event.getTagName());
 	}
 
 	@Override

@@ -33,17 +33,6 @@ public class BasicAgent extends JamelObject implements Agent {
 			throw new RuntimeException("Something went wrong while creating the method for this phase: " + phase, e);
 		}
 
-		/*try {
-			if ("opening".equals(phase)) {
-				result = BasicAgent.class.getMethod("open");
-			} else if ("closure".equals(phase)) {
-				result = BasicAgent.class.getMethod("close");
-			} else {
-				result = null;
-			}
-		} catch (NoSuchMethodException | SecurityException e) {
-			throw new RuntimeException("Something went wrong while creating the method for this phase: " + phase, e);
-		}*/
 		return result;
 	}
 
@@ -85,7 +74,8 @@ public class BasicAgent extends JamelObject implements Agent {
 		// C'est ici qu'on met à jour les données de la période.
 		this.dataset.put("countAgent", 1);
 		this.dataset.put("alea", this.getRandom().nextGaussian());
-		//Jamel.println(this.sector.getName(), this.getName() + " is now closed");
+		// Jamel.println(this.sector.getName(), this.getName() + " is now
+		// closed");
 	}
 
 	@Override
@@ -97,7 +87,8 @@ public class BasicAgent extends JamelObject implements Agent {
 	 * Opens this agent.
 	 */
 	public void open() {
-		//Jamel.println(this.sector.getName(), this.getName() + " is now open");
+		// Jamel.println(this.sector.getName(), this.getName() + " is now
+		// open");
 	}
 
 	@Override

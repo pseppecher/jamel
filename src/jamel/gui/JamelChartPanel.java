@@ -16,7 +16,7 @@ import org.jfree.chart.util.ParamChecks;
 /**
  * A convenient extension of ChartPanel.
  */
-public class JamelChartPanel extends ChartPanel implements Updatable {
+public class JamelChartPanel extends ChartPanel {
 
 	/** Background color */
 	private static final Color background = JamelColor.getColor("background");
@@ -74,11 +74,6 @@ public class JamelChartPanel extends ChartPanel implements Updatable {
 				| InvocationTargetException | NoSuchMethodException | SecurityException ex) {
 			throw new RuntimeException(ex);
 		}
-	}
-
-	@Override
-	public void update() {
-		((Updatable)this.getChart()).update();
 	}
 
 }

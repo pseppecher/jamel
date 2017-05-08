@@ -23,6 +23,15 @@ public abstract class JamelObject {
 	}
 
 	/**
+	 * Returns the value of the current period.
+	 * 
+	 * @return the value of the current period.
+	 */
+	public int getPeriod() {
+		return this.simulation.getPeriod();
+	}
+
+	/**
 	 * Returns the random.
 	 * 
 	 * @return the random.

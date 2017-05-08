@@ -183,6 +183,11 @@ public class BasicGui extends JamelObject implements Gui {
 	}
 
 	@Override
+	public void doEvent(Element event) {
+		// TODO implement me !
+	}
+
+	@Override
 	public File getFile() {
 		throw new RuntimeException("Not yet implemented");
 	}

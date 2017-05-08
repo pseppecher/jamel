@@ -3,6 +3,8 @@ package jamel.util;
 import java.io.File;
 import java.util.Random;
 
+import org.jfree.data.xy.XYSeries;
+
 import jamel.data.Expression;
 
 /**
@@ -51,7 +53,23 @@ public interface Simulation {
 	 */
 	int getPeriod();
 
+	/**
+	 * Returns the random.
+	 * 
+	 * @return the random.
+	 */
 	Random getRandom();
+
+	/**
+	 * Returns the specified series.
+	 * 
+	 * @param x
+	 *            the description of x values.
+	 * @param y
+	 *            the description of y values.
+	 * @return the specified series.
+	 */
+	XYSeries getSeries(String x, String y);
 
 	/**
 	 * Returns <code>true</code> if this simulation is paused,
@@ -62,6 +80,9 @@ public interface Simulation {
 	 */
 	boolean isPaused();
 
+	/**
+	 * Pauses or resumes the simulation.
+	 */
 	void pause();
 
 	/**

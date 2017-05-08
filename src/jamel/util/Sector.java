@@ -1,11 +1,21 @@
 package jamel.util;
 
+import org.w3c.dom.Element;
+
 import jamel.data.Expression;
 
 /**
  * Represents a sector.
  */
 public interface Sector {
+
+	/**
+	 * Executes the specified event.
+	 * 
+	 * @param event
+	 *            the event to be executed.
+	 */
+	void doEvent(Element event);
 
 	/**
 	 * Returns an expression that provides an access to the specified data.

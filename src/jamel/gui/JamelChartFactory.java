@@ -103,20 +103,18 @@ public class JamelChartFactory {
 	 * @return a new plot.
 	 */
 	private static XYPlot createXYPlot(XYDataset dataset, NumberAxis xAxis, NumberAxis yAxis, XYItemRenderer renderer) {
-		return new XYPlot(dataset, xAxis, yAxis, renderer) {
-			{
-				this.setOrientation(PlotOrientation.VERTICAL);
-				this.setDomainGridlinesVisible(false);
-				this.setDomainMinorGridlinesVisible(false);
-				this.setRangeGridlinesVisible(false);
-				this.setRangeMinorGridlinesVisible(false);
-				this.setRangeCrosshairVisible(false);
-				this.setDomainCrosshairVisible(false);
-				this.setBackgroundPaint(Color.WHITE);
-				this.getRangeAxis().setLabelFont(axisLabelFont);
-				this.getDomainAxis().setLabelFont(axisLabelFont);
-			}
-		};
+		final XYPlot plot = new XYPlot(dataset, xAxis, yAxis, renderer);
+		plot.setOrientation(PlotOrientation.VERTICAL);
+		plot.setDomainGridlinesVisible(false);
+		plot.setDomainMinorGridlinesVisible(false);
+		plot.setRangeGridlinesVisible(false);
+		plot.setRangeMinorGridlinesVisible(false);
+		plot.setRangeCrosshairVisible(false);
+		plot.setDomainCrosshairVisible(false);
+		plot.setBackgroundPaint(Color.WHITE);
+		plot.getRangeAxis().setLabelFont(axisLabelFont);
+		plot.getDomainAxis().setLabelFont(axisLabelFont);
+		return plot;
 	}
 
 	/**
@@ -133,50 +131,66 @@ public class JamelChartFactory {
 		final NodeList seriesList = description.getElementsByTagName("series");
 		final int nbSeries = seriesList.getLength();
 		final XYSeriesCollection dataset = new XYSeriesCollection();
-		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, true);
+		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
 		final DefaultDrawingSupplier drawingSupplier = new DefaultDrawingSupplier();
 		final LegendItemCollection defaultLegendItemCollection = new LegendItemCollection();
 		for (int k = 0; k < nbSeries; k++) {
-			final Element serieXML = (Element) seriesList.item(k);
+			final Element seriesElement = (Element) seriesList.item(k);
 
-			final String x = getTagText("x", serieXML);
-			final String y = getTagText("y", serieXML);
+			final String x = getTagText("x", seriesElement);
+			final String y = getTagText("y", seriesElement);
 
-			// final String x = serieXML.getAttribute("x");
-			// final String y = serieXML.getAttribute("y");
-			final Integer start = null;// parseIntegerAttribute(serieXML,
-										// "start");
-			final Integer end = null;// parseIntegerAttribute(serieXML, "end");
+			// final Integer start = null;// parseIntegerAttribute(serieXML,
+			// "start");
+			// final Integer end = null;// parseIntegerAttribute(serieXML,
+			// "end");
 			// TODO uses start, end, mod
-			final Expression xExp = simulation.getExpression(x);
+			
+			/*final Expression xExp = simulation.getExpression(x);
 			final Expression yExp = simulation.getExpression(y);
-			dataset.addSeries(new DynamicXYSeries(xExp, yExp));
-			final String color = serieXML.getAttribute("color");
-			renderer.setSeriesShape(k, null);
-			final String shapesVisibles = serieXML.getAttribute("shapesVisibles");
-			if (shapesVisibles.equals("false")) {
+			dataset.addSeries(new DynamicXYSeries(xExp, yExp));*/
+			dataset.addSeries(simulation.getSeries(x,y));
+
+			renderer.setSeriesLinesVisible(k, (seriesElement.getAttribute("linesVisible").equals("true")));
+			
+			// renderer.setSeriesPaint(k, lineColor);
+			// final String color = seriesElement.getAttribute("color");
+			final Paint seriesPaint;
+			{
+				final String color = getTagText("lineColor", seriesElement);
+				if (color == null) {
+					seriesPaint = drawingSupplier.getNextPaint();
+				} else {
+					seriesPaint = JamelColor.getColor(color);
+				}
+			}
+			renderer.setSeriesPaint(k, seriesPaint);
+			
+			// Shapes
+			
+			if (seriesElement.getAttribute("shapesVisible").equals("true")) {
+				renderer.setSeriesShapesVisible(k, true);
+				final String fillColor = getTagText("fillColor", seriesElement);
+				if (fillColor == null) {
+					renderer.setUseFillPaint(false);
+				} else {
+					renderer.setUseFillPaint(true);
+					renderer.setSeriesFillPaint(k, JamelColor.getColor(fillColor));
+				}
+			} else {
 				renderer.setSeriesShapesVisible(k, false);
 			}
-			// renderer.setSeriesPaint(k, lineColor);
-			final Paint paint;
-			if (color.equals("")) {
-				paint = drawingSupplier.getNextPaint();
-			} else {
-				paint = JamelColor.getColor(color);
-			}
-			renderer.setUseFillPaint(true);
-			renderer.setSeriesFillPaint(k, paint);
-			renderer.setSeriesPaint(k, paint);
 
 			// Preparing default legend:
+			
 			final String legendLabel;
 			final String tooltip;
 			final String seriesKey = "x=" + x + ", y=" + y;
-			if (serieXML.getAttribute("label").equals("")) {
+			if (seriesElement.getAttribute("label").equals("")) {
 				legendLabel = seriesKey;
 				tooltip = null;
 			} else {
-				legendLabel = serieXML.getAttribute("label");
+				legendLabel = seriesElement.getAttribute("label");
 				tooltip = seriesKey;
 			}
 			/* TODO IMPLEMENT final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, true, square, true, paint,
@@ -228,20 +242,24 @@ public class JamelChartFactory {
 			public void addTimeMarker(ValueMarker marker) {
 				// Does nothing. TODO implement
 			}
-
-			@Override
-			public void update() {
-				final List<?> list = dataset.getSeries();
-				for (final Object series : list) {
-					((DynamicXYSeries) series).update();
-				}
-			}
-
+			
 		};
 
 		return result;
 	}
 
+	/**
+	 * Returns the text content of the first node with the given tag name within
+	 * the specified element. If there no node with given name, this returns
+	 * <code>null</code>.
+	 * 
+	 * @param tagName
+	 *            the name of the tag to match on. The special value "*"
+	 *            matches all tags.
+	 * @param element
+	 *            the parent element.
+	 * @return the text content of first node with the given tag name.
+	 */
 	private static String getTagText(final String tagName, final Element element) {
 		final String result;
 		final Node node = element.getElementsByTagName(tagName).item(0);

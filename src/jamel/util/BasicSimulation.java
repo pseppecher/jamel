@@ -11,15 +11,19 @@ import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.jfree.data.xy.XYSeries;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import jamel.Jamel;
 import jamel.data.Export;
 import jamel.data.Expression;
 import jamel.data.ExpressionFactory;
+import jamel.gui.DynamicXYSeries;
 import jamel.gui.Gui;
+import jamel.gui.Updatable;
 
 /**
  * A basic simulation.
@@ -122,6 +126,9 @@ public class BasicSimulation implements Simulation {
 		return sector;
 	}
 
+	/** The events. */
+	private final Map<Integer, Element> events = new HashMap<>();
+
 	/**
 	 * The list of the exports.
 	 */
@@ -181,6 +188,11 @@ public class BasicSimulation implements Simulation {
 	 * The timer.
 	 */
 	final private Timer timer;
+
+	/**
+	 * The list of the series to update.
+	 */
+	private List<Updatable> updatableSeries = new LinkedList<>();
 
 	/**
 	 * Creates an new simulation.
@@ -264,6 +276,23 @@ public class BasicSimulation implements Simulation {
 			}
 		}
 
+		// Looks for the events.
+
+		{
+			final Element eventsTag = (Element) this.scenario.getElementsByTagName("events").item(0);
+			if (eventsTag != null) {
+				final NodeList eventList = eventsTag.getElementsByTagName("event");
+				for (int i = 0; i < eventList.getLength(); i++) {
+					final Element element = (Element) eventList.item(i);
+					final int period = Integer.parseInt(element.getAttribute("when"));
+					if (this.events.containsKey(period)) {
+						throw new RuntimeException("Events already defined for the period: " + period);
+					}
+					this.events.put(period, element);
+				}
+			}
+		}
+
 		// Looks for the gui.
 
 		{
@@ -278,13 +307,52 @@ public class BasicSimulation implements Simulation {
 	}
 
 	/**
+	 * Executes the specified event.
+	 * 
+	 * @param event
+	 *            the event to be executed.
+	 */
+	private void doEvent(Element event) {
+		switch (event.getTagName()) {
+		case "pause":
+			this.pause = true;
+			break;
+		default:
+			throw new RuntimeException("Not yet implemented: \'" + event.getTagName() + "\'");
+		}
+	}
+
+	/**
+	 * Executes the events of the simulation.
+	 */
+	private void doEvents() {
+		final Element currentEvents = this.events.get(getPeriod());
+		if (currentEvents != null) {
+			final NodeList eventList = currentEvents.getChildNodes();
+			for (int i = 0; i < eventList.getLength(); i++) {
+				if (eventList.item(i).getNodeType() == Node.ELEMENT_NODE) {
+					final Element event = (Element) eventList.item(i);
+					if (event.getAttribute("recipient").isEmpty()) {
+						this.doEvent(event);
+					} else if (event.getAttribute("recipient").equals("gui")) {
+						this.gui.doEvent(event);
+					} else {
+						final String sectorName = event.getAttribute("recipient");
+						this.sectors.get(sectorName).doEvent(event);
+					}
+				}
+			}
+		}
+	}
+
+	/**
 	 * Pauses the simulation.
 	 */
 	private void doPause() {
 		if (isPaused()) {
 			// TODO clean up
-			// this.gui.repaintControls();
 			// final long startPause = new Date().getTime();
+			this.gui.update();
 			while (isPaused()) {
 				try {
 					Thread.sleep(500);
@@ -292,6 +360,7 @@ public class BasicSimulation implements Simulation {
 					e.printStackTrace();
 				}
 			}
+			this.gui.update();
 			// final long endPause = new Date().getTime();
 			// this.pausedTime += endPause - startPause;
 			// this.gui.repaintControls(); TODO ??
@@ -310,14 +379,17 @@ public class BasicSimulation implements Simulation {
 						+ "', for the sector: '" + phase.getSector().getName() + "'.", e);
 			}
 		}
+		for (final Updatable updatable : this.updatableSeries) {
+			updatable.update();
+		}
+		if (gui != null) {
+			this.gui.update();
+		}
 		for (final Export export : this.exports) {
 			export.run();
 		}
-		// this.doEvents();
-		if (gui != null) {
-			this.gui.update();
-			this.doPause();
-		}
+		this.doEvents();
+		this.doPause();
 		this.timer.next();
 		Jamel.println("period", this.timer.getPeriod());
 	}
@@ -385,6 +457,15 @@ public class BasicSimulation implements Simulation {
 	@Override
 	public Random getRandom() {
 		return random;
+	}
+
+	@Override
+	public XYSeries getSeries(String x, String y) {
+		final Expression xExp = getExpression(x);
+		final Expression yExp = getExpression(y);
+		final DynamicXYSeries newSeries = new DynamicXYSeries(xExp, yExp);
+		this.updatableSeries.add(newSeries);
+		return newSeries;
 	}
 
 	@Override

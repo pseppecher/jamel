@@ -2,10 +2,7 @@
 
 <!-- 5 mai 2017 -->
 
-<simulation
-	name="Simulation 1"
-	className="jamel.util.BasicSimulation"
->
+<simulation name="Simulation 1" className="jamel.util.BasicSimulation">
 
 	<randomSeed>
 		0
@@ -15,18 +12,12 @@
 
 	<sectors>
 
-		<sector
-			name="Sector1"
-			className="jamel.util.BasicSector"
-		>
+		<sector name="Sector1" className="jamel.util.BasicSector">
 			<agentClassName>jamel.util.BasicAgent</agentClassName>
 			<initialPopulation>100000</initialPopulation>
 		</sector>
 
-		<sector
-			name="Sector2"
-			className="jamel.util.BasicSector"
-		>
+		<sector name="Sector2" className="jamel.util.BasicSector">
 			<agentClassName>jamel.util.BasicAgent</agentClassName>
 			<initialPopulation>100000</initialPopulation>
 		</sector>
@@ -61,9 +52,17 @@
 			5*6;
 			-(-3+1)/5;
 			period;
-			value(Sector1,countAgent,t,sum)+
-			value(Sector2,countAgent,t,sum);
+			value(Sector1, countAgent, t, sum) + value(Sector2, countAgent, t, sum);
 		</export>
 	</exports>
+
+	<events>
+		<event when="200">
+			<exportCharts recipient="gui">
+				export/scenario1/charts/
+			</exportCharts>
+			<pause />
+		</event>
+	</events>
 
 </simulation>
