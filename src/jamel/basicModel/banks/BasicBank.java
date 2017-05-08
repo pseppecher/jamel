@@ -1,4 +1,4 @@
-package jamel.jamel.banks;
+package jamel.basicModel.banks;
 
 import java.lang.reflect.Method;
 import java.util.LinkedHashMap;

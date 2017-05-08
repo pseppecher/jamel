@@ -20,7 +20,7 @@
 				value(Sector2,countAgent,t,sum)
 			</data>
 		</html>
-		<chart title="Cardiogramme de Janine">
+		<chart title="Test">
 			<series shapesVisible="true" linesVisible="true">
 				<x>period</x>
 				<y>value(Sector2, alea, t, sum)</y>
@@ -44,7 +44,7 @@
 				</y>
 			</series>
 		</chart>
-		<chart title="Cardiogramme de Janine">
+		<chart title="Test">
 			<series>
 				<x>period</x>
 				<y>value(Sector1,alea,t,sum) + value(Sector2,alea,t,sum)</y>

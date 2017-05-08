@@ -1,4 +1,4 @@
-package jamel.jamel.banks;
+package jamel.basicModel.banks;
 
 /**
  * Encapsulates an amount of money or debt. Always positive.

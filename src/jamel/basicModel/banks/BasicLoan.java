@@ -1,4 +1,4 @@
-package jamel.jamel.banks;
+package jamel.basicModel.banks;
 
 import jamel.util.JamelObject;
 

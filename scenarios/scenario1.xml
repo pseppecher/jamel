@@ -8,7 +8,7 @@
 		0
 	</randomSeed>
 
-	<gui src="config/gui.xml" />
+	<gui src="config/panels.xml" />
 
 	<sectors>
 

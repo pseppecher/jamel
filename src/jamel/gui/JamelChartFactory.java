@@ -4,7 +4,6 @@ import java.awt.Color;
 import java.awt.Font;
 import java.awt.Paint;
 import java.text.NumberFormat;
-import java.util.List;
 import java.util.Locale;
 
 import org.jfree.chart.LegendItemCollection;
@@ -23,7 +22,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import jamel.data.Expression;
 import jamel.util.Simulation;
 
 /**
