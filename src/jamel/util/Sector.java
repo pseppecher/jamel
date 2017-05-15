@@ -39,10 +39,13 @@ public interface Sector {
 	 * 
 	 * @param name
 	 *            the name of the phase to be returned.
+	 * @param shuffle
+	 *            if the agents need to be shuffled at the beginning of the
+	 *            phase.
 	 * 
 	 * @return the specified phase.
 	 */
-	Phase getPhase(String name);
+	Phase getPhase(String name, boolean shuffle);
 
 	/**
 	 * Returns the parent simulation.
@@ -50,5 +53,14 @@ public interface Sector {
 	 * @return the parent simulation.
 	 */
 	Simulation getSimulation();
+
+	/**
+	 * Returns a random selection of <code>n</code> agents.
+	 * 
+	 * @param n
+	 *            the number of agents to be selected.
+	 * @return a random selection of <code>n</code> agents.
+	 */
+	Agent[] select(int n);
 
 }

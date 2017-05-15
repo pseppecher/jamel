@@ -20,10 +20,10 @@ public class ExpressionFactory extends JamelObject {
 	 */
 	private static String cleanUp(final String query) {
 		final String result;
-		if (query.contains(" ")) {
+		/*if (query.contains(" ")) {
 			final String str2 = query.replace(" ", "");
 			result = cleanUp(str2);
-		} else if (query.startsWith("+")) {
+		} else*/ if (query.startsWith("+")) {
 			final String str2 = query.substring(1, query.length());
 			result = cleanUp(str2);
 		} else if (query.charAt(0) == '(' && query.charAt(query.length() - 1) == ')') {
@@ -63,20 +63,22 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified addition.
 	 */
 	private static Expression getAddition(final Expression arg1, final Expression arg2) {
-		if (arg1==null || arg2 ==null) {
-			throw new InvalidParameterException("Null expression");
+		if (arg1 == null || arg2 == null) {
+			throw new InvalidParameterException("Null");
 		}
 		final Expression result = new Expression() {
 
 			@Override
 			public Double getValue() {
-				final Double val;
-				if (arg1.getValue()!=null&&arg2.getValue()!=null) {
-					val = arg1.getValue() + arg2.getValue();
+
+				final Double value;
+				if (arg1.getValue() == null || arg2.getValue() == null) {
+					value = null;
 				} else {
-					val=null;
+					value = arg1.getValue() + arg2.getValue();
 				}
-				return val;
+				return value;
+
 			}
 
 			@Override
@@ -98,12 +100,20 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified division.
 	 */
 	private static Expression getDivision(final Expression arg1, final Expression arg2) {
+		if (arg1 == null || arg2 == null) {
+			throw new InvalidParameterException("Null");
+		}
 		final Expression result = new Expression() {
 
 			@Override
 			public Double getValue() {
-				// TODO what if arg2.getValue()==0 ?
-				return arg1.getValue() / arg2.getValue();
+				final Double value;
+				if (arg1.getValue() == null || arg2.getValue() == null || arg2.getValue() == 0) {
+					value = null;
+				} else {
+					value = arg1.getValue() / arg2.getValue();
+				}
+				return value;
 			}
 
 			@Override
@@ -125,11 +135,20 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified multiplication.
 	 */
 	private static Expression getMultiplication(final Expression arg1, final Expression arg2) {
+		if (arg1 == null || arg2 == null) {
+			throw new IllegalArgumentException("Null.");
+		}
 		final Expression result = new Expression() {
 
 			@Override
 			public Double getValue() {
-				return arg1.getValue() * arg2.getValue();
+				final Double value;
+				if (arg1.getValue() == null || arg2.getValue() == null) {
+					value = null;
+				} else {
+					value = arg1.getValue() * arg2.getValue();
+				}
+				return value;
 			}
 
 			@Override
@@ -173,6 +192,9 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the opposite of the specified expression.
 	 */
 	private static Expression getOpposite(final Expression arg1) {
+		if (arg1 == null) {
+			throw new InvalidParameterException("Null");
+		}
 		final Expression result = new Expression() {
 
 			@Override
@@ -199,11 +221,22 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified subtraction.
 	 */
 	private static Expression getSubtraction(final Expression arg1, final Expression arg2) {
+		if (arg1 == null || arg2 == null) {
+			throw new InvalidParameterException("Null");
+		}
 		final Expression result = new Expression() {
 
 			@Override
 			public Double getValue() {
-				return arg1.getValue() - arg2.getValue();
+
+				final Double value;
+				if (arg1.getValue() == null || arg2.getValue() == null) {
+					value = null;
+				} else {
+					value = arg1.getValue() - arg2.getValue();
+				}
+				return value;
+
 			}
 
 			@Override
@@ -270,7 +303,7 @@ public class ExpressionFactory extends JamelObject {
 			// clairement l'utilisateur de l'endroit où il s'est planté.
 		}
 
-		final String cleaned = cleanUp(query);
+		final String cleaned = cleanUp(query.replaceAll("(\\p{javaSpaceChar}|\\r|\\n)", ""));
 
 		Character operator = null;
 		Integer position = null;

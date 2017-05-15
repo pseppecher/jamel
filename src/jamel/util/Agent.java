@@ -24,6 +24,13 @@ public interface Agent {
 	String getName();
 
 	/**
+	 * Returns the sector of this agent.
+	 * 
+	 * @return the sector of this agent
+	 */
+	Sector getSector();
+
+	/**
 	 * Returns the parent simulation.
 	 * 
 	 * @return the parent simulation.

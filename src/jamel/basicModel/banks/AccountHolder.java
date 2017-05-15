@@ -1,13 +1,15 @@
 package jamel.basicModel.banks;
 
-import jamel.util.Agent;
-
 /**
  * Represents an account holder.
  */
-public interface AccountHolder extends Agent {
+public interface AccountHolder {
 
-	// TODO : à revoir, vérifier l'utilité de toutes ces méthodes.
+	@SuppressWarnings("javadoc")
+	Long getAssetTotalValue();
+
+	@SuppressWarnings("javadoc")
+	int getBorrowerStatus();
 
 	/**
 	 * Notifies the account holder of its bankruptcy.
@@ -31,14 +33,5 @@ public interface AccountHolder extends Agent {
 	 *         otherwise.
 	 */
 	boolean isSolvent();
-
-	@SuppressWarnings("javadoc")
-	int getBorrowerStatus();
-
-	@SuppressWarnings("javadoc")
-	Long getAssetTotalValue();
-
-	@SuppressWarnings("javadoc")
-	void creditNotification(long credit, Agent payer, String reason);
 
 }

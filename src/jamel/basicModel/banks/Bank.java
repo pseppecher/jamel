@@ -1,11 +1,9 @@
 package jamel.basicModel.banks;
 
-import jamel.util.Agent;
-
 /**
  * Represents a bank.
  */
-interface Bank extends Agent {
+public interface Bank extends AccountHolder {
 
 	/**
 	 * Opens a new account for the specified {@link AccountHolder}
@@ -17,5 +15,3 @@ interface Bank extends Agent {
 	Account openAccount(AccountHolder accountHolder);
 
 }
-
-// ***

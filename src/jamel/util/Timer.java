@@ -15,6 +15,6 @@ public interface Timer {
 	 * 
 	 * @return the value of the current period.
 	 */
-	int getPeriod();
+	int getValue();
 
 }

@@ -2,14 +2,16 @@ package jamel.util;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import jamel.Jamel;
 import jamel.data.DataManager;
 import jamel.data.Expression;
 
@@ -19,6 +21,30 @@ import jamel.data.Expression;
 public class BasicSector extends JamelObject implements Sector {
 
 	/**
+	 * Returns the specified action.
+	 * 
+	 * @param phaseName
+	 *            the name of the phase.
+	 * @param agentClass
+	 *            the targeted Class of agents.
+	 * 
+	 * @return the specified action.
+	 */
+	@SuppressWarnings("unchecked")
+	private static Consumer<? super Agent> getAction(String phaseName, Class<? extends Agent> agentClass) {
+		final Consumer<? super Agent> action;
+		try {
+			final Method getPhaseMethod = agentClass.getMethod("getAction", String.class);
+			action = (Consumer<? super Agent>) getPhaseMethod.invoke(null, phaseName);
+		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
+				| SecurityException e) {
+			throw new RuntimeException("Something went wrong while creating the action phase \"" + phaseName
+					+ "\" for the agent \"" + agentClass.getName() + "\".", e);
+		}
+		return action;
+	}
+
+	/**
 	 * The class of the agents that populate the sector.
 	 */
 	final private Class<? extends Agent> agentClass;
@@ -26,7 +52,7 @@ public class BasicSector extends JamelObject implements Sector {
 	/**
 	 * The collection of agents that populate this sector.
 	 */
-	final private List<Agent> agents = new LinkedList<>();
+	final private List<Agent> agents;
 
 	/**
 	 * The data manager.
@@ -34,7 +60,7 @@ public class BasicSector extends JamelObject implements Sector {
 	final private DataManager dataManager;
 
 	/**
-	 * The number of agents created.
+	 * To count the agent creation since the start.
 	 */
 	private int nAgent = 0;
 
@@ -61,7 +87,6 @@ public class BasicSector extends JamelObject implements Sector {
 		super(simulation);
 		this.specification = specification;
 		this.name = this.specification.getAttribute("name");
-		this.dataManager = new DataManager(agents, this);
 
 		// Inits the type of the agents.
 
@@ -76,7 +101,8 @@ public class BasicSector extends JamelObject implements Sector {
 				if (!Agent.class.isAssignableFrom(klass)) {
 					throw new RuntimeException("Agent class is not assignable from " + klass.getName());
 					// TODO c'est une erreur du scénario : à traiter comme
-					// telle.
+					// telle. Balancer un message d'erreur à la GUI qui display
+					// une box.
 				}
 				@SuppressWarnings("unchecked")
 				final Class<? extends Agent> klass2 = (Class<? extends Agent>) klass;
@@ -96,9 +122,10 @@ public class BasicSector extends JamelObject implements Sector {
 			} else {
 				initialPopulation = Integer.parseInt(nodeList.item(0).getTextContent().trim());
 			}
-			this.agents.addAll(getNewAgents(initialPopulation));
+			this.agents = new ArrayList<>(getNewAgents(initialPopulation));
 		}
 
+		this.dataManager = new DataManager(this.agents, this);
 	}
 
 	/**
@@ -137,18 +164,11 @@ public class BasicSector extends JamelObject implements Sector {
 	}
 
 	@Override
-	public Phase getPhase(final String phaseName) {
+	public Phase getPhase(final String phaseName, final boolean shuffle) {
 		if (phaseName == null) {
 			throw new RuntimeException("Phase name is null");
 		}
-		final Method phaseMethod;
-		try {
-			final Method getPhaseMethod = agentClass.getMethod("getPhaseMethod", String.class);
-			phaseMethod = (Method) getPhaseMethod.invoke(null, phaseName);
-		} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException | NoSuchMethodException
-				| SecurityException e) {
-			throw new RuntimeException("Something went wrong", e);
-		}
+		final Consumer<? super Agent> action = getAction(phaseName, agentClass);
 
 		final Phase result = new Phase() {
 
@@ -164,21 +184,34 @@ public class BasicSector extends JamelObject implements Sector {
 
 			@Override
 			public void run() {
-				for (final Agent agent : BasicSector.this.agents) {
-					try {
-						phaseMethod.invoke(agent);
-					} catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
-						throw new RuntimeException("Something went wrong while running the phase \"" + phaseName
-								+ "\" for the sector \"" + BasicSector.this.name, e);
-					}
+
+				if (shuffle) {
+					Collections.shuffle(BasicSector.this.agents, BasicSector.this.getRandom());
 				}
-				Jamel.println(BasicSector.this.name, this.getName());
+
+				BasicSector.this.agents.forEach(action);
+
 			}
 
 		};
 
 		return result;
 
+	}
+
+	@Override
+	public Agent[] select(int n) {
+		Agent[] result = new Agent[n];
+		for (int i = 0; i < n; i++) {
+			result[i] = this.agents.get(this.getRandom().nextInt(this.agents.size()));
+			for (int j = 0; j < i - 1; j++) {
+				// Si l'agent est déjà dans la sélection, on l'efface.
+				if (result[j] == result[i]) {
+					result[i] = null;
+				}
+			}
+		}
+		return result;
 	}
 
 }

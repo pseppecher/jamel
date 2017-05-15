@@ -35,6 +35,11 @@ import jamel.util.Simulation;
 public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updatable {
 
 	/**
+	 * Error message.
+	 */
+	private static final String ERROR_STRING = "<div style=\"color:red\">ERROR</div>";
+
+	/**
 	 * Returns a new data element.
 	 * 
 	 * @param expression
@@ -82,9 +87,21 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 			if (list.item(i).getNodeType() == Node.ELEMENT_NODE) {
 				final Element elem2 = (Element) list.item(i);
 				if (elem2.getNodeName().equals("data")) {
-					final Expression expression = simulation.getExpression(elem2.getTextContent());
-					htmlElement = getNewDataElement(expression);
-					/*} else if (elem2.getNodeName().equals("test")) {
+					Expression expression = null;
+					try {
+						expression = simulation.getExpression(elem2.getTextContent());
+					} catch (final Exception e) {
+						e.printStackTrace();
+					}
+					if (expression == null) {
+						htmlElement = getNewTextElement(ERROR_STRING);
+					} else {
+						htmlElement = getNewDataElement(expression);
+					}
+					/*
+					 * TODO implement or remove :
+					 * 
+					} else if (elem2.getNodeName().equals("test")) {
 						result = getNewTestElement(elem2, macroDatabase);
 					} else if (elem2.getNodeName().equals("info")) {
 						result = getNewInfoElement(elem2, macroDatabase);

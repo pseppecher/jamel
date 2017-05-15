@@ -52,4 +52,8 @@ public class AgentDataset extends JamelObject {
 		this.data.put(key, value);
 	}
 
+	public void clear() {
+		this.data.clear();
+	}
+
 }

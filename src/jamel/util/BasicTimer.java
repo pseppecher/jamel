@@ -6,9 +6,9 @@ package jamel.util;
 public class BasicTimer implements Timer {
 
 	/**
-	 * The current period.
+	 * The value of the current period.
 	 */
-	private int currentPeriod;
+	private int value;
 
 	/**
 	 * Creates the timer.
@@ -17,17 +17,17 @@ public class BasicTimer implements Timer {
 	 *            the starting period.
 	 */
 	public BasicTimer(int start) {
-		this.currentPeriod = start;
+		this.value = start;
 	}
 
 	@Override
-	public int getPeriod() {
-		return this.currentPeriod;
+	public int getValue() {
+		return this.value;
 	}
 
 	@Override
 	public void next() {
-		currentPeriod++;
+		value++;
 	}
 
 }

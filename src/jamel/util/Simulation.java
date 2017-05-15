@@ -61,6 +61,15 @@ public interface Simulation {
 	Random getRandom();
 
 	/**
+	 * Returns the specified sector.
+	 * 
+	 * @param name
+	 *            the name of the sector to be returned.
+	 * @return the specified sector.
+	 */
+	Sector getSector(String name);
+
+	/**
 	 * Returns the specified series.
 	 * 
 	 * @param x

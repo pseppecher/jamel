@@ -15,6 +15,7 @@ import java.util.Locale;
 
 import javax.swing.BoxLayout;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
 import javax.swing.SwingUtilities;
@@ -66,13 +67,24 @@ public class BasicGui extends JamelObject implements Gui {
 	 * @return the new panel.
 	 */
 	private static Component getNewPanel(final Element elem, final Gui gui) {
-		Component result = null;
+		final Component result;
 		try {
 			if (elem.getNodeName().equals("empty")) {
 				result = new EmptyPanel();
 			} else if (elem.getNodeName().equals("chart")) {
-				final JamelChartPanel chartPanel = JamelChartFactory.createChartPanel(elem, gui.getSimulation());
-				result = chartPanel;
+				JamelChartPanel chartPanel = null;
+				try {
+					chartPanel = JamelChartFactory.createChartPanel(elem, gui.getSimulation());
+				} catch (final Exception e) {
+					e.printStackTrace();
+				}
+				if (chartPanel != null) {
+					result = chartPanel;
+				} else {
+					result = new EmptyPanel();
+					// TODO il vaudrait mieux un HtmlPanel avec un message
+					// d'erreur.
+				}
 			} else if (elem.getNodeName().equals("html")) {
 				result = new HtmlPanel(elem, gui);
 			} else {
@@ -208,6 +220,12 @@ public class BasicGui extends JamelObject implements Gui {
 			}
 		}
 
+	}
+
+	@Override
+	public void displayErrorMessage(final String title, final String message) {
+		JOptionPane.showMessageDialog(this.window, "<html>" + message + "<br>See the console for more details.</html>",
+				title, JOptionPane.ERROR_MESSAGE);
 	}
 
 }

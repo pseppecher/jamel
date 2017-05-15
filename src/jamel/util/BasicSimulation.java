@@ -157,7 +157,7 @@ public class BasicSimulation implements Simulation {
 	/**
 	 * A flag that indicates whether the simulation is paused or not.
 	 */
-	private boolean pause = false;
+	private boolean pause = true;
 
 	/**
 	 * The list of the phases of the period.
@@ -247,6 +247,7 @@ public class BasicSimulation implements Simulation {
 			for (int i = 0; i < phaseList.getLength(); i++) {
 				final Element phaseTag = (Element) phaseList.item(i);
 				final String phaseName = phaseTag.getAttribute("name");
+				final boolean shuffle = phaseTag.getElementsByTagName("shuffle").item(0) != null;
 				final NodeList sectorList = phaseTag.getElementsByTagName("sector");
 				for (int j = 0; j < sectorList.getLength(); j++) {
 					final String sectorName = sectorList.item(j).getTextContent().trim();
@@ -254,7 +255,7 @@ public class BasicSimulation implements Simulation {
 					if (sector == null) {
 						throw new RuntimeException("Sector not found: " + sectorName);
 					}
-					final Phase phase = sector.getPhase(phaseName);
+					final Phase phase = sector.getPhase(phaseName, shuffle);
 					if (phase == null) {
 						throw new RuntimeException(
 								"Sector: " + sectorName + ", unable to create the phase: " + phaseName);
@@ -375,12 +376,23 @@ public class BasicSimulation implements Simulation {
 			try {
 				phase.run();
 			} catch (Exception e) {
+				if (this.gui != null) {
+					this.gui.displayErrorMessage("Error", "Something went wrong.<br>" + "Sector: '"
+							+ phase.getSector().getName() + "', phase: '" + phase.getName() + "'");
+				}
 				throw new RuntimeException("Something went wrong while running the phase: '" + phase.getName()
 						+ "', for the sector: '" + phase.getSector().getName() + "'.", e);
 			}
 		}
 		for (final Updatable updatable : this.updatableSeries) {
-			updatable.update();
+			try {
+				updatable.update();
+			} catch (Exception e) {
+				if (this.gui != null) {
+					this.gui.displayErrorMessage("Error", "Something went wrong while updating the data.");
+				}
+				throw new RuntimeException("Something went wrong while updating the data.", e);
+			}
 		}
 		if (gui != null) {
 			this.gui.update();
@@ -391,7 +403,6 @@ public class BasicSimulation implements Simulation {
 		this.doEvents();
 		this.doPause();
 		this.timer.next();
-		Jamel.println("period", this.timer.getPeriod());
 	}
 
 	@Override
@@ -402,7 +413,7 @@ public class BasicSimulation implements Simulation {
 
 				@Override
 				public Double getValue() {
-					return (double) timer.getPeriod();
+					return (double) timer.getValue();
 				}
 
 				@Override
@@ -446,7 +457,7 @@ public class BasicSimulation implements Simulation {
 
 	@Override
 	public int getPeriod() {
-		return this.timer.getPeriod();
+		return this.timer.getValue();
 	}
 
 	/**
@@ -460,11 +471,22 @@ public class BasicSimulation implements Simulation {
 	}
 
 	@Override
+	public Sector getSector(final String sectorName) {
+		return this.sectors.get(sectorName);
+	}
+
+	@Override
 	public XYSeries getSeries(String x, String y) {
-		final Expression xExp = getExpression(x);
-		final Expression yExp = getExpression(y);
-		final DynamicXYSeries newSeries = new DynamicXYSeries(xExp, yExp);
-		this.updatableSeries.add(newSeries);
+		DynamicXYSeries newSeries = null;
+		try {
+			final Expression xExp = getExpression(x);
+			final Expression yExp = getExpression(y);
+			newSeries = new DynamicXYSeries(xExp, yExp);
+			this.updatableSeries.add(newSeries);
+
+		} catch (final Exception e) {
+			e.printStackTrace();
+		}
 		return newSeries;
 	}
 
@@ -481,6 +503,7 @@ public class BasicSimulation implements Simulation {
 	@Override
 	public void run() {
 		this.run = true;
+		this.doPause();
 		while (this.run) {
 			this.period();
 		}

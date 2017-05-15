@@ -12,6 +12,16 @@ import jamel.util.Simulation;
 public interface Gui {
 
 	/**
+	 * Brings up a dialog that displays an error message.
+	 * 
+	 * @param title
+	 *            the title string for the dialog.
+	 * @param message
+	 *            the message to display.
+	 */
+	void displayErrorMessage(String title, String message);
+
+	/**
 	 * Executes the specified event.
 	 * 
 	 * @param event

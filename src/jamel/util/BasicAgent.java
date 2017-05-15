@@ -1,6 +1,6 @@
 package jamel.util;
 
-import java.lang.reflect.Method;
+import java.util.function.Consumer;
 
 /**
  * A basic agent.
@@ -8,33 +8,35 @@ import java.lang.reflect.Method;
 public class BasicAgent extends JamelObject implements Agent {
 
 	/**
-	 * Returns the specified phase method.
+	 * Returns the specified action.
 	 * 
-	 * @param phase
-	 *            the name of the phase.
-	 * @return the method that should be called by the specified phase.
+	 * @param phaseName
+	 *            the name of the action.
+	 * @return the specified action.
 	 */
-	static public Method getPhaseMethod(final String phase) {
-		final Method result;
-
-		try {
-			switch (phase) {
-			case "opening":
-				result = BasicAgent.class.getMethod("open");
-				break;
-			case "closure":
-				result = BasicAgent.class.getMethod("close");
-				break;
-			default:
-				result = null;
-
-			}
-		} catch (NoSuchMethodException | SecurityException e) {
-			throw new RuntimeException("Something went wrong while creating the method for this phase: " + phase, e);
+	static public Consumer<? super Agent> getAction(final String phaseName) {
+		final Consumer<? super Agent> action;
+		switch (phaseName) {
+		case "opening":
+			action = (agent) -> {
+				((BasicAgent) agent).open();
+			};
+			break;
+		case "closure":
+			action = (agent) -> {
+				((BasicAgent) agent).close();
+			};
+			break;
+		default:
+			throw new IllegalArgumentException(phaseName);
 		}
-
-		return result;
+		return action;
 	}
+
+	/**
+	 * The dataset.
+	 */
+	final private AgentDataset dataset;
 
 	/**
 	 * The id of this agent.
@@ -44,13 +46,7 @@ public class BasicAgent extends JamelObject implements Agent {
 	/**
 	 * The parent sector.
 	 */
-	@SuppressWarnings("unused")
 	final private Sector sector;
-
-	/**
-	 * The dataset.
-	 */
-	final private AgentDataset dataset;
 
 	/**
 	 * Creates a new basic agent.
@@ -70,7 +66,7 @@ public class BasicAgent extends JamelObject implements Agent {
 	/**
 	 * Closes this agent.
 	 */
-	public void close() {
+	private void close() {
 		// C'est ici qu'on met à jour les données de la période.
 		this.dataset.put("countAgent", 1);
 		this.dataset.put("alea", this.getRandom().nextGaussian());
@@ -78,15 +74,10 @@ public class BasicAgent extends JamelObject implements Agent {
 		// closed");
 	}
 
-	@Override
-	public String getName() {
-		return "Agent " + id;
-	}
-
 	/**
 	 * Opens this agent.
 	 */
-	public void open() {
+	private void open() {
 		// Jamel.println(this.sector.getName(), this.getName() + " is now
 		// open");
 	}
@@ -94,6 +85,16 @@ public class BasicAgent extends JamelObject implements Agent {
 	@Override
 	public Double getData(String dataKey, String period) {
 		return this.dataset.getData(dataKey);
+	}
+
+	@Override
+	public String getName() {
+		return "Agent " + id;
+	}
+
+	@Override
+	public Sector getSector() {
+		return this.sector;
 	}
 
 }

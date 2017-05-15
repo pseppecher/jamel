@@ -17,6 +17,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -69,15 +70,17 @@ public class JamelChartFactory {
 
 		axis.setTickLabelFont(tickLabelFont);
 		if (description != null) {
-			final Double max = parseDouble(description.getAttribute("max"));
+			final Double max = parseDouble(getTagText("max", description));
+			// final Double max = parseDouble(description.getAttribute("max"));
 			if (max != null) {
 				axis.setUpperBound(max);
 			}
-			final Double min = parseDouble(description.getAttribute("min"));
+			final Double min = parseDouble(getTagText("min", description));
+			// final Double min = parseDouble(description.getAttribute("min"));
 			if (min != null) {
-				if (max == null && min == 0) {
+				/*if (max == null && min == 0) {
 					axis.setAutoRangeIncludesZero(true);
-				} else {
+				} else*/ {
 					axis.setLowerBound(min);
 				}
 			}
@@ -143,61 +146,63 @@ public class JamelChartFactory {
 			// final Integer end = null;// parseIntegerAttribute(serieXML,
 			// "end");
 			// TODO uses start, end, mod
-			
-			/*final Expression xExp = simulation.getExpression(x);
-			final Expression yExp = simulation.getExpression(y);
-			dataset.addSeries(new DynamicXYSeries(xExp, yExp));*/
-			dataset.addSeries(simulation.getSeries(x,y));
+			final XYSeries newSeries = simulation.getSeries(x, y);
+			if (newSeries != null) {
+				dataset.addSeries(simulation.getSeries(x, y));
 
-			renderer.setSeriesLinesVisible(k, (seriesElement.getAttribute("linesVisible").equals("true")));
-			
-			// renderer.setSeriesPaint(k, lineColor);
-			// final String color = seriesElement.getAttribute("color");
-			final Paint seriesPaint;
-			{
-				final String color = getTagText("lineColor", seriesElement);
-				if (color == null) {
-					seriesPaint = drawingSupplier.getNextPaint();
-				} else {
-					seriesPaint = JamelColor.getColor(color);
-				}
-			}
-			renderer.setSeriesPaint(k, seriesPaint);
-			
-			// Shapes
-			
-			if (seriesElement.getAttribute("shapesVisible").equals("true")) {
-				renderer.setSeriesShapesVisible(k, true);
-				final String fillColor = getTagText("fillColor", seriesElement);
-				if (fillColor == null) {
-					renderer.setUseFillPaint(false);
-				} else {
-					renderer.setUseFillPaint(true);
-					renderer.setSeriesFillPaint(k, JamelColor.getColor(fillColor));
-				}
-			} else {
-				renderer.setSeriesShapesVisible(k, false);
-			}
+				// renderer.setSeriesLinesVisible(k,
+				// (seriesElement.getAttribute("linesVisible").equals("true")));
 
-			// Preparing default legend:
-			
-			final String legendLabel;
-			final String tooltip;
-			final String seriesKey = "x=" + x + ", y=" + y;
-			if (seriesElement.getAttribute("label").equals("")) {
-				legendLabel = seriesKey;
-				tooltip = null;
-			} else {
-				legendLabel = seriesElement.getAttribute("label");
-				tooltip = seriesKey;
+				// renderer.setSeriesPaint(k, lineColor);
+				// final String color = seriesElement.getAttribute("color");
+				final Paint seriesPaint;
+				{
+					final String color = getTagText("color", seriesElement);
+					if (color == null) {
+						seriesPaint = drawingSupplier.getNextPaint();
+					} else {
+						seriesPaint = JamelColor.getColor(color);
+					}
+				}
+				renderer.setSeriesPaint(k, seriesPaint);
+
+				// Shapes
+
+				if (seriesElement.getAttribute("shapesVisible").equals("true")) {
+					renderer.setSeriesShapesVisible(k, true);
+					final String fillColor = getTagText("fillColor", seriesElement);
+					if (fillColor == null) {
+						renderer.setUseFillPaint(false);
+					} else {
+						renderer.setUseFillPaint(true);
+						renderer.setSeriesFillPaint(k, JamelColor.getColor(fillColor));
+					}
+				} else {
+					renderer.setSeriesShapesVisible(k, false);
+				}
+
+				// Preparing default legend:
+
+				final String legendLabel;
+				final String tooltip;
+				final String seriesKey = "x=" + x + ", y=" + y;
+				if (seriesElement.getAttribute("label").equals("")) {
+					legendLabel = seriesKey;
+					tooltip = null;
+				} else {
+					legendLabel = seriesElement.getAttribute("label");
+					tooltip = seriesKey;
+				}
+				/* TODO IMPLEMENT final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, true, square, true, paint,
+						true, lineColor, basicStroke, false, null, basicStroke, null);
+				defaultLegendItemCollection.add(legendItem);*/
 			}
-			/* TODO IMPLEMENT final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, true, square, true, paint,
-					true, lineColor, basicStroke, false, null, basicStroke, null);
-			defaultLegendItemCollection.add(legendItem);*/
 
 		}
 		final NumberAxis xAxis = createAxis((Element) description.getElementsByTagName("xAxis").item(0), null);
 		final NumberAxis yAxis = createAxis((Element) description.getElementsByTagName("yAxis").item(0), null);
+
+		// xAxis.setTickUnit(new NumberTickUnit(120));
 
 		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
 
@@ -240,7 +245,7 @@ public class JamelChartFactory {
 			public void addTimeMarker(ValueMarker marker) {
 				// Does nothing. TODO implement
 			}
-			
+
 		};
 
 		return result;
@@ -264,7 +269,7 @@ public class JamelChartFactory {
 		if (node == null) {
 			result = null;
 		} else {
-			result = node.getTextContent();
+			result = node.getTextContent().trim();
 		}
 		return result;
 	}
@@ -279,7 +284,7 @@ public class JamelChartFactory {
 	 */
 	private static Double parseDouble(String s) {
 		final Double result;
-		if (s.isEmpty()) {
+		if (s == null || s.isEmpty()) {
 			result = null;
 		} else {
 			result = Double.parseDouble(s);

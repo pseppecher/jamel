@@ -22,10 +22,12 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import jamel.util.NotYetImplementedException;
 import jamel.util.Simulation;
 
 /**
@@ -107,12 +109,15 @@ public class Jamel {
 		if (!element.getNodeName().equals("simulation")) {
 			throw new RuntimeException("Bad element: " + element.getNodeName());
 		}
-		final String simulationClassName = element.getAttribute("className");
+		final Node simulationClassNameNode = element.getElementsByTagName("simulationClassName").item(0);
+		/*final String simulationClassName = element.getAttribute("className");
 		if (simulationClassName.isEmpty()) {
 			throw new RuntimeException("Attribute \"className\" is missing or empty.");
+		}*/if (simulationClassNameNode==null) {
+			throw new RuntimeException("Missing node: \"simulationClassName\".");
 		}
 		try {
-			simulation = (Simulation) Class.forName(simulationClassName, false, ClassLoader.getSystemClassLoader())
+			simulation = (Simulation) Class.forName(simulationClassNameNode.getTextContent().trim(), false, ClassLoader.getSystemClassLoader())
 					.getConstructor(Element.class, File.class).newInstance(element, file);
 		} catch (Exception e) {
 			throw new RuntimeException("Something went wrong while creating the simulation.", e);
@@ -339,6 +344,13 @@ public class Jamel {
 		Jamel.println();
 		Jamel.println("End", simpleDateFormat.format(new Date()));
 		Jamel.println();
+	}
+
+	/**
+	 * Throws a new <code>NotYetImplementedException</code>.
+	 */
+	public static void notYetImplemented() {
+		throw new NotYetImplementedException();
 	}
 
 	/**

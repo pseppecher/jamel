@@ -1,17 +1,13 @@
 package jamel.basicModel.banks;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-
-import jamel.util.Agent;
+import jamel.Jamel;
 import jamel.util.JamelObject;
 
 /**
  * A basic account for the basic bank.
  */
 class BasicAccount extends JamelObject implements Account {
-	
+
 	/*
 	 * TODO
 	 * Il manque un traitement statistique des opérations du compte, un recueil des données.
@@ -25,9 +21,9 @@ class BasicAccount extends JamelObject implements Account {
 	private final BasicBank bank;
 
 	/**
-	 * The deposit.
+	 * The deposit account.
 	 */
-	private final Amount deposit = new Amount();
+	private final DepositAccount deposit;
 
 	/**
 	 * The account holder.
@@ -35,126 +31,48 @@ class BasicAccount extends JamelObject implements Account {
 	final private AccountHolder holder;
 
 	/**
-	 * The outstanding loans.
+	 * The loan account.
 	 */
-	private final List<Loan> loans = new LinkedList<>();
+	private final LoanAccount loans;
 
 	/**
-	 * The overdue loans.
+	 * The pending payment.
 	 */
-	private final Amount overdueLoans = new Amount();
+	private Cheque pending = null;
 
 	/**
 	 * Creates a basic account.
 	 * 
 	 * @param bank
-	 *            the bank
+	 *            the bank.
 	 * @param accountHolder
-	 *            the account holder
+	 *            the account holder.
 	 * 
 	 */
-	public BasicAccount(final BasicBank bank, final AccountHolder accountHolder) {
+	BasicAccount(final BasicBank bank, final AccountHolder accountHolder) {
 		super(bank.getSimulation());
 		this.bank = bank;
 		this.holder = accountHolder;
+		this.deposit = this.bank.getNewDepositAccount();
+		this.loans = this.bank.getNewLoanAccount(this.deposit);
 	}
 
 	/**
-	 * Creates a new "overdue" loan.
+	 * Recovers due debts.
 	 * 
-	 * @param amount
-	 *            the amount of overdue debt.
+	 * @param penaltyRate the penalty rate.
 	 */
-	private void newOverdueLoan(long amount) {
-		if (amount <= 0) {
-			throw new RuntimeException("Bad amount: " + amount);
-		}
-		this.overdueLoans.plus(amount);
-		this.deposit.plus(amount);
-		this.bank.newLoan(amount);
+	void debtRecovery(final double penaltyRate) {
+		this.loans.debtRecovery(penaltyRate);
 	}
 
 	/**
-	 * Adds the specified amount to this account.
+	 * Returns the holder of this account.
 	 * 
-	 * @param credit
-	 *            the amount to be added.
-	 * @param payer
-	 *            the payer or the creditor.
-	 * @param reason
-	 *            the reason of the credit.
+	 * @return the holder of this account.
 	 */
-	void credit(final long credit, final Agent payer, final String reason) {
-		this.deposit.plus(credit);
-		this.holder.creditNotification(credit, payer, reason);
-	}
-
-	/**
-	 * Removes the specified amount from this account.
-	 * 
-	 * @param debit
-	 *            the amount to be removed.
-	 */
-	void debit(long debit) {
-		this.deposit.minus(debit);
-	}
-
-	/**
-	 * Pays back the debt.
-	 */
-	void payBack() {
-
-		// Ces opérations devraient comptabilisées au niveau du compte pour
-		// informer le holder
-
-		// Paiement des intérêts sur la dette "overdue".
-
-		{
-			final long interest = (long) (this.bank.getPenaltyRate() * this.overdueLoans.getAmount());
-			if (interest > this.deposit.getAmount()) {
-				final long newLoan = interest - this.deposit.getAmount();
-				this.overdueLoans.plus(newLoan);
-				this.deposit.plus(newLoan);
-				this.bank.newLoan(newLoan);
-			}
-			this.deposit.minus(interest);
-			this.bank.newInterest(interest);
-
-		}
-
-		// Remboursement de la dette "overdue".
-
-		{
-			final long installment = Math.min(this.overdueLoans.getAmount(), this.deposit.getAmount());
-			this.deposit.minus(installment);
-			this.overdueLoans.minus(installment);
-			this.bank.debtRepayment(installment);
-		}
-
-		// Puis on s'occupe des crédits ordinaires
-
-		final Iterator<Loan> it = this.loans.iterator();
-		while (it.hasNext()) {
-			final Loan loan = it.next();
-			if (loan.getPrincipal() == 0) {
-				throw new RuntimeException("This loan is empty.");
-			}
-			final long interest = loan.getInterest();
-			final long installment = loan.getInstallment();
-			if (interest + installment >= 0) {
-				if (interest + installment > this.deposit.getAmount()) {
-					this.newOverdueLoan(interest + installment - this.deposit.getAmount());
-				}
-				this.deposit.minus(interest + installment);
-				loan.cancel(installment);
-				this.bank.newInterest(interest);
-				this.bank.debtRepayment(installment);
-				if (loan.getPrincipal() == 0) {
-					it.remove();
-				}
-			}
-		}
-
+	AccountHolder getHolder() {
+		return this.holder;
 	}
 
 	@Override
@@ -167,12 +85,57 @@ class BasicAccount extends JamelObject implements Account {
 		}
 		final Loan loan = new BasicLoan(this, amount, this.bank.getRate(), this.getPeriod() + term, amortizing);
 		this.loans.add(loan);
-		this.bank.newLoan(amount);
 	}
 
 	@Override
-	public void transfer(final long amount, final AccountHolder payee, final String reason) {
-		this.bank.transfer(this, payee, amount, reason);
+	public void deposit(final Cheque cheque) {
+		if (cheque.getPayee() != this.holder || cheque.getIssue() != this.getPeriod() || !cheque.isValid()) {
+			throw new RuntimeException("Bad cheque.");
+		}
+
+		if (cheque.getDrawer() == this.bank) {
+			// Todo check if this cheque is pending
+			((BankCheque) cheque).cancel();
+		} else {
+
+			final BasicAccount drawerAccount = ((BasicCheque) cheque).getDrawerAccount();
+			if (drawerAccount.pending != cheque) {
+				Jamel.println();
+				Jamel.println("drawerAccount.pending", drawerAccount.pending);
+				Jamel.println("cheque", cheque);
+				Jamel.println("drawerAccount.holder", drawerAccount.holder);
+				Jamel.println("cheque.getDrawer()", cheque.getDrawer());
+				Jamel.println();
+				throw new RuntimeException("Bad cheque.");
+			}
+
+			drawerAccount.pending = null;
+			drawerAccount.deposit.newWithdrawal(cheque.getAmount());
+			((BasicCheque) cheque).cancel();
+		}
+		this.deposit.newDeposit(cheque.getAmount());
+	}
+
+	@Override
+	public long getAmount() {
+		return this.deposit.getAmount();
+	}
+
+	@Override
+	public long getDebt() {
+		return this.loans.getAmount();
+	}
+
+	@Override
+	public Cheque issueCheque(final AccountHolder payee, final long amount) {
+		if (this.pending != null) {
+			throw new RuntimeException("this.pending should be null");
+		}
+		if (this.deposit.getAmount() < amount) {
+			throw new RuntimeException("Not enough money.");
+		}
+		this.pending = new BasicCheque(this, payee, amount, this.getPeriod());
+		return this.pending;
 	}
 
 }

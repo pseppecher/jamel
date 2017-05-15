@@ -45,14 +45,13 @@ public class BasicLoan extends JamelObject implements Loan {
 	 * @param amortizing
 	 *            if the loan is amortizing.
 	 */
-	public BasicLoan(final BasicAccount account, final long amount, final double rate, final int maturityDate,
+	BasicLoan(final BasicAccount account, final long amount, final double rate, final int maturityDate,
 			final boolean amortizing) {
 		super(account.getSimulation());
 		this.principal.plus(amount);
 		this.rate = rate;
 		this.maturityDate = maturityDate;
 		this.amortizing = amortizing;
-
 	}
 
 	@Override

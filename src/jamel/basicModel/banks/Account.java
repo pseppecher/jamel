@@ -18,15 +18,36 @@ public interface Account {
 	void borrow(long amount, int term, boolean amortizing);
 
 	/**
-	 * Transfers the specified amount from this account to the payee account.
+	 * Deposits a cheque in this account.
 	 * 
-	 * @param amount
-	 *            the amount to be transfered.
+	 * @param cheque
+	 *            the cheque to be deposited.
+	 */
+	void deposit(Cheque cheque);
+
+	/**
+	 * Returns the amount of money deposited on this account.
+	 * 
+	 * @return the amount of money deposited on this account.
+	 */
+	long getAmount();
+
+	/**
+	 * Returns the outstanding debt of this account.
+	 * 
+	 * @return the outstanding debt of this account.
+	 */
+	long getDebt();
+
+	/**
+	 * Issues a new cheque.
+	 * 
 	 * @param payee
 	 *            the payee.
-	 * @param reason
-	 *            the reason of the payment.
+	 * @param amount
+	 *            the amount of the cheque.
+	 * @return a new cheque.
 	 */
-	void transfer(long amount, AccountHolder payee, String reason);
+	Cheque issueCheque(AccountHolder payee, long amount);
 
 }
