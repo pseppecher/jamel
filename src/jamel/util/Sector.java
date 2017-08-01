@@ -1,7 +1,5 @@
 package jamel.util;
 
-import org.w3c.dom.Element;
-
 import jamel.data.Expression;
 
 /**
@@ -10,12 +8,17 @@ import jamel.data.Expression;
 public interface Sector {
 
 	/**
+	 * Closes the sector.
+	 */
+	void close();
+
+	/**
 	 * Executes the specified event.
 	 * 
 	 * @param event
 	 *            the event to be executed.
 	 */
-	void doEvent(Element event);
+	void doEvent(Parameters event);
 
 	/**
 	 * Returns an expression that provides an access to the specified data.
@@ -35,17 +38,31 @@ public interface Sector {
 	String getName();
 
 	/**
+	 * Returns the parameters of the sector.
+	 * 
+	 * @return the parameters of the sector.
+	 */
+	Parameters getParameters();
+
+	/**
+	 * Returns the value of the current period.
+	 * 
+	 * @return the value of the current period.
+	 */
+	Integer getPeriod();
+
+	/**
 	 * Returns the specified phase.
 	 * 
 	 * @param name
 	 *            the name of the phase to be returned.
-	 * @param shuffle
-	 *            if the agents need to be shuffled at the beginning of the
+	 * @param options
+	 *            an array of strings, each of them specifying one option of the
 	 *            phase.
 	 * 
 	 * @return the specified phase.
 	 */
-	Phase getPhase(String name, boolean shuffle);
+	Phase getPhase(String name, String[] options);
 
 	/**
 	 * Returns the parent simulation.
@@ -53,6 +70,11 @@ public interface Sector {
 	 * @return the parent simulation.
 	 */
 	Simulation getSimulation();
+
+	/**
+	 * Opens the sector.
+	 */
+	void open();
 
 	/**
 	 * Returns a random selection of <code>n</code> agents.

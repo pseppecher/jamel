@@ -1,12 +1,13 @@
 package jamel.basicModel.firms;
 
 import jamel.basicModel.banks.Cheque;
-import jamel.util.AgentDataset;
+import jamel.data.AgentDataset;
+import jamel.util.JamelObject;
 
 /**
  * A basic supply for the basic firm.
  */
-public class BasicSupply implements Supply {
+public class BasicSupply extends JamelObject implements Supply {
 
 	/**
 	 * The dataset.
@@ -21,12 +22,12 @@ public class BasicSupply implements Supply {
 	/**
 	 * The value of the sales of the period.
 	 */
-	private int salesValue;
+	private long salesValue;
 
 	/**
 	 * The volume of the sales of the period.
 	 */
-	private int salesVolume;
+	private long salesVolume;
 
 	/**
 	 * The supplier.
@@ -34,14 +35,9 @@ public class BasicSupply implements Supply {
 	final private BasicFirm supplier;
 
 	/**
-	 * The current period.
-	 */
-	private int time;
-
-	/**
 	 * The volume of this supply.
 	 */
-	private int volume;
+	private long volume;
 
 	/**
 	 * Creates a new supply.
@@ -50,27 +46,29 @@ public class BasicSupply implements Supply {
 	 *            the supplier.
 	 */
 	public BasicSupply(final BasicFirm firm) {
+		super(firm.getSimulation());
 		this.supplier = firm;
 		this.dataset = firm.getDataset();
-		this.time = firm.getPeriod() - 1;
 	}
 
 	/**
-	 * Resets the supply.
+	 * Closes this supply. Must be called at the end of the period.
 	 */
-	void reset() {
-		if (!this.supplier.isOpen()) {
-			throw new RuntimeException("Closed.");
-		}
-		this.time++;
-		if (this.time != this.supplier.getPeriod()) {
-			throw new RuntimeException("Inconsistency.");
-		}
+	@Override
+	protected void close() {
+		super.close();
+	}
+
+	/**
+	 * Opens this supply. Must be called at the beginning of the period.
+	 */
+	@Override
+	protected void open() {
 		this.price = 0;
 		this.volume = 0;
 		this.salesVolume = 0;
 		this.salesValue = 0;
-		this.dataset.clear();
+		super.open();
 	}
 
 	/**
@@ -81,7 +79,7 @@ public class BasicSupply implements Supply {
 	 * @param newPrice
 	 *            the unit price.
 	 */
-	void update(final int newVolume, final double newPrice) {
+	void update(final long newVolume, final double newPrice) {
 		if (newVolume == 0 || newVolume == 0) {
 			throw new IllegalArgumentException();
 		}
@@ -116,7 +114,7 @@ public class BasicSupply implements Supply {
 	}
 
 	@Override
-	public int getVolume() {
+	public long getVolume() {
 		return this.volume;
 	}
 
@@ -126,7 +124,7 @@ public class BasicSupply implements Supply {
 	}
 
 	@Override
-	public Goods purchase(final int purchase, final Cheque cheque) {
+	public Goods purchase(final long purchase, final Cheque cheque) {
 		if ((long) (this.price * purchase) != cheque.getAmount()) {
 			throw new RuntimeException("Inconsistency");
 		}

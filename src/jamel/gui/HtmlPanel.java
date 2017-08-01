@@ -315,8 +315,8 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 				@Override
 				public void run() {
 					HtmlPanel.this.jEditorPane.setText(newText);
-					revalidate();
-					repaint();
+					HtmlPanel.this.revalidate();
+					HtmlPanel.this.repaint();
 				}
 			});
 		}

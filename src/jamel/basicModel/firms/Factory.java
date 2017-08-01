@@ -18,7 +18,7 @@ interface Factory {
 	 * 
 	 * @return the capacity of this factory.
 	 */
-	double getCapacity();
+	int getCapacity();
 
 	/**
 	 * Returns the inventories of this factory.

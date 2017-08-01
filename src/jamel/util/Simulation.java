@@ -76,9 +76,11 @@ public interface Simulation {
 	 *            the description of x values.
 	 * @param y
 	 *            the description of y values.
+	 * @param conditions
+	 *            the description of the update conditions (null allowed).
 	 * @return the specified series.
 	 */
-	XYSeries getSeries(String x, String y);
+	XYSeries getSeries(String x, String y, String conditions);
 
 	/**
 	 * Returns <code>true</code> if this simulation is paused,

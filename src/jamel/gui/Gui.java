@@ -2,14 +2,18 @@ package jamel.gui;
 
 import java.io.File;
 
-import org.w3c.dom.Element;
-
+import jamel.util.Parameters;
 import jamel.util.Simulation;
 
 /**
  * An interface for the graphical user interface of the simulation.
  */
 public interface Gui {
+
+	/**
+	 * Closes the gui at the end of the period.
+	 */
+	void close();
 
 	/**
 	 * Brings up a dialog that displays an error message.
@@ -27,7 +31,7 @@ public interface Gui {
 	 * @param event
 	 *            the event to be executed.
 	 */
-	void doEvent(Element event);
+	void doEvent(Parameters event);
 
 	/**
 	 * Returns the source file of this Gui.
@@ -44,8 +48,8 @@ public interface Gui {
 	Simulation getSimulation();
 
 	/**
-	 * Updates the content of the Gui.
+	 * Opens the gui at the beginning of the period.
 	 */
-	void update();
+	void open();
 
 }

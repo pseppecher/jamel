@@ -1,15 +1,14 @@
 package jamel.basicModel.banks;
 
-import jamel.util.JamelObject;
-
 /**
  * A basic loans.
  */
-/**
- * @author pascal
- *
- */
-public class BasicLoan extends JamelObject implements Loan {
+public class BasicLoan implements Loan {
+
+	/**
+	 * The account.
+	 */
+	private BasicAccount account;
 
 	/**
 	 * If the loan is amortizing.
@@ -47,7 +46,7 @@ public class BasicLoan extends JamelObject implements Loan {
 	 */
 	BasicLoan(final BasicAccount account, final long amount, final double rate, final int maturityDate,
 			final boolean amortizing) {
-		super(account.getSimulation());
+		this.account = account;
 		this.principal.plus(amount);
 		this.rate = rate;
 		this.maturityDate = maturityDate;
@@ -64,7 +63,7 @@ public class BasicLoan extends JamelObject implements Loan {
 	@Override
 	public long getInstallment() {
 		final long result;
-		final long term = this.maturityDate - this.getPeriod();
+		final long term = this.maturityDate - this.account.getPeriod();
 		if (term == 0) {
 			result = this.principal.getAmount();
 		} else if (this.amortizing) {

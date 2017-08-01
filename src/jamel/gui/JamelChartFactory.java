@@ -1,13 +1,18 @@
 package jamel.gui;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Paint;
+import java.awt.Shape;
+import java.awt.geom.Line2D;
 import java.text.NumberFormat;
+import java.util.List;
 import java.util.Locale;
 
+import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
-import org.jfree.chart.axis.LogarithmicAxis;
+// import org.jfree.chart.axis.LogarithmicAxis;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.TickUnitSource;
 import org.jfree.chart.plot.DefaultDrawingSupplier;
@@ -19,10 +24,8 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
+import jamel.util.Parameters;
 import jamel.util.Simulation;
 
 /**
@@ -38,6 +41,17 @@ public class JamelChartFactory {
 	private static final Font axisLabelFont = new Font("Tahoma", Font.PLAIN, 12);
 
 	/**
+	 * A basic stroke used for legend items.
+	 */
+	private static final BasicStroke basicStroke = new BasicStroke();
+	// Je ne comprends pas pourquoi c'est nécessaire.
+
+	/**
+	 * The shape of the line used by legends.
+	 */
+	private static final Shape line = new Line2D.Double(0, 0, 10, 0);
+
+	/**
 	 * The font used for tick labels.
 	 */
 	private static final Font tickLabelFont = new Font("Tahoma", Font.PLAIN, 10);
@@ -45,38 +59,41 @@ public class JamelChartFactory {
 	/**
 	 * Creates and returns a new Y axis.
 	 * 
-	 * @param description
+	 * @param axisDescription
 	 *            an XML element with the description of the axis.
 	 * @param source
 	 *            the tick unit source.
 	 * @return a new Y axis.
 	 */
-	private static NumberAxis createAxis(Element description, TickUnitSource source) {
-		final NumberAxis axis;
+	private static NumberAxis createAxis(Parameters axisDescription, TickUnitSource source) {
+		final JamelAxis axis;
+		axis = new JamelAxis(null);
+
+		/*final NumberAxis axis;
+		
+		
 		if (description != null && description.getAttribute("logarithmic").equals("true")) {
 			axis = new LogarithmicAxis(null);
 		} else {
 			axis = new NumberAxis(null);
+			axis.setAutoTickUnitSelection(true);
 			if (source != null) {
 				axis.setStandardTickUnits(source);
 			}
-		}
-
 		axis.setAutoRangeIncludesZero(false);
+		}*/
 
-		if (description != null && !description.getAttribute("label").equals("")) {
-			axis.setLabel(description.getAttribute("label"));
+		if (axisDescription != null && !axisDescription.getAttribute("label").equals("")) {
+			axis.setLabel(axisDescription.getAttribute("label"));
 		}
 
 		axis.setTickLabelFont(tickLabelFont);
-		if (description != null) {
-			final Double max = parseDouble(getTagText("max", description));
-			// final Double max = parseDouble(description.getAttribute("max"));
+		if (axisDescription != null) {
+			final Double max = axisDescription.getDoubleAttribute("max");
 			if (max != null) {
 				axis.setUpperBound(max);
 			}
-			final Double min = parseDouble(getTagText("min", description));
-			// final Double min = parseDouble(description.getAttribute("min"));
+			final Double min = axisDescription.getDoubleAttribute("min");
 			if (min != null) {
 				/*if (max == null && min == 0) {
 					axis.setAutoRangeIncludesZero(true);
@@ -112,53 +129,56 @@ public class JamelChartFactory {
 		plot.setRangeMinorGridlinesVisible(false);
 		plot.setRangeCrosshairVisible(false);
 		plot.setDomainCrosshairVisible(false);
-		plot.setBackgroundPaint(Color.WHITE);
+		plot.setBackgroundPaint(Color.white);
 		plot.getRangeAxis().setLabelFont(axisLabelFont);
 		plot.getDomainAxis().setLabelFont(axisLabelFont);
+		plot.setDomainZeroBaselineVisible(true);
+		plot.setRangeZeroBaselineVisible(true);
 		return plot;
 	}
 
 	/**
 	 * Creates and returns a new XY chart.
 	 * 
-	 * @param description
+	 * @param params
 	 *            the description of the XY chart to create.
 	 * @param simulation
 	 *            the parent simulation.
 	 * @return a new XY chart.
 	 */
-	private static JamelChart getNewXYChart(final Element description, final Simulation simulation) {
-		final String name = description.getAttribute("title");
-		final NodeList seriesList = description.getElementsByTagName("series");
-		final int nbSeries = seriesList.getLength();
+	private static JamelChart getNewXYChart(final Parameters params, final Simulation simulation) {
+		final String name = params.getAttribute("title");
+		final String defaultConditions;
+		if (params.get("if") != null) {
+			defaultConditions = params.get("if").getText();
+		} else {
+			defaultConditions = null;
+		}
+		final List<Parameters> seriesList = params.getAll("series");
 		final XYSeriesCollection dataset = new XYSeriesCollection();
 		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
 		final DefaultDrawingSupplier drawingSupplier = new DefaultDrawingSupplier();
 		final LegendItemCollection defaultLegendItemCollection = new LegendItemCollection();
-		for (int k = 0; k < nbSeries; k++) {
-			final Element seriesElement = (Element) seriesList.item(k);
-
-			final String x = getTagText("x", seriesElement);
-			final String y = getTagText("y", seriesElement);
-
-			// final Integer start = null;// parseIntegerAttribute(serieXML,
-			// "start");
-			// final Integer end = null;// parseIntegerAttribute(serieXML,
-			// "end");
-			// TODO uses start, end, mod
-			final XYSeries newSeries = simulation.getSeries(x, y);
+		int k = 0;
+		for (final Parameters seriesElement : seriesList) {
+			final String x = seriesElement.get("x").getText();
+			final String y = seriesElement.get("y").getText();
+			final String conditions;
+			if (seriesElement.get("if") != null) {
+				conditions = seriesElement.get("if").getText();
+			} else {
+				conditions = defaultConditions;
+			}
+			final XYSeries newSeries = simulation.getSeries(x, y, conditions);
 			if (newSeries != null) {
-				dataset.addSeries(simulation.getSeries(x, y));
+				dataset.addSeries(newSeries);
 
-				// renderer.setSeriesLinesVisible(k,
-				// (seriesElement.getAttribute("linesVisible").equals("true")));
+				// Color
 
-				// renderer.setSeriesPaint(k, lineColor);
-				// final String color = seriesElement.getAttribute("color");
 				final Paint seriesPaint;
 				{
-					final String color = getTagText("color", seriesElement);
-					if (color == null) {
+					final String color = seriesElement.getAttribute("color");
+					if (color == "") {
 						seriesPaint = drawingSupplier.getNextPaint();
 					} else {
 						seriesPaint = JamelColor.getColor(color);
@@ -166,11 +186,23 @@ public class JamelChartFactory {
 				}
 				renderer.setSeriesPaint(k, seriesPaint);
 
+				// Line visibility
+
+				renderer.setSeriesLinesVisible(k, (!seriesElement.getAttribute("linesVisible").equals("false")));
+
 				// Shapes
+
+				final Shape shape = renderer.getBaseShape();
+				// final Shape lineshape = renderer.getline();
 
 				if (seriesElement.getAttribute("shapesVisible").equals("true")) {
 					renderer.setSeriesShapesVisible(k, true);
-					final String fillColor = getTagText("fillColor", seriesElement);
+					final String fillColor;
+					if (seriesElement.get("fillColor") != null) {
+						fillColor = seriesElement.get("fillColor").getText();
+					} else {
+						fillColor = null;
+					}
 					if (fillColor == null) {
 						renderer.setUseFillPaint(false);
 					} else {
@@ -185,40 +217,41 @@ public class JamelChartFactory {
 
 				final String legendLabel;
 				final String tooltip;
-				final String seriesKey = "x=" + x + ", y=" + y;
 				if (seriesElement.getAttribute("label").equals("")) {
-					legendLabel = seriesKey;
+					legendLabel = newSeries.getDescription();
 					tooltip = null;
 				} else {
 					legendLabel = seriesElement.getAttribute("label");
-					tooltip = seriesKey;
+					tooltip = newSeries.getDescription();
 				}
-				/* TODO IMPLEMENT final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, true, square, true, paint,
-						true, lineColor, basicStroke, false, null, basicStroke, null);
-				defaultLegendItemCollection.add(legendItem);*/
+
+				final LegendItem legendItem = new LegendItem(legendLabel, "description", tooltip, null, false, shape,
+						true, seriesPaint, false, seriesPaint, basicStroke, true, line, basicStroke, seriesPaint);
+
+				defaultLegendItemCollection.add(legendItem);
 			}
-
+			k++;
 		}
-		final NumberAxis xAxis = createAxis((Element) description.getElementsByTagName("xAxis").item(0), null);
-		final NumberAxis yAxis = createAxis((Element) description.getElementsByTagName("yAxis").item(0), null);
-
-		// xAxis.setTickUnit(new NumberTickUnit(120));
+		final NumberAxis xAxis = createAxis(params.get("xAxis"), null);
+		final NumberAxis yAxis = createAxis(params.get("yAxis"), null);
 
 		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
 
 		// TODO addZeroBaselines(plot, description);
 
-		final NodeList legends = description.getElementsByTagName("legend");
-		if (legends.getLength() > 0) {
-			Element legend = (Element) legends.item(0);
-			final NodeList items = legend.getElementsByTagName("item");
+		final Parameters legend = params.get("legend");
+		if (legend != null) {
+			final List<Parameters> items = legend.getAll("item");
 
 			final LegendItemCollection legendItemCollection = new LegendItemCollection();
-			for (int i = 0; i < items.getLength(); i++) {
-				final Element item = (Element) items.item(i);
-				final String legendLabel = item.getAttribute("value");
-				final Paint paint = JamelColor.getColor(item.getAttribute("color"));
-				final String tooltip = item.getAttribute("tooltip");
+			for (@SuppressWarnings("unused")
+			final Parameters item : items) {
+				// TODO work in progress
+				// final Element item = (Element) items.item(i);
+				// final String legendLabel = item.getAttribute("value");
+				// final Paint paint =
+				// JamelColor.getColor(item.getAttribute("color"));
+				// final String tooltip = item.getAttribute("tooltip");
 				/*TODO final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, true, square, true,
 						paint, true, lineColor, basicStroke, false, null, basicStroke, null);
 				try {
@@ -233,7 +266,7 @@ public class JamelChartFactory {
 			plot.setFixedLegendItems(defaultLegendItemCollection);
 		}
 
-		final String background = description.getAttribute("background");
+		final String background = params.getAttribute("background");
 		if (!"".equals(background)) {
 			plot.setBackgroundPaint(JamelColor.getColor(background));
 		}
@@ -252,77 +285,16 @@ public class JamelChartFactory {
 	}
 
 	/**
-	 * Returns the text content of the first node with the given tag name within
-	 * the specified element. If there no node with given name, this returns
-	 * <code>null</code>.
-	 * 
-	 * @param tagName
-	 *            the name of the tag to match on. The special value "*"
-	 *            matches all tags.
-	 * @param element
-	 *            the parent element.
-	 * @return the text content of first node with the given tag name.
-	 */
-	private static String getTagText(final String tagName, final Element element) {
-		final String result;
-		final Node node = element.getElementsByTagName(tagName).item(0);
-		if (node == null) {
-			result = null;
-		} else {
-			result = node.getTextContent().trim();
-		}
-		return result;
-	}
-
-	/**
-	 * Returns a new double initialized to the value represented by the
-	 * specified String.
-	 * 
-	 * @param s
-	 *            the string to be parsed.
-	 * @return the double value represented by the string argument.
-	 */
-	private static Double parseDouble(String s) {
-		final Double result;
-		if (s == null || s.isEmpty()) {
-			result = null;
-		} else {
-			result = Double.parseDouble(s);
-		}
-		return result;
-	}
-
-	/**
 	 * Creates and returns a new chart panel.
 	 * 
-	 * @param elem
+	 * @param params
 	 *            the description of the chart panel to create.
 	 * @param simulation
 	 *            the parent simulation.
 	 * @return a new chart panel.
 	 */
-	public static JamelChartPanel createChartPanel(final Element elem, final Simulation simulation) {
-
-		// final String type = elem.getAttribute("type");
-		final JamelChart chart = getNewXYChart(elem, simulation);
-		/*if ("".equals(type)) {
-			throw new InitializationException("Chart " + elem.getAttribute("title") + ": Chart type is missing.");
-		} else if ("scatter chart".equals(type)) {
-			chart = createScatterChart(elem, dataManager);
-		} else if ("time scatter chart".equals(type)) {
-			chart = createTimeScatterChart(elem, dataManager);
-		} else if ("time chart".equals(type)) {
-			chart = createTimeChart(elem, dataManager);
-		} else if ("histogram".equals(type)) {
-			chart = createHistogram(elem, dataManager);
-		} else {
-			throw new InitializationException("Unexpected chart type: " + type);
-		}*/
-		// chart.getLegend().setItemFont(axisLabelFont);
-		// TODO l'ajustement des fonts n'a pas sa place ici
-
-		final JamelChartPanel chartPanel = new JamelChartPanel(chart);
-		return chartPanel;
+	public static JamelChartPanel createChartPanel(final Parameters params, final Simulation simulation) {
+		return new JamelChartPanel(getNewXYChart(params, simulation));
 	}
 
 }

@@ -38,7 +38,7 @@ public interface Supply {
 	/**
 	 * Purchases some goods.
 	 * 
-	 * @param volume
+	 * @param consumVol
 	 *            the volume to be purchased.
 	 * 
 	 * @param cheque
@@ -46,13 +46,13 @@ public interface Supply {
 	 * 
 	 * @return the purchased goods.
 	 */
-	Goods purchase(int volume, Cheque cheque);
+	Goods purchase(long consumVol, Cheque cheque);
 
 	/**
 	 * Returns the volume of this supply.
 	 * 
 	 * @return the volume of this supply.
 	 */
-	int getVolume();
+	long getVolume();
 
 }

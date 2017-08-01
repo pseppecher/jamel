@@ -2,6 +2,7 @@ package jamel.util;
 
 import java.io.File;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -14,8 +15,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import org.jfree.data.xy.XYSeries;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import jamel.Jamel;
 import jamel.data.Export;
@@ -23,7 +22,6 @@ import jamel.data.Expression;
 import jamel.data.ExpressionFactory;
 import jamel.gui.DynamicXYSeries;
 import jamel.gui.Gui;
-import jamel.gui.Updatable;
 
 /**
  * A basic simulation.
@@ -33,30 +31,38 @@ public class BasicSimulation implements Simulation {
 	/**
 	 * Creates and returns a new Gui.
 	 * 
-	 * @param elem
-	 *            an XML element that contains the description of the Gui.
+	 * @param params
+	 *            the parameters of the Gui.
 	 * @param simulation
 	 *            the parent simulation.
 	 * @return a new Gui.
 	 */
-	private static Gui getNewGui(final Element elem, final Simulation simulation) {
+	private static Gui getNewGui(final Parameters params, final Simulation simulation) {
 
-		if (!elem.getNodeName().equals("gui")) {
-			throw new RuntimeException("Bad element: " + elem.getNodeName());
+		if (!params.getName().equals("gui")) {
+			// TODO : ça aussi devrait être une JamelInitialisationException.
+			throw new RuntimeException("Bad element: " + params.getName());
 		}
 
 		final File guiFile;
-		final Element guiDescription;
+		final Parameters guiDescription;
 
-		if (elem.hasAttribute("src")) {
+		if (params.hasAttribute("src")) {
 
 			/*
 			 * Opens and reads the XML file that contains the specification of the gui.
 			 */
 
-			final String src = elem.getAttribute("src");
+			final String src = params.getAttribute("src");
 			final String fileName = simulation.getFile().getParent() + "/" + src;
 			guiFile = new File(fileName);
+			if (!guiFile.exists()) {
+				// TODO : ça, par exemple, devrait être une
+				// JamelInitialisationException.
+				// Elle serait interceptée plus haut et donnerait à
+				// l'utilisateur les instructions pour corriger son scénario.
+				throw new RuntimeException(fileName + " (No such file)");
+			}
 			final Element root;
 			try {
 				final Document document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(guiFile);
@@ -67,11 +73,11 @@ public class BasicSimulation implements Simulation {
 			if (!root.getTagName().equals("gui")) {
 				throw new RuntimeException(fileName + ": Bad element: " + root.getTagName());
 			}
-			guiDescription = root;
+			guiDescription = new Parameters(root);
 
 		} else {
 			guiFile = simulation.getFile();
-			guiDescription = elem;
+			guiDescription = params;
 		}
 
 		final String guiClassName = guiDescription.getAttribute("className");
@@ -86,7 +92,7 @@ public class BasicSimulation implements Simulation {
 		final Gui gui;
 		try {
 			gui = (Gui) Class.forName(guiClassName, false, ClassLoader.getSystemClassLoader())
-					.getConstructor(Element.class, File.class, Simulation.class)
+					.getConstructor(Parameters.class, File.class, Simulation.class)
 					.newInstance(guiDescription, guiFile, simulation);
 		} catch (Exception e) {
 			throw new RuntimeException("Something went wrong while creating the gui.", e);
@@ -98,27 +104,35 @@ public class BasicSimulation implements Simulation {
 	/**
 	 * Creates and returns a new sector.
 	 * 
-	 * @param specification
-	 *            an XML element that specifies the sector to be created.
 	 * @param simulation
 	 *            the parent simulation
+	 * @param parameters
+	 *            an XML element that specifies the sector to be created.
+	 * @param defaultClassName
+	 *            the default class name of the sector to be created.
 	 * 
 	 * @return the new sector.
 	 */
-	private static Sector getNewSector(Element specification, Simulation simulation) {
-		if (!specification.getNodeName().equals("sector")) {
-			throw new RuntimeException("Bad element: " + specification.getNodeName());
+	private static Sector getNewSector(final Simulation simulation, final Parameters parameters,
+			final String defaultClassName) {
+		if (!parameters.getName().equals("sector")) {
+			throw new RuntimeException("Bad element: " + parameters.getName());
 		}
 
-		final String sectorClassName = specification.getAttribute("className");
+		final String sectorClassName;
+		if (parameters.getAttribute("className").isEmpty()) {
+			sectorClassName = defaultClassName;
+		} else {
+			sectorClassName = parameters.getAttribute("className");
+		}
 		if (sectorClassName.isEmpty()) {
-			throw new RuntimeException("Attribute \"className\" is missing or empty.");
+			throw new RuntimeException("Sector: Attribute \"className\" is missing or empty.");
 		}
 
 		final Sector sector;
 		try {
 			sector = (Sector) Class.forName(sectorClassName, false, ClassLoader.getSystemClassLoader())
-					.getConstructor(Element.class, Simulation.class).newInstance(specification, simulation);
+					.getConstructor(Parameters.class, Simulation.class).newInstance(parameters, simulation);
 		} catch (Exception e) {
 			throw new RuntimeException("Something went wrong while creating the sector.", e);
 		}
@@ -126,8 +140,13 @@ public class BasicSimulation implements Simulation {
 		return sector;
 	}
 
+	/**
+	 * The list of the series to update.
+	 */
+	private List<DynamicXYSeries> dynamicSeries = new LinkedList<>();
+
 	/** The events. */
-	private final Map<Integer, Element> events = new HashMap<>();
+	private final Map<Integer, Parameters> events = new HashMap<>();
 
 	/**
 	 * The list of the exports.
@@ -155,6 +174,12 @@ public class BasicSimulation implements Simulation {
 	private final String name;
 
 	/**
+	 * The start of the simulation (in milliseconds).
+	 * For performance measure.
+	 */
+	private Long now = null;
+
+	/**
 	 * A flag that indicates whether the simulation is paused or not.
 	 */
 	private boolean pause = true;
@@ -175,9 +200,9 @@ public class BasicSimulation implements Simulation {
 	private boolean run = false;
 
 	/**
-	 * An XML element that contains the description of the simulation.
+	 * The parameters of the simulation.
 	 */
-	final private Element scenario;
+	final private Parameters scenario;
 
 	/**
 	 * The collection of the sectors, with access by their names.
@@ -185,25 +210,49 @@ public class BasicSimulation implements Simulation {
 	final private Map<String, Sector> sectors = new HashMap<>();
 
 	/**
+	 * The instantaneous speed of the simulation (ie, the number of periods by
+	 * ms).
+	 * For performance measure.
+	 */
+	private Double speed = null;
+
+	/**
+	 * The start of the simulation (in milliseconds).
+	 * For performance measure.
+	 */
+	private Long start = null;
+
+	/**
+	 * An expression that returns the value of the current period.
+	 */
+	final private Expression time = new Expression() {
+
+		@Override
+		public Double getValue() {
+			return (double) timer.getValue();
+		}
+
+		@Override
+		public String toString() {
+			return "t";
+		}
+
+	};
+
+	/**
 	 * The timer.
 	 */
 	final private Timer timer;
 
 	/**
-	 * The list of the series to update.
-	 */
-	private List<Updatable> updatableSeries = new LinkedList<>();
-
-	/**
 	 * Creates an new simulation.
 	 * 
 	 * @param scenario
-	 *            An XML element that contains the description of the
-	 *            simulation.
+	 *            the parameters of the simulation.
 	 * @param file
 	 *            The file that contains the description of the simulation.
 	 */
-	public BasicSimulation(final Element scenario, final File file) {
+	public BasicSimulation(final Parameters scenario, final File file) {
 
 		this.scenario = scenario;
 		this.file = file;
@@ -212,25 +261,15 @@ public class BasicSimulation implements Simulation {
 
 		// Inits the random.
 
-		{
-			final NodeList nodeList = this.scenario.getElementsByTagName("randomSeed");
-			if (nodeList.getLength() == 0) {
-				throw new RuntimeException("Missing tag : randomSeed");
-			}
-			final int randomSeed = Integer.parseInt(nodeList.item(0).getTextContent().trim());
-			this.random = new Random(randomSeed);
-		}
+		this.random = new Random(this.scenario.getIntAttribute("randomSeed"));
 
 		// Looks for the sectors.
 
 		{
-			final Element sectorsTag = (Element) this.scenario.getElementsByTagName("sectors").item(0);
-			if (sectorsTag == null) {
-				throw new RuntimeException("Missing tag : sectors");
-			}
-			final NodeList nodeList = sectorsTag.getElementsByTagName("sector");
-			for (int index = 0; index < nodeList.getLength(); index++) {
-				final Sector sector = getNewSector((Element) nodeList.item(index), this);
+			final Parameters sectorsTag = this.scenario.get("sectors");
+			final String defaultClassName = sectorsTag.getAttribute("defaultClassName");
+			for (final Parameters params : sectorsTag.getAll("sector")) {
+				final Sector sector = getNewSector(this, params, defaultClassName);
 				this.sectors.put(sector.getName(), sector);
 				Jamel.println("new sector", sector.getName());
 			}
@@ -239,26 +278,22 @@ public class BasicSimulation implements Simulation {
 		// Looks for the phases.
 
 		{
-			final Element phasesTag = (Element) this.scenario.getElementsByTagName("phases").item(0);
-			if (phasesTag == null) {
-				throw new RuntimeException("Missing tag : phasesTag");
-			}
-			final NodeList phaseList = phasesTag.getElementsByTagName("phase");
-			for (int i = 0; i < phaseList.getLength(); i++) {
-				final Element phaseTag = (Element) phaseList.item(i);
-				final String phaseName = phaseTag.getAttribute("name");
-				final boolean shuffle = phaseTag.getElementsByTagName("shuffle").item(0) != null;
-				final NodeList sectorList = phaseTag.getElementsByTagName("sector");
-				for (int j = 0; j < sectorList.getLength(); j++) {
-					final String sectorName = sectorList.item(j).getTextContent().trim();
+			final Parameters phasesTag = this.scenario.get("phases");
+			for (final Parameters params : phasesTag.getAll("phase")) {
+				final String phaseName = params.getAttribute("name");
+				final String[] options = params.getAttribute("options").split(",");
+				// TODO IMPLEMENT : shuffle =
+				// params.getElementsByTagName("shuffle").item(0) != null;
+				final String[] sectorNames = params.splitTextContent(",");
+				for (String sectorName : sectorNames) {
 					final Sector sector = this.sectors.get(sectorName);
 					if (sector == null) {
-						throw new RuntimeException("Sector not found: " + sectorName);
+						throw new RuntimeException("Sector not found: \'" + sectorName + "\'");
 					}
-					final Phase phase = sector.getPhase(phaseName, shuffle);
+					final Phase phase = sector.getPhase(phaseName, options);
 					if (phase == null) {
 						throw new RuntimeException(
-								"Sector: " + sectorName + ", unable to create the phase: " + phaseName);
+								"Sector: " + sectorName + ", unable to create the phase: \'" + phaseName + "\'");
 					}
 					this.phases.add(phase);
 				}
@@ -268,11 +303,10 @@ public class BasicSimulation implements Simulation {
 		// Looks for the exports.
 
 		{
-			final Element exportsTag = (Element) this.scenario.getElementsByTagName("exports").item(0);
-			if (exportsTag != null) {
-				final NodeList exportList = exportsTag.getElementsByTagName("export");
-				for (int i = 0; i < exportList.getLength(); i++) {
-					this.exports.add(new Export((Element) exportList.item(i), this));
+			final Parameters exportsParameters = this.scenario.get("exports");
+			if (exportsParameters != null) {
+				for (final Parameters param : exportsParameters.getAll("export")) {
+					this.exports.add(new Export(param, this));
 				}
 			}
 		}
@@ -280,16 +314,14 @@ public class BasicSimulation implements Simulation {
 		// Looks for the events.
 
 		{
-			final Element eventsTag = (Element) this.scenario.getElementsByTagName("events").item(0);
+			final Parameters eventsTag = this.scenario.get("events");
 			if (eventsTag != null) {
-				final NodeList eventList = eventsTag.getElementsByTagName("event");
-				for (int i = 0; i < eventList.getLength(); i++) {
-					final Element element = (Element) eventList.item(i);
-					final int period = Integer.parseInt(element.getAttribute("when"));
+				for (Parameters event : eventsTag.getAll("when")) {
+					final int period = event.getIntAttribute("t");
 					if (this.events.containsKey(period)) {
 						throw new RuntimeException("Events already defined for the period: " + period);
 					}
-					this.events.put(period, element);
+					this.events.put(period, event);
 				}
 			}
 		}
@@ -297,11 +329,11 @@ public class BasicSimulation implements Simulation {
 		// Looks for the gui.
 
 		{
-			final NodeList nodeList = this.scenario.getElementsByTagName("gui");
-			if (nodeList.getLength() == 0) {
+			final Parameters guiP = this.scenario.get("gui");
+			if (guiP == null) {
 				this.gui = null;
 			} else {
-				this.gui = getNewGui((Element) nodeList.item(0), this);
+				this.gui = getNewGui(guiP, this);
 			}
 		}
 
@@ -313,13 +345,13 @@ public class BasicSimulation implements Simulation {
 	 * @param event
 	 *            the event to be executed.
 	 */
-	private void doEvent(Element event) {
-		switch (event.getTagName()) {
+	private void doEvent(Parameters event) {
+		switch (event.getName()) {
 		case "pause":
 			this.pause = true;
 			break;
 		default:
-			throw new RuntimeException("Not yet implemented: \'" + event.getTagName() + "\'");
+			throw new RuntimeException("Not yet implemented: \'" + event.getName() + "\'");
 		}
 	}
 
@@ -327,20 +359,18 @@ public class BasicSimulation implements Simulation {
 	 * Executes the events of the simulation.
 	 */
 	private void doEvents() {
-		final Element currentEvents = this.events.get(getPeriod());
+		final Parameters currentEvents = this.events.get(getPeriod());
 		if (currentEvents != null) {
-			final NodeList eventList = currentEvents.getChildNodes();
-			for (int i = 0; i < eventList.getLength(); i++) {
-				if (eventList.item(i).getNodeType() == Node.ELEMENT_NODE) {
-					final Element event = (Element) eventList.item(i);
-					if (event.getAttribute("recipient").isEmpty()) {
-						this.doEvent(event);
-					} else if (event.getAttribute("recipient").equals("gui")) {
+			for (Parameters event : currentEvents.getAll()) {
+				if (event.getAttribute("sector").isEmpty()) {
+					if (event.getName().startsWith("gui.")) {
 						this.gui.doEvent(event);
 					} else {
-						final String sectorName = event.getAttribute("recipient");
-						this.sectors.get(sectorName).doEvent(event);
+						this.doEvent(event);
 					}
+				} else {
+					final String sectorName = event.getAttribute("sector");
+					this.sectors.get(sectorName).doEvent(event);
 				}
 			}
 		}
@@ -351,9 +381,6 @@ public class BasicSimulation implements Simulation {
 	 */
 	private void doPause() {
 		if (isPaused()) {
-			// TODO clean up
-			// final long startPause = new Date().getTime();
-			this.gui.update();
 			while (isPaused()) {
 				try {
 					Thread.sleep(500);
@@ -361,10 +388,6 @@ public class BasicSimulation implements Simulation {
 					e.printStackTrace();
 				}
 			}
-			this.gui.update();
-			// final long endPause = new Date().getTime();
-			// this.pausedTime += endPause - startPause;
-			// this.gui.repaintControls(); TODO ??
 		}
 	}
 
@@ -372,6 +395,13 @@ public class BasicSimulation implements Simulation {
 	 * Executes a period of the simulation.
 	 */
 	private void period() {
+		
+		this.gui.open();
+
+		for (Sector sector : this.sectors.values()) {
+			sector.open();
+		}
+
 		for (final Phase phase : this.phases) {
 			try {
 				phase.run();
@@ -384,19 +414,17 @@ public class BasicSimulation implements Simulation {
 						+ "', for the sector: '" + phase.getSector().getName() + "'.", e);
 			}
 		}
-		for (final Updatable updatable : this.updatableSeries) {
-			try {
-				updatable.update();
-			} catch (Exception e) {
-				if (this.gui != null) {
-					this.gui.displayErrorMessage("Error", "Something went wrong while updating the data.");
-				}
-				throw new RuntimeException("Something went wrong while updating the data.", e);
-			}
+
+		for (Sector sector : this.sectors.values()) {
+			sector.close();
 		}
-		if (gui != null) {
-			this.gui.update();
+
+		for (final DynamicXYSeries series : dynamicSeries) {
+			series.update();
 		}
+		
+		this.gui.close();
+
 		for (final Export export : this.exports) {
 			export.run();
 		}
@@ -408,22 +436,61 @@ public class BasicSimulation implements Simulation {
 	@Override
 	public Expression getDataAccess(final String key) {
 		final Expression result;
-		if (key.equals("period")) {
+
+		if (key.equals("t")) {
+			result = this.time;
+		}
+
+		else if (key.equals("speed")) {
 			result = new Expression() {
 
 				@Override
 				public Double getValue() {
-					return (double) timer.getValue();
+					return speed;
 				}
 
 				@Override
 				public String toString() {
-					return "period";
+					return "simulationSpeed";
 				}
 
 			};
-		} else if (Pattern.matches("value[\\(].*[\\)]", key)) {
-			final String argString = key.substring(6, key.length() - 1);
+		}
+
+		else if (key.equals("alea")) {
+			result = new Expression() {
+
+				@Override
+				public Double getValue() {
+					return random.nextDouble();
+				}
+
+				@Override
+				public String toString() {
+					return "alea";
+				}
+
+			};
+		}
+
+		else if (key.equals("duration")) {
+			result = new Expression() {
+
+				@Override
+				public Double getValue() {
+					return new Double(now - start);
+				}
+
+				@Override
+				public String toString() {
+					return "simulationDuration";
+				}
+
+			};
+		}
+
+		else if (Pattern.matches("val[\\(].*[\\)]", key)) {
+			final String argString = key.substring(4, key.length() - 1);
 			final String[] split = argString.split(",");
 			final Sector sector = this.sectors.get(split[0]);
 			if (sector == null) {
@@ -432,7 +499,8 @@ public class BasicSimulation implements Simulation {
 			final String[] args = Arrays.copyOfRange(split, 1, split.length);
 			// TODO le premier argument devrait contenir non seulement le nom du
 			// secteur, mais aussi (éventuellement) des instructions permettant
-			// de limiter la sélection à un sous ensemble des agents.
+			// de limiter la sélection à un sous-ensemble des agents de ce
+			// secteur.
 			result = sector.getDataAccess(args);
 		} else {
 			throw new RuntimeException("Not yet implemented: \'" + key + "\'");
@@ -476,14 +544,22 @@ public class BasicSimulation implements Simulation {
 	}
 
 	@Override
-	public XYSeries getSeries(String x, String y) {
+	public XYSeries getSeries(final String x, final String y, final String conditions) {
 		DynamicXYSeries newSeries = null;
 		try {
 			final Expression xExp = getExpression(x);
 			final Expression yExp = getExpression(y);
-			newSeries = new DynamicXYSeries(xExp, yExp);
-			this.updatableSeries.add(newSeries);
-
+			if (conditions == null) {
+				newSeries = new DynamicXYSeries(xExp, yExp);
+			} else {
+				final String[] strings = ExpressionFactory.split(conditions);
+				final Expression[] conditionsExp = new Expression[strings.length];
+				for (int i = 0; i < strings.length; i++) {
+					conditionsExp[i] = getExpression(strings[i]);
+				}
+				newSeries = new DynamicXYSeries(xExp, yExp, conditionsExp);
+			}
+			this.dynamicSeries.add(newSeries);
 		} catch (final Exception e) {
 			e.printStackTrace();
 		}
@@ -504,9 +580,16 @@ public class BasicSimulation implements Simulation {
 	public void run() {
 		this.run = true;
 		this.doPause();
+		this.start = (new Date()).getTime();
+		this.now = start;
 		while (this.run) {
+			final long before = (new Date()).getTime();
 			this.period();
+			final long after = (new Date()).getTime();
+			this.speed = 1. / (after - before);
+			this.now = (new Date()).getTime();
 		}
+
 	}
 
 }

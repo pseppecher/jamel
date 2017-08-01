@@ -5,19 +5,24 @@ import org.jfree.data.xy.XYSeries;
 import jamel.data.Expression;
 
 /**
- * A {@link XYSeries} that implements the {@link Updatable} interface.
+ * An extension of {@link XYSeries}.
  */
-public class DynamicXYSeries extends XYSeries implements Updatable {
+public class DynamicXYSeries extends XYSeries {
+
+	/**
+	 * The conditions (a list of expressions).
+	 */
+	final private Expression[] conditions;
 
 	/**
 	 * The expression for the x values.
 	 */
-	private Expression x;
+	final private Expression x;
 
 	/**
 	 * The expression for the y values.
 	 */
-	private Expression y;
+	final private Expression y;
 
 	/**
 	 * Constructs a new empty series, with the auto-sort flag set as
@@ -29,19 +34,49 @@ public class DynamicXYSeries extends XYSeries implements Updatable {
 	 *            the series key (<code>null</code> not permitted).
 	 */
 	public DynamicXYSeries(Expression xExp, Expression yExp) {
-		// TODO duplicate values ne devrait pas toujours être allowed ?
+		this(xExp, yExp, null);
+	}
+
+	/**
+	 * Constructs a new empty series, with the auto-sort flag set as
+	 * <code>false</code>, and duplicate values allowed.
+	 * 
+	 * @param xExp
+	 *            the series key (<code>null</code> not permitted).
+	 * @param yExp
+	 *            the series key (<code>null</code> not permitted).
+	 * @param conditions
+	 *            a list of conditions (<code>null</code> permitted).
+	 */
+	public DynamicXYSeries(Expression xExp, Expression yExp, Expression[] conditions) {
 		super(xExp.toString() + "," + yExp.toString(), false);
 		this.x = xExp;
 		this.y = yExp;
+		if (conditions == null) {
+			this.conditions = new Expression[0];
+		} else {
+			this.conditions = conditions;
+		}
+		this.setDescription("x = " + this.x.toString() + ", y = " + this.y.toString());
 	}
 
-	@Override
+	/**
+	 * Updates the series, by adding new data items.
+	 */
 	public void update() {
-		// TODO tester ici les limites start et end ainsi que le modulo
 		final Double xValue = this.x.getValue();
 		final Double yValue = this.y.getValue();
 		if (xValue != null && yValue != null) {
-			this.add(xValue, yValue);
+			boolean update = true;
+			for (int i = 0; i < this.conditions.length; i++) {
+				if (conditions[i].getValue() != 1) {
+					update = false;
+					break;
+				}
+			}
+			if (update) {
+				this.add(xValue, yValue);
+			}
 		}
 	}
 

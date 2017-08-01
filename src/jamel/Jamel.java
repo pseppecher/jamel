@@ -22,12 +22,12 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import jamel.util.NotYetImplementedException;
+import jamel.util.Parameters;
 import jamel.util.Simulation;
 
 /**
@@ -89,36 +89,39 @@ public class Jamel {
 	/** The user preferences. */
 
 	/** This version of Jamel. */
-	final private static String version = "jamel-20170501";
+	final private static String version = "jamel-20170725";
 
 	/**
 	 * Creates and returns a new simulation.
 	 * 
-	 * @param element
+	 * @param parameters
 	 *            an XML element that contains the description of the new
 	 *            simulation.
 	 * @param file
 	 *            the file of the scenario.
 	 * @return a new simulation.
 	 */
-	private static Simulation newSimulation(final Element element, final File file) {
+	private static Simulation newSimulation(final Parameters parameters, final File file) {
 		if (file == null) {
 			throw new IllegalArgumentException("Path is null");
 		}
 		final Simulation simulation;
-		if (!element.getNodeName().equals("simulation")) {
-			throw new RuntimeException("Bad element: " + element.getNodeName());
+		if (!parameters.getName().equals("simulation")) {
+			throw new RuntimeException("Bad element: \'" + parameters.getName() + "\'");
 		}
-		final Node simulationClassNameNode = element.getElementsByTagName("simulationClassName").item(0);
+		// TODO clean up !
+		// final Node simulationClassNameNode =
+		// parameters.getElementsByTagName("simulationClassName").item(0);
 		/*final String simulationClassName = element.getAttribute("className");
 		if (simulationClassName.isEmpty()) {
 			throw new RuntimeException("Attribute \"className\" is missing or empty.");
-		}*/if (simulationClassNameNode==null) {
+		}*//*if (simulationClassNameNode == null) {
 			throw new RuntimeException("Missing node: \"simulationClassName\".");
-		}
+			}*/
 		try {
-			simulation = (Simulation) Class.forName(simulationClassNameNode.getTextContent().trim(), false, ClassLoader.getSystemClassLoader())
-					.getConstructor(Element.class, File.class).newInstance(element, file);
+			simulation = (Simulation) Class
+					.forName(parameters.getAttribute("simulationClassName"), false, ClassLoader.getSystemClassLoader())
+					.getConstructor(Parameters.class, File.class).newInstance(parameters, file);
 		} catch (Exception e) {
 			throw new RuntimeException("Something went wrong while creating the simulation.", e);
 		}
@@ -233,7 +236,7 @@ public class Jamel {
 				throw new RuntimeException("Something went wrong while creating the XML document.", e);
 			}
 
-			simulate(elem2, new File(fileName));
+			simulate(new Parameters(elem2), new File(fileName));
 
 		}
 
@@ -266,7 +269,7 @@ public class Jamel {
 			final Element root = document.getDocumentElement();
 			if (root.getTagName().equals("simulation")) {
 				// C'est une simulation, on l'exécute directement.
-				simulate(root, file);
+				simulate(new Parameters(root), file);
 			} else if (root.getTagName().equals("multi-simulation")) {
 				// C'est une collection de simulations,
 				// on les exécute les unes après les autres
@@ -287,11 +290,11 @@ public class Jamel {
 	 * Creates and runs a new simulation.
 	 * 
 	 * @param scenario
-	 *            an element that contains the description of the simulation.
+	 *            the parameters of the simulation.
 	 * @param file
 	 *            the file.
 	 */
-	private static void simulate(final Element scenario, final File file) {
+	private static void simulate(final Parameters scenario, final File file) {
 		final Simulation simulation = newSimulation(scenario, file);
 		try {
 			simulation.run();
@@ -351,6 +354,16 @@ public class Jamel {
 	 */
 	public static void notYetImplemented() {
 		throw new NotYetImplementedException();
+	}
+
+	/**
+	 * Throws a new <code>NotYetImplementedException</code>.
+	 * 
+	 * @param message
+	 *            the detail message.
+	 */
+	public static void notYetImplemented(String message) {
+		throw new NotYetImplementedException(message);
 	}
 
 	/**

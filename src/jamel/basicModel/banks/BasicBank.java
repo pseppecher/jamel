@@ -7,8 +7,8 @@ import java.util.function.Consumer;
 
 import jamel.Jamel;
 import jamel.basicModel.households.Shareholder;
+import jamel.data.AgentDataset;
 import jamel.util.Agent;
-import jamel.util.AgentDataset;
 import jamel.util.JamelObject;
 import jamel.util.Sector;
 
@@ -29,11 +29,6 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 		final Consumer<? super Agent> action;
 
 		switch (phaseName) {
-		case "opening":
-			action = (agent) -> {
-				((BasicBank) agent).open();
-			};
-			break;
 		case "payDividends":
 			action = (agent) -> {
 				((BasicBank) agent).payDividends();
@@ -42,11 +37,6 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 		case "debtRecovery":
 			action = (agent) -> {
 				((BasicBank) agent).debtRecovery();
-			};
-			break;
-		case "closure":
-			action = (agent) -> {
-				((BasicBank) agent).close();
 			};
 			break;
 		default:
@@ -71,11 +61,6 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 	 * The id of this bank.
 	 */
 	final private int id;
-
-	/**
-	 * A flag that indicates whether this bank is open or not.
-	 */
-	private boolean open = false;
 
 	/**
 	 * The amount of outstanding deposits.
@@ -143,20 +128,6 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 	}
 
 	/**
-	 * Closes this agent.
-	 */
-	private void close() {
-		if (!this.open) {
-			throw new RuntimeException("Already closed.");
-		}
-		// this.checkConsistency(); // TODO debugging purposes / to be removed
-		this.dataset.put("countAgent", 1);
-		this.dataset.put("assets", this.outstandingLoans.getAmount());
-		this.dataset.put("liabilities", this.outstandindDeposits.getAmount());
-		this.open = false;
-	}
-
-	/**
 	 * Recovers due debts.
 	 */
 	private void debtRecovery() {
@@ -182,25 +153,10 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 	}
 
 	/**
-	 * Opens this agent.
-	 */
-	private void open() {
-		if (this.open) {
-			throw new RuntimeException("Already open.");
-		}
-		if (this.owners.isEmpty()) {
-			initOwners();
-		}
-		this.open = true;
-	}
-
-	/**
 	 * The dividend payment phase.
 	 */
 	private void payDividends() {
-		if (!this.open) {
-			throw new RuntimeException("Closed.");
-		}
+		checkOpen();
 		if (this.owners.isEmpty()) {
 			throw new RuntimeException("No owners.");
 		}
@@ -217,6 +173,31 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 				shareholder.acceptDividendCheque(new BankCheque(this, shareholder, newDividend, this.getPeriod()));
 			}
 		}
+	}
+
+	/**
+	 * Closes this agent.
+	 */
+	@Override
+	public void close() {
+		// this.checkConsistency(); // TODO debugging purposes / to be removed
+		this.dataset.put("countAgent", 1);
+		this.dataset.put("assets", this.outstandingLoans.getAmount());
+		this.dataset.put("liabilities", this.outstandindDeposits.getAmount());
+		this.dataset.close();
+		super.close();
+	}
+
+	/**
+	 * Opens this agent.
+	 */
+	@Override
+	public void open() {
+		if (this.owners.isEmpty()) {
+			initOwners();
+		}
+		this.dataset.open();
+		super.open();
 	}
 
 	/**
@@ -271,8 +252,8 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 	}
 
 	@Override
-	public Double getData(String dataKey, String period) {
-		return this.dataset.getData(dataKey);
+	public Double getData(String dataKey, int period) {
+		return this.dataset.getData(dataKey, period);
 	}
 
 	@Override

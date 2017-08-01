@@ -10,13 +10,18 @@ import java.lang.reflect.Method;
 
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.block.BlockBorder;
+import org.jfree.chart.block.BlockFrame;
 import org.jfree.chart.plot.ValueMarker;
-import org.jfree.chart.util.ParamChecks;
+import org.jfree.chart.title.TextTitle;
+
+import jamel.util.ArgChecks;
+import jamel.util.Parameters;
 
 /**
  * A convenient extension of ChartPanel.
  */
-public class JamelChartPanel extends ChartPanel {
+public class JamelChartPanel extends ChartPanel implements Updatable {
 
 	/** Background color */
 	private static final Color background = JamelColor.getColor("background");
@@ -50,30 +55,61 @@ public class JamelChartPanel extends ChartPanel {
 	 * 
 	 * @param file
 	 *            the output file (<code>null</code> not permitted).
-	 * @param w
-	 *            the chart width.
-	 * @param h
-	 *            the chart height.
+	 * @param params
+	 *            formating parameters.
 	 */
-	public void writeAsPDF(File file, int w, int h) {
-		ParamChecks.nullNotPermitted(file, "file");
+	public void writeAsPDF(File file, Parameters params) {
+		ArgChecks.nullNotPermitted(file, "file");
+		final int w;
+		final int h;
+		if (params != null) {
+			w = Integer.parseInt(params.getAttribute("width"));
+			h = Integer.parseInt(params.getAttribute("height"));
+		} else {
+			w = this.getWidth();
+			h = this.getHeight();
+		}
+
+		// Chart formating
+
+		final TextTitle chartTitle = this.getChart().getTitle();
+		this.getChart().setTitle((String) null);
+		final BlockFrame legendFrame = this.getChart().getLegend().getFrame();
+		this.getChart().getLegend().setFrame(BlockBorder.NONE);
+
 		try {
-			Class<?> pdfDocClass = Class.forName("com.orsonpdf.PDFDocument");
-			Object pdfDoc = pdfDocClass.newInstance();
-			Method m = pdfDocClass.getMethod("createPage", Rectangle2D.class);
-			Rectangle2D rect = new Rectangle(w, h);
-			Object page = m.invoke(pdfDoc, rect);
-			Method m2 = page.getClass().getMethod("getGraphics2D");
-			Graphics2D g2 = (Graphics2D) m2.invoke(page);
+
+			// Export to pdf
+
+			final Class<?> pdfDocClass = Class.forName("com.orsonpdf.PDFDocument");
+			final Object pdfDoc = pdfDocClass.newInstance();
+			final Method m = pdfDocClass.getMethod("createPage", Rectangle2D.class);
+			final Rectangle2D rect = new Rectangle(w, h);
+			final Object page = m.invoke(pdfDoc, rect);
+			final Method m2 = page.getClass().getMethod("getGraphics2D");
+			final Graphics2D g2 = (Graphics2D) m2.invoke(page);
 			g2.setRenderingHint(JFreeChart.KEY_SUPPRESS_SHADOW_GENERATION, true);
-			Rectangle2D drawArea = new Rectangle2D.Double(0, 0, w, h);
+			final Rectangle2D drawArea = new Rectangle2D.Double(0, 0, w, h);
 			this.getChart().draw(g2, drawArea);
-			Method m3 = pdfDocClass.getMethod("writeToFile", File.class);
+			final Method m3 = pdfDocClass.getMethod("writeToFile", File.class);
 			m3.invoke(pdfDoc, file);
+
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException | NoSuchMethodException | SecurityException ex) {
 			throw new RuntimeException(ex);
 		}
+
+		// Chart unformating
+
+		this.getChart().setTitle(chartTitle);
+		this.getChart().getLegend().setFrame(legendFrame);
+
+	}
+	
+	@Override
+	public void update() {
+		this.getChart().setNotify(true);
+		this.getChart().setNotify(false);
 	}
 
 }

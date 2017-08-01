@@ -13,7 +13,7 @@ class BasicGoods implements Goods {
 	/**
 	 * The volume of commodities in this heap.
 	 */
-	private int volume = 0;
+	private long volume = 0;
 
 	/**
 	 * Adds the specified volume of commodities into this heap.
@@ -51,7 +51,7 @@ class BasicGoods implements Goods {
 	}
 
 	@Override
-	public int getVolume() {
+	public long getVolume() {
 		return this.volume;
 	}
 
@@ -72,7 +72,7 @@ class BasicGoods implements Goods {
 	}
 
 	@Override
-	public Goods take(int newVolume) {
+	public Goods take(long newVolume) {
 		if (newVolume > this.volume) {
 			throw new RuntimeException("Not enough goods.");
 		}

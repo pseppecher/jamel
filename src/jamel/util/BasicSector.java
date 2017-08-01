@@ -3,15 +3,13 @@ package jamel.util;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-
+import jamel.Jamel;
 import jamel.data.DataManager;
 import jamel.data.Expression;
 
@@ -45,6 +43,28 @@ public class BasicSector extends JamelObject implements Sector {
 	}
 
 	/**
+	 * Creates and returns a new agent.
+	 * 
+	 * @param sector
+	 *            the sector.
+	 * @param agentClass
+	 *            the agent class.
+	 * 
+	 * @param id
+	 *            the id of the agent to be created.
+	 * @return a new agent.
+	 */
+	private static Agent getNewAgent(final Sector sector, Class<? extends Agent> agentClass, final int id) {
+		final Agent result;
+		try {
+			result = agentClass.getConstructor(Sector.class, int.class).newInstance(sector, id);
+		} catch (Exception e) {
+			throw new RuntimeException("Something went wrong while creating a new agent.", e);
+		}
+		return result;
+	}
+
+	/**
 	 * The class of the agents that populate the sector.
 	 */
 	final private Class<? extends Agent> agentClass;
@@ -60,42 +80,36 @@ public class BasicSector extends JamelObject implements Sector {
 	final private DataManager dataManager;
 
 	/**
-	 * To count the agent creation since the start.
-	 */
-	private int nAgent = 0;
-
-	/**
 	 * The name of the sector.
 	 */
 	final private String name;
 
 	/**
-	 * The specification of the sector.
+	 * The parameters of the sector.
 	 */
-	final private Element specification;
+	final private Parameters params;
 
 	/**
 	 * Creates a new basic sector.
 	 * 
-	 * @param specification
-	 *            an XML element that contains the specification of the sector.
+	 * @param params
+	 *            the parameters of the sector.
 	 * 
 	 * @param simulation
 	 *            the parent simulation.
 	 */
-	public BasicSector(final Element specification, final Simulation simulation) {
+	public BasicSector(final Parameters params, final Simulation simulation) {
 		super(simulation);
-		this.specification = specification;
-		this.name = this.specification.getAttribute("name");
+		this.params = params;
+		this.name = this.params.getAttribute("name");
 
 		// Inits the type of the agents.
 
 		{
-			final NodeList nodeList = this.specification.getElementsByTagName("agentClassName");
-			if (nodeList.getLength() == 0) {
-				throw new RuntimeException("Missing tag : agentClassName");
+			final String agentClassName = this.params.getAttribute("agentClassName");
+			if (agentClassName.isEmpty()) {
+				throw new RuntimeException("Sector \'" + this.name + "\': missing or empty attribute: agentClassName");
 			}
-			final String agentClassName = nodeList.item(0).getTextContent().trim();
 			try {
 				final Class<?> klass = Class.forName(agentClassName);
 				if (!Agent.class.isAssignableFrom(klass)) {
@@ -115,42 +129,36 @@ public class BasicSector extends JamelObject implements Sector {
 		// Looks for the initial number of agents.
 
 		{
-			final NodeList nodeList = this.specification.getElementsByTagName("initialPopulation");
+
+			final String initialPopulationString = this.params.getAttribute("initialPopulation");
 			final int initialPopulation;
-			if (nodeList.getLength() == 0) {
+			if (initialPopulationString.isEmpty()) {
 				initialPopulation = 0;
 			} else {
-				initialPopulation = Integer.parseInt(nodeList.item(0).getTextContent().trim());
+				initialPopulation = Integer.parseInt(initialPopulationString);
 			}
-			this.agents = new ArrayList<>(getNewAgents(initialPopulation));
+
+			this.agents = new ArrayList<>(initialPopulation);
+			for (int i = 0; i < initialPopulation; i++) {
+				this.agents.add(getNewAgent(this, agentClass, i));
+			}
+
 		}
 
 		this.dataManager = new DataManager(this.agents, this);
 	}
 
-	/**
-	 * Creates and returns a collection of new agents.
-	 * 
-	 * @param number
-	 *            the number of agents to be created.
-	 * @return a collection of new agents.
-	 */
-	private Collection<Agent> getNewAgents(final int number) {
-		final Collection<Agent> result = new LinkedList<>();
-		for (int i = 0; i < number; i++) {
-			try {
-				result.add(agentClass.getConstructor(Sector.class, int.class).newInstance(this, this.nAgent));
-				this.nAgent++;
-			} catch (Exception e) {
-				throw new RuntimeException("Something went wrong while creating a new agent.", e);
-			}
+	@Override
+	public void close() {
+		super.close();
+		for (int i = 0; i < this.agents.size(); i++) {
+			this.agents.get(i).close();
 		}
-		return result;
 	}
 
 	@Override
-	public void doEvent(Element event) {
-		throw new RuntimeException("Not yet implemented: " + event.getTagName());
+	public void doEvent(Parameters event) {
+		Jamel.notYetImplemented("Not yet implemented: " + event.getName());
 	}
 
 	@Override
@@ -164,7 +172,11 @@ public class BasicSector extends JamelObject implements Sector {
 	}
 
 	@Override
-	public Phase getPhase(final String phaseName, final boolean shuffle) {
+	public Phase getPhase(final String phaseName, final String[] options) {
+
+		final Set<String> set = new HashSet<>();
+		Collections.addAll(set, options);
+
 		if (phaseName == null) {
 			throw new RuntimeException("Phase name is null");
 		}
@@ -185,7 +197,7 @@ public class BasicSector extends JamelObject implements Sector {
 			@Override
 			public void run() {
 
-				if (shuffle) {
+				if (set.contains("shuffle")) {
 					Collections.shuffle(BasicSector.this.agents, BasicSector.this.getRandom());
 				}
 
@@ -197,6 +209,14 @@ public class BasicSector extends JamelObject implements Sector {
 
 		return result;
 
+	}
+
+	@Override
+	public void open() {
+		super.open();
+		for (int i = 0; i < this.agents.size(); i++) {
+			this.agents.get(i).open();
+		}
 	}
 
 	@Override
@@ -212,6 +232,11 @@ public class BasicSector extends JamelObject implements Sector {
 			}
 		}
 		return result;
+	}
+
+	@Override
+	public Parameters getParameters() {
+		return this.params.get("parameters");
 	}
 
 }

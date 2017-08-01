@@ -9,10 +9,11 @@ import jamel.basicModel.banks.Cheque;
 import jamel.basicModel.firms.Goods;
 import jamel.basicModel.firms.Supplier;
 import jamel.basicModel.firms.Supply;
+import jamel.data.AgentDataset;
 import jamel.util.Agent;
-import jamel.util.AgentDataset;
 import jamel.util.JamelObject;
 import jamel.util.NotUsedException;
+import jamel.util.Parameters;
 import jamel.util.Sector;
 
 /**
@@ -32,19 +33,9 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 		final Consumer<? super Agent> action;
 
 		switch (phaseName) {
-		case "opening":
-			action = (agent) -> {
-				((BasicShareholder) agent).open();
-			};
-			break;
 		case "consumption":
 			action = (agent) -> {
 				((BasicShareholder) agent).consumption();
-			};
-			break;
-		case "closure":
-			action = (agent) -> {
-				((BasicShareholder) agent).close();
 			};
 			break;
 		default:
@@ -76,9 +67,14 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 	final private int id;
 
 	/**
-	 * A flag that indicates whether this shareholder is open or not.
+	 * The saving propensity.
 	 */
-	private boolean open;
+	private final double param_savingPropensity;
+
+	/**
+	 * The number of suppliers to be selected in the consumption phase.
+	 */
+	private final int param_supplySearch;
 
 	/**
 	 * The parent sector.
@@ -102,40 +98,34 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 		super(sector.getSimulation());
 		this.sector = sector;
 		this.id = id;
-		this.account = ((Bank) this.getSimulation().getSector("Banks").select(1)[0]).openAccount(this);
-		this.supplierSector = this.getSimulation().getSector("Firms");
-		// TODO "Firms" sould be a parameter
-		if (this.supplierSector == null) {
-			throw new RuntimeException("Supplier sector is missing.");
-		}
-		this.dataset = new AgentDataset(this);
-	}
 
-	/**
-	 * Closes the shareholder at the end of the period.
-	 */
-	private void close() {
-		if (!this.open) {
-			throw new RuntimeException("Already closed.");
+		final Parameters params = this.sector.getParameters();
+		if (params == null) {
+			throw new RuntimeException("Parameters are null.");
 		}
-		this.dataset.put("countAgent", 1);
-		this.dataset.put("money", this.account.getAmount());
-		this.open = false;
+
+		final String bankSectorName = params.getAttribute("bankSector");
+		this.account = ((Bank) this.getSimulation().getSector(bankSectorName).select(1)[0]).openAccount(this);
+
+		final Parameters goodMarketParams = params.get("goodMarket");
+		this.supplierSector = this.getSimulation().getSector(goodMarketParams.getAttribute("suppliers"));
+		this.param_savingPropensity = goodMarketParams.getDoubleAttribute("savingPropensity");
+		this.param_supplySearch = goodMarketParams.getIntAttribute("search");
+
+		this.dataset = new AgentDataset(this);
 	}
 
 	/**
 	 * The consumption phase.
 	 */
 	private void consumption() {
-		if (!this.open) {
-			throw new RuntimeException("Closed.");
-		}
 		long consumptionVolume = 0;
 		long consumptionValue = 0;
+		//long budget = (long) (this.account.getAmount() * (1.-this.param_savingPropensity));
 		long budget = this.account.getAmount();
 		this.dataset.put("consumptionBudget", budget);
 		if (budget > 0) {
-			final Agent[] selection = this.supplierSector.select(10);
+			final Agent[] selection = this.supplierSector.select(param_supplySearch);
 			while (budget > 0) {
 				Agent supplier = null;
 				for (int i = 0; i < selection.length; i++) {
@@ -159,7 +149,7 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 
 				final Supply supply = ((Supplier) supplier).getSupply();
 				final long spending;
-				final int consumVol;
+				final long consumVol;
 				if (supply.getTotalValue() <= budget) {
 					consumVol = supply.getVolume();
 					spending = (long) (consumVol * supply.getPrice());
@@ -187,22 +177,22 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 		// TODO updater les chiffres de la consommation et de l'épargne.
 	}
 
-	/**
-	 * Opens the shareholder at the beginning of the period.
-	 */
-	private void open() {
-		if (this.open) {
-			throw new RuntimeException("Already open.");
-		}
-		this.open = true;
-		this.dividends.cancel();
-	}
-
 	@Override
 	public void acceptDividendCheque(Cheque cheque) {
 		this.account.deposit(cheque);
 		// TODO comptabiliser ce dépôt pour calculer le revenu de l'agent.
 		// a des fins statistiques mais aussi comportementales.
+	}
+
+	/**
+	 * Closes the shareholder at the end of the period.
+	 */
+	@Override
+	public void close() {
+		this.dataset.put("countAgent", 1);
+		this.dataset.put("money", this.account.getAmount());
+		this.dataset.close();
+		super.close();
 	}
 
 	@Override
@@ -216,8 +206,8 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 	}
 
 	@Override
-	public Double getData(String dataKey, String period) {
-		return this.dataset.getData(dataKey);
+	public Double getData(String dataKey, int period) {
+		return this.dataset.getData(dataKey, period);
 	}
 
 	@Override
@@ -243,6 +233,16 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 	@Override
 	public boolean isSolvent() {
 		throw new NotUsedException();
+	}
+
+	/**
+	 * Opens the shareholder at the beginning of the period.
+	 */
+	@Override
+	public void open() {
+		this.dividends.cancel();
+		this.dataset.open();
+		super.open();
 	}
 
 }

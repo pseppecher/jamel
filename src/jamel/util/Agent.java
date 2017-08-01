@@ -6,15 +6,21 @@ package jamel.util;
 public interface Agent {
 
 	/**
+	 * Closes this agent.
+	 * Must be called at the end of the period.
+	 */
+	void close();
+
+	/**
 	 * Returns the specified data.
 	 * 
 	 * @param dataKey
 	 *            the key of the data to be returned.
-	 * @param period
+	 * @param t
 	 *            the period of the data to be returned.
 	 * @return the specified data.
 	 */
-	Double getData(String dataKey, String period);
+	Double getData(String dataKey, int t);
 
 	/**
 	 * Returns the name of the agent.
@@ -36,5 +42,11 @@ public interface Agent {
 	 * @return the parent simulation.
 	 */
 	Simulation getSimulation();
+
+	/**
+	 * Opens this agent.
+	 * Must be called at the beginning of the period.
+	 */
+	void open();
 
 }

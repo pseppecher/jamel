@@ -3,10 +3,9 @@ package jamel.data;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.w3c.dom.Element;
-
 import jamel.Jamel;
 import jamel.util.JamelObject;
+import jamel.util.Parameters;
 import jamel.util.Simulation;
 
 /**
@@ -22,14 +21,14 @@ public class Export extends JamelObject {
 	/**
 	 * Creates a new Export object.
 	 * 
-	 * @param elem
+	 * @param param
 	 *            the description of the data to be observed.
 	 * @param simulation
 	 *            the parent simulation.
 	 */
-	public Export(final Element elem, final Simulation simulation) {
+	public Export(final Parameters param, final Simulation simulation) {
 		super(simulation);
-		final String[] keys = elem.getTextContent().split(";");
+		final String[] keys = param.splitTextContent(";");
 		for (final String key : keys) {
 			if (!key.trim().isEmpty()) {
 				this.expressions.add(this.getSimulation().getExpression(key.trim()));

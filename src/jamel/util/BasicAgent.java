@@ -2,6 +2,8 @@ package jamel.util;
 
 import java.util.function.Consumer;
 
+import jamel.data.AgentDataset;
+
 /**
  * A basic agent.
  */
@@ -20,6 +22,11 @@ public class BasicAgent extends JamelObject implements Agent {
 		case "opening":
 			action = (agent) -> {
 				((BasicAgent) agent).open();
+			};
+			break;
+		case "doesSomething":
+			action = (agent) -> {
+				((BasicAgent) agent).doesSomething();
 			};
 			break;
 		case "closure":
@@ -64,27 +71,28 @@ public class BasicAgent extends JamelObject implements Agent {
 	}
 
 	/**
-	 * Closes this agent.
+	 * Does something.
 	 */
-	private void close() {
+	private void doesSomething() {
 		// C'est ici qu'on met à jour les données de la période.
-		this.dataset.put("countAgent", 1);
-		this.dataset.put("alea", this.getRandom().nextGaussian());
-		// Jamel.println(this.sector.getName(), this.getName() + " is now
-		// closed");
+		this.dataset.put("count", 1);
+		for(int i=0;i<10;i++) {
+			this.dataset.put("alea"+i, this.getRandom().nextGaussian());
+		}
 	}
 
 	/**
-	 * Opens this agent.
+	 * Closes this agent.
 	 */
-	private void open() {
-		// Jamel.println(this.sector.getName(), this.getName() + " is now
-		// open");
+	@Override
+	public void close() {
+		super.close();
+		this.dataset.close();
 	}
 
 	@Override
-	public Double getData(String dataKey, String period) {
-		return this.dataset.getData(dataKey);
+	public Double getData(String dataKey, int period) {
+		return this.dataset.getData(dataKey,period);
 	}
 
 	@Override
@@ -95,6 +103,15 @@ public class BasicAgent extends JamelObject implements Agent {
 	@Override
 	public Sector getSector() {
 		return this.sector;
+	}
+
+	/**
+	 * Opens this agent.
+	 */
+	@Override
+	public void open() {
+		super.open();
+		this.dataset.open();
 	}
 
 }

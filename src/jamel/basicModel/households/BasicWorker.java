@@ -13,10 +13,11 @@ import jamel.basicModel.firms.JobOffer;
 import jamel.basicModel.firms.LaborContract;
 import jamel.basicModel.firms.Supplier;
 import jamel.basicModel.firms.Supply;
+import jamel.data.AgentDataset;
 import jamel.util.Agent;
-import jamel.util.AgentDataset;
 import jamel.util.JamelObject;
 import jamel.util.NotUsedException;
+import jamel.util.Parameters;
 import jamel.util.Sector;
 
 /**
@@ -35,26 +36,17 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 	private static final int UNEMPLOYED = 0;
 
 	/**
-	 * The wage flexibility parameter.
-	 */
-	private static final int wageFlexParam = 0;
-
-	/**
-	 * THe wage resistance parameter.
-	 */
-	private static final int wageResistanceParam = 0;
-
-	/**
 	 * Selects the best offer among the selection.
 	 * 
 	 * @param employerSector
 	 *            the employer sector.
+	 * @param n
+	 *            the number of offers to be selected.
 	 * @return the best offer, or <code>null</code> if a valid offer could not
 	 *         be found.
 	 */
-	private static JobOffer selectJobOffer(Sector employerSector) {
-		final Agent[] employers = employerSector.select(10);
-		// TODO 10 should be an argument of this method
+	private static JobOffer selectJobOffer(Sector employerSector, int n) {
+		final Agent[] employers = employerSector.select(n);
 		JobOffer result = null;
 		// On retient la meilleur des offres.
 		for (int i = 0; i < employers.length; i++) {
@@ -82,11 +74,6 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 		final Consumer<? super Agent> action;
 
 		switch (phaseName) {
-		case "opening":
-			action = (agent) -> {
-				((BasicWorker) agent).open();
-			};
-			break;
 		case "jobSearch":
 			action = (agent) -> {
 				((BasicWorker) agent).jobSearch();
@@ -95,11 +82,6 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 		case "consumption":
 			action = (agent) -> {
 				((BasicWorker) agent).consumption();
-			};
-			break;
-		case "closure":
-			action = (agent) -> {
-				((BasicWorker) agent).close();
 			};
 			break;
 		default:
@@ -141,9 +123,29 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 	private LaborContract jobContract = null;
 
 	/**
-	 * A flag that indicates whether this worker is open or not.
+	 * The wage flexibility parameter.
 	 */
-	private boolean open;
+	private final double param_flexibility;
+
+	/**
+	 * The number of employers to be selected in the job search phase.
+	 */
+	private final int param_jobSearch;
+
+	/**
+	 * The wage resistance parameter.
+	 */
+	private final int param_resistance;
+
+	/**
+	 * The saving propensity.
+	 */
+	private final double param_savingPropensity;
+
+	/**
+	 * The number of suppliers to be selected in the consumption phase.
+	 */
+	private final int param_supplySearch;
 
 	/**
 	 * The reservation wage of this worker.
@@ -176,9 +178,9 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 	private final Amount wage = new Amount();
 
 	/**
-	 * THe flexibility of the wage.
+	 * The flexibility of the wage.
 	 */
-	private float wageFlex;
+	private double wageFlex;
 
 	/**
 	 * Creates a new worker.
@@ -192,60 +194,41 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 		super(sector.getSimulation());
 		this.sector = sector;
 		this.id = id;
-		this.account = ((Bank) this.getSimulation().getSector("Banks").select(1)[0]).openAccount(this);
-		this.employerSector = this.getSimulation().getSector("Firms");
-		// TODO "Firms" sould be a parameter
-		if (this.employerSector == null) {
-			throw new RuntimeException("Employer sector is missing.");
-		}
-		this.supplierSector = this.getSimulation().getSector("Firms");
-		// TODO "Firms" sould be a parameter
-		if (this.supplierSector == null) {
-			throw new RuntimeException("Supplier sector is missing.");
-		}
-		this.dataset = new AgentDataset(this);
-	}
 
-	/**
-	 * Closes the worker at the end of the period.
-	 */
-	private void close() {
-		if (!this.open) {
-			throw new RuntimeException("Already closed.");
+		final Parameters params = this.sector.getParameters();
+		if (params == null) {
+			throw new RuntimeException("Parameters are null.");
 		}
-		if (this.exhausted && (this.wage.isEmpty() || this.jobContract == null
-				|| this.jobContract.getWage() != this.wage.getAmount())) {
-			Jamel.println();
-			Jamel.println("this.wage.isEmpty()", this.wage.isEmpty());
-			Jamel.println("this.jobContract", this.jobContract);
-			Jamel.println("this.jobContract.getWage()", this.jobContract.getWage());
-			Jamel.println("this.wage.getAmount()", this.wage.getAmount());
-			Jamel.println();
-			throw new RuntimeException("This worker is exhausted but there is a problem with its labor contract.");
-		}
-		this.dataset.put("countAgent", 1);
-		if (this.exhausted) {
-			this.dataset.put("employed", 1);
-		} else {
-			this.dataset.put("employed", 0);
-		}
-		this.dataset.put("money", this.account.getAmount());
-		this.open = false;
+
+		final String bankSectorName = params.getAttribute("bankSector");
+		this.account = ((Bank) this.getSimulation().getSector(bankSectorName).select(1)[0]).openAccount(this);
+
+		final Parameters laborMarketParams = params.get("laborMarket");
+		final String employerSectorName = laborMarketParams.getAttribute("employers");
+		this.employerSector = this.getSimulation().getSector(employerSectorName);
+		this.param_jobSearch = laborMarketParams.getIntAttribute("search");
+		this.param_flexibility = laborMarketParams.getDoubleAttribute("flexibility");
+		this.param_resistance = laborMarketParams.getIntAttribute("resistance");
+
+		final Parameters goodMarketParams = params.get("goodMarket");
+		final String supplierSectorName = goodMarketParams.getAttribute("suppliers");
+		this.supplierSector = this.getSimulation().getSector(supplierSectorName);
+		this.param_savingPropensity = Double.parseDouble(goodMarketParams.getAttribute("savingPropensity"));
+		this.param_supplySearch = Integer.parseInt(goodMarketParams.getAttribute("search"));
+
+		this.dataset = new AgentDataset(this);
 	}
 
 	/**
 	 * The consumption phase.
 	 */
 	private void consumption() {
-		if (!this.open) {
-			throw new RuntimeException("Closed.");
-		}
 		long consumptionVolume = 0;
 		long consumptionValue = 0;
-		long budget = this.account.getAmount();
+		long budget = (long) (this.account.getAmount() * (1.-this.param_savingPropensity));
 		this.dataset.put("consumptionBudget", budget);
 		if (budget > 0) {
-			final Agent[] selection = this.supplierSector.select(10);
+			final Agent[] selection = this.supplierSector.select(param_supplySearch);
 			while (budget > 0) {
 				Agent supplier = null;
 				for (int i = 0; i < selection.length; i++) {
@@ -269,7 +252,7 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 
 				final Supply supply = ((Supplier) supplier).getSupply();
 				final long spending;
-				final int consumVol;
+				final long consumVol;
 				if (supply.getTotalValue() <= budget) {
 					consumVol = supply.getVolume();
 					spending = (long) (consumVol * supply.getPrice());
@@ -298,7 +281,7 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 	}
 
 	/**
-	 * Search for job opportunities.
+	 * The job search phase.
 	 */
 	private void jobSearch() {
 
@@ -315,12 +298,11 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 		case UNEMPLOYED:
 			this.unempDuration++;
 
-			if (this.reservationWage > 0 && this.unempDuration > wageResistanceParam) {
+			if (this.reservationWage > 0 && this.unempDuration > param_resistance) {
 				this.reservationWage -= this.wageFlex * getRandom().nextFloat();
 			}
-			final JobOffer jobOffer = selectJobOffer(this.employerSector);
+			final JobOffer jobOffer = selectJobOffer(this.employerSector, this.param_jobSearch);
 			if (jobOffer != null && jobOffer.getWage() >= this.reservationWage) {
-				// Jamel.println(this.getName(), " I've got a job!");
 				this.jobContract = jobOffer.apply(this);
 				this.status = EMPLOYED;
 				this.unempDuration = 0;
@@ -330,24 +312,12 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 		case EMPLOYED:
 			this.unempDuration = 0;
 			this.reservationWage = this.jobContract.getWage();
-			this.wageFlex = wageFlexParam * this.jobContract.getWage();
+			this.wageFlex = param_flexibility * this.jobContract.getWage();
 			break;
 
 		default:
 			throw new RuntimeException("Unexpected status: " + this.status);
 		}
-	}
-
-	/**
-	 * Opens the worker at the beginning of the period.
-	 */
-	private void open() {
-		if (this.open) {
-			throw new RuntimeException("Already open.");
-		}
-		this.open = true;
-		this.exhausted = false;
-		this.wage.cancel();
 	}
 
 	@Override
@@ -364,6 +334,32 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 		// le travailleur vérifie s'il a été payé en fin de période.
 	}
 
+	/**
+	 * Closes the worker at the end of the period.
+	 */
+	@Override
+	public void close() {
+		if (this.exhausted && (this.wage.isEmpty() || this.jobContract == null
+				|| this.jobContract.getWage() != this.wage.getAmount())) {
+			Jamel.println();
+			Jamel.println("this.wage.isEmpty()", this.wage.isEmpty());
+			Jamel.println("this.jobContract", this.jobContract);
+			Jamel.println("this.jobContract.getWage()", this.jobContract.getWage());
+			Jamel.println("this.wage.getAmount()", this.wage.getAmount());
+			Jamel.println();
+			throw new RuntimeException("This worker is exhausted but there is a problem with its labor contract.");
+		}
+		this.dataset.put("countAgent", 1);
+		if (this.exhausted) {
+			this.dataset.put("employed", 1);
+		} else {
+			this.dataset.put("employed", 0);
+		}
+		this.dataset.put("money", this.account.getAmount());
+		this.dataset.close();
+		super.close();
+	}
+
 	@Override
 	public Long getAssetTotalValue() {
 		throw new NotUsedException();
@@ -375,8 +371,8 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 	}
 
 	@Override
-	public Double getData(String dataKey, String period) {
-		return this.dataset.getData(dataKey);
+	public Double getData(String dataKey, int period) {
+		return this.dataset.getData(dataKey, period);
 	}
 
 	@Override
@@ -402,6 +398,17 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 	@Override
 	public boolean isSolvent() {
 		throw new NotUsedException();
+	}
+
+	/**
+	 * Opens the worker at the beginning of the period.
+	 */
+	@Override
+	public void open() {
+		this.exhausted = false;
+		this.wage.cancel();
+		this.dataset.open();
+		super.open();
 	}
 
 	@Override

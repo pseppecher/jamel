@@ -1,6 +1,7 @@
 package jamel.data;
 
 import java.security.InvalidParameterException;
+import java.util.ArrayList;
 import java.util.regex.Pattern;
 
 import jamel.util.JamelObject;
@@ -20,10 +21,7 @@ public class ExpressionFactory extends JamelObject {
 	 */
 	private static String cleanUp(final String query) {
 		final String result;
-		/*if (query.contains(" ")) {
-			final String str2 = query.replace(" ", "");
-			result = cleanUp(str2);
-		} else*/ if (query.startsWith("+")) {
+		if (query.startsWith("+")) {
 			final String str2 = query.substring(1, query.length());
 			result = cleanUp(str2);
 		} else if (query.charAt(0) == '(' && query.charAt(query.length() - 1) == ')') {
@@ -126,6 +124,41 @@ public class ExpressionFactory extends JamelObject {
 	}
 
 	/**
+	 * Returns the modulo.
+	 * 
+	 * @param arg1
+	 *            the dividend.
+	 * @param arg2
+	 *            the divisor.
+	 * @return the specified modulo operation.
+	 */
+	private static Expression getModulo(final Expression arg1, final Expression arg2) {
+		if (arg1 == null || arg2 == null) {
+			throw new InvalidParameterException("Null");
+		}
+		final Expression result = new Expression() {
+
+			@Override
+			public Double getValue() {
+				final Double value;
+				if (arg1.getValue() == null || arg2.getValue() == null || arg2.getValue() == 0) {
+					value = null;
+				} else {
+					value = arg1.getValue() % arg2.getValue();
+				}
+				return value;
+			}
+
+			@Override
+			public String toString() {
+				return arg1.toString() + " % " + arg2.toString();
+			}
+
+		};
+		return result;
+	}
+
+	/**
 	 * Returns the specified multiplication.
 	 * 
 	 * @param arg1
@@ -168,6 +201,7 @@ public class ExpressionFactory extends JamelObject {
 	 * @return an expression that represents the specified numeric constant.
 	 */
 	private static Expression getNumeric(final double d) {
+
 		final Expression result = new Expression() {
 
 			@Override
@@ -249,6 +283,46 @@ public class ExpressionFactory extends JamelObject {
 	}
 
 	/**
+	 * Compares the value of the first expression against the value of the
+	 * second expression. The result is 1 if and only if the arguments are not
+	 * null and the double values are the same.
+	 * 
+	 * @param arg1
+	 *            the first expression
+	 * @param arg2
+	 *            the second expression
+	 * @return <code>1</code> if the values of the expressions are the same;
+	 *         <code>0</code> otherwise.
+	 */
+	private static Expression getTestEqual(Expression arg1, Expression arg2) {
+		if (arg1 == null || arg2 == null) {
+			throw new InvalidParameterException("Null");
+		}
+		final Expression result = new Expression() {
+
+			@Override
+			public Double getValue() {
+				final Double value;
+				if (arg1.getValue() == null || arg2.getValue() == null) {
+					value = null;
+				} else if (arg1.getValue().equals(arg2.getValue())) {
+					value = 1.;
+				} else {
+					value = 0.;
+				}
+				return value;
+			}
+
+			@Override
+			public String toString() {
+				return "isEqual(" + arg1.toString() + ", " + arg2.toString() + ")";
+			}
+
+		};
+		return result;
+	}
+
+	/**
 	 * Returns <code>true</code> if parentheses in the specified query are
 	 * balanced, <code>false</code> otherwise.
 	 * 
@@ -271,6 +345,85 @@ public class ExpressionFactory extends JamelObject {
 			}
 		}
 		return count == 0;
+	}
+
+	/**
+	 * Splits this string in two substrings around the first comma.
+	 * Commas within parentheses are ignored.
+	 *
+	 * @param input
+	 *            the string to be split.
+	 * @return the array of strings computed by splitting the given string
+	 */
+	private static String[] split2(final String input) {
+		final String[] result;
+		Integer position = null;
+		int count = 0;
+		for (int i = 0; i < input.length(); i++) {
+			final char c = input.charAt(i);
+			if (c == '(') {
+				count++;
+			} else if (c == ')') {
+				count--;
+				if (count < 0) {
+					throw new RuntimeException("Parentheses not balanced: " + input);
+				}
+			} else if (count == 0) {
+				// We are outside parentheses.
+				// Is this char an comma ?
+				if (c == ',') {
+					position = i;
+					break;
+				}
+			}
+		}
+		if (count != 0) {
+			throw new RuntimeException("Parentheses not balanced: " + input);
+		}
+		if (position != null) {
+			result = new String[2];
+			result[0] = input.substring(0, position);
+			result[1] = input.substring(position + 1);
+		} else {
+			result = new String[1];
+			result[0] = input;
+		}
+		return result;
+	}
+
+	/**
+	 * For debugging purposes.
+	 * 
+	 * @param args
+	 *            not used.
+	 */
+	public static void main(String[] args) {
+		/*final String[] split = split("a,truc(a,b,c),b");
+		for (int i = 0; i < split.length; i++) {
+			Jamel.println("[" + split[i] + "]");
+		}*/
+	}
+
+	/**
+	 * Splits the given input String around commas.
+	 * Commas within parenthesis are ignored.
+	 *
+	 * @param input
+	 *            the string to be split
+	 * @return the array of strings computed by splitting the given string
+	 */
+	public static String[] split(final String input) {
+		final ArrayList<String> list = new ArrayList<>();
+		String string = input;
+		while (true) {
+			final String[] output = split2(string);
+			list.add(output[0]);
+			if (output.length == 1) {
+				break;
+			}
+			string = output[1];
+		}
+		return list.toArray(new String[list.size()]);
 	}
 
 	/**
@@ -303,7 +456,7 @@ public class ExpressionFactory extends JamelObject {
 			// clairement l'utilisateur de l'endroit où il s'est planté.
 		}
 
-		final String cleaned = cleanUp(query.replaceAll("(\\p{javaSpaceChar}|\\r|\\n)", ""));
+		final String cleaned = cleanUp(query.replaceAll("(\\p{javaSpaceChar}|\\r|\\n|\\t)", ""));
 
 		Character operator = null;
 		Integer position = null;
@@ -335,7 +488,7 @@ public class ExpressionFactory extends JamelObject {
 						position = i;
 						break;
 					}
-				} else if (c == '*' || c == '/') {
+				} else if (c == '*' || c == '/' || c == '%') {
 					operator = c;
 					position = i;
 				}
@@ -362,6 +515,9 @@ public class ExpressionFactory extends JamelObject {
 			case '/':
 				result = getDivision(arg1, arg2);
 				break;
+			case '%':
+				result = getModulo(arg1, arg2);
+				break;
 			default:
 				throw new RuntimeException("Unexpected operator: " + operator);
 			}
@@ -371,6 +527,13 @@ public class ExpressionFactory extends JamelObject {
 				result = getOpposite(getExpression(cleaned.substring(1)));
 			} else if (Pattern.matches("\\d.*", cleaned)) {
 				result = getNumeric(Double.parseDouble(cleaned));
+			} else if (Pattern.matches("isEqual[\\(].*[\\)]", cleaned)) {
+				final String argString = cleaned.substring(8, cleaned.length() - 1);
+				final String[] args = split(argString);
+				if (args.length != 2) {
+					throw new RuntimeException("Bad number of parameters: " + cleaned);
+				}
+				result = getTestEqual(getExpression(args[0]), getExpression(args[1]));
 			} else {
 				result = this.getSimulation().getDataAccess(cleaned);
 			}

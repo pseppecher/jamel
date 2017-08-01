@@ -30,7 +30,7 @@ public interface Goods {
 	 * 
 	 * @return the volume of commodities in this heap.
 	 */
-	int getVolume();
+	long getVolume();
 
 	/**
 	 * Returns <code>true</code> if this heap of commodities is empty.
@@ -54,6 +54,6 @@ public interface Goods {
 	 *            the volume of goods to be returned.
 	 * @return the specified volume of goods.
 	 */
-	Goods take(int volume);
+	Goods take(long volume);
 
 }

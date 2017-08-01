@@ -3,7 +3,7 @@ package jamel.basicModel.firms;
 import java.util.List;
 
 import jamel.Jamel;
-import jamel.util.AgentDataset;
+import jamel.data.AgentDataset;
 import jamel.util.BasicTimer;
 import jamel.util.JamelObject;
 import jamel.util.Timer;
@@ -82,7 +82,7 @@ class BasicFactory extends JamelObject implements Factory {
 	}
 
 	@Override
-	public double getCapacity() {
+	public int getCapacity() {
 		return this.capacity;
 	}
 

@@ -1,13 +1,12 @@
 package jamel.basicModel.firms;
 
 import jamel.basicModel.households.Worker;
-import jamel.util.JamelObject;
 import jamel.util.Simulation;
 
 /**
  * A basic labor contract.
  */
-class BasicLaborContract extends JamelObject implements LaborContract {
+class BasicLaborContract implements LaborContract {
 
 	/**
 	 * The employee.
@@ -23,6 +22,11 @@ class BasicLaborContract extends JamelObject implements LaborContract {
 	 * The end of this contract.
 	 */
 	private int end;
+
+	/**
+	 * The simulation.
+	 */
+	private Simulation simulation;
 
 	/**
 	 * The wage paid to the employee.
@@ -44,10 +48,10 @@ class BasicLaborContract extends JamelObject implements LaborContract {
 	 *            the duration.
 	 */
 	BasicLaborContract(Simulation simulation, Employer employer, Worker employee, long wage, int duration) {
-		super(simulation);
+		this.simulation = simulation;
 		this.employee = employee;
 		this.wage = wage;
-		this.end = this.getPeriod() + duration;
+		this.end = this.simulation.getPeriod() + duration;
 		this.employer = employer;
 	}
 
@@ -58,7 +62,7 @@ class BasicLaborContract extends JamelObject implements LaborContract {
 		if (!isValid()) {
 			throw new RuntimeException("Invalid contract");
 		}
-		this.end = this.getPeriod();
+		this.end = this.simulation.getPeriod();
 	}
 
 	@Override
@@ -78,7 +82,7 @@ class BasicLaborContract extends JamelObject implements LaborContract {
 
 	@Override
 	public boolean isValid() {
-		return (this.getPeriod() >= this.end);
+		return (this.simulation.getPeriod() >= this.end);
 	}
 
 }

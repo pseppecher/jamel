@@ -10,8 +10,8 @@ import jamel.basicModel.banks.Bank;
 import jamel.basicModel.banks.Cheque;
 import jamel.basicModel.households.Shareholder;
 import jamel.basicModel.households.Worker;
+import jamel.data.AgentDataset;
 import jamel.util.Agent;
-import jamel.util.AgentDataset;
 import jamel.util.JamelObject;
 import jamel.util.NotUsedException;
 import jamel.util.Sector;
@@ -43,11 +43,6 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 		final Consumer<? super Agent> action;
 
 		switch (phaseName) {
-		case "opening":
-			action = (agent) -> {
-				((BasicFirm) agent).open();
-			};
-			break;
 		case "planProduction":
 			action = (agent) -> {
 				((BasicFirm) agent).planProduction();
@@ -66,11 +61,6 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 		case "payDividends":
 			action = (agent) -> {
 				((BasicFirm) agent).payDividends();
-			};
-			break;
-		case "closure":
-			action = (agent) -> {
-				((BasicFirm) agent).close();
 			};
 			break;
 		default:
@@ -107,9 +97,9 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	private final BasicJobOffer jobOffer;
 
 	/**
-	 * A flag that indicates whether this firm is open or not.
+	 * The markup.
 	 */
-	private boolean open = false;
+	private double markup = 1.2;// TODO the iniital markup should be a parameter
 
 	/**
 	 * The owners of the firm.
@@ -132,7 +122,7 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	private final BasicSupply supply;
 
 	/**
-	 * The wage. Exogenously fixed.
+	 * The wage. Exogenously fixed. TODO should be a parameter.
 	 */
 	private final long wage = 700;
 
@@ -157,24 +147,6 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	}
 
 	/**
-	 * Closes the firm at the end of the period.
-	 */
-	private void close() {
-		if (!this.open) {
-			throw new RuntimeException("Already closed.");
-		}
-		this.supply.updateData();
-		this.dataset.put("countAgent", 1);
-		this.dataset.put("inventoriesVolume", this.factory.getInventories().getVolume());
-		this.dataset.put("inventoriesValue", this.factory.getInventories().getValue());
-		this.dataset.put("money", this.account.getAmount());
-		this.dataset.put("assets", this.account.getAmount() + this.factory.getValue());
-		this.dataset.put("tangibleAssets", this.factory.getValue());
-		this.dataset.put("liabilities", this.account.getDebt());
-		this.open = false;
-	}
-
-	/**
 	 * Initializes the owners of this firm.
 	 */
 	private void initOwners() {
@@ -187,27 +159,9 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	}
 
 	/**
-	 * Opens the firm at the beginning of the period.
-	 */
-	private void open() {
-		if (this.open) {
-			throw new RuntimeException("Already open.");
-		}
-		if (this.owners.isEmpty()) {
-			initOwners();
-		}
-		this.open = true;
-		this.jobOffer.reset();
-		this.supply.reset();
-	}
-
-	/**
 	 * The dividend payment phase.
 	 */
 	private void payDividends() {
-		if (!this.open) {
-			throw new RuntimeException("Closed.");
-		}
 		if (this.owners.isEmpty()) {
 			throw new RuntimeException("No owners.");
 		}
@@ -232,9 +186,6 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	 * The wage payment phase.
 	 */
 	private void payWages() {
-		if (!this.open) {
-			throw new RuntimeException("Closed.");
-		}
 
 		/*
 		 * Première passe : on calcule le wagebill.
@@ -267,9 +218,6 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	 * Phase of production planing. Decides how much to produce.
 	 */
 	private void planProduction() {
-		if (!this.open) {
-			throw new RuntimeException("Closed.");
-		}
 
 		// On commence par faire le ménage dans la liste des contrats de
 		// travail, en retirant les contrats échus.
@@ -299,12 +247,8 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	 * The production phase.
 	 */
 	private void production() {
-		if (!this.open) {
-			throw new RuntimeException("Closed.");
-		}
 		this.factory.production(this.payroll);
 		if (this.factory.getInventories().getVolume() > 0) {
-			final double markup = 1.2;// TODO markup should be a parameter
 			this.supply.update(this.factory.getInventories().getVolume(),
 					markup * this.factory.getInventories().getValue() / this.factory.getInventories().getVolume());
 			this.dataset.put("supplyVolume", this.factory.getInventories().getVolume());
@@ -355,8 +299,28 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	 *            the volume of goods to be returned.
 	 * @return the specified volume of goods.
 	 */
-	Goods supply(int volume) {
+	Goods supply(long volume) {
 		return this.factory.getInventories().take(volume);
+	}
+
+	/**
+	 * Closes the firm at the end of the period.
+	 */
+	@Override
+	public void close() {
+		this.supply.updateData();
+		this.dataset.put("count", 1);
+		this.dataset.put("inventoriesVolume", this.factory.getInventories().getVolume());
+		this.dataset.put("inventoriesValue", this.factory.getInventories().getValue());
+		this.dataset.put("money", this.account.getAmount());
+		this.dataset.put("assets", this.account.getAmount() + this.factory.getValue());
+		this.dataset.put("tangibleAssets", this.factory.getValue());
+		this.dataset.put("liabilities", this.account.getDebt());
+		this.dataset.put("markup", this.markup);
+		this.dataset.close();
+		this.supply.close();
+		this.jobOffer.close();
+		super.close();
 	}
 
 	@Override
@@ -370,8 +334,8 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	}
 
 	@Override
-	public Double getData(String dataKey, String period) {
-		return this.dataset.getData(dataKey);
+	public Double getData(String dataKey, int period) {
+		return this.dataset.getData(dataKey, period);
 	}
 
 	@Override
@@ -417,13 +381,36 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	}
 
 	@Override
-	public boolean isOpen() {
-		return this.open;
-	}
-
-	@Override
 	public boolean isSolvent() {
 		throw new NotUsedException();
+	}
+
+	/**
+	 * Opens the firm at the beginning of the period.
+	 */
+	@Override
+	public void open() {
+		if (this.owners.isEmpty()) {
+			initOwners();
+		}
+		this.jobOffer.open();
+		this.dataset.open();
+		this.supply.open();
+		super.open();
+		this.updateMarkup();
+	}
+
+	private void updateMarkup() {
+		// TODO 0.01, 1000, should be parameters.
+		double delta = 0.03 * this.getRandom().nextDouble();
+		if (this.factory.getInventories().getVolume() > 250) {
+			delta = -delta;
+		}
+		this.markup += delta;
+		if (this.markup < 0.1) {
+			this.markup = 0.1;
+		}
+		this.dataset.put("deltaMarkup", delta);
 	}
 
 }

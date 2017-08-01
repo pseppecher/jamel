@@ -1,12 +1,11 @@
 package jamel.basicModel.banks;
 
 import jamel.Jamel;
-import jamel.util.JamelObject;
 
 /**
  * A basic account for the basic bank.
  */
-class BasicAccount extends JamelObject implements Account {
+class BasicAccount implements Account {
 
 	/*
 	 * TODO
@@ -50,7 +49,6 @@ class BasicAccount extends JamelObject implements Account {
 	 * 
 	 */
 	BasicAccount(final BasicBank bank, final AccountHolder accountHolder) {
-		super(bank.getSimulation());
 		this.bank = bank;
 		this.holder = accountHolder;
 		this.deposit = this.bank.getNewDepositAccount();
@@ -60,7 +58,8 @@ class BasicAccount extends JamelObject implements Account {
 	/**
 	 * Recovers due debts.
 	 * 
-	 * @param penaltyRate the penalty rate.
+	 * @param penaltyRate
+	 *            the penalty rate.
 	 */
 	void debtRecovery(final double penaltyRate) {
 		this.loans.debtRecovery(penaltyRate);
@@ -83,13 +82,13 @@ class BasicAccount extends JamelObject implements Account {
 		if (term <= 0) {
 			throw new RuntimeException("Bad term: " + amount);
 		}
-		final Loan loan = new BasicLoan(this, amount, this.bank.getRate(), this.getPeriod() + term, amortizing);
+		final Loan loan = new BasicLoan(this, amount, this.bank.getRate(), this.bank.getPeriod() + term, amortizing);
 		this.loans.add(loan);
 	}
 
 	@Override
 	public void deposit(final Cheque cheque) {
-		if (cheque.getPayee() != this.holder || cheque.getIssue() != this.getPeriod() || !cheque.isValid()) {
+		if (cheque.getPayee() != this.holder || cheque.getIssue() != this.bank.getPeriod() || !cheque.isValid()) {
 			throw new RuntimeException("Bad cheque.");
 		}
 
@@ -126,6 +125,15 @@ class BasicAccount extends JamelObject implements Account {
 		return this.loans.getAmount();
 	}
 
+	/**
+	 * Returns the value of the current period.
+	 * 
+	 * @return the value of the current period.
+	 */
+	public int getPeriod() {
+		return this.bank.getPeriod();
+	}
+
 	@Override
 	public Cheque issueCheque(final AccountHolder payee, final long amount) {
 		if (this.pending != null) {
@@ -134,7 +142,7 @@ class BasicAccount extends JamelObject implements Account {
 		if (this.deposit.getAmount() < amount) {
 			throw new RuntimeException("Not enough money.");
 		}
-		this.pending = new BasicCheque(this, payee, amount, this.getPeriod());
+		this.pending = new BasicCheque(this, payee, amount, this.bank.getPeriod());
 		return this.pending;
 	}
 

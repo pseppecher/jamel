@@ -1,11 +1,12 @@
 package jamel.basicModel.firms;
 
 import jamel.basicModel.households.Worker;
+import jamel.util.JamelObject;
 
 /**
  * A basic job offer.
  */
-class BasicJobOffer implements JobOffer {
+class BasicJobOffer extends JamelObject implements JobOffer {
 
 	/**
 	 * The employer.
@@ -34,15 +35,26 @@ class BasicJobOffer implements JobOffer {
 	 *            the employer.
 	 */
 	BasicJobOffer(final BasicFirm employer) {
+		super(employer.getSimulation());
 		this.employer = employer;
 	}
 
 	/**
-	 * Clears this job offer.
+	 * Closes this job offer. Must be called at the end of the period.
 	 */
-	void reset() {
+	@Override
+	protected void close() {
+		super.close();
+	}
+
+	/**
+	 * Opens this job offer. Must be called at the beginning of the period.
+	 */
+	@Override
+	protected void open() {
 		this.wage = 0;
 		this.vacancies = 0;
+		super.open();
 	}
 
 	/**

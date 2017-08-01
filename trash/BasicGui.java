@@ -5,8 +5,6 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Window;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
@@ -60,21 +58,21 @@ public class BasicGui extends JamelObject implements Gui {
 	/**
 	 * Creates and returns a new panel (a chart panel or a html panel).
 	 * 
-	 * @param params
+	 * @param elem
 	 *            the description of the panel to be created.
 	 * @param gui
 	 *            the parent Gui.
 	 * @return the new panel.
 	 */
-	private static Component getNewPanel(final Parameters params, final Gui gui) {
+	private static Component getNewPanel(final Parameters elem, final Gui gui) {
 		final Component result;
 		try {
-			if (params.getName().equals("empty")) {
+			if (elem.getName().equals("empty")) {
 				result = new EmptyPanel();
-			} else if (params.getName().equals("chart")) {
+			} else if (elem.getName().equals("chart")) {
 				JamelChartPanel chartPanel = null;
 				try {
-					chartPanel = JamelChartFactory.createChartPanel(params, gui.getSimulation());
+					chartPanel = JamelChartFactory.createChartPanel(elem.getElem(), gui.getSimulation());
 				} catch (final Exception e) {
 					e.printStackTrace();
 				}
@@ -85,38 +83,19 @@ public class BasicGui extends JamelObject implements Gui {
 					// TODO il vaudrait mieux un HtmlPanel avec un message
 					// d'erreur.
 				}
-			} else if (params.getName().equals("html")) {
-				result = new HtmlPanel(params.getElem(), gui);
+			} else if (elem.getName().equals("html")) {
+				result = new HtmlPanel(elem.getElem(), gui);
 			} else {
-				throw new RuntimeException("Not yet implemented: " + params.getName());
+				throw new RuntimeException("Not yet implemented: " + elem.getName());
 			}
 		} catch (Exception e) {
 			throw new RuntimeException("Not yet implemented", e);
+			/*e.printStackTrace();
+			result = HtmlPanel
+					.getErrorPanel("Error:<br />" + e.toString() + "<br />See jamel.log file for more details.");*/
 		}
 		return result;
 	}
-
-	/**
-	 * To control the progress of the simulation.
-	 */
-	final private ActionListener controler = new ActionListener() {
-
-		private Boolean isPaused = null;
-
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			final Integer present = getPeriod();
-			final Boolean simulationIsPaused = getSimulation().isPaused();
-			if (simulationIsPaused != this.isPaused
-					|| (!simulationIsPaused && (latestRefresh == null || present - latestRefresh >= refresh))) {
-				controlPanel.refresh();
-				refreshCharts();
-				latestRefresh = present;
-				this.isPaused = simulationIsPaused;
-			}
-		}
-
-	};
 
 	/**
 	 * The control panel.
@@ -161,10 +140,7 @@ public class BasicGui extends JamelObject implements Gui {
 	public BasicGui(final Parameters param, final File parentFile, final Simulation simulation) {
 
 		super(simulation);
-
-		final javax.swing.Timer timer = new javax.swing.Timer(50, this.controler);
-		timer.start();
-
+		
 		if (!param.getName().equals("gui")) {
 			throw new RuntimeException("Bad element: " + param.getName());
 		}
@@ -264,22 +240,6 @@ public class BasicGui extends JamelObject implements Gui {
 		}
 	}
 
-	/**
-	 * Refreshes the charts.
-	 */
-	private void refreshCharts() {
-		for (final Component panel : this.panels) {
-			if (panel instanceof Updatable) {
-				((Updatable) panel).update();
-			}
-		}
-	}
-
-	@Override
-	public void close() {
-		super.close();
-	}
-
 	@Override
 	public void displayErrorMessage(final String title, final String message) {
 		JOptionPane.showMessageDialog(this.window, "<html>" + message + "<br>See the console for more details.</html>",
@@ -301,8 +261,33 @@ public class BasicGui extends JamelObject implements Gui {
 	}
 
 	@Override
+	public void refresh() {
+		SwingUtilities.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				BasicGui.this.controlPanel.refresh();
+			}
+		});
+		for (final Component panel : this.panels) {
+			if (panel instanceof Updatable) {
+				((Updatable) panel).update();
+			}
+		}
+		this.latestRefresh=this.getPeriod();
+	}
+
+	@Override
 	public void open() {
 		super.open();
+	}
+
+	@Override
+	public void close() {
+		final Integer present = this.getPeriod();
+		if (present != null && (this.latestRefresh== null || present - this.latestRefresh >= this.refresh || this.getSimulation().isPaused())) {
+			this.refresh();
+		}
+		super.close();
 	}
 
 }

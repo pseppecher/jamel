@@ -36,6 +36,7 @@ public abstract class JamelChart extends JFreeChart {
 		super(title, titleFont, plot, true);
 		this.setBackgroundPaint(colorTransparent);
 		this.getLegend().setItemFont(legendItemFont);
+		this.setNotify(false);
 	}
 
 	/**

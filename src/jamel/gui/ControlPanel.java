@@ -88,7 +88,7 @@ public class ControlPanel extends JPanel {
 					@Override
 					public void actionPerformed(ActionEvent e) {
 						simulation.pause();
-						ControlPanel.this.update();
+						ControlPanel.this.refresh();
 					}
 				});
 				if (suspendIcon != null) {
@@ -103,7 +103,7 @@ public class ControlPanel extends JPanel {
 	/**
 	 * Updates this panel.
 	 */
-	public void update() {
+	public void refresh() {
 		this.timeCounter.setText("" + this.simulation.getPeriod());
 		if (simulation != null) {
 			final boolean b = simulation.isPaused();
