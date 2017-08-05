@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<gui
+	className="jamel.v170804.gui.BasicGui"
+>
+
+	<panel title="Main">
+		<html title="Presentation">
+			<center>
+				<h2>A Prototype Model of a</h2>
+				<h1>Monetized Economy of Production</h1>
+				<h2>(July 25, 2017)</h2>
+				<p>For debugging purposes.</p>
+				<p>
+					<a href="http://p.seppecher.free.fr/jamel/">http://p.seppecher.free.fr/jamel/</a>
+				</p>
+			</center>
+		</html>
+
+		<chart title="Costs and Prices">
+			<if>isEqual(t%3, 0)</if>
+			<series
+				label="Unit Cost"
+				color="red"
+			>
+				<x>t/12</x>
+				<y>
+					val(Firms, supplyCost, t-2...t, sum) / val(Firms, supplyVolume,
+					t-2...t, sum)
+				</y>
+			</series>
+			<series
+				label="Unit Price"
+				color="blue"
+			>
+				<x>t/12</x>
+				<y>
+					val(Firms, supplyValue, t-2...t, sum) / val(Firms, supplyVolume,
+					t-2...t, sum)
+				</y>
+			</series>
+			<yAxis label="Value" />
+
+		</chart>
+
+		<chart title="Deposits">
+			<if>isEqual(t%3, 0)</if>
+			<series
+				label="Firms"
+				color="red"
+			>
+				<x>t/12</x>
+				<y>val(Firms, money, t, sum)</y>
+			</series>
+			<series
+				label="Workers"
+				color="blue"
+			>
+				<x>t/12</x>
+				<y>val(Workers, money, t, sum)</y>
+			</series>
+			<series
+				label="Shareholders"
+				color="green"
+			>
+				<x>t/12</x>
+				<y>val(Shareholders, money, t, sum)</y>
+			</series>
+			<yAxis label="Value" />
+		</chart>
+
+		<col />
+
+		<chart title="Firms Balance Sheet">
+			<if>isEqual(t%3, 0)</if>
+			<series
+				label="Tangible assets"
+				color="red"
+			>
+				<x>t/12</x>
+				<y>val(Firms, tangibleAssets, t, sum)</y>
+			</series>
+			<series
+				label="Money"
+				color="blue"
+			>
+				<x>t/12</x>
+				<y>val(Firms, money, t, sum)</y>
+			</series>
+			<series
+				label="Liabilities"
+				color="green"
+			>
+				<x>t/12</x>
+				<y>val(Firms, liabilities, t, sum)</y>
+			</series>
+			<yAxis label="Value" />
+		</chart>
+
+		<chart title="Firms Debt Ratio">
+			<if>isEqual(t%3, 0)</if>
+			<series
+				label="Debt ratio"
+				color="red"
+			>
+				<x>t/12</x>
+				<y>
+					val(Firms, liabilities, t, sum) / val(Firms, assets, t, sum)
+				</y>
+			</series>
+			<yAxis
+				label="%"
+				min="0"
+				max="1" />
+		</chart>
+
+		<chart title="Goods Market">
+
+			<if>isEqual(t%3, 0)</if>
+
+			<series
+				label="Supply"
+				color="red"
+			>
+				<x>t/12</x>
+				<y>val(Firms, supplyValue, t-2...t, sum)</y>
+			</series>
+
+			<series
+				label="Demand"
+				color="blue"
+			>
+				<x>t/12</x>
+				<y>
+					val(Workers, consumptionBudget, t-2...t, sum) +
+					val(Shareholders,
+					consumptionBudget, t-2...t, sum)
+				</y>
+			</series>
+
+			<yAxis label="Value" />
+
+		</chart>
+
+		<col />
+
+		<chart title="Banks Balance Sheet">
+
+			<if>isEqual(t%3, 0)</if>
+
+			<series
+				label="Assets"
+				color="blue"
+			>
+				<x>t/12</x>
+				<y>val(Banks, assets, t, sum)</y>
+			</series>
+
+			<series
+				label="liabilities"
+				color="red"
+			>
+				<x>t/12</x>
+				<y>val(Banks, liabilities, t, sum)</y>
+			</series>
+
+			<yAxis label="Value" />
+
+		</chart>
+
+		<chart title="Goods Market">
+
+			<if>isEqual(t%3, 0)</if>
+
+			<series
+				label="Production"
+				color="red"
+			>
+				<x>t/12</x>
+				<y>val(Firms, productionVolume, t-2...t, sum)</y>
+			</series>
+
+			<series
+				label="Sales"
+				color="blue"
+			>
+				<x>t/12</x>
+				<y>val(Firms, salesVolume, t-2...t, sum)</y>
+			</series>
+
+			<series
+				label="Consumption"
+				color="green"
+			>
+				<x>t/12</x>
+				<y>val(Workers, consumptionVolume, t-2...t, sum) +
+					val(Shareholders,
+					consumptionVolume, t-2...t, sum)
+				</y>
+			</series>
+
+			<yAxis label="Volume" />
+
+		</chart>
+
+		<chart title="Good Market">
+
+			<if>isEqual(t%3, 0)</if>
+
+			<series
+				label="Supply"
+				color="red"
+			>
+				<x>t/12</x>
+				<y>val(Firms, supplyVolume, t-2...t, sum)</y>
+			</series>
+
+			<series
+				label="demand"
+				color="blue"
+			>
+				<x>t/12</x>
+				<y>
+					(val(Workers, consumptionBudget, t-2...t, sum) +
+					val(Shareholders, consumptionBudget, t-2...t, sum)) *
+					val(Firms,supplyVolume,t-2...t, sum) /
+					val(Firms,supplyValue,t-2...t, sum)
+				</y>
+
+			</series>
+
+			<yAxis label="Volume" />
+
+		</chart>
+
+	</panel>
+
+	<panel title="Performances">
+		<html title="Presentation">
+			<center>
+				<h2>Tests</h2>
+			</center>
+		</html>
+
+		<col />
+		<empty />
+		<col />
+		<chart title="Simulation Speed">
+			<series label="average">
+				<x>t/12</x>
+				<y>t/duration</y>
+			</series>
+			<series label="instantaneous">
+				<x>t/12</x>
+				<y>speed</y>
+			</series>
+
+			<xAxis label="Time">
+			</xAxis>
+		</chart>
+		<empty />
+		<empty />
+
+	</panel>
+</gui>

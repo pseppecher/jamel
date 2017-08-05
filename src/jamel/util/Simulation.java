@@ -5,8 +5,6 @@ import java.util.Random;
 
 import org.jfree.data.xy.XYSeries;
 
-import jamel.data.Expression;
-
 /**
  * Represents a simulation.
  */
@@ -38,6 +36,15 @@ public interface Simulation {
 	 * @return the scenario file of this simulation.
 	 */
 	File getFile();
+
+	/**
+	 * Returns the specified information about this simulation.
+	 * 
+	 * @param query
+	 *            a query that specifies the information to be returned.
+	 * @return a string that contains the specified information.
+	 */
+	String getInfo(String query);
 
 	/**
 	 * Returns the name of the simulation.

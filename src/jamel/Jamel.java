@@ -318,6 +318,15 @@ public class Jamel {
 	}
 
 	/**
+	 * Returns this version of Jamel.
+	 * 
+	 * @return this version of Jamel.
+	 */
+	public static String getVersion() {
+		return version;
+	}
+
+	/**
 	 * The main method for Jamel.
 	 * 
 	 * @param args

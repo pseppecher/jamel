@@ -1,7 +1,5 @@
 package jamel.util;
 
-import jamel.data.Expression;
-
 /**
  * Represents a sector.
  */

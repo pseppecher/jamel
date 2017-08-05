@@ -1,17 +1,51 @@
 package jamel.util;
 
+import java.io.StringWriter;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
+
+import jamel.v170804.util.ArgChecks;
 
 /**
  * Encapsulates a set of parameters.
  * To facilitate the parsing of XML elements.
  */
 public class Parameters {
+
+	/**
+	 * Converts an element into a string.
+	 * 
+	 * @param elem
+	 *            the element to be converted.
+	 * @return a string representation of this element.
+	 */
+	private static String element2string(final Element elem) {
+		final String result;
+		try {
+			final DOMSource domSource = new DOMSource(elem);
+			final StringWriter writer = new StringWriter();
+			final StreamResult sResult = new StreamResult(writer);
+			final TransformerFactory tf = TransformerFactory.newInstance();
+			final Transformer transformer = tf.newTransformer();
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+			transformer.transform(domSource, sResult);
+			result = writer.toString();
+		} catch (TransformerException ex) {
+			throw new RuntimeException(ex);
+		}
+		return result;
+	}
 
 	/**
 	 * Converts a <code>NodeList</code> into a <code>List</code> of
@@ -35,6 +69,10 @@ public class Parameters {
 	 * The encapsulated XML element.
 	 */
 	final private Element element;
+	/**
+	 * The string representation of these parameters.
+	 */
+	final private String string;
 
 	/**
 	 * Creates a new Parameters object.
@@ -44,6 +82,7 @@ public class Parameters {
 	 */
 	public Parameters(final Element element) {
 		this.element = element;
+		this.string = element2string(this.element);
 	}
 
 	/**
@@ -59,6 +98,7 @@ public class Parameters {
 			throw new IllegalArgumentException("The node should be an Element: " + node.getNodeName());
 		}
 		this.element = (Element) node;
+		this.string = element2string(this.element);
 	}
 
 	/**
@@ -124,11 +164,11 @@ public class Parameters {
 	 */
 	public Double getDoubleAttribute(String name) {
 		final Double result;
-		final String string = this.element.getAttribute(name);
-		if (string.isEmpty()) {
+		final String attribute = this.element.getAttribute(name);
+		if (attribute.isEmpty()) {
 			result = null;
 		} else {
-			result = Double.parseDouble(string);
+			result = Double.parseDouble(attribute);
 		}
 		return result;
 	}
@@ -177,15 +217,15 @@ public class Parameters {
 	 * specified on this element or has a default value, <code>false</code>
 	 * otherwise.
 	 * 
-	 * @param string
+	 * @param name
 	 *            The name of the attribute to look for.
 	 * @return <code>true</code> if an attribute with the given name is
 	 *         specified on this element or has a default value,
 	 *         <code>false</code>
 	 *         otherwise.
 	 */
-	public boolean hasAttribute(String string) {
-		return this.element.hasAttribute(string);
+	public boolean hasAttribute(String name) {
+		return this.element.hasAttribute(name);
 	}
 
 	/**
@@ -201,6 +241,11 @@ public class Parameters {
 	 */
 	public String[] splitTextContent(String regex) {
 		return getText().split(regex);
+	}
+
+	@Override
+	public String toString() {
+		return this.string;
 	}
 
 }
