@@ -34,7 +34,10 @@
 		<sector
 			name="Banks"
 			agentClassName="&model;.banks.BasicBank"
-			initialPopulation="1" />
+			initialPopulation="1"
+		>
+			<parameters capitalTargetRatio="0.1" />
+		</sector>
 
 		<sector
 			name="Firms"

@@ -8,9 +8,11 @@ import java.util.function.Consumer;
 import jamel.Jamel;
 import jamel.util.Agent;
 import jamel.util.JamelObject;
+import jamel.util.Parameters;
 import jamel.util.Sector;
 import jamel.v170804.data.AgentDataset;
 import jamel.v170804.models.basicModel1.households.Shareholder;
+import jamel.v170804.util.ArgChecks;
 
 /**
  * A basic bank.
@@ -51,6 +53,11 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 	 * The collection of accounts.
 	 */
 	private final List<BasicAccount> accounts = new ArrayList<>();
+
+	/**
+	 * The capital target ratio.
+	 */
+	final private double capitalTargetRatio;
 
 	/**
 	 * The dataset.
@@ -104,6 +111,9 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 		super(sector.getSimulation());
 		this.sector = sector;
 		this.id = id;
+		final Parameters params = this.sector.getParameters();
+		ArgChecks.nullNotPermitted(params, "params");
+		this.capitalTargetRatio = params.getDoubleAttribute("initialMarkup");
 		this.dataset = new AgentDataset(this);
 	}
 
@@ -164,8 +174,7 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 		final long assets = this.outstandingLoans.getAmount();
 		final long liabilities = this.outstandindDeposits.getAmount();
 		final long capital = assets - liabilities;
-		final long capitalTarget = (long) (assets * 0.1);
-		// TODO 0.1 should be a parameter
+		final long capitalTarget = (long) (assets * this.capitalTargetRatio);
 		final long capitalExcess = Math.max(capital - capitalTarget, 0);
 		if (capitalExcess > this.owners.size()) {
 			final long newDividend = capitalExcess / this.owners.size();
@@ -173,31 +182,6 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 				shareholder.acceptDividendCheque(new BankCheque(this, shareholder, newDividend, this.getPeriod()));
 			}
 		}
-	}
-
-	/**
-	 * Closes this agent.
-	 */
-	@Override
-	public void close() {
-		// this.checkConsistency(); // TODO debugging purposes / to be removed
-		this.dataset.put("countAgent", 1);
-		this.dataset.put("assets", this.outstandingLoans.getAmount());
-		this.dataset.put("liabilities", this.outstandindDeposits.getAmount());
-		this.dataset.close();
-		super.close();
-	}
-
-	/**
-	 * Opens this agent.
-	 */
-	@Override
-	public void open() {
-		if (this.owners.isEmpty()) {
-			initOwners();
-		}
-		this.dataset.open();
-		super.open();
 	}
 
 	/**
@@ -237,6 +221,18 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 	 */
 	double getRate() {
 		return this.rate;
+	}
+
+	/**
+	 * Closes this agent.
+	 */
+	@Override
+	public void close() {
+		this.dataset.put("countAgent", 1);
+		this.dataset.put("assets", this.outstandingLoans.getAmount());
+		this.dataset.put("liabilities", this.outstandindDeposits.getAmount());
+		this.dataset.close();
+		super.close();
 	}
 
 	@Override
@@ -281,6 +277,18 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 	public boolean isSolvent() {
 		Jamel.notYetImplemented();
 		return false;
+	}
+
+	/**
+	 * Opens this agent.
+	 */
+	@Override
+	public void open() {
+		if (this.owners.isEmpty()) {
+			initOwners();
+		}
+		this.dataset.open();
+		super.open();
 	}
 
 	@Override
