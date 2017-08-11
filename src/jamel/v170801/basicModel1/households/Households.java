@@ -4,8 +4,11 @@ import java.util.Comparator;
 
 import jamel.util.Agent;
 import jamel.v170801.basicModel1.firms.Supplier;
-import jamel.v170801.basicModel1.firms.Supply;
 
+/**
+ * Not so good idea.
+ */
+@SuppressWarnings("javadoc")
 public class Households {
 
 	private static class SupplierComparator implements Comparator<Agent> {

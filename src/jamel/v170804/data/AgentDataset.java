@@ -1,54 +1,23 @@
 package jamel.v170804.data;
 
-import java.util.LinkedList;
-
 import jamel.util.Agent;
-import jamel.util.JamelObject;
 
 /**
- * The agent dataset.
+ * Represents an agent dataset.
  */
-public class AgentDataset extends JamelObject {
+public interface AgentDataset {
 
 	/**
-	 * TODO should be a parameter
+	 * Closes the dataset.
 	 */
-	private static final int maxSize = 24;
+	void close();
 
 	/**
-	 * The owner agent.
-	 */
-	final private Agent agent;
-
-	/**
+	 * Returns the owner of this dataset.
 	 * 
+	 * @return the owner of this dataset.
 	 */
-	final private LinkedList<Dataset> data = new LinkedList<>();
-
-	/**
-	 * Creates a new dataset for this agent.
-	 * 
-	 * @param agent
-	 *            the agent.
-	 */
-	public AgentDataset(final Agent agent) {
-		super(agent.getSimulation());
-		this.agent = agent;
-	}
-
-	@Override
-	public void close() {
-		super.close();
-	}
-
-	/**
-	 * Returns the agent.
-	 * 
-	 * @return the agent.
-	 */
-	public Agent getAgent() {
-		return agent;
-	}
+	Agent getAgent();
 
 	/**
 	 * Returns the value of the specified data.
@@ -59,46 +28,26 @@ public class AgentDataset extends JamelObject {
 	 *            the period of the data to be returned
 	 * @return the value of the specified data.
 	 */
-	public Double getData(final String key, final int t) {
-		final int index = this.getPeriod()-t;
-		if (index < 0 || index >= maxSize) {
-			throw new IllegalArgumentException("Bad lag: " + index);
-		}
-		final Double result;
-		if (index >= this.data.size()) {
-			result = null;
-		} else {
-			result = this.data.get(index).get(key);
-		}
-		return result;
-	}
+	Double getData(final String key, final int t);
 
 	/**
 	 * Opens the dataset.
+	 * 
 	 * Must be called at the beginning of the period, before adding data.
 	 */
-	@Override
-	public void open() {
-		this.data.addFirst(new BasicDataset());
-		if (this.data.size() > maxSize) {
-			this.data.removeLast().clear();
-		}
-		super.open();
-	}
+	void open();
 
 	/**
-	 * Associates the specified value with the specified key in this dataset.
+	 * Inserts the specified value at the specified position in this agent
+	 * dataset. If the agent dataset previously contained a value for the
+	 * specified index, an exception is thrown.
 	 * 
-	 * @param key
-	 *            key with which the specified value is to be associated.
+	 * @param index
+	 *            index with which the specified value is to be associated.
+	 * 
 	 * @param value
 	 *            value to be associated with the specified key.
 	 */
-	public void put(String key, Number value) {
-		this.checkOpen();
-		if (this.data.get(0).put(key, value.doubleValue()) != null) {
-			throw new RuntimeException("Not null: " + key);
-		}
-	}
+	void put(int index, Number value);
 
 }

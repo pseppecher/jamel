@@ -5,6 +5,7 @@ import java.util.function.Consumer;
 
 import jamel.Jamel;
 import jamel.util.Agent;
+import jamel.util.ArgChecks;
 import jamel.util.JamelObject;
 import jamel.util.NotUsedException;
 import jamel.util.Parameters;
@@ -20,7 +21,6 @@ import jamel.v170801.basicModel1.firms.LaborContract;
 import jamel.v170801.basicModel1.firms.Supplier;
 import jamel.v170801.basicModel1.firms.Supply;
 import jamel.v170801.data.AgentDataset;
-import jamel.v170801.util.ArgChecks;
 
 /**
  * Represents a worker.
@@ -142,6 +142,7 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 	/**
 	 * The saving propensity.
 	 */
+	@SuppressWarnings("unused")
 	private final double param_savingPropensity;
 
 	/**

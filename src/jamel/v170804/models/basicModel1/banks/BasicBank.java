@@ -7,17 +7,23 @@ import java.util.function.Consumer;
 
 import jamel.Jamel;
 import jamel.util.Agent;
+import jamel.util.ArgChecks;
 import jamel.util.JamelObject;
 import jamel.util.Parameters;
 import jamel.util.Sector;
 import jamel.v170804.data.AgentDataset;
+import jamel.v170804.data.BasicAgentDataset;
 import jamel.v170804.models.basicModel1.households.Shareholder;
-import jamel.v170804.util.ArgChecks;
 
 /**
  * A basic bank.
  */
 public class BasicBank extends JamelObject implements Agent, Bank {
+
+	/**
+	 * The data keys.
+	 */
+	private static final BasicBankKeys keys = new BasicBankKeys();
 
 	/**
 	 * Returns the specified action.
@@ -113,8 +119,8 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 		this.id = id;
 		final Parameters params = this.sector.getParameters();
 		ArgChecks.nullNotPermitted(params, "params");
-		this.capitalTargetRatio = params.getDoubleAttribute("initialMarkup");
-		this.dataset = new AgentDataset(this);
+		this.capitalTargetRatio = params.getDoubleAttribute("capitalTargetRatio");
+		this.dataset = new BasicAgentDataset(this, keys);
 	}
 
 	/**
@@ -228,9 +234,9 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 	 */
 	@Override
 	public void close() {
-		this.dataset.put("countAgent", 1);
-		this.dataset.put("assets", this.outstandingLoans.getAmount());
-		this.dataset.put("liabilities", this.outstandindDeposits.getAmount());
+		this.dataset.put(keys.count, 1);
+		this.dataset.put(keys.assets, this.outstandingLoans.getAmount());
+		this.dataset.put(keys.liabilities, this.outstandindDeposits.getAmount());
 		this.dataset.close();
 		super.close();
 	}

@@ -70,6 +70,7 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 	/**
 	 * The saving propensity.
 	 */
+	@SuppressWarnings("unused")
 	private final double param_savingPropensity;
 
 	/**

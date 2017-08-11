@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<!-- 1er août 2017 -->
+<!-- 9 août 2017 -->
 
-<!DOCTYPE simulation [
+<!DOCTYPE gui [
 	<!ENTITY refresh "isEqual(t&#37;1, 0)"> 
 	<!ENTITY laps "t"> 
 ]>
@@ -12,7 +12,8 @@
 	<panel title="Main">
 
 		<chart title="Costs and Prices">
-			<if>&refresh;</if>
+			<if>&refresh;
+			</if>
 			<series
 				label="Unit Cost"
 				color="red"
@@ -41,7 +42,8 @@
 
 		</chart>
 		<chart title="Deposits">
-			<if>&refresh;</if>
+			<if>&refresh;
+			</if>
 			<series
 				label="Firms"
 				color="red"
@@ -264,7 +266,7 @@
 				color="green"
 			>
 				<x>t</x>
-				<y>val(Workers, countAgent, t, sum)</y>
+				<y>val(Workers, count, t, sum)</y>
 				<color>green</color>
 			</series>
 			<series
@@ -288,7 +290,8 @@
 		<col />
 		<empty />
 
-		<col /><empty />
+		<col />
+		<empty />
 
 	</panel>
 	<panel title="Workers">
@@ -402,39 +405,9 @@
 
 		</chart>
 
-		<chart title="Suppliers">
-			<series
-				label="#Suppliers by Household"
-				color="red"
-			>
-				<x>t</x>
-				<y>val(Shareholders, suppliers, t, sum) / val(Shareholders, count,
-					t, sum)
-				</y>
-			</series>
-			<series
-				label="# of the Selection"
-				color="blue"
-			>
-				<x>t</x>
-				<y>val(Shareholders, supplierSample, t, sum) / val(Shareholders,
-					count, t, sum)
-				</y>
-			</series>
-			<yAxis label="Number" />
-		</chart>
+		<empty />
 
 		<chart title="Supply and demand">
-			<series
-				label="Supply"
-				color="red"
-			>
-				<x>t</x>
-				<y>val(Shareholders,
-					supplyValue, &laps;,
-					sum)
-				</y>
-			</series>
 			<series
 				label="Demand"
 				color="blue"
@@ -530,7 +503,8 @@
 		</chart>
 
 		<chart title="Inventories">
-			<if>&refresh;</if>
+			<if>&refresh;
+			</if>
 			<series
 				label="Effective"
 				color="red"
@@ -544,7 +518,8 @@
 				color="green"
 			>
 				<x>t</x>
-				<y>val(Firms, inventoriesNormalVolume, t, sum) / val(Firms, count, t, sum)
+				<y>val(Firms, inventoriesNormalVolume, t, sum) / val(Firms, count,
+					t, sum)
 				</y>
 			</series>
 			<yAxis label="Volume" />
@@ -581,6 +556,8 @@
 			<yAxis label="Megabytes" />
 		</chart>
 
+		<empty/>
+
 		<col />
 
 		<html>
@@ -608,6 +585,52 @@
 			MB
 			<br />
 		</html>
+		
+		<empty/>
+		<empty/>
+
+		<col />
+		
+		<chart title="Phase performances">
+			
+			<series label="Firms.planProduction">
+				<x>t</x>
+				<y>val(Firms, phase.planProduction.runtime)/t</y>
+			</series>
+			<series label="Workers.jobSearch">
+				<x>t</x>
+				<y>val(Workers, phase.jobSearch.runtime)/t</y>
+			</series>
+			<series label="Workers.consumption">
+				<x>t</x>
+				<y>val(Workers, phase.consumption.runtime)/t</y>
+			</series>
+			<series label="Shareholders.consumption">
+				<x>t</x>
+				<y>val(Shareholders, phase.consumption.runtime)/t</y>
+			</series>
+			<series label="Firms.payWages">
+				<x>t</x>
+				<y>val(Firms, phase.payWages.runtime)/t</y>
+			</series>
+			<series label="Banks.debtRecovery">
+				<x>t</x>
+				<y>val(Banks, phase.debtRecovery.runtime)/t</y>
+			</series>
+			<series label="Banks.payDividends">
+				<x>t</x>
+				<y>val(Banks, phase.payDividends.runtime)/t</y>
+			</series>
+			<series label="Firms.payDividends">
+				<x>t</x>
+				<y>val(Firms, phase.payDividends.runtime)/t</y>
+			</series>
+			
+		</chart>
+		
+		<empty/>
+		<empty/>
+		
 
 	</panel>
 

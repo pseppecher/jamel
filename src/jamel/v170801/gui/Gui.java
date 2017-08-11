@@ -48,10 +48,14 @@ public interface Gui {
 	Simulation getSimulation();
 
 	/**
+	 * A bad idea.
+	 * @param b a boolean.
+	 */
+	void notifyPause(boolean b);
+
+	/**
 	 * Opens the gui at the beginning of the period.
 	 */
 	void open();
-
-	void notifyPause(boolean b);
 
 }

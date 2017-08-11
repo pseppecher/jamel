@@ -15,8 +15,8 @@ import org.jfree.chart.block.BlockFrame;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.title.TextTitle;
 
+import jamel.util.ArgChecks;
 import jamel.util.Parameters;
-import jamel.v170804.util.ArgChecks;
 
 /**
  * A convenient extension of ChartPanel.

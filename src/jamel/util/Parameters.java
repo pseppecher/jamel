@@ -15,8 +15,6 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import jamel.v170804.util.ArgChecks;
-
 /**
  * Encapsulates a set of parameters.
  * To facilitate the parsing of XML elements.
@@ -69,6 +67,7 @@ public class Parameters {
 	 * The encapsulated XML element.
 	 */
 	final private Element element;
+	
 	/**
 	 * The string representation of these parameters.
 	 */
@@ -174,6 +173,34 @@ public class Parameters {
 	}
 
 	/**
+	 * Returns the double value of the specified parameter.
+	 * 
+	 * Useful to display parameter values in the gui.
+	 * 
+	 * @param key
+	 *            the string key of the parameter.
+	 * @return the double value of the specified parameter.
+	 */
+	public Double getDoubleValue(String key) {
+		final Double result;
+		final String[] split = key.split("\\.", 2);
+		if (split.length == 1) {
+			result = this.getDoubleAttribute(key);
+			if (result == null) {
+				throw new RuntimeException("Parameter not found: " + key);
+			}
+		} else {
+			final Parameters sub = this.get(split[0]);
+			if (sub == null) {
+				throw new RuntimeException("Parameter not found: " + key);
+				// result = null;
+			}
+			result = sub.getDoubleValue(split[1]);
+		}
+		return result;
+	}
+
+	/**
 	 * Returns the encapsulated element.
 	 * 
 	 * @return the encapsulated element.
@@ -190,6 +217,9 @@ public class Parameters {
 	 * @return The attribute value as a <code>Integer</code>.
 	 */
 	public Integer getIntAttribute(String name) {
+		if (!this.element.hasAttribute(name)) {
+			throw new RuntimeException("Parameter not found: \"" + name+"\" in \""+this.element.getTagName()+"\".");
+		}
 		return Integer.parseInt(this.element.getAttribute(name));
 	}
 

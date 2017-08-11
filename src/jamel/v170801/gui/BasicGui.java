@@ -138,6 +138,9 @@ public class BasicGui extends JamelObject implements Gui {
 	 */
 	final private List<Component> panels = new LinkedList<>();
 
+	/**
+	 * A flag that indicates whether the simulation is paused or not.
+	 */
 	private Boolean pause = null;
 
 	/**

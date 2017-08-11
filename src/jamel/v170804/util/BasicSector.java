@@ -4,8 +4,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -96,6 +98,11 @@ public class BasicSector extends JamelObject implements Sector {
 	final private Parameters params;
 
 	/**
+	 * The list of the phases, accessible by their names.
+	 */
+	private Map<String, Phase> phases = new HashMap<>();
+
+	/**
 	 * Creates a new basic sector.
 	 * 
 	 * @param params
@@ -154,6 +161,37 @@ public class BasicSector extends JamelObject implements Sector {
 		this.dataManager = new DataManager(this.agents, this);
 	}
 
+	/**
+	 * Returns an expression that gives access to some sectoral data.
+	 * 
+	 * @param arg
+	 *            the argument of the expression to be returned.
+	 * @return an expression that gives access to some sectoral data.
+	 */
+	private Expression getSectorDataAccess(String arg) {
+		final Expression result;
+		final String[] args = arg.split("\\.");
+		if (args[0].equals("phase") && args[2].equals("runtime")) {
+			final Phase phase = this.phases.get(args[1]);
+			result = new Expression() {
+
+				@Override
+				public Double getValue() {
+					return (double) phase.getRuntime();
+				}
+
+				@Override
+				public String toString() {
+					return name + ".phase." + args[1] + ".runtime";
+				}
+
+			};
+		} else {
+			throw new RuntimeException("Bad key: '" + args[0] + "' in '" + arg + "'");
+		}
+		return result;
+	}
+
 	@Override
 	public void close() {
 		super.close();
@@ -168,13 +206,29 @@ public class BasicSector extends JamelObject implements Sector {
 	}
 
 	@Override
+	public Expression getDataAccess(String agentName, String[] args) {
+		return this.dataManager.getDataAccess(agentName, args);
+	}
+
+	@Override
 	public Expression getDataAccess(String[] args) {
-		return this.dataManager.getDataAccess(args);
+		final Expression result;
+		if (args.length == 1) {
+			result = this.getSectorDataAccess(args[0]);
+		} else {
+			result = this.dataManager.getDataAccess(args);
+		}
+		return result;
 	}
 
 	@Override
 	public String getName() {
 		return this.name;
+	}
+
+	@Override
+	public Parameters getParameters() {
+		return this.params.get("parameters");
 	}
 
 	@Override
@@ -190,9 +244,16 @@ public class BasicSector extends JamelObject implements Sector {
 
 		final Phase result = new Phase() {
 
+			private long runtime = 0;
+
 			@Override
 			public String getName() {
 				return phaseName;
+			}
+
+			@Override
+			public long getRuntime() {
+				return this.runtime;
 			}
 
 			@Override
@@ -203,15 +264,27 @@ public class BasicSector extends JamelObject implements Sector {
 			@Override
 			public void run() {
 
+				final long start = System.currentTimeMillis();
+
 				if (set.contains("shuffle")) {
 					Collections.shuffle(BasicSector.this.agents, BasicSector.this.getRandom());
 				}
 
 				BasicSector.this.agents.forEach(action);
 
+				final long end = System.currentTimeMillis();
+
+				runtime += end - start;
+
 			}
 
 		};
+
+		final Phase previousValue = this.phases.put(phaseName, result);
+		if (previousValue != null) {
+			throw new RuntimeException(
+					"The sector " + name + " alreday contains a phase with the name '" + phaseName + "'");
+		}
 
 		return result;
 
@@ -238,11 +311,6 @@ public class BasicSector extends JamelObject implements Sector {
 			}
 		}
 		return result;
-	}
-
-	@Override
-	public Parameters getParameters() {
-		return this.params.get("parameters");
 	}
 
 }

@@ -6,6 +6,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import jamel.util.Agent;
+import jamel.util.ArgChecks;
 import jamel.util.JamelObject;
 import jamel.util.NotUsedException;
 import jamel.util.Parameters;
@@ -16,7 +17,6 @@ import jamel.v170801.basicModel1.banks.Cheque;
 import jamel.v170801.basicModel1.households.Shareholder;
 import jamel.v170801.basicModel1.households.Worker;
 import jamel.v170801.data.AgentDataset;
-import jamel.v170801.util.ArgChecks;
 
 /**
  * A basic firm.

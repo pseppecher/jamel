@@ -6,22 +6,28 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import jamel.util.Agent;
+import jamel.util.ArgChecks;
 import jamel.util.JamelObject;
 import jamel.util.NotUsedException;
 import jamel.util.Parameters;
 import jamel.util.Sector;
 import jamel.v170804.data.AgentDataset;
+import jamel.v170804.data.BasicAgentDataset;
 import jamel.v170804.models.basicModel1.banks.Account;
 import jamel.v170804.models.basicModel1.banks.Bank;
 import jamel.v170804.models.basicModel1.banks.Cheque;
 import jamel.v170804.models.basicModel1.households.Shareholder;
 import jamel.v170804.models.basicModel1.households.Worker;
-import jamel.v170804.util.ArgChecks;
 
 /**
  * A basic firm.
  */
 public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Supplier {
+
+	/**
+	 * The data keys.
+	 */
+	private static final BasicFirmKeys keys = new BasicFirmKeys();
 
 	/**
 	 * To test the validity of job contracts.
@@ -164,7 +170,7 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 		ArgChecks.nullNotPermitted(params, "params");
 
 		this.id = id;
-		this.dataset = new AgentDataset(this);
+		this.dataset = new BasicAgentDataset(this, keys);
 
 		this.markup = params.get("pricing").getDoubleAttribute("initialMarkup");
 		this.markupFlexibility = params.get("pricing").getDoubleAttribute("markupFlexibility");
@@ -278,7 +284,7 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 			this.jobOffer.setWage(this.wage);
 			this.jobOffer.setVacancies(workforceTarget - this.payroll.size());
 		}
-		this.dataset.put("jobOffers", this.jobOffer.getVacancies());
+		this.dataset.put(keys.jobOffers, this.jobOffer.getVacancies());
 	}
 
 	/**
@@ -297,9 +303,9 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 				this.supply.update(this.factory.getInventories().getVolume(), oldPrice);
 			}
 
-			this.dataset.put("supplyVolume", this.factory.getInventories().getVolume());
-			this.dataset.put("supplyValue", this.supply.getPrice() * this.factory.getInventories().getVolume());
-			this.dataset.put("supplyCost", this.factory.getInventories().getValue());
+			this.dataset.put(keys.supplyVolume, this.factory.getInventories().getVolume());
+			this.dataset.put(keys.supplyValue, this.supply.getPrice() * this.factory.getInventories().getVolume());
+			this.dataset.put(keys.supplyCost, this.factory.getInventories().getValue());
 		}
 	}
 
@@ -315,7 +321,7 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 		if (this.markup < 0.1) {
 			this.markup = 0.1;
 		}
-		this.dataset.put("deltaMarkup", delta);
+		this.dataset.put(keys.deltaMarkup, delta);
 	}
 
 	/**
@@ -369,15 +375,15 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	@Override
 	public void close() {
 		this.supply.updateData();
-		this.dataset.put("count", 1);
-		this.dataset.put("inventoriesVolume", this.factory.getInventories().getVolume());
-		this.dataset.put("inventoriesNormalVolume", this.inventoriesNormalVolume);
-		this.dataset.put("inventoriesValue", this.factory.getInventories().getValue());
-		this.dataset.put("money", this.account.getAmount());
-		this.dataset.put("assets", this.account.getAmount() + this.factory.getValue());
-		this.dataset.put("tangibleAssets", this.factory.getValue());
-		this.dataset.put("liabilities", this.account.getDebt());
-		this.dataset.put("markup", this.markup);
+		this.dataset.put(keys.count, 1);
+		this.dataset.put(keys.inventoriesVolume, this.factory.getInventories().getVolume());
+		this.dataset.put(keys.inventoriesNormalVolume, this.inventoriesNormalVolume);
+		this.dataset.put(keys.inventoriesValue, this.factory.getInventories().getValue());
+		this.dataset.put(keys.money, this.account.getAmount());
+		this.dataset.put(keys.assets, this.account.getAmount() + this.factory.getValue());
+		this.dataset.put(keys.tangibleAssets, this.factory.getValue());
+		this.dataset.put(keys.liabilities, this.account.getDebt());
+		this.dataset.put(keys.markup, this.markup);
 		this.dataset.close();
 		this.supply.close();
 		this.jobOffer.close();

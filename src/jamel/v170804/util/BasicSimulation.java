@@ -2,7 +2,6 @@ package jamel.v170804.util;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -19,13 +18,15 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import jamel.Jamel;
+import jamel.util.BasicTimer;
 import jamel.util.Expression;
+import jamel.util.ExpressionFactory;
 import jamel.util.Parameters;
 import jamel.util.Phase;
 import jamel.util.Sector;
 import jamel.util.Simulation;
+import jamel.util.Timer;
 import jamel.v170804.data.Export;
-import jamel.v170804.data.ExpressionFactory;
 import jamel.v170804.gui.DynamicXYSeries;
 import jamel.v170804.gui.Gui;
 
@@ -615,17 +616,27 @@ public class BasicSimulation implements Simulation {
 
 		else if (Pattern.matches("val[\\(].*[\\)]", key)) {
 			final String argString = key.substring(4, key.length() - 1);
-			final String[] split = argString.split(",");
-			final Sector sector = this.sectors.get(split[0]);
+			final String[] split = argString.split(",",2);
+			final Sector sector = this.sectors.get(split[0].split("\\.")[0]);
 			if (sector == null) {
 				throw new RuntimeException("Sector not found: " + split[0]);
 			}
-			final String[] args = Arrays.copyOfRange(split, 1, split.length);
-			// TODO le premier argument devrait contenir non seulement le nom du
-			// secteur, mais aussi (éventuellement) des instructions permettant
-			// de limiter la sélection à un sous-ensemble des agents de ce
-			// secteur.
-			result = sector.getDataAccess(args);
+			final String[] args = split[1].split(",");
+			if (split[0].split("\\.").length==2) {
+				// on demande une valeur sur un agent particulier.
+				result = sector.getDataAccess(split[0].split("\\.")[1],args);				
+			} else {
+				// on demande une opération d'agrégation sur l'ensemble des agents (somme des données par exemple)
+				result = sector.getDataAccess(args);
+			}
+		} else if (Pattern.matches(".*[\\.].*", key)) {
+			// Récupération d'un paramètre
+			final String[] split = key.split("\\.", 2);
+			final Sector sector = this.sectors.get(split[0]);
+			if (sector == null) {
+				throw new RuntimeException("Sector not found: \"" + split[0]+"\" in string: \""+key+"\"");
+			}
+			result=ExpressionFactory.getConstant(sector.getParameters().getDoubleValue(split[1]));
 		} else {
 			throw new RuntimeException("Not yet implemented: \'" + key + "\'");
 		}

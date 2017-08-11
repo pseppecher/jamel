@@ -21,13 +21,15 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 import jamel.Jamel;
+import jamel.util.BasicTimer;
 import jamel.util.Expression;
+import jamel.util.ExpressionFactory;
 import jamel.util.Parameters;
 import jamel.util.Phase;
 import jamel.util.Sector;
 import jamel.util.Simulation;
+import jamel.util.Timer;
 import jamel.v170801.data.Export;
-import jamel.v170801.data.ExpressionFactory;
 import jamel.v170801.gui.DynamicXYSeries;
 import jamel.v170801.gui.Gui;
 

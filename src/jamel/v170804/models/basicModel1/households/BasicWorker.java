@@ -4,11 +4,13 @@ import java.util.function.Consumer;
 
 import jamel.Jamel;
 import jamel.util.Agent;
+import jamel.util.ArgChecks;
 import jamel.util.JamelObject;
 import jamel.util.NotUsedException;
 import jamel.util.Parameters;
 import jamel.util.Sector;
 import jamel.v170804.data.AgentDataset;
+import jamel.v170804.data.BasicAgentDataset;
 import jamel.v170804.models.basicModel1.banks.Account;
 import jamel.v170804.models.basicModel1.banks.Amount;
 import jamel.v170804.models.basicModel1.banks.Bank;
@@ -19,7 +21,6 @@ import jamel.v170804.models.basicModel1.firms.JobOffer;
 import jamel.v170804.models.basicModel1.firms.LaborContract;
 import jamel.v170804.models.basicModel1.firms.Supplier;
 import jamel.v170804.models.basicModel1.firms.Supply;
-import jamel.v170804.util.ArgChecks;
 
 /**
  * Represents a worker.
@@ -30,6 +31,11 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 	 * The 'employed' status.
 	 */
 	private static final int EMPLOYED = 1;
+
+	/**
+	 * The data keys.
+	 */
+	private static final BasicWorkerKeys keys = new BasicWorkerKeys();
 
 	/**
 	 * THe 'unemployed' status.
@@ -215,7 +221,7 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 		this.param_savingPropensity = Double.parseDouble(goodMarketParams.getAttribute("savingPropensity"));
 		this.param_supplySearch = Integer.parseInt(goodMarketParams.getAttribute("search"));
 
-		this.dataset = new AgentDataset(this);
+		this.dataset = new BasicAgentDataset(this, keys);
 	}
 
 	/**
@@ -225,7 +231,7 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 		long consumptionVolume = 0;
 		long consumptionValue = 0;
 		long budget = (long) (this.account.getAmount() * (1. - this.param_savingPropensity));
-		this.dataset.put("consumptionBudget", budget);
+		this.dataset.put(keys.consumptionBudget, budget);
 		if (budget > 0) {
 			final Agent[] selection = this.supplierSector.select(param_supplySearch);
 			while (budget > 0) {
@@ -274,8 +280,8 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 			}
 
 		}
-		this.dataset.put("consumptionVolume", consumptionVolume);
-		this.dataset.put("consumptionValue", consumptionValue);
+		this.dataset.put(keys.consumptionVolume, consumptionVolume);
+		this.dataset.put(keys.consumptionValue, consumptionValue);
 		// TODO updater les chiffres de la consommation et de l'épargne.
 	}
 
@@ -348,13 +354,13 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 			Jamel.println();
 			throw new RuntimeException("This worker is exhausted but there is a problem with its labor contract.");
 		}
-		this.dataset.put("countAgent", 1);
+		this.dataset.put(keys.count, 1);
 		if (this.exhausted) {
-			this.dataset.put("employed", 1);
+			this.dataset.put(keys.employed, 1);
 		} else {
-			this.dataset.put("employed", 0);
+			this.dataset.put(keys.employed, 0);
 		}
-		this.dataset.put("money", this.account.getAmount());
+		this.dataset.put(keys.money, this.account.getAmount());
 		this.dataset.close();
 		super.close();
 	}

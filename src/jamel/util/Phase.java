@@ -13,6 +13,16 @@ public interface Phase {
 	String getName();
 
 	/**
+	 * Returns the runtime (in milliseconds) of this phase since the start of
+	 * the simulation.
+	 * 
+	 * For performance purposes.
+	 * 
+	 * @return the runtime of this phase.
+	 */
+	long getRuntime();
+
+	/**
 	 * Returns the sector.
 	 * 
 	 * @return the sector.

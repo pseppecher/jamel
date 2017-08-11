@@ -3,7 +3,7 @@ package jamel.v170804.data;
 /**
  * Represents a dataset.
  */
-public interface Dataset {
+interface Dataset {
 
 	/**
 	 * Removes all of the data from this dataset. The dataset will be empty
@@ -16,23 +16,22 @@ public interface Dataset {
 	 * 
 	 * @param key
 	 *            the key for the data to be returned.
+	 *            
 	 * @return the value of the specified data.
 	 */
-	public Double get(Object key);
+	public Double get(String key);
 
 	/**
-	 * Associates the specified value with the specified key in this map. If the
-	 * map previously contained a mapping for the key, the old value is
-	 * replaced.
+	 * Inserts the specified value at the specified position in this dataset. If
+	 * the dataset previously contained a value for the specified index, an
+	 * exception is thrown.
 	 * 
-	 * @param key
-	 *            key with which the specified value is to be associated.
+	 * @param index
+	 *            index with which the specified value is to be associated.
+	 *            
 	 * @param value
 	 *            value to be associated with the specified key.
-	 * @return the previous value associated with key, or null if there was no
-	 *         mapping for key. (A null return can also indicate that the map
-	 *         previously associated null with key.)
 	 */
-	public Double put(String key, Double value);
+	public void put(int index, Number value);
 
 }

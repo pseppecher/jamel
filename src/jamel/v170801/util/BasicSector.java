@@ -211,6 +211,12 @@ public class BasicSector extends JamelObject implements Sector {
 
 			}
 
+			@Override
+			public long getRuntime() {
+				Jamel.notYetImplemented();
+				return 0;
+			}
+
 		};
 
 		return result;
@@ -243,6 +249,12 @@ public class BasicSector extends JamelObject implements Sector {
 	@Override
 	public Parameters getParameters() {
 		return this.params.get("parameters");
+	}
+
+	@Override
+	public Expression getDataAccess(String agentName, String[] args) {
+		Jamel.notYetImplemented();
+		return null;
 	}
 
 }

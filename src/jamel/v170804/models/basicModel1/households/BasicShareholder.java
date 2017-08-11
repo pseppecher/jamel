@@ -8,6 +8,7 @@ import jamel.util.NotUsedException;
 import jamel.util.Parameters;
 import jamel.util.Sector;
 import jamel.v170804.data.AgentDataset;
+import jamel.v170804.data.BasicAgentDataset;
 import jamel.v170804.models.basicModel1.banks.Account;
 import jamel.v170804.models.basicModel1.banks.Amount;
 import jamel.v170804.models.basicModel1.banks.Bank;
@@ -20,6 +21,11 @@ import jamel.v170804.models.basicModel1.firms.Supply;
  * Represents a shareholder.
  */
 public class BasicShareholder extends JamelObject implements Agent, Shareholder {
+
+	/**
+	 * The data keys.
+	 */
+	private static final BasicShareholderKeys keys = new BasicShareholderKeys();
 
 	/**
 	 * Returns the specified action.
@@ -112,7 +118,7 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 		this.param_savingPropensity = goodMarketParams.getDoubleAttribute("savingPropensity");
 		this.param_supplySearch = goodMarketParams.getIntAttribute("search");
 
-		this.dataset = new AgentDataset(this);
+		this.dataset = new BasicAgentDataset(this, keys);
 	}
 
 	/**
@@ -122,7 +128,7 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 		long consumptionVolume = 0;
 		long consumptionValue = 0;
 		long budget = (long) (this.account.getAmount() * (1. - this.param_savingPropensity));
-		this.dataset.put("consumptionBudget", budget);
+		this.dataset.put(keys.consumptionBudget, budget);
 		if (budget > 0) {
 			final Agent[] selection = this.supplierSector.select(param_supplySearch);
 			while (budget > 0) {
@@ -171,8 +177,8 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 			}
 
 		}
-		this.dataset.put("consumptionVolume", consumptionVolume);
-		this.dataset.put("consumptionValue", consumptionValue);
+		this.dataset.put(keys.consumptionVolume, consumptionVolume);
+		this.dataset.put(keys.consumptionValue, consumptionValue);
 		// TODO updater les chiffres de la consommation et de l'épargne.
 	}
 
@@ -188,8 +194,8 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 	 */
 	@Override
 	public void close() {
-		this.dataset.put("count", 1);
-		this.dataset.put("money", this.account.getAmount());
+		this.dataset.put(keys.count, 1);
+		this.dataset.put(keys.money, this.account.getAmount());
 		this.dataset.close();
 		super.close();
 	}

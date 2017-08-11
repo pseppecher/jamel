@@ -19,6 +19,20 @@ public interface Sector {
 	void doEvent(Parameters event);
 
 	/**
+	 * Returns an expression that provides an access to the specified data for
+	 * the specified agent.
+	 * 
+	 * @param agentName
+	 *            the name of the agent for the data to be accessed.
+	 * 
+	 * @param args
+	 *            the arguments specifying the data to be accessed.
+	 * 
+	 * @return an expression.
+	 */
+	Expression getDataAccess(String agentName, String[] args);
+
+	/**
 	 * Returns an expression that provides an access to the specified data.
 	 * 
 	 * @param args

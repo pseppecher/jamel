@@ -13,6 +13,11 @@ import jamel.v170804.data.AgentDataset;
 class BasicFactory extends JamelObject implements Factory {
 
 	/**
+	 * The data keys.
+	 */
+	private static final BasicFirmKeys keys = new BasicFirmKeys();
+	
+	/**
 	 * The number of machines.
 	 */
 	private final int capacity;
@@ -151,8 +156,8 @@ class BasicFactory extends JamelObject implements Factory {
 			this.values[stage] += newValues[stage];
 		}
 
-		this.dataset.put("productionValue", this.values[this.productionProcessLenght - 1]);
-		this.dataset.put("productionVolume", this.materials[this.productionProcessLenght - 1]);
+		this.dataset.put(keys.productionValue, this.values[this.productionProcessLenght - 1]);
+		this.dataset.put(keys.productionVolume, this.materials[this.productionProcessLenght - 1]);
 		this.finishedGoods.add(this.materials[this.productionProcessLenght - 1],
 				this.values[this.productionProcessLenght - 1]);
 		this.materials[this.productionProcessLenght - 1] = 0;

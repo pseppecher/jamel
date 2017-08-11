@@ -137,8 +137,6 @@ public class BasicGui extends JamelObject implements Gui {
 			throw new RuntimeException("Bad element: " + param.getName());
 		}
 
-		// this.refresh = param.getIntAttribute("refresh");
-
 		this.controlPanel = new ControlPanel(simulation);
 
 		{
@@ -193,9 +191,6 @@ public class BasicGui extends JamelObject implements Gui {
 		this.window.setTitle(windowTitle);
 		this.window.setVisible(true);
 
-		// final javax.swing.Timer timer = new javax.swing.Timer(50,
-		// this.controler);
-		// timer.start();
 	}
 
 	/**

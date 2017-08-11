@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE simulation [
+	<!ENTITY model "basicModel1"> 
+]>
+
+<simulation
+	simulationClassName="jamel.v170801.util.BasicSimulation"
+	randomSeed="0"
+>
+
+	<meta
+		title="A Monetized Economy of Production"
+	>
+		<longTitle>
+			<h2>A prototype model of</h2>
+			<h1>A Monetized Economy of Production</h1>
+			<h2>August 1, 2017</h2>
+			<p>This scenario is for debugging purpose.</p>
+		</longTitle>
+	</meta>
+
+	<gui src="config/panels.xml" />
+
+	<sectors defaultClassName="jamel.v170801.util.BasicSector">
+
+		<sector
+			name="Banks"
+			agentClassName="jamel.v170801.&model;.banks.BasicBank"
+			initialPopulation="1" />
+
+		<sector
+			name="Firms"
+			agentClassName="jamel.v170801.&model;.firms.BasicFirm"
+			initialPopulation="1000"
+		>
+			<parameters>
+				<financing bankSector="Banks" />
+				<production
+					capacity="10"
+					processLenght="4"
+					productivity="100" />
+			</parameters>
+		</sector>
+
+
+		<sector
+			name="Workers"
+			agentClassName="jamel.v170801.&model;.households.BasicWorker"
+			initialPopulation="10000"
+		>
+			<parameters bankSector="Banks">
+				<goodMarket
+					suppliers="Firms"
+					savingPropensity="0"
+					search="3" />
+				<laborMarket
+					employers="Firms"
+					flexibility="0"
+					resistance="0"
+					search="10" />
+			</parameters>
+
+		</sector>
+
+		<sector
+			name="Shareholders"
+			agentClassName="jamel.v170801.&model;.households.BasicShareholder2"
+			initialPopulation="1000"
+		>
+			<parameters
+				bankSector="Banks"
+				supplierSector="Firms"
+			>
+				<goodMarket
+					suppliers="Firms"
+					savingPropensity="0"
+					search="10" />
+			</parameters>
+		</sector>
+
+	</sectors>
+
+	<phases>
+
+		<phase name="planProduction">
+			Firms
+		</phase>
+
+		<phase name="jobSearch">
+			Workers
+		</phase>
+
+		<phase name="production">
+			Firms
+		</phase>
+
+		<phase name="consumption">
+			Shareholders, Workers
+		</phase>
+
+		<phase name="payWages">
+			Firms
+		</phase>
+
+		<phase name="debtRecovery">
+			Banks
+		</phase>
+
+		<phase name="payDividends">
+			Firms, Banks
+		</phase>
+
+	</phases>
+
+	<exports>
+		<export>
+		</export>
+	</exports>
+
+	<events>
+		<when t="2400">
+			<gui.exportCharts to="exports/pdf/">
+				<format
+					width="800"
+					height="300" />
+			</gui.exportCharts>
+			<pause />
+		</when>
+	</events>
+
+</simulation>

@@ -75,10 +75,13 @@ public class DynamicXYSeries extends XYSeries {
 			}
 		}
 		if (update) {
-			final Double xValue = this.x.getValue();
-			final Double yValue = this.y.getValue();
-			if (xValue != null && yValue != null) {
+			try {
+				final Double xValue = this.x.getValue();
+				final Double yValue = this.y.getValue();
 				this.add(xValue, yValue);
+			} catch (Exception e) {
+				throw new RuntimeException("Something went wrong while updating the series: " + this.getDescription(),
+						e);
 			}
 		}
 		if (refereshCharts) {

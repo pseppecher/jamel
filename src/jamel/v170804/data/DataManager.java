@@ -268,6 +268,95 @@ public class DataManager {
 	}
 
 	/**
+	 * Returns an expression that provides an access to the specified data for
+	 * the specified agent.
+	 * 
+	 * @param agentName
+	 *            the name of the agent for the data to be accessed.
+	 * 
+	 * @param args
+	 *            the arguments specifying the data to be accessed.
+	 * 
+	 * @return an expression.
+	 */
+	public Expression getDataAccess(String agentName, String[] args) {
+		final Expression result;
+		if (args.length != 2) {
+			Jamel.println(args);
+			throw new RuntimeException("Bad number of parameters: " + args.length);
+		}
+		final String key = agentName + "," + args[0] + "," + args[1];
+		if (this.expressions.containsKey(key)) {
+			result = this.expressions.get(key);
+		} else {
+			final String dataKey = args[0];
+			final String lags = args[1];
+			final int min = parsePeriods(lags, 0);
+			final int max = parsePeriods(lags, 1);
+			if (min != max) {
+				Jamel.println(min, max);
+				throw new RuntimeException("Bad time indexes: " + lags);
+			}
+			result = new Expression() {
+
+				/**
+				 * The date of the value in the cache.
+				 */
+				private Integer cacheDate = null;
+
+				/**
+				 * The value in the cache.
+				 */
+				private Double cacheValue = null;
+
+				@Override
+				public Double getValue() {
+					Double value = null;
+					final Integer currentPeriod = sector.getPeriod();
+					if (currentPeriod != null) {
+						if (currentPeriod.equals(this.cacheDate)) {
+							value = this.cacheValue;
+						} else {
+							final int t = currentPeriod - min;
+							final String query = "agentName=" + agentName + ", key=" + dataKey + ", t=" + t;
+							if (cache.containsKey(query)) {
+								value = cache.get(query);
+							} else {
+								Double val = null;
+								for (final Agent agent : DataManager.this.agents) {
+									if (agent.getName().equals(agentName)) {
+										val = agent.getData(dataKey, t);
+										break;
+									}
+								}
+								value = val;
+								cache.put(query, value);
+							}
+							// On met en cache le résultat pour éviter d'avoir à
+							// le
+							// calculer à nouveau au cours de cette période.
+
+							this.cacheValue = value;
+							this.cacheDate = currentPeriod;
+
+						}
+					}
+
+					return value;
+				}
+
+				@Override
+				public String toString() {
+					return "val(" + sector.getName() + ", " + dataKey + ", " + lags + ", sum)";
+				}
+
+			};
+			this.expressions.put(key, result);
+		}
+		return result;
+	}
+
+	/**
 	 * Returns an expression that provides an access to the specified data.
 	 * 
 	 * @param args
@@ -277,6 +366,10 @@ public class DataManager {
 	 */
 	public Expression getDataAccess(final String[] args) {
 		final Expression result;
+		if (args.length != 3) {
+			Jamel.println(args);
+			throw new RuntimeException("Bad number of parameters: " + args.length);
+		}
 		final String key = args[0] + "," + args[1] + "," + args[2];
 		if (this.expressions.containsKey(key)) {
 			result = this.expressions.get(key);

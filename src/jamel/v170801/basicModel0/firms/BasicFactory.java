@@ -3,10 +3,10 @@ package jamel.v170801.basicModel0.firms;
 import java.util.List;
 
 import jamel.Jamel;
+import jamel.util.BasicTimer;
 import jamel.util.JamelObject;
+import jamel.util.Timer;
 import jamel.v170801.data.AgentDataset;
-import jamel.v170801.util.BasicTimer;
-import jamel.v170801.util.Timer;
 
 /**
  * A very basic factory.

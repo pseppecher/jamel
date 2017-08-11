@@ -3,11 +3,11 @@ package jamel.v170801.basicModel1.firms;
 import java.util.List;
 
 import jamel.Jamel;
+import jamel.util.BasicTimer;
 import jamel.util.JamelObject;
 import jamel.util.Parameters;
+import jamel.util.Timer;
 import jamel.v170801.data.AgentDataset;
-import jamel.v170801.util.BasicTimer;
-import jamel.v170801.util.Timer;
 
 /**
  * A very basic factory.
@@ -61,7 +61,9 @@ class BasicFactory extends JamelObject implements Factory {
 
 	/**
 	 * Creates a new basic factory.
-	 * @param parameters 
+	 * 
+	 * @param parameters
+	 *            the parameters.
 	 * 
 	 * @param firm
 	 *            the parent firm.

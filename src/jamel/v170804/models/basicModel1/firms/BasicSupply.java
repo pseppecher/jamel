@@ -10,6 +10,11 @@ import jamel.v170804.models.basicModel1.banks.Cheque;
 public class BasicSupply extends JamelObject implements Supply {
 
 	/**
+	 * The data keys.
+	 */
+	private static final BasicFirmKeys keys = new BasicFirmKeys();
+
+	/**
 	 * The dataset.
 	 */
 	private final AgentDataset dataset;
@@ -94,8 +99,8 @@ public class BasicSupply extends JamelObject implements Supply {
 	 * Updates the dataset.
 	 */
 	void updateData() {
-		this.dataset.put("salesValue", this.salesValue);
-		this.dataset.put("salesVolume", this.salesVolume);
+		this.dataset.put(keys.salesValue, this.salesValue);
+		this.dataset.put(keys.salesVolume, this.salesVolume);
 	}
 
 	@Override
