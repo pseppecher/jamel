@@ -8,7 +8,7 @@ public class BasicLoan implements Loan {
 	/**
 	 * The account.
 	 */
-	private BasicAccount account;
+	final private BasicAccount account;
 
 	/**
 	 * If the loan is amortizing.

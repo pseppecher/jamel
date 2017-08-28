@@ -168,6 +168,12 @@ public class BasicSector extends JamelObject implements Sector {
 	}
 
 	@Override
+	public Expression getDataAccess(String agentName, String[] args) {
+		Jamel.notYetImplemented();
+		return null;
+	}
+
+	@Override
 	public Expression getDataAccess(String[] args) {
 		return this.dataManager.getDataAccess(args);
 	}
@@ -175,6 +181,11 @@ public class BasicSector extends JamelObject implements Sector {
 	@Override
 	public String getName() {
 		return this.name;
+	}
+
+	@Override
+	public Parameters getParameters() {
+		return this.params.get("parameters");
 	}
 
 	@Override
@@ -196,6 +207,12 @@ public class BasicSector extends JamelObject implements Sector {
 			}
 
 			@Override
+			public long getRuntime() {
+				Jamel.notYetImplemented();
+				return 0;
+			}
+
+			@Override
 			public Sector getSector() {
 				return BasicSector.this;
 			}
@@ -209,12 +226,6 @@ public class BasicSector extends JamelObject implements Sector {
 
 				BasicSector.this.agents.forEach(action);
 
-			}
-
-			@Override
-			public long getRuntime() {
-				Jamel.notYetImplemented();
-				return 0;
 			}
 
 		};
@@ -232,6 +243,12 @@ public class BasicSector extends JamelObject implements Sector {
 	}
 
 	@Override
+	public Agent select() {
+		Jamel.notUsed();
+		return null;
+	}
+
+	@Override
 	public Agent[] select(int n) {
 		Agent[] result = new Agent[n];
 		for (int i = 0; i < n; i++) {
@@ -244,17 +261,6 @@ public class BasicSector extends JamelObject implements Sector {
 			}
 		}
 		return result;
-	}
-
-	@Override
-	public Parameters getParameters() {
-		return this.params.get("parameters");
-	}
-
-	@Override
-	public Expression getDataAccess(String agentName, String[] args) {
-		Jamel.notYetImplemented();
-		return null;
 	}
 
 }

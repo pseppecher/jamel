@@ -23,7 +23,7 @@ public class BasicBank extends JamelObject implements Agent, Bank {
 	/**
 	 * The set of data keys.
 	 */
-	private static final BasicBankKeys keys = new BasicBankKeys();
+	private static final BasicBankKeys keys = BasicBankKeys.getInstance();
 
 	/**
 	 * Returns the specified action.

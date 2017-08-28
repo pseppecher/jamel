@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+	2017-08-18
+	Réformer profondément le fonctionnement de la banque.
+-->
+
+<simulation
+	model="jamel.v170804.models.basicModel4"
+	simulationClassName="AliasOfBasicSimulation"
+	randomSeed="0"
+>
+
+	<meta title="A Monetized Economy of Production">
+		<longTitle>
+			<h2>A prototype model of</h2>
+			<h1>A Monetized Economy of Production</h1>
+			<h2>August 18, 2017</h2>
+			<p>This scenario is for debugging purpose.</p>
+		</longTitle>
+	</meta>
+
+	<gui
+		src="config/panels.xml"
+		refresh="6" />
+
+	<sectors defaultClassName="AliasOfBasicSector">
+
+		<sector
+			name="Banks"
+			agentClassName="banks.BasicBank"
+			initialPopulation="1"
+		>
+			<parameters capitalTargetRatio="0.1" />
+		</sector>
+
+		<sector
+			name="Firms"
+			agentClassName="firms.BasicFirm"
+			initialPopulation="1000"
+		>
+			<parameters>
+				<financing 
+					bankSector="Banks" 
+					targetLeverageRatio="0.5"/>
+				<inventories 
+					normalVolume.weightOfProductionCapacity="1"
+					normalVolume.weightOfPastSales="1"/>
+				<pricing
+					initialMarkup="1.2"
+					markupFlexibility="0.01"
+					threshold="0.025"
+					/>
+				<production
+					capacity="12"
+					processLenght="4"
+					productivity="100" 
+					target.weightOfInventories="0.2"
+					target.weightOfPastSales="1.2"/>
+				<workforce>
+					<wage
+						initialValue="500"
+						flexibility="0.05" />
+					<jobContracts
+						min="12"
+						max="36" />
+				</workforce>
+				<utilization
+					normalRate="0.9" />
+			</parameters>
+		</sector>
+
+
+		<sector
+			name="Workers"
+			agentClassName="households.BasicWorker"
+			initialPopulation="10000"
+		>
+			<parameters bankSector="Banks">
+				<goodMarket
+					suppliers="Firms"
+					savingPropensity="0"
+					search="3" />
+				<laborMarket
+					employers="Firms"
+					flexibility="0.05"
+					resistance="12"
+					search="10" />
+			</parameters>
+
+		</sector>
+
+		<sector
+			name="Shareholders"
+			agentClassName="households.BasicShareholder"
+			initialPopulation="1000"
+		>
+			<parameters
+				bankSector="Banks"
+				supplierSector="Firms"
+			>
+				<goodMarket
+					suppliers="Firms"
+					savingPropensity="0"
+					search="10" />
+			</parameters>
+		</sector>
+
+	</sectors>
+
+	<phases>
+
+		<phase name="planProduction">
+			Firms
+		</phase>
+
+		<phase name="jobSearch">
+			Workers
+		</phase>
+
+		<phase name="production">
+			Firms
+		</phase>
+
+		<phase name="consumption">
+			Shareholders, Workers
+		</phase>
+
+		<phase name="payWages">
+			Firms
+		</phase>
+
+		<phase name="debtRecovery">
+			Banks
+		</phase>
+
+		<phase name="payDividends">
+			Firms, Banks
+		</phase>
+
+	</phases>
+
+	<exports>
+		<export>
+		</export>
+	</exports>
+
+	<events>
+		<when t="2400">
+			<gui.exportCharts to="exports/panels/">
+				<format
+					width="800"
+					height="300" />
+			</gui.exportCharts>
+			<pause />
+		</when>
+	</events>
+
+</simulation>

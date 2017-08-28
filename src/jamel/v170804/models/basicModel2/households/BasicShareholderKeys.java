@@ -7,6 +7,23 @@ import jamel.v170804.data.AbstractDataKeys;
  */
 public class BasicShareholderKeys extends AbstractDataKeys {
 
+	/**
+	 * An instance of {@code BasicShareholderKeys}.
+	 */
+	private static BasicShareholderKeys instance;
+
+	/**
+	 * Returns an instance of {@code BasicShareholderKeys}.
+	 * 
+	 * @return an instance of {@code BasicShareholderKeys}.
+	 */
+	static BasicShareholderKeys getInstance() {
+		if (instance == null) {
+			instance = new BasicShareholderKeys();
+		}
+		return instance;
+	}
+
 	@SuppressWarnings("javadoc")
 	final public int consumptionBudget = this.getNextIndex();
 
@@ -25,7 +42,7 @@ public class BasicShareholderKeys extends AbstractDataKeys {
 	/**
 	 * Creates a new set of data keys.
 	 */
-	BasicShareholderKeys() {
+	private BasicShareholderKeys() {
 		this.init(this.getClass().getFields());
 	}
 

@@ -19,7 +19,6 @@ import javax.swing.SwingUtilities;
 
 import jamel.Jamel;
 import jamel.util.JamelObject;
-import jamel.util.NotUsedException;
 import jamel.util.Parameters;
 import jamel.util.Simulation;
 
@@ -210,22 +209,33 @@ public class BasicGui extends JamelObject implements Gui {
 		final Parameters chartDescription = event.get("format");
 		try {
 			SwingUtilities.invokeAndWait(new Runnable() {
+				private void ensureParentFileExist(final File file) {
+					if (!file.getParentFile().exists()) {
+						file.getParentFile().mkdirs();
+					}
+				}
+
 				@Override
 				public void run() {
 					for (Component comp : panels) {
+						final String tabName = comp.getParent().getParent().getName().replaceAll(" ", "_");
 						if (comp instanceof JamelChartPanel) {
-							final String tabName = comp.getParent().getParent().getName().replaceAll(" ", "_");
 							final String filename = exportDirectoryName + tabName + "/"
 									+ ((JamelChartPanel) comp).getChart().getTitle().getText().replaceAll(" ", "_")
 									+ ".pdf";
 							final File pdfFile = new File(parent, filename);
-							if (!pdfFile.getParentFile().exists()) {
-								pdfFile.getParentFile().mkdirs();
-							}
-							((JamelChartPanel) comp).writeAsPDF(pdfFile, chartDescription);
+							ensureParentFileExist(pdfFile);
+							((JamelChartPanel) comp).export(pdfFile, chartDescription);
+						} else if (comp instanceof HtmlPanel) {
+							final String filename = exportDirectoryName + tabName + "/" + "panel.html";
+							// TODO: revoir le nommage de ce fichier
+							final File htmlFile = new File(parent, filename);
+							ensureParentFileExist(htmlFile);
+							((HtmlPanel) comp).export(htmlFile);
 						}
 					}
 				}
+
 			});
 		} catch (InvocationTargetException e) {
 			e.printStackTrace();
@@ -257,22 +267,6 @@ public class BasicGui extends JamelObject implements Gui {
 	@Override
 	public File getFile() {
 		return this.sourceFile;
-	}
-
-	@Override
-	public void notifyPause(final boolean b) {
-		throw new NotUsedException();
-		/*if (SwingUtilities.isEventDispatchThread()) {
-			this.pause = b;
-		} else {
-			SwingUtilities.invokeLater(new Runnable() {
-		
-				@Override
-				public void run() {
-					BasicGui.this.pause = b;
-				}
-			});
-		}*/
 	}
 
 	@Override

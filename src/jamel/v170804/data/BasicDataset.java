@@ -35,6 +35,11 @@ class BasicDataset implements Dataset {
 	}
 
 	@Override
+	public Double get(int index) {
+		return this.data[index];
+	}
+
+	@Override
 	public Double get(String key) {
 		return this.data[keys.indexOf(key)];
 	}
@@ -44,7 +49,11 @@ class BasicDataset implements Dataset {
 		if (index < 0 || index >= this.data.length) {
 			throw new IllegalArgumentException("Index out of range: " + index);
 		}
-		this.data[index] = value.doubleValue();
+		if (value != null) {
+			this.data[index] = value.doubleValue();
+		} else {
+			this.data[index] = null;
+		}
 	}
 
 }

@@ -26,6 +26,7 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
+import jamel.util.NotUsedException;
 import jamel.util.NotYetImplementedException;
 import jamel.util.Parameters;
 import jamel.util.Simulation;
@@ -86,8 +87,6 @@ public class Jamel {
 
 	}
 
-	/** The user preferences. */
-
 	/** This version of Jamel. */
 	final private static String version = "jamel-20170725";
 
@@ -109,18 +108,16 @@ public class Jamel {
 		if (!parameters.getName().equals("simulation")) {
 			throw new RuntimeException("Bad element: \'" + parameters.getName() + "\'");
 		}
-		// TODO clean up !
-		// final Node simulationClassNameNode =
-		// parameters.getElementsByTagName("simulationClassName").item(0);
-		/*final String simulationClassName = element.getAttribute("className");
-		if (simulationClassName.isEmpty()) {
-			throw new RuntimeException("Attribute \"className\" is missing or empty.");
-		}*//*if (simulationClassNameNode == null) {
-			throw new RuntimeException("Missing node: \"simulationClassName\".");
-			}*/
+		final String model = parameters.getAttribute("model");
+		final String simulationClassName;
+		if (model.isEmpty()) {
+			simulationClassName = parameters.getAttribute("simulationClassName");
+		} else {
+			simulationClassName = model + "." + parameters.getAttribute("simulationClassName");
+		}
+
 		try {
-			simulation = (Simulation) Class
-					.forName(parameters.getAttribute("simulationClassName"), false, ClassLoader.getSystemClassLoader())
+			simulation = (Simulation) Class.forName(simulationClassName, false, ClassLoader.getSystemClassLoader())
 					.getConstructor(Parameters.class, File.class).newInstance(parameters, file);
 		} catch (Exception e) {
 			throw new RuntimeException("Something went wrong while creating the simulation.", e);
@@ -359,14 +356,21 @@ public class Jamel {
 	}
 
 	/**
-	 * Throws a new <code>NotYetImplementedException</code>.
+	 * Throws a new {@code NotUsedException}.
+	 */
+	public static void notUsed() {
+		throw new NotUsedException();
+	}
+
+	/**
+	 * Throws a new {@code NotYetImplementedException}.
 	 */
 	public static void notYetImplemented() {
 		throw new NotYetImplementedException();
 	}
 
 	/**
-	 * Throws a new <code>NotYetImplementedException</code>.
+	 * Throws a new {@code NotYetImplementedException}.
 	 * 
 	 * @param message
 	 *            the detail message.
@@ -376,7 +380,7 @@ public class Jamel {
 	}
 
 	/**
-	 * A short cut for <code>System.out.println()</code>.
+	 * A short cut for {@code System.out.println()}.
 	 */
 	public static void println() {
 		System.out.println();
@@ -403,7 +407,7 @@ public class Jamel {
 	 * Prints several objects.
 	 *
 	 * @param objects
-	 *            The <code>Objects</code> to be printed.
+	 *            The objects to be printed.
 	 */
 	public static void println(Object... objects) {
 		for (int i = 0; i < objects.length; i++) {

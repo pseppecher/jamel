@@ -509,7 +509,7 @@ public class BasicSimulation implements Simulation {
 				}
 			});
 		} catch (InvocationTargetException | InterruptedException e) {
-			throw new RuntimeException("Something went wrong while updating the series.",e);
+			throw new RuntimeException("Something went wrong while updating the series.", e);
 		}
 		/*for (final DynamicXYSeries series : dynamicSeries) {
 			series.update();
@@ -663,6 +663,12 @@ public class BasicSimulation implements Simulation {
 			throw new IllegalArgumentException("Bad query: \"" + query + "\"");
 		}
 		return result;
+	}
+
+	@Override
+	public String getModel() {
+		Jamel.notUsed();
+		return null;
 	}
 
 	@Override

@@ -12,7 +12,7 @@ public class BasicSupply extends JamelObject implements Supply {
 	/**
 	 * The data keys.
 	 */
-	private static final BasicFirmKeys keys = new BasicFirmKeys();
+	private static final BasicFirmKeys keys = BasicFirmKeys.getInstance();
 
 	/**
 	 * The dataset.
@@ -48,6 +48,8 @@ public class BasicSupply extends JamelObject implements Supply {
 	 * The volume of this supply.
 	 */
 	private long volume;
+
+	final private Goods purchased = new BasicGoods();
 
 	/**
 	 * Creates a new supply.
@@ -138,13 +140,13 @@ public class BasicSupply extends JamelObject implements Supply {
 			throw new RuntimeException("Inconsistency");
 		}
 		this.volume -= purchase;
-		final Goods result = this.supplier.supply(purchase);
-		this.salesCosts += result.getValue();
-		result.setValue(cheque.getAmount());
-		this.salesVolume += result.getVolume();
-		this.salesValue += result.getValue();
+		this.purchased.add(this.supplier.supply(purchase));
+		this.salesCosts += purchased.getValue();
+		this.purchased.setValue(cheque.getAmount());
+		this.salesVolume += purchased.getVolume();
+		this.salesValue += purchased.getValue();
 		this.supplier.accept(cheque);
-		return result;
+		return purchased;
 	}
 
 }

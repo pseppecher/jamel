@@ -4,7 +4,10 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -360,6 +363,20 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 				previousMaximum = maximum;
 			}
 		});
+	}
+
+	/**
+	 * Writes the current panel to the specified file in HTML format.
+	 * 
+	 * @param outputFile
+	 *            the output file ({@code null} not permitted).
+	 */
+	public void export(final File outputFile) {
+		try(BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
+			writer.write(this.text);
+		} catch (IOException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	@Override

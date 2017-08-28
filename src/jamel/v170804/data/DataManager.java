@@ -43,9 +43,24 @@ public class DataManager {
 	}
 
 	/**
+	 * Constant for the MAX operator.
+	 */
+	private static final int MAX = 2;
+
+	/**
 	 * The maximum size of the cache.
 	 */
 	static final private int MAX_CACHE_SIZE = 100;
+
+	/**
+	 * Constant for the MIN operator.
+	 */
+	private static final int MIN = 1;
+
+	/**
+	 * Constant for the SUM operator.
+	 */
+	private static final int SUM = 0;
 
 	/**
 	 * Parses the string argument as a positive integer.
@@ -156,6 +171,140 @@ public class DataManager {
 	}
 
 	/**
+	 * Returns the expression for the max of all specified values for the
+	 * specified period.
+	 * 
+	 * @param dataKey
+	 *            the key of the values.
+	 * @param periods
+	 *            the periods.
+	 * @return the expression for the max.
+	 */
+	private Expression getMax(String dataKey, String periods) {
+		
+		final int min = parsePeriods(periods, 0);
+		final int max = parsePeriods(periods, 1);
+		if (min != max) {
+			Jamel.println(min, max);
+			throw new RuntimeException("Bad periods: " + periods);
+		}
+
+		final Expression expression = new Expression() {
+
+			/**
+			 * The date of the value in the cache.
+			 */
+			private Integer cacheDate = null;
+
+			/**
+			 * The value in the cache.
+			 */
+			private Double cacheValue = null;
+
+			@Override
+			public Double getValue() {
+				final Double result;
+				final Integer period = sector.getPeriod();
+				if (period != null) {
+					if (period.equals(this.cacheDate)) {
+						result = this.cacheValue;
+					} else {
+						final int t = period - min;
+
+						result = DataManager.this.getValue(dataKey, MAX, t);
+
+						// On place le résultat dans le cache de l'expression
+						// pour éviter d'avoir à le
+						// calculer à nouveau au cours de cette période.
+
+						this.cacheValue = result;
+						this.cacheDate = period;
+
+					}
+				} else {
+					result = null;
+				}
+
+				return result;
+			}
+
+			@Override
+			public String toString() {
+				return "val(" + sector.getName() + ", " + dataKey + ", " + periods + ", max)";
+			}
+
+		};
+		return expression;
+	}
+
+	/**
+	 * Returns the expression for the minimum of all specified values for the
+	 * specified period.
+	 * 
+	 * @param dataKey
+	 *            the key of the values.
+	 * @param periods
+	 *            the periods.
+	 * @return the expression for the minimum.
+	 */
+	private Expression getMin(String dataKey, String periods) {
+		
+		final int min = parsePeriods(periods, 0);
+		final int max = parsePeriods(periods, 1);
+		if (min != max) {
+			Jamel.println(min, max);
+			throw new RuntimeException("Bad periods: " + periods);
+		}
+
+		final Expression expression = new Expression() {
+
+			/**
+			 * The date of the value in the cache.
+			 */
+			private Integer cacheDate = null;
+
+			/**
+			 * The value in the cache.
+			 */
+			private Double cacheValue = null;
+
+			@Override
+			public Double getValue() {
+				final Double result;
+				final Integer period = sector.getPeriod();
+				if (period != null) {
+					if (period.equals(this.cacheDate)) {
+						result = this.cacheValue;
+					} else {
+						final int t = period - min;
+
+						result = DataManager.this.getValue(dataKey, MIN, t);
+
+						// On place le résultat dans le cache de l'expression
+						// pour éviter d'avoir à le
+						// calculer à nouveau au cours de cette période.
+
+						this.cacheValue = result;
+						this.cacheDate = period;
+
+					}
+				} else {
+					result = null;
+				}
+
+				return result;
+			}
+
+			@Override
+			public String toString() {
+				return "val(" + sector.getName() + ", " + dataKey + ", " + periods + ", min)";
+			}
+
+		};
+		return expression;
+	}
+
+	/**
 	 * Returns the expression for the sum of all specified values for the
 	 * specified period.
 	 * 
@@ -197,23 +346,7 @@ public class DataManager {
 						final int start = period - min;
 						final int end = period - max;
 						for (int t = start; t <= end; t++) {
-							Double sum = null;
-							final String query = "sum, key=" + dataKey + ", t=" + t;
-							if (cache.containsKey(query)) {
-								sum = cache.get(query);
-							} else {
-								for (final Agent agent : DataManager.this.agents) {
-									final Double val = agent.getData(dataKey, t);
-									if (val != null) {
-										if (sum == null) {
-											sum = val;
-										} else {
-											sum += val;
-										}
-									}
-								}
-								cache.put(query, sum);
-							}
+							final Double sum = DataManager.this.getValue(dataKey, SUM, t);
 							if (sum != null) {
 								if (result == null) {
 									result = sum;
@@ -223,7 +356,8 @@ public class DataManager {
 							}
 						}
 
-						// On met en cache le résultat pour éviter d'avoir à le
+						// On place le résultat dans le cache de l'expression
+						// pour éviter d'avoir à le
 						// calculer à nouveau au cours de cette période.
 
 						this.cacheValue = result;
@@ -235,29 +369,6 @@ public class DataManager {
 				return result;
 			}
 
-			/*
-			
-			Je désactive cette méthode pour en essayer une autre qui fait appel au cache.
-			
-			@Override
-			public Double getValue() {
-				Double sum = null;
-				for (final Agent agent : DataManager.this.agents) {
-					final Double val;
-					val = agent.getDataSum(dataKey, min, max);
-					if (val != null) {
-						if (sum == null) {
-							sum = val;
-						} else {
-							sum += val;
-						}
-					}
-			
-				}
-				return sum;
-			}
-			*/
-
 			@Override
 			public String toString() {
 				return "val(" + sector.getName() + ", " + dataKey + ", " + periods + ", sum)";
@@ -265,6 +376,66 @@ public class DataManager {
 
 		};
 		return expression;
+	}
+
+	/**
+	 * Returns the specified value.
+	 * 
+	 * @param dataKey
+	 *            the data key.
+	 * @param op
+	 *            the operator.
+	 * @param t
+	 *            the period.
+	 * @return the specified value.
+	 */
+	@SuppressWarnings("null")
+	private Double getValue(String dataKey, int op, int t) {
+		final Double result;
+		final String query = "dataKey=" + dataKey + ", op=" + op + ", t=" + t;
+		if (cache.containsKey(query)) {
+			result = cache.get(query);
+		} else {
+			Double sum = null;
+			Double min = null;
+			Double max = null;
+			for (int i=0; i<this.agents.size();i++) {
+				final Double val = this.agents.get(i).getData(dataKey, t);
+				if (val != null) {
+					if (sum == null) {
+						sum = val;
+						min = val;
+						max = val;
+					} else {
+						sum += val;
+						if (val < min) {
+							min = val;
+						}
+						if (val > max) {
+							max = val;
+						}
+					}
+				}
+			}
+			cache.put("dataKey=" + dataKey + ", op=" + SUM + ", t=" + t, sum);
+			cache.put("dataKey=" + dataKey + ", op=" + MIN + ", t=" + t, min);
+			cache.put("dataKey=" + dataKey + ", op=" + MAX + ", t=" + t, max);
+			switch (op) {
+			case SUM:
+				result = sum;
+				break;
+			case MIN:
+				result = min;
+				break;
+			case MAX:
+				result = max;
+				break;
+			default:
+				throw new RuntimeException("Bad operator: " + op);
+			}
+		}
+	
+		return result;
 	}
 
 	/**
@@ -380,6 +551,12 @@ public class DataManager {
 			switch (operation) {
 			case "sum":
 				result = getSum(dataKey, period);
+				break;
+			case "min":
+				result = getMin(dataKey, period);
+				break;
+			case "max":
+				result = getMax(dataKey, period);
 				break;
 			default:
 				throw new RuntimeException("Not yet implemented: " + operation);

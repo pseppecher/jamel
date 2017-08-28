@@ -212,6 +212,11 @@ public class BasicSimulation implements Simulation {
 	private Gui gui;
 
 	/**
+	 * The model.
+	 */
+	final private String model;
+
+	/**
 	 * The name of the simulation.
 	 */
 	private final String name;
@@ -316,11 +321,21 @@ public class BasicSimulation implements Simulation {
 
 		this.random = new Random(this.scenario.getIntAttribute("randomSeed"));
 
+		this.model = scenario.getAttribute("model");
+
 		// Looks for the sectors.
 
 		{
 			final Parameters sectorsTag = this.scenario.get("sectors");
-			final String defaultClassName = sectorsTag.getAttribute("defaultClassName");
+			final String defaultClassName;
+			final String defaultClassAttribute = sectorsTag.getAttribute("defaultClassName");
+			Jamel.println("defaultClassAttribute", defaultClassAttribute);
+			if (this.model.isEmpty()) {
+				defaultClassName = defaultClassAttribute;
+			} else {
+				defaultClassName = this.model + "." + defaultClassAttribute;
+			}
+			Jamel.println("defaultClassName", defaultClassName);
 			for (final Parameters params : sectorsTag.getAll("sector")) {
 				final Sector sector = getNewSector(this, params, defaultClassName);
 				this.sectors.put(sector.getName(), sector);
@@ -616,17 +631,18 @@ public class BasicSimulation implements Simulation {
 
 		else if (Pattern.matches("val[\\(].*[\\)]", key)) {
 			final String argString = key.substring(4, key.length() - 1);
-			final String[] split = argString.split(",",2);
+			final String[] split = argString.split(",", 2);
 			final Sector sector = this.sectors.get(split[0].split("\\.")[0]);
 			if (sector == null) {
 				throw new RuntimeException("Sector not found: " + split[0]);
 			}
 			final String[] args = split[1].split(",");
-			if (split[0].split("\\.").length==2) {
+			if (split[0].split("\\.").length == 2) {
 				// on demande une valeur sur un agent particulier.
-				result = sector.getDataAccess(split[0].split("\\.")[1],args);				
+				result = sector.getDataAccess(split[0].split("\\.")[1], args);
 			} else {
-				// on demande une opération d'agrégation sur l'ensemble des agents (somme des données par exemple)
+				// on demande une opération d'agrégation sur l'ensemble des
+				// agents (somme des données par exemple)
 				result = sector.getDataAccess(args);
 			}
 		} else if (Pattern.matches(".*[\\.].*", key)) {
@@ -634,9 +650,9 @@ public class BasicSimulation implements Simulation {
 			final String[] split = key.split("\\.", 2);
 			final Sector sector = this.sectors.get(split[0]);
 			if (sector == null) {
-				throw new RuntimeException("Sector not found: \"" + split[0]+"\" in string: \""+key+"\"");
+				throw new RuntimeException("Sector not found: \"" + split[0] + "\" in string: \"" + key + "\"");
 			}
-			result=ExpressionFactory.getConstant(sector.getParameters().getDoubleValue(split[1]));
+			result = ExpressionFactory.getConstant(sector.getParameters().getDoubleValue(split[1]));
 		} else {
 			throw new RuntimeException("Not yet implemented: \'" + key + "\'");
 		}
@@ -668,6 +684,11 @@ public class BasicSimulation implements Simulation {
 			throw new IllegalArgumentException("Bad query: \"" + query + "\"");
 		}
 		return result;
+	}
+
+	@Override
+	public String getModel() {
+		return this.model;
 	}
 
 	@Override

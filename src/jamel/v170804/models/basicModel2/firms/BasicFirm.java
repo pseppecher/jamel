@@ -27,7 +27,7 @@ public class BasicFirm extends JamelObject implements Agent, Firm, Employer, Sup
 	/**
 	 * The data keys.
 	 */
-	private static final BasicFirmKeys keys = new BasicFirmKeys();
+	private static final BasicFirmKeys keys = BasicFirmKeys.getInstance();
 
 	/**
 	 * To test the validity of job contracts.

@@ -7,6 +7,23 @@ import jamel.v170804.data.AbstractDataKeys;
  */
 final class BasicFirmKeys extends AbstractDataKeys {
 
+	/**
+	 * An instance of {@code BasicFirmKeys}.
+	 */
+	private static BasicFirmKeys instance;
+
+	/**
+	 * Returns an instance of {@code BasicShareholderKeys}.
+	 * 
+	 * @return an instance of {@code BasicShareholderKeys}.
+	 */
+	static BasicFirmKeys getInstance() {
+		if (instance == null) {
+			instance = new BasicFirmKeys();
+		}
+		return instance;
+	}
+
 	@SuppressWarnings("javadoc")
 	final public int assets = this.getNextIndex();
 
@@ -91,7 +108,7 @@ final class BasicFirmKeys extends AbstractDataKeys {
 	/**
 	 * Creates a new set of data keys.
 	 */
-	BasicFirmKeys() {
+	private BasicFirmKeys() {
 		this.init(this.getClass().getFields());
 	}
 

@@ -25,6 +25,7 @@ import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
+import jamel.Jamel;
 import jamel.util.Parameters;
 import jamel.util.Simulation;
 
@@ -184,34 +185,32 @@ public class JamelChartFactory {
 						seriesPaint = JamelColor.getColor(color);
 					}
 				}
-				renderer.setSeriesPaint(k, seriesPaint);
-
-				// Line visibility
-
-				renderer.setSeriesLinesVisible(k, (!seriesElement.getAttribute("linesVisible").equals("false")));
-
-				// Shapes
+				
+				// Shapes ?
 
 				final Shape shape = renderer.getBaseShape();
 				// final Shape lineshape = renderer.getline();
 
 				if (seriesElement.getAttribute("shapesVisible").equals("true")) {
 					renderer.setSeriesShapesVisible(k, true);
-					final String fillColor;
-					if (seriesElement.get("fillColor") != null) {
-						fillColor = seriesElement.get("fillColor").getText();
-					} else {
-						fillColor = null;
-					}
-					if (fillColor == null) {
-						renderer.setUseFillPaint(false);
-					} else {
-						renderer.setUseFillPaint(true);
-						renderer.setSeriesFillPaint(k, JamelColor.getColor(fillColor));
-					}
+					renderer.setUseFillPaint(true);
+					renderer.setSeriesFillPaint(k, seriesPaint);
 				} else {
 					renderer.setSeriesShapesVisible(k, false);
 				}
+				
+				// Line color
+				
+				if (seriesElement.hasAttribute("lineColor")) {
+					final Color lineColor = JamelColor.getColor(seriesElement.getAttribute("lineColor"));
+					renderer.setSeriesPaint(k, lineColor);					
+				} else {
+					renderer.setSeriesPaint(k, seriesPaint);				
+				}
+
+				// Line visibility
+
+				renderer.setSeriesLinesVisible(k, (!seriesElement.getAttribute("linesVisible").equals("false")));
 
 				// Preparing default legend:
 
@@ -276,6 +275,7 @@ public class JamelChartFactory {
 		final JamelChart result = new JamelChart(name, plot,simulation) {
 			@Override
 			public void addTimeMarker(ValueMarker marker) {
+				Jamel.notYetImplemented();
 				// Does nothing. TODO implement
 			}
 

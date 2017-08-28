@@ -59,6 +59,56 @@ public class BasicAgentDataset extends JamelObject implements AgentDataset {
 		return this.agent;
 	}
 
+	@Override
+	public double getAverage(int dataKey, int laps) {
+		if (laps<0 || laps>maxSize) {
+			throw new RuntimeException("Bad value: "+laps);
+		}
+		final double result;
+		double sum = 0;
+		int count = 0;
+		for (final Dataset dataset : this.data) {
+			final Double value = dataset.get(dataKey);
+			if (value != null) {
+				sum += value;
+				count++;
+			}
+			if (count == laps) {
+				break;
+			}
+		}
+		if (count > 0) {
+			result = sum / count;
+		} else {
+			result = 0;
+		}
+		return result;
+	}
+
+	/**
+	 * Returns the value of the specified data.
+	 * 
+	 * @param index
+	 *            the index for the data to be returned.
+	 * @param t
+	 *            the period of the data to be returned
+	 * @return the value of the specified data.
+	 */
+	@Override
+	public Double getData(final int index, final int t) {
+		final int timeIndex = this.getPeriod() - t;
+		if (timeIndex < 0 || timeIndex >= maxSize) {
+			throw new IllegalArgumentException("Bad lag: " + timeIndex);
+		}
+		final Double result;
+		if (timeIndex >= this.data.size()) {
+			result = null;
+		} else {
+			result = this.data.get(timeIndex).get(index);
+		}
+		return result;
+	}
+
 	/**
 	 * Returns the value of the specified data.
 	 * 

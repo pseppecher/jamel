@@ -1,6 +1,5 @@
 package jamel.util;
 
-import java.security.InvalidParameterException;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
@@ -58,9 +57,8 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified addition.
 	 */
 	private static Expression getAddition(final Expression arg1, final Expression arg2) {
-		if (arg1 == null || arg2 == null) {
-			throw new InvalidParameterException("Null");
-		}
+		ArgChecks.nullNotPermitted(arg1, "arg1");
+		ArgChecks.nullNotPermitted(arg2, "arg2");
 		final Expression result = new Expression() {
 
 			@Override
@@ -95,9 +93,8 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified division.
 	 */
 	private static Expression getDivision(final Expression arg1, final Expression arg2) {
-		if (arg1 == null || arg2 == null) {
-			throw new InvalidParameterException("Null");
-		}
+		ArgChecks.nullNotPermitted(arg1, "arg1");
+		ArgChecks.nullNotPermitted(arg2, "arg2");
 		final Expression result = new Expression() {
 
 			@Override
@@ -130,9 +127,8 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified modulo operation.
 	 */
 	private static Expression getModulo(final Expression arg1, final Expression arg2) {
-		if (arg1 == null || arg2 == null) {
-			throw new InvalidParameterException("Null");
-		}
+		ArgChecks.nullNotPermitted(arg1, "arg1");
+		ArgChecks.nullNotPermitted(arg2, "arg2");
 		final Expression result = new Expression() {
 
 			@Override
@@ -165,9 +161,8 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified multiplication.
 	 */
 	private static Expression getMultiplication(final Expression arg1, final Expression arg2) {
-		if (arg1 == null || arg2 == null) {
-			throw new IllegalArgumentException("Null.");
-		}
+		ArgChecks.nullNotPermitted(arg1, "arg1");
+		ArgChecks.nullNotPermitted(arg2, "arg2");
 		final Expression result = new Expression() {
 
 			@Override
@@ -239,24 +234,22 @@ public class ExpressionFactory extends JamelObject {
 	/**
 	 * Returns the opposite of the specified expression.
 	 * 
-	 * @param arg1
+	 * @param arg
 	 *            the specified expression.
 	 * @return the opposite of the specified expression.
 	 */
-	private static Expression getOpposite(final Expression arg1) {
-		if (arg1 == null) {
-			throw new InvalidParameterException("Null");
-		}
+	private static Expression getOpposite(final Expression arg) {
+		ArgChecks.nullNotPermitted(arg, "arg");
 		final Expression result = new Expression() {
 
 			@Override
 			public Double getValue() {
-				return -arg1.getValue();
+				return -arg.getValue();
 			}
 
 			@Override
 			public String toString() {
-				return "- " + arg1.toString();
+				return "- " + arg.toString();
 			}
 
 		};
@@ -273,9 +266,8 @@ public class ExpressionFactory extends JamelObject {
 	 * @return the specified subtraction.
 	 */
 	private static Expression getSubtraction(final Expression arg1, final Expression arg2) {
-		if (arg1 == null || arg2 == null) {
-			throw new InvalidParameterException("Null");
-		}
+		ArgChecks.nullNotPermitted(arg1, "arg1");
+		ArgChecks.nullNotPermitted(arg2, "arg2");
 		final Expression result = new Expression() {
 
 			@Override
@@ -313,9 +305,8 @@ public class ExpressionFactory extends JamelObject {
 	 *         <code>0</code> otherwise.
 	 */
 	private static Expression getTestEqual(Expression arg1, Expression arg2) {
-		if (arg1 == null || arg2 == null) {
-			throw new InvalidParameterException("Null");
-		}
+		ArgChecks.nullNotPermitted(arg1, "arg1");
+		ArgChecks.nullNotPermitted(arg2, "arg2");
 		final Expression result = new Expression() {
 
 			@Override
@@ -412,16 +403,17 @@ public class ExpressionFactory extends JamelObject {
 	/**
 	 * Returns a new constant expression.
 	 * 
-	 * @param d
+	 * @param arg1
 	 *            the number value to be returned by the expression.
 	 * @return a new constant expression.
 	 */
-	public static Expression getConstant(Number d) {
+	public static Expression getConstant(Number arg1) {
+		ArgChecks.nullNotPermitted(arg1, "arg1");
 		final Expression result;
-		if (d == null) {
+		if (arg1 == null) {
 			result = getNull();
 		} else {
-			result = getNumeric(d.doubleValue());
+			result = getNumeric(arg1.doubleValue());
 		}
 		return result;
 	}

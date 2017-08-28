@@ -669,7 +669,7 @@
 		<col/>
 		
 		<html>
-			Period:<data format="##0">t</data><br />
+			Period: <data format="##0">t</data><br />
 			&aFirm; price: <data format="##0.##">val(Firms.firm_0, price, t)</data><br />
 			Sector average price: <data format="##0.##">val(Firms, price, t, sum)/val(Firms, count, t, sum)</data><br />
 			Sector average (ex post) markup: <data format="##0.##">val(Firms, salesValue, t, sum)/val(Firms, salesCosts, t, sum)</data><br />

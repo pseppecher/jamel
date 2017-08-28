@@ -20,6 +20,29 @@ public interface AgentDataset {
 	Agent getAgent();
 
 	/**
+	 * Returns the average value of the specified subset of data.
+	 * 
+	 * @param index
+	 *            the index for the data to be averaged.
+	 * @param laps
+	 *            the number of data in the subset.
+	 *            
+	 * @return the average of the specified data.
+	 */
+	double getAverage(int index, int laps);
+
+	/**
+	 * Returns the value of the specified data.
+	 * 
+	 * @param index
+	 *            the index for the data to be returned.
+	 * @param t
+	 *            the period of the data to be returned
+	 * @return the value of the specified data.
+	 */
+	Double getData(int index, int t);
+
+	/**
 	 * Returns the value of the specified data.
 	 * 
 	 * @param key

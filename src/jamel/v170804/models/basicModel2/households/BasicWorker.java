@@ -35,7 +35,7 @@ public class BasicWorker extends JamelObject implements Agent, Worker {
 	/**
 	 * The data keys.
 	 */
-	private static final BasicWorkerKeys keys = new BasicWorkerKeys();
+	private static final BasicWorkerKeys keys = BasicWorkerKeys.getInstance();
 
 	/**
 	 * THe 'unemployed' status.

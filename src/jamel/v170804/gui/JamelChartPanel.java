@@ -59,11 +59,11 @@ public class JamelChartPanel extends ChartPanel implements Updatable {
 	 * OrsonPDF (which is non-free software).
 	 * 
 	 * @param file
-	 *            the output file (<code>null</code> not permitted).
+	 *            the output file ({@code null} not permitted).
 	 * @param params
 	 *            formating parameters.
 	 */
-	public void writeAsPDF(File file, Parameters params) {
+	public void export(final File file, final Parameters params) {
 		ArgChecks.nullNotPermitted(file, "file");
 		final int w;
 		final int h;

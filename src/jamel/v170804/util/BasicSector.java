@@ -100,7 +100,7 @@ public class BasicSector extends JamelObject implements Sector {
 	/**
 	 * The list of the phases, accessible by their names.
 	 */
-	private Map<String, Phase> phases = new HashMap<>();
+	final private Map<String, Phase> phases = new HashMap<>();
 
 	/**
 	 * Creates a new basic sector.
@@ -115,13 +115,20 @@ public class BasicSector extends JamelObject implements Sector {
 		super(simulation);
 		this.params = params;
 		this.name = this.params.getAttribute("name");
+		final String model = this.getSimulation().getModel();
 
-		// Inits the type of the agents.
+		// Initializes the type of the agents.
 
 		{
-			final String agentClassName = this.params.getAttribute("agentClassName");
-			if (agentClassName.isEmpty()) {
+			final String agentClassName;
+			final String attributeAgentClassName = this.params.getAttribute("agentClassName");
+			if (attributeAgentClassName.isEmpty()) {
 				throw new RuntimeException("Sector \'" + this.name + "\': missing or empty attribute: agentClassName");
+			}
+			if (model.isEmpty()) {
+				agentClassName = attributeAgentClassName;
+			} else {
+				agentClassName = model + "." + attributeAgentClassName;
 			}
 			try {
 				final Class<?> klass = Class.forName(agentClassName);
@@ -299,8 +306,14 @@ public class BasicSector extends JamelObject implements Sector {
 	}
 
 	@Override
-	public Agent[] select(int n) {
-		Agent[] result = new Agent[n];
+	public Agent select() {
+		Agent result = this.agents.get(this.getRandom().nextInt(this.agents.size()));
+		return result;
+	}
+
+	@Override
+	public Agent[] select(final int n) {
+		final Agent[] result = new Agent[n];
 		for (int i = 0; i < n; i++) {
 			result[i] = this.agents.get(this.getRandom().nextInt(this.agents.size()));
 			for (int j = 0; j < i - 1; j++) {

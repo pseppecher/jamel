@@ -89,6 +89,13 @@ public interface Sector {
 	void open();
 
 	/**
+	 * Returns an agent selected at random.
+	 * 
+	 * @return an agent selected at random.
+	 */
+	Agent select();
+
+	/**
 	 * Returns a random selection of <code>n</code> agents.
 	 * 
 	 * @param n

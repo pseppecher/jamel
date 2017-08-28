@@ -15,7 +15,7 @@ class BasicFactory extends JamelObject implements Factory {
 	/**
 	 * The data keys.
 	 */
-	private static final BasicFirmKeys keys = new BasicFirmKeys();
+	private static final BasicFirmKeys keys = BasicFirmKeys.getInstance();
 
 	/**
 	 * The number of machines.

@@ -53,14 +53,6 @@ public interface Gui {
 	void open();
 
 	/**
-	 * TODO: remove this method.
-	 * 
-	 * @param b
-	 *            a boolean.
-	 */
-	void notifyPause(boolean b);
-
-	/**
 	 * Refresh the gui.
 	 */
 	void refresh();

@@ -143,7 +143,7 @@
 
 	<events>
 		<when t="2400">
-			<gui.exportCharts to="exports/pdf/">
+			<gui.exportCharts to="exports/panels/">
 				<format
 					width="800"
 					height="300" />

@@ -67,7 +67,7 @@ public class Parameters {
 	 * The encapsulated XML element.
 	 */
 	final private Element element;
-	
+
 	/**
 	 * The string representation of these parameters.
 	 */
@@ -183,19 +183,23 @@ public class Parameters {
 	 */
 	public Double getDoubleValue(String key) {
 		final Double result;
-		final String[] split = key.split("\\.", 2);
-		if (split.length == 1) {
+		if (this.hasAttribute(key)) {
 			result = this.getDoubleAttribute(key);
-			if (result == null) {
-				throw new RuntimeException("Parameter not found: " + key);
-			}
 		} else {
-			final Parameters sub = this.get(split[0]);
-			if (sub == null) {
-				throw new RuntimeException("Parameter not found: " + key);
-				// result = null;
+			final String[] split = key.split("\\.", 2);
+			if (split.length == 1) {
+				result = this.getDoubleAttribute(key);
+				if (result == null) {
+					throw new RuntimeException("Parameter not found: " + key);
+				}
+			} else {
+				final Parameters sub = this.get(split[0]);
+				if (sub == null) {
+					throw new RuntimeException("Parameter not found: " + key);
+					// result = null;
+				}
+				result = sub.getDoubleValue(split[1]);
 			}
-			result = sub.getDoubleValue(split[1]);
 		}
 		return result;
 	}
@@ -218,7 +222,8 @@ public class Parameters {
 	 */
 	public Integer getIntAttribute(String name) {
 		if (!this.element.hasAttribute(name)) {
-			throw new RuntimeException("Parameter not found: \"" + name+"\" in \""+this.element.getTagName()+"\".");
+			throw new RuntimeException(
+					"Parameter not found: \"" + name + "\" in \"" + this.element.getTagName() + "\".");
 		}
 		return Integer.parseInt(this.element.getAttribute(name));
 	}

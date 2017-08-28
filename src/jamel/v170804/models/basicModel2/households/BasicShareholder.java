@@ -25,7 +25,7 @@ public class BasicShareholder extends JamelObject implements Agent, Shareholder 
 	/**
 	 * The data keys.
 	 */
-	private static final BasicShareholderKeys keys = new BasicShareholderKeys();
+	private static final BasicShareholderKeys keys = BasicShareholderKeys.getInstance();
 
 	/**
 	 * Returns the specified action.

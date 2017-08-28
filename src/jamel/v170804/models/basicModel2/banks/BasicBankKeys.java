@@ -7,6 +7,23 @@ import jamel.v170804.data.AbstractDataKeys;
  */
 public class BasicBankKeys extends AbstractDataKeys {
 
+	/**
+	 * An instance of {@code BasicBankKeys}.
+	 */
+	private static BasicBankKeys instance;
+
+	/**
+	 * Returns an instance of {@code BasicShareholderKeys}.
+	 * 
+	 * @return an instance of {@code BasicShareholderKeys}.
+	 */
+	static BasicBankKeys getInstance() {
+		if (instance == null) {
+			instance = new BasicBankKeys();
+		}
+		return instance;
+	}
+
 	@SuppressWarnings("javadoc")
 	final public int assets = this.getNextIndex();
 
@@ -19,7 +36,7 @@ public class BasicBankKeys extends AbstractDataKeys {
 	/**
 	 * Creates a new set of data keys.
 	 */
-	BasicBankKeys() {
+	private BasicBankKeys() {
 		init(this.getClass().getFields());
 	}
 

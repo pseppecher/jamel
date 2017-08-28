@@ -53,6 +53,19 @@ public abstract class JamelObject {
 	}
 
 	/**
+	 * Returns {@code true} if the given period is the current period,
+	 * {@code false} otherwise.
+	 * 
+	 * @param period
+	 *            the period to be checked.
+	 * @return Return {@code true} if the given period is the current period,
+	 *         {@code false} otherwise.
+	 */
+	protected boolean isCurrent(Integer period) {
+		return (t.equals(period));
+	}
+
+	/**
 	 * Opens the object.
 	 * Must be called at the beginning of the period.
 	 */
@@ -75,7 +88,7 @@ public abstract class JamelObject {
 		}
 		this.open = true;
 	}
-
+	
 	/**
 	 * Returns the value of the current period.
 	 * 

@@ -49,6 +49,9 @@ public class AbstractDataKeys implements DataKeys {
 
 	@Override
 	final public int indexOf(String key) {
+		if (!this.keys.containsKey(key)) {
+			throw new RuntimeException("Unknown data key: " + key);
+		}
 		return this.keys.get(key);
 	}
 

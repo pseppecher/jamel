@@ -1,6 +1,6 @@
 #Jamel: Java Agent-based MacroEconomic Laboratory
 
-May 2017: refactoring (work in progress)
+May-August 2017: refactoring (work in progress)
 
 More info: [http://p.seppecher.free.fr/jamel/](http://p.seppecher.free.fr/jamel/)
 

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 18 août 2017 -->
+
+<!DOCTYPE gui [
+	<!ENTITY refresh "isEqual(t&#37;1, 0)"> 
+	<!ENTITY laps "t"> 
+	<!ENTITY aFirm "Firm_100"> 
+	<!ENTITY aWorker "Worker_0">
+]>
+
+<gui className="jamel.v170804.gui.BasicGui">
+
+	<panel title="Performances">
+
+		<html>
+			<center>
+				<h2>Profiling and debugging</h2>
+			</center>
+		</html>
+
+		<chart title="Simulation Speed">
+			<series label="Average">
+				<x>t</x>
+				<y>1000*t/duration</y>
+			</series>
+			<series label="Instantaneous">
+				<x>t</x>
+				<y>1000*speed</y>
+			</series>
+			<yAxis label="Periods by second" />
+		</chart>
+
+		<chart title="Memory usage">
+			<series label="Total Memory">
+				<x>t</x>
+				<y>totalMemory/1000000</y>
+			</series>
+			<series label="Used">
+				<x>t</x>
+				<y>(totalMemory-freeMemory)/1000000</y>
+			</series>
+			<yAxis label="Megabytes" />
+		</chart>
+
+		<col />
+
+		<html>
+			Period:
+			<data format="##0">t</data>
+			<br />
+			Simulation duration:
+			<data format="##0">duration/1000</data>
+			s
+			<br />
+			Instantaneous speed:
+			<data format="##0.00">1000*speed</data>
+			periods by second
+			<br />
+			Average speed:
+			<data format="##0.00">1000*t/duration</data>
+			periods by second
+			<br />
+			Total memory:
+			<data format="##0.00">totalMemory/1000000</data>
+			MB
+			<br />
+			Free memory:
+			<data format="##0.00">freeMemory/1000000</data>
+			MB
+			<br />
+		</html>
+
+		<empty />
+
+		<empty />
+
+		<col />
+
+		<chart title="Phase performances">
+
+			<series label="Firms.planProduction">
+				<x>t</x>
+				<y>val(Firms, phase.planProduction.runtime)/t</y>
+			</series>
+			<series label="Workers.jobSearch">
+				<x>t</x>
+				<y>val(Workers, phase.jobSearch.runtime)/t</y>
+			</series>
+			<series label="Workers.consumption">
+				<x>t</x>
+				<y>val(Workers, phase.consumption.runtime)/t</y>
+			</series>
+			<series label="Shareholders.consumption">
+				<x>t</x>
+				<y>val(Shareholders, phase.consumption.runtime)/t</y>
+			</series>
+			<series label="Firms.payWages">
+				<x>t</x>
+				<y>val(Firms, phase.payWages.runtime)/t</y>
+			</series>
+			<series label="Banks.debtRecovery">
+				<x>t</x>
+				<y>val(Banks, phase.debtRecovery.runtime)/t</y>
+			</series>
+			<series label="Banks.payDividends">
+				<x>t</x>
+				<y>val(Banks, phase.payDividends.runtime)/t</y>
+			</series>
+			<series label="Firms.payDividends">
+				<x>t</x>
+				<y>val(Firms, phase.payDividends.runtime)/t</y>
+			</series>
+
+		</chart>
+
+		<empty />
+		<empty />
+
+	</panel>
+</gui>

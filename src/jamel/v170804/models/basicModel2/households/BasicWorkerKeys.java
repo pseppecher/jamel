@@ -6,7 +6,24 @@ import jamel.v170804.data.AbstractDataKeys;
  * Data keys for the {@code BasicWorker}.
  */
 public class BasicWorkerKeys extends AbstractDataKeys {
-	
+
+	/**
+	 * An instance of {@code BasicWorkerKeys}.
+	 */
+	private static BasicWorkerKeys instance;
+
+	/**
+	 * Returns an instance of {@code BasicWorkerKeys}.
+	 * 
+	 * @return an instance of {@code BasicWorkerKeys}.
+	 */
+	public static BasicWorkerKeys getInstance() {
+		if (instance == null) {
+			instance = new BasicWorkerKeys();
+		}
+		return instance;
+	}
+
 	@SuppressWarnings("javadoc")
 	final public int consumptionBudget = getNextIndex();
 
@@ -55,7 +72,7 @@ public class BasicWorkerKeys extends AbstractDataKeys {
 	/**
 	 * Creates a new set of data keys.
 	 */
-	BasicWorkerKeys() {
+	private BasicWorkerKeys() {
 		this.init(this.getClass().getFields());
 	}
 

@@ -14,9 +14,19 @@ interface Dataset {
 	/**
 	 * Returns the value of the specified data.
 	 * 
+	 * @param index
+	 *            the index of the data to be returned.
+	 * 
+	 * @return the value of the specified data.
+	 */
+	public Double get(int index);
+
+	/**
+	 * Returns the value of the specified data.
+	 * 
 	 * @param key
 	 *            the key for the data to be returned.
-	 *            
+	 * 
 	 * @return the value of the specified data.
 	 */
 	public Double get(String key);
@@ -28,7 +38,7 @@ interface Dataset {
 	 * 
 	 * @param index
 	 *            index with which the specified value is to be associated.
-	 *            
+	 * 
 	 * @param value
 	 *            value to be associated with the specified key.
 	 */
