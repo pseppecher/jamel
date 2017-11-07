@@ -1,15 +1,26 @@
 package jamel.util;
 
+import org.jfree.data.xy.XYDataItem;
+
 /**
  * Represents an agent.
  */
 public interface Agent {
 
-	/**
-	 * Closes this agent.
-	 * Must be called at the end of the period.
-	 */
 	void close();
+
+	void doEvent(Parameters event);
+
+	/**
+	 * Returns the specified data.
+	 * 
+	 * @param dataIndex
+	 *            the index of the data to be returned.
+	 * @param t
+	 *            the period of the data to be returned.
+	 * @return the specified data.
+	 */
+	Double getData(int dataIndex, int t);
 
 	/**
 	 * Returns the specified data.
@@ -30,23 +41,16 @@ public interface Agent {
 	String getName();
 
 	/**
-	 * Returns the sector of this agent.
+	 * Returns the simulation.
 	 * 
-	 * @return the sector of this agent
-	 */
-	Sector getSector();
-
-	/**
-	 * Returns the parent simulation.
-	 * 
-	 * @return the parent simulation.
+	 * @return the simulation.
 	 */
 	Simulation getSimulation();
 
-	/**
-	 * Opens this agent.
-	 * Must be called at the beginning of the period.
-	 */
+	XYDataItem getXYDataItem(String x, String y, int period);
+
 	void open();
+
+	boolean satisfy(String criteria);
 
 }

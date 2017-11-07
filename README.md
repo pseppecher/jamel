@@ -1,6 +1,8 @@
-#Jamel: Java Agent-based MacroEconomic Laboratory
+# Jamel: Java Agent-based MacroEconomic Laboratory
 
-May-August 2017: refactoring (work in progress)
+May-November 2017: refactoring (work in progress)
+
+November 2017: Source code and scenario for the paper "Is the Market Really a Good Teacher?"
 
 More info: [http://p.seppecher.free.fr/jamel/](http://p.seppecher.free.fr/jamel/)
 

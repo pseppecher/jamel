@@ -1,0 +1,4 @@
+/**
+ * 
+ */
+package jamel.models.util;

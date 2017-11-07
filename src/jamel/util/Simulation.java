@@ -3,7 +3,7 @@ package jamel.util;
 import java.io.File;
 import java.util.Random;
 
-import org.jfree.data.xy.XYSeries;
+import jamel.data.Expression;
 
 /**
  * Represents a simulation.
@@ -11,40 +11,34 @@ import org.jfree.data.xy.XYSeries;
 public interface Simulation {
 
 	/**
-	 * Returns an expression that provides access to the specified simulation
-	 * data.
+	 * Returns an access to the simulation duration.
 	 * 
-	 * @param key
-	 *            the description of the data to be returned.
-	 * @return an expression that provides access to the specified simulation
-	 *         data.
+	 * @return an access to the simulation duration.
 	 */
-	Expression getDataAccess(String key);
+	Expression getDuration();
 
 	/**
-	 * Returns the specified numerical expression.
+	 * Returns the scenario file.
 	 * 
-	 * @param key
-	 *            the description of the expression to be returned.
-	 * @return the specified numerical expression.
-	 */
-	Expression getExpression(String key);
-
-	/**
-	 * Returns the scenario file of this simulation.
-	 * 
-	 * @return the scenario file of this simulation.
+	 * @return the scenario file.
 	 */
 	File getFile();
 
 	/**
-	 * Returns the specified information about this simulation.
+	 * Returns an access to the simulation free memory.
 	 * 
-	 * @param query
-	 *            a query that specifies the information to be returned.
-	 * @return a string that contains the specified information.
+	 * @return an access to the simulation free memory.
 	 */
-	String getInfo(String query);
+	Expression getFreeMemory();
+
+	/**
+	 * Returns some informations about this simulation.
+	 * 
+	 * @param key
+	 *            the key of the information to be returned.
+	 * @return some informations about this simulation.
+	 */
+	String getInfo(String key);
 
 	/**
 	 * Returns the model.
@@ -61,11 +55,20 @@ public interface Simulation {
 	String getName();
 
 	/**
-	 * Returns the value of the current period.
+	 * Returns the current period.
 	 * 
-	 * @return the value of the current period.
+	 * @return the current period.
 	 */
 	int getPeriod();
+
+	/**
+	 * Returns a public data.
+	 * 
+	 * @param key
+	 *            the key for the data to be returned.
+	 * @return a public data.
+	 */
+	Double getPublicData(String key);
 
 	/**
 	 * Returns the random.
@@ -76,6 +79,7 @@ public interface Simulation {
 
 	/**
 	 * Returns the specified sector.
+	 * Used by a sector to get access to another sector.
 	 * 
 	 * @param name
 	 *            the name of the sector to be returned.
@@ -84,29 +88,36 @@ public interface Simulation {
 	Sector getSector(String name);
 
 	/**
-	 * Returns the specified series.
+	 * Returns an access to the simulation speed.
 	 * 
-	 * @param x
-	 *            the description of x values.
-	 * @param y
-	 *            the description of y values.
-	 * @param conditions
-	 *            the description of the update conditions (null allowed).
-	 * @return the specified series.
+	 * @return an access to the simulation speed.
 	 */
-	XYSeries getSeries(String x, String y, String conditions);
+	Expression getSpeed();
 
 	/**
-	 * Returns <code>true</code> if this simulation is paused,
-	 * <code>false</code> otherwise.
+	 * Returns an access to the current period.
 	 * 
-	 * @return <code>true</code> if this simulation is paused,
-	 *         <code>false</code> otherwise.
+	 * @return an access to the current period
+	 */
+	Expression getTime();
+
+	/**
+	 * Returns an access to the simulation total memory.
+	 * 
+	 * @return an access to the simulation total memory.
+	 */
+	Expression getTotalMemory();
+
+	/**
+	 * Returns <code>true</code> if the circuit is paused, <code>false</code>
+	 * otherwise.
+	 * 
+	 * @return a boolean.
 	 */
 	boolean isPaused();
 
 	/**
-	 * Pauses or resumes the simulation.
+	 * Pauses the simulation.
 	 */
 	void pause();
 

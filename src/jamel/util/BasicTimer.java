@@ -21,11 +21,13 @@ public class BasicTimer implements Timer {
 	}
 
 	@Override
-	public int getValue() {
+	public int getPeriod() {
 		return this.value;
 	}
 
-	@Override
+	/**
+	 * Changes to the next period.
+	 */
 	public void next() {
 		value++;
 	}

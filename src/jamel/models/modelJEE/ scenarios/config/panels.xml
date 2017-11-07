@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 7 novembre 2017 -->
+
+<!DOCTYPE gui [
+	<!ENTITY refresh "isEqual(t&#37;12, 0)">
+	<!ENTITY laps "t"> 
+]>
+
+<gui className="jamel.gui.BasicGui">
+
+	<panel title="Charts">
+		
+		<chart title="Growth">
+		
+			<info>The real economic growth rate time series.</info>
+
+			<if>&refresh;</if>
+
+			<series label="GDP Growth" color="blue">
+				<x>t</x>
+				<y>100 * (val(Firms, productionVolume, t-11...t, sum) / val(Firms, productionVolume, t-23...t-12, sum) - 1)</y>
+			</series>
+
+			<yAxis label="%" min="-20" max="20"/>
+
+		</chart>
+		
+		<chart title="Phillips Curve">
+		
+			<info>A graphical representation of the relationship between unemployment and inflation.</info>
+
+			<if>isEqual(t%12, 0)</if>
+
+			<series label="Phillips" color="red" shapesVisible="true" lineColor="gray">
+				<x>100 * val(Households, unemployed, t-11...t, sum) / val(Households, count, t-11...t, sum)</x>
+				<y>100 * (val(Households, wage, t-11...t, sum) * val(Households, employed,
+					t-23...t-12, sum) / (val(Households, wage, t-23...t-12, sum) *
+					val(Households, employed, t-11...t, sum))-1)</y>
+			</series>
+			<xAxis label="Unemployment (%)" min="0" max="60" />
+			<yAxis label="Inflation (%)" min="-10" max="30" />
+
+			<legend />
+
+		</chart>
+		
+		<chart title="Bankruptcies">
+		
+			<info>
+				Bankruptcy are caused by insolvency or by the loss of productive capacities.
+			</info>
+
+			<if>isEqual(t%12, 0)</if>
+
+			<series label="Bankruptcies" color="red">
+				<x>t</x>
+				<y>100 * val(Firms, imitation, t-11...t, sum) / val(Firms, count, t-11...t, sum)</y>
+			</series>
+
+			<yAxis label="# Firms" min="0" max="0.5" />
+
+		</chart>	
+		
+		<col />
+		
+		<chart title="Labor Market">
+
+			<info>A synthetic view of the labor market.</info>
+
+			<if>&refresh;
+			</if>
+
+			<series label="Capacity" color="blue">
+				<x>t</x>
+				<y>val(Firms, capacity, t, sum)</y>
+			</series>
+
+			<series label="Labor demand" color="red">
+				<x>t</x>
+				<y>val(Firms, workforceTarget, t, sum)</y>
+			</series>
+
+			<series label="Labor supply" color="green">
+				<x>t</x>
+				<y>val(Households, count, t, sum)</y>
+			</series>
+
+			<yAxis label="# Jobs" />
+
+		</chart>
+		
+		<chart title="Beveridge Curve">
+		
+			<info>A graphical representation of the relationship between unemployment and the job vacancy rate.</info>
+
+			<if>isEqual(t%12, 0)</if>
+
+			<series label="Beveridge" color="green" shapesVisible="true" lineColor="gray">
+				<x>100 * val(Households, unemployed, t-11...t, sum) / (12*val(Households, count, t, sum))</x>
+				<y>100 * val(Firms, vacancies, t-11...t, sum) / val(Firms, capacity, t-11...t, sum)</y>
+			</series>
+
+			<xAxis label="Unemployment (%)" min="0" max="60" />
+
+			<yAxis label="Vacancies (%)" min="0" max="30" />
+
+			<legend />
+
+		</chart>		
+		<chart title="Interest Rates">
+		
+			<info>The risk-free interest rate is set by a central bank according to a most simplified Taylor rule.</info>
+
+			<if>&refresh;</if>
+
+			<series label="i (nominal)" color="green">
+				<x>t</x>
+				<y>100*val(Banks, nominalRate, t-11...t, sum)</y>
+			</series>
+			<series label="r (real)" color="blue">
+				<x>t</x>
+				<y>100*val(Banks, realRate, t-11...t, sum)</y>
+			</series>
+			<series label="inflation" color="red">
+				<x>t</x>
+				<y>100*val(Banks, inflation, t, sum)</y>
+			</series>
+
+			<yAxis label="%" integerUnit="true" min="-10" max="25" />
+
+		</chart>
+		
+		<col />
+		
+		<chart title="Firms Debt Ratio">
+		
+			<info>Firms use a simple adaptation model to choose a debt strategy, and deal with the “growth-safety” trade-off.</info>
+
+			<if>&refresh;</if>
+
+			<series label="Average" color="green">
+				<x>t</x>
+				<y>100 * val(Firms, liabilities, t, sum) / val(Firms, assets, t, sum)</y>
+			</series>
+
+			<series label="Min" color="veryLightGreen">
+				<x>t</x>
+				<y>100 * val(Firms, debtRatio, t, min)</y>
+			</series>
+
+			<series label="Max" color="veryLightGreen">
+				<x>t</x>
+				<y>100 * val(Firms, debtRatio, t, max)</y>
+			</series>
+
+			<series label="Target" color="red">
+				<x>t</x>
+				<y>100 * val(Firms, debtRatioTarget, t, sum) / val(Firms, count, t, sum)</y>
+			</series>
+
+			<series label="Weighted" color="blue">
+				<x>t</x>
+				<y>100 * val(Firms, liabilitiesTarget, t, sum) / val(Firms, assets,
+					t, sum)</y>
+			</series>
+			<yAxis label="%" min="0" max="100" />
+
+		</chart>
+		
+		<chart title="Financial Fragility">
+		
+			<info>We refer as financial fragility asthe ratio between the aggregate debt level and the aggregate net profits</info>
+
+			<if>isEqual(t%12, 0)</if>
+
+			<series label="Financial Fragility" color="red" shapesVisible="true" lineColor="gray">
+				<x>val(Firms, productionMax, t-11...t, sum)</x>
+				<y>val(Firms, liabilities, t-11...t, sum) / (12 * (val(Firms, grossProfit, t-11...t, sum) - val(Firms, interests, t-11...t, sum)))</y>
+			</series>
+
+			<xAxis label="Potential Output (volume)" />
+
+			<yAxis label="Financial Fragility (%)" min="0" max="11" />
+
+			<legend />
+
+		</chart>
+		
+		<chart title="Income-debt Relations">
+
+			<info>Not yet implemented</info>
+
+			<xAxis label="Target Debt Ratio (%)" min="0" max="100"/>
+			<yAxis label="Capacity (# machines)" min="0" max="150"/>
+
+		</chart>
+		
+	</panel>
+
+	<panel title="Balance Sheet">
+		<html src="balanceSheet.xml" />
+	</panel>
+	
+	<panel title="Paper">
+		<html src="presentation.xml" />
+	</panel>
+
+	<panel title="Jamel">
+		<html src="about.xml" />
+	</panel>
+	
+</gui>

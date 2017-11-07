@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<simulation
+	className="jamel.models.modelJEE.BasicSimulation"
+	date="2017-09-24"
+	randomSeed="1"
+>
+
+	<meta title="Is the Market Really a Good Teatcher? Market selection, collective adaptation and financial instability">
+		<about>
+			<h1>Is the Market Really a Good Teatcher?</h1>
+			<h2>Market selection, collective adaptation and financial instability</h2>
+			<h2>September 24, 2017</h2>
+			<p>Ce scénario est sensé répliquer exactement les résultats présentés
+				dans le papier du JEE (Is the Market...).</p>
+		</about>
+	</meta>
+
+	<gui src="config/panels.xml" />
+
+	<sectors defaultClassName="jamel.models.modelJEE.BasicSector">
+
+		<sector
+			name="Firms"
+			agent="jamel.models.modelJEE.firms.BasicFirm"
+		>
+			<settings
+				mutation.strenght="0.05"
+				mutation.probability="0.05"
+				investment.greediness="0.2"
+				debtRatio.target.initialValue.min="0."
+				debtRatio.target.initialValue.max="0.9"
+				ownerEquities.maximumShareToBeDistributedAsDividend="0.2"
+				credit.term.short="12"
+				credit.term.long="120"
+				inventories.normalLevel="2"
+				inventories.propensity2sell="0.5"
+				sales.capacity="2"
+				sales.normalRate="1"
+				labourContract.max="36"
+				labourContract.min="6"
+				production.capacity="15"
+				utilizationRate.flexibility="0.1"
+				utilizationRate.initialValue="0.8"
+				price.flexibility="0.04"
+				vacancy.normalRate="0.03"
+				wage.initialValue="50"
+				wage.flexibility="0.02"
+				wage.observations="3"
+				wage.minimum="0"
+			>
+				<workforce>
+					<jobContracts
+						min="6"
+						max="36" />
+				</workforce>
+				<technology
+					machine.creation.input.type="Basic Goods"
+					machine.creation.input.volume="500"
+					machine.timelife.mean="120"
+					machine.timelife.stDev="15"
+					production.productivity="100"
+					production.type="Basic Goods"
+					production.time="4" />
+			</settings>
+
+			<dependencies>
+				<CapitalistSector value="Households" />
+				<Banks value="Banks" />
+				<Suppliers
+					sector="Firms"
+					supply="Basic Goods" />
+			</dependencies>
+
+
+		</sector>
+
+		<sector
+			name="Households"
+			agent="jamel.models.modelJEE.households.BasicHousehold"
+		>
+			<settings
+				wage.resistance="12"
+				wage.flexibility="0.05"
+				savings.propensityToSave="0.2"
+				savings.ratioTarget="0.2"
+				savings.propensityToConsumeExcess="0.5"
+				jobs.selection="10"
+				supplies.selection="10" />
+			<dependencies>
+				<Suppliers
+					value="Firms"
+					good="Basic Goods" />
+				<Employers value="Firms" />
+				<Banks value="Banks" />
+			</dependencies>
+		</sector>
+
+		<sector
+			name="Banks"
+			agent="jamel.models.modelJEE.banks.BasicBank"
+		>
+			<settings
+				taylorRule.coef="2"
+				taylorRule.target="0.02"
+				capital.targetedRatio="0.1"
+				capital.propensityToDistributeExcess="1."
+				penalty.premium="0.04"
+				recapitalization.debtRatio.target="0.8"
+				patience="12"
+				accommodating="0" />
+			<dependencies>
+				<CapitalistSector value="Households" />
+			</dependencies>
+		</sector>
+
+	</sectors>
+
+	<phases>
+		<Banks action="opening" />
+		<Firms
+			action="opening"
+			shuffle="true" />
+		<Households action="opening" />
+		<Banks action="pay_dividend" />
+		<Firms action="pay_dividend" />
+		<Households action="take_dividends" />
+		<Firms
+			action="plan_production"
+			shuffle="true" />
+		<Households
+			action="job_search"
+			shuffle="true" />
+
+		<Firms
+			action="production"
+			shuffle="true" />
+		<Firms
+			action="investment"
+			shuffle="true" />
+		<Households
+			action="consumption"
+			shuffle="true" />
+		<Banks action="debt_recovery" />
+		<Banks action="closure" />
+		<Firms action="closure" />
+		<Households action="closure" />
+	</phases>
+	<queries>
+		<inflation
+			value="
+				(sum ( Firms , sales.val , t-1 ) 
+				* sum ( Firms , sales.vol , t-13 ) 
+				: ( sum ( Firms , sales.vol , t-1 ) 
+				* sum ( Firms , sales.val , t-13 ) ) 
+				-1)" />
+		<inflation2
+			value="
+				( sum ( Households , wages , t-1 ) 
+				* sum ( Households , employed , t-13 ) ) 
+				: ( sum ( Households , employed , t-1 ) 
+				* sum ( Households , wages , t-13 ) ) 
+				- 1" />
+	</queries>
+
+	<events>
+
+		<pause period="0" />
+		<Banks
+			period="0"
+			event="Populate"
+			size="1" />
+		<Households
+			period="0"
+			event="Populate"
+			size="6000" />
+		<Firms
+			period="0"
+			event="Populate"
+			size="400" />
+		<pause period="3000" />
+
+	</events>
+
+</simulation>

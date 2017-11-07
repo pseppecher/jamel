@@ -1,37 +1,29 @@
 package jamel.util;
 
 /**
- * Represents a phase of period
+ * Represents a phase of the circuit.
  */
 public interface Phase {
 
 	/**
-	 * Returns the name of this phase.
-	 * 
-	 * @return the name of this phase.
+	 * Returns the name of the phase.
+	 * @return a string.
 	 */
 	String getName();
 
 	/**
-	 * Returns the runtime (in milliseconds) of this phase since the start of
-	 * the simulation.
-	 * 
-	 * For performance purposes.
-	 * 
-	 * @return the runtime of this phase.
-	 */
-	long getRuntime();
-
-	/**
-	 * Returns the sector.
-	 * 
-	 * @return the sector.
+	 * Returns the sector linked to this phase.
+	 * @return a sector.
 	 */
 	Sector getSector();
 
 	/**
-	 * Executes this phase.
+	 * Runs the phase.
 	 */
 	void run();
 
+	long getRuntime();
+
 }
+
+// ***

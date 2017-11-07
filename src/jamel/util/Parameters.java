@@ -155,6 +155,16 @@ public class Parameters {
 	}
 
 	/**
+	 * Returns the text content of the encapsulated element and its descendants.
+	 * All space characters are cut.
+	 * 
+	 * @return the text content of the encapsulated element and its descendants.
+	 */
+	public String getCompactText() {
+		return this.element.getTextContent().replaceAll("(\\p{javaSpaceChar}|\\r|\\n|\\t)", "");
+	}
+
+	/**
 	 * Retrieves an attribute <code>Double</code> value by name.
 	 * 
 	 * @param name
@@ -214,6 +224,20 @@ public class Parameters {
 	}
 
 	/**
+	 * Returns the float value of the specified parameter.
+	 * 
+	 * Useful to display parameter values in the gui.
+	 * 
+	 * @param key
+	 *            the string key of the parameter.
+	 * @return the float value of the specified parameter.
+	 */
+	public Float getFloat(String key) {
+		final Double result = this.getDoubleValue(key);
+		return (result != null) ? result.floatValue() : null;
+	}
+
+	/**
 	 * Retrieves an attribute <code>Integer</code> value by name.
 	 * 
 	 * @param name
@@ -223,9 +247,39 @@ public class Parameters {
 	public Integer getIntAttribute(String name) {
 		if (!this.element.hasAttribute(name)) {
 			throw new RuntimeException(
-					"Parameter not found: \"" + name + "\" in \"" + this.element.getTagName() + "\".");
+					"Attribute not found: \"" + name + "\" in \"" + this.element.getTagName() + "\".");
 		}
 		return Integer.parseInt(this.element.getAttribute(name));
+	}
+
+	/**
+	 * Returns the integer value of the specified parameter.
+	 * 
+	 * @param key
+	 *            the string key of the parameter.
+	 * @return the integer value of the specified parameter.
+	 */
+	public Integer getInt(String key) {
+		final Integer result;
+		if (this.hasAttribute(key)) {
+			result = this.getIntAttribute(key);
+		} else {
+			final String[] split = key.split("\\.", 2);
+			if (split.length == 1) {
+				result = this.getIntAttribute(key);
+				if (result == null) {
+					throw new RuntimeException("Parameter not found: '" + element.getTagName()+"."+key + "'");
+				}
+			} else {
+				final Parameters sub = this.get(split[0]);
+				if (sub == null) {
+					throw new RuntimeException("Parameter not found: '" + element.getTagName()+"."+key + "'");
+					// result = null;
+				}
+				result = sub.getInt(split[1]);
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -238,13 +292,37 @@ public class Parameters {
 	}
 
 	/**
-	 * Returns the text content of the encapsulated element and its descendants.
-	 * All space characters are cut.
+	 * Returns the string value of the specified parameter.
 	 * 
-	 * @return the text content of the encapsulated element and its descendants.
+	 * @param key
+	 *            the string key of the parameter.
+	 * @return the string value of the specified parameter.
+	 */
+	public String getString(String key) {
+		final String result;
+		if (this.hasAttribute(key)) {
+			result = this.getAttribute(key);
+		} else {
+			final String[] split = key.split("\\.", 2);
+			if (split.length == 1) {
+					throw new RuntimeException("Parameter not found: " + key);
+			}
+			final Parameters sub = this.get(split[0]);
+			if (sub == null) {
+				throw new RuntimeException("Parameter not found: " + key);
+			}
+			result = sub.getString(split[1]);
+		}
+		return result;
+	}
+
+	/**
+	 * Returns the text content of this set of parameters and its descendants.
+	 * 
+	 * @return the text content of this set of parameters and its descendants.
 	 */
 	public String getText() {
-		return this.element.getTextContent().replaceAll("(\\p{javaSpaceChar}|\\r|\\n|\\t)", "");
+		return this.element.getTextContent().trim();
 	}
 
 	/**
@@ -275,7 +353,7 @@ public class Parameters {
 	 *         expression.
 	 */
 	public String[] splitTextContent(String regex) {
-		return getText().split(regex);
+		return getCompactText().split(regex);
 	}
 
 	@Override

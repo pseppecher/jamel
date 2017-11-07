@@ -1,16 +1,11 @@
 package jamel;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedHashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.prefs.Preferences;
 
 import javax.swing.JFileChooser;
@@ -21,9 +16,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 import jamel.util.NotUsedException;
@@ -62,7 +54,7 @@ public class Jamel {
 		public void run() {
 			final Preferences prefs = Preferences.userRoot();
 			final String PREF_SCENARIO_PATH = version + ".scenario.path";
-			final String defaultFolder = "scenarios";
+			final String defaultFolder = "src/jamel/models";
 			final String path = prefs.get(PREF_SCENARIO_PATH, defaultFolder);
 			final JFileChooser fc = new JFileChooser() {
 				{
@@ -87,17 +79,21 @@ public class Jamel {
 
 	}
 
+	/**
+	 * Message see log file for more details.
+	 */
+	private static final String seeLogFile = "See the jamel.log file for more details.";
+
 	/** This version of Jamel. */
-	final private static String version = "jamel-20170725";
+	final private static int version = 20171106;
 
 	/**
 	 * Creates and returns a new simulation.
 	 * 
 	 * @param parameters
-	 *            an XML element that contains the description of the new
-	 *            simulation.
+	 *            the description of the new simulation.
 	 * @param file
-	 *            the file of the scenario.
+	 *            the scenario file.
 	 * @return a new simulation.
 	 */
 	private static Simulation newSimulation(final Parameters parameters, final File file) {
@@ -111,176 +107,23 @@ public class Jamel {
 		final String model = parameters.getAttribute("model");
 		final String simulationClassName;
 		if (model.isEmpty()) {
-			simulationClassName = parameters.getAttribute("simulationClassName");
+			simulationClassName = parameters.getAttribute("className");
 		} else {
-			simulationClassName = model + "." + parameters.getAttribute("simulationClassName");
+			simulationClassName = model + "." + parameters.getAttribute("className");
+		}
+		
+		if (simulationClassName.isEmpty()) {
+			throw new RuntimeException("className is missing or empty");			
 		}
 
 		try {
 			simulation = (Simulation) Class.forName(simulationClassName, false, ClassLoader.getSystemClassLoader())
 					.getConstructor(Parameters.class, File.class).newInstance(parameters, file);
 		} catch (Exception e) {
+			Jamel.println("simulationClassName",simulationClassName);
 			throw new RuntimeException("Something went wrong while creating the simulation.", e);
 		}
 		return simulation;
-	}
-
-	/**
-	 * Repeats several simulations.
-	 * 
-	 * @param element
-	 *            an element that contains the description of the simulations to
-	 *            be repeated.
-	 * @param parentFile
-	 *            the parent file.
-	 */
-	private static void repeat(final Element element, final File parentFile) {
-
-		// Sets the name of the scenario file.
-
-		if (element.getAttribute("src").isEmpty()) {
-			throw new RuntimeException("Simulation attribute src is empty or missing.");
-		}
-		final String fileName = parentFile.getPath() + "/" + element.getAttribute("src");
-
-		// Reading the scenario file.
-
-		String scenario;
-		try (final BufferedReader reader = new BufferedReader(new FileReader(fileName));) {
-			final StringBuilder stringBuilder = new StringBuilder();
-			final String ls = System.getProperty("line.separator");
-
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				stringBuilder.append(line);
-				stringBuilder.append(ls);
-			}
-			scenario = stringBuilder.toString();
-			reader.close();
-		} catch (IOException e) {
-			throw new RuntimeException("Something went wrong while reading this file: " + fileName, e);
-		}
-
-		// Replaces some strings in the scenario
-
-		final NodeList replaceNodeList = element.getElementsByTagName("replace");
-		for (int i = 0; i < replaceNodeList.getLength(); i++) {
-			final Element item = (Element) replaceNodeList.item(i);
-			final String regex = item.getAttribute("regex");
-			final String replacement = item.getAttribute("replacement");
-			scenario = scenario.replaceAll(regex, replacement);
-		}
-
-		// Sets the number of replications
-
-		final int replications;
-		if (element.getAttribute("repeat").isEmpty()) {
-			throw new RuntimeException("Repeat attribute is missing or empty.");
-		}
-		try {
-			replications = Integer.parseInt(element.getAttribute("repeat"));
-		} catch (@SuppressWarnings("unused") java.lang.NumberFormatException e) {
-			throw new RuntimeException("Repeat attribute is not a number: " + element.getAttribute("repeat"));
-		}
-
-		// Gets the variables.
-
-		final Map<String, String[]> variables = new LinkedHashMap<>();
-		final NodeList nodeList = element.getElementsByTagName("variable");
-		for (int i = 0; i < nodeList.getLength(); i++) {
-			final Element item = (Element) nodeList.item(i);
-			if (item.getAttribute("key").isEmpty()) {
-				throw new RuntimeException("key attribute is missing or empty.");
-			}
-			final String key = item.getAttribute("key");
-			if (item.getAttribute("values").isEmpty()) {
-				throw new RuntimeException("values attribute is missing or empty.");
-			}
-			final String[] values = item.getAttribute("values").split(",");
-			if (values.length != replications) {
-				Jamel.println();
-				Jamel.println("key: " + key);
-				Jamel.println("values: " + item.getAttribute("values"));
-				Jamel.println("values.lenght() is: " + values.length);
-				Jamel.println("but expected was: " + replications);
-				Jamel.println();
-				throw new RuntimeException("Error while parsing the variables. See log file for more details.");
-			}
-			variables.put(key, values);
-		}
-
-		// Repeats the simulation
-
-		for (int i = 0; i < replications; i++) {
-
-			String newScenario = scenario;
-
-			// Changes the variables
-
-			for (String key : variables.keySet()) {
-				newScenario = newScenario.replaceAll(key, variables.get(key)[i]);
-			}
-
-			final Element elem2;
-			try {
-				elem2 = DocumentBuilderFactory.newInstance().newDocumentBuilder()
-						.parse(new InputSource(new StringReader(newScenario))).getDocumentElement();
-			} catch (SAXException | IOException | ParserConfigurationException e) {
-				Jamel.println();
-				Jamel.println("fileName", fileName);
-				Jamel.println("replication", i);
-				Jamel.println();
-				throw new RuntimeException("Something went wrong while creating the XML document.", e);
-			}
-
-			simulate(new Parameters(elem2), new File(fileName));
-
-		}
-
-	}
-
-	/**
-	 * Runs Jamel.
-	 */
-	private static void run() {
-
-		final Chooser scenarioChooser = new Chooser();
-
-		try {
-			SwingUtilities.invokeAndWait(scenarioChooser);
-		} catch (InvocationTargetException | InterruptedException e) {
-			throw new RuntimeException("Something went wrong while choosing the scenario file.", e);
-		}
-
-		final File file = scenarioChooser.getFile();
-
-		if (file != null) {
-			Jamel.println("run " + file.getPath());
-
-			final Document document;
-			try {
-				document = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
-			} catch (final Exception e) {
-				throw new RuntimeException("Something went wrong while reading the file \"" + file.getName() + "\"", e);
-			}
-			final Element root = document.getDocumentElement();
-			if (root.getTagName().equals("simulation")) {
-				// C'est une simulation, on l'exécute directement.
-				simulate(new Parameters(root), file);
-			} else if (root.getTagName().equals("multi-simulation")) {
-				// C'est une collection de simulations,
-				// on les exécute les unes après les autres
-				final NodeList nodeList = root.getElementsByTagName("simulation");
-				for (int index = 0; index < nodeList.getLength(); index++) {
-					final Element element = (Element) nodeList.item(index);
-					repeat(element, file.getParentFile());
-				}
-			} else {
-				// C'est n'importe quoi, fin.
-				throw new RuntimeException("Bad root element: " + root.getTagName());
-			}
-
-		}
 	}
 
 	/**
@@ -289,7 +132,7 @@ public class Jamel {
 	 * @param scenario
 	 *            the parameters of the simulation.
 	 * @param file
-	 *            the file.
+	 *            the scenario file.
 	 */
 	private static void simulate(final Parameters scenario, final File file) {
 		final Simulation simulation = newSimulation(scenario, file);
@@ -315,12 +158,12 @@ public class Jamel {
 	}
 
 	/**
-	 * Returns this version of Jamel.
+	 * Returns a string description of this version of Jamel.
 	 * 
-	 * @return this version of Jamel.
+	 * @return a string description of this version of Jamel.
 	 */
 	public static String getVersion() {
-		return version;
+		return "" + version;
 	}
 
 	/**
@@ -333,25 +176,47 @@ public class Jamel {
 
 		final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d HH:mm:ss", Locale.US);
 
-		Jamel.println(version);
-		Jamel.println("Start", simpleDateFormat.format(new Date()));
-		Jamel.println();
+		println("Jamel " + version);
+		println("Start " + simpleDateFormat.format(new Date()));
+		
+		final Chooser scenarioChooser = new Chooser();
 
 		try {
-			run();
-		} catch (RuntimeException e) {
+			SwingUtilities.invokeAndWait(scenarioChooser);
+		} catch (InvocationTargetException e) {
 			e.printStackTrace();
-			final String message;
-			if (e.getCause() != null && e.getCause().getMessage() != null) {
-				message = e.getMessage() + "<br>" + e.getCause().getMessage();
-			} else {
-				message = e.getMessage();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		final File file = scenarioChooser.getFile();
+		if (file != null) {
+			Jamel.println("run " + file.getPath());
+			final Document scenario;
+			try {
+				scenario = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
+			} catch (SAXException | IOException | ParserConfigurationException e) {
+				JOptionPane.showMessageDialog(null, "<html>" + e.getMessage() + "<br>" + seeLogFile + "</html>",
+						"Initialization Error", JOptionPane.ERROR_MESSAGE);
+				e.printStackTrace();
+				return;
 			}
-			errorMessage("Runtime Error", message);
+			if (scenario == null) {
+				throw new RuntimeException("Scenario is null");
+			}
+
+			final String root = scenario.getDocumentElement().getTagName();
+
+			if (root.equals("simulation")) {
+				simulate(new Parameters(scenario.getDocumentElement()), file);
+			} else {
+				throw new RuntimeException("This file doesn't seem to be a Jamel scenario: bad root node: " + root);
+			}
+
 		}
 
 		Jamel.println();
-		Jamel.println("End", simpleDateFormat.format(new Date()));
+		Jamel.println("End", simpleDateFormat.format(System.currentTimeMillis()));
 		Jamel.println();
 	}
 
@@ -367,16 +232,6 @@ public class Jamel {
 	 */
 	public static void notYetImplemented() {
 		throw new NotYetImplementedException();
-	}
-
-	/**
-	 * Throws a new {@code NotYetImplementedException}.
-	 * 
-	 * @param message
-	 *            the detail message.
-	 */
-	public static void notYetImplemented(String message) {
-		throw new NotYetImplementedException(message);
 	}
 
 	/**
@@ -443,5 +298,3 @@ public class Jamel {
 	}
 
 }
-
-// ***
