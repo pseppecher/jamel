@@ -6,11 +6,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.jfree.data.xy.XYSeries;
-
 import jamel.Jamel;
 import jamel.data.Expression;
 import jamel.data.SectorDataManager;
+import jamel.gui.DynamicXYSeries;
 import jamel.util.Agent;
 import jamel.util.JamelObject;
 import jamel.util.Parameters;
@@ -84,7 +83,7 @@ public class BasicSector extends JamelObject implements Sector {
 	 */
 	public BasicSector(final Parameters parameters, final Simulation simulation) {
 		super(simulation);
-		this.agentSet = new BasicAgentSet<Agent>(this.getRandom());
+		this.agentSet = new BasicAgentSet<>(this.getRandom());
 		this.parameters = parameters;
 		this.name = this.parameters.getAttribute("name");
 		this.agentClass = getClass(parameters.getAttribute("agent"));
@@ -101,7 +100,7 @@ public class BasicSector extends JamelObject implements Sector {
 	 * @return a list containing the new agents.
 	 */
 	final private List<Agent> createAgents(Class<? extends Agent> klass, int lim) {
-		final List<Agent> result = new ArrayList<Agent>(lim);
+		final List<Agent> result = new ArrayList<>(lim);
 		try {
 			for (int index = 0; index < lim; index++) {
 				this.countAgents++;
@@ -225,9 +224,8 @@ public class BasicSector extends JamelObject implements Sector {
 	}
 
 	@Override
-	public XYSeries getScatterSeries(String x, String y) {
-		Jamel.notUsed();
-		return null;
+	public DynamicXYSeries getScatterSeries(String xKey, String yKey, Expression[] conditions, String selection) {
+		return this.dataManager.getScatterSeries(xKey, yKey, conditions, selection);
 	}
 
 	@Override

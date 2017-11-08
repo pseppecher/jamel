@@ -6,10 +6,13 @@ import java.awt.Font;
 import java.awt.Paint;
 import java.awt.Shape;
 import java.awt.geom.Line2D;
+import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+
+import javax.swing.SwingUtilities;
 
 import org.jfree.chart.LegendItem;
 import org.jfree.chart.LegendItemCollection;
@@ -32,7 +35,6 @@ import jamel.data.Expression;
 import jamel.data.ExpressionFactory;
 import jamel.util.JamelObject;
 import jamel.util.Parameters;
-import jamel.util.Simulation;
 
 /**
  * The chart manager.
@@ -50,7 +52,7 @@ public class ChartManager extends JamelObject {
 	 * A basic stroke used for legend items.
 	 */
 	private static final BasicStroke basicStroke = new BasicStroke();
-	// Je ne comprends pas pourquoi c'est nécessaire.
+	// REMARQUE : Je ne comprends pas pourquoi c'est nécessaire.
 
 	/**
 	 * The shape of the line used by legends.
@@ -129,21 +131,6 @@ public class ChartManager extends JamelObject {
 	}
 
 	/**
-	 * Creates and returns a new scatter chart panel.
-	 * 
-	 * @param params
-	 *            the description of the chart panel to create.
-	 * @param simulation
-	 *            the parent simulation.
-	 * @return a new chart panel.
-	 */
-	@SuppressWarnings("unused")
-	private static JamelChartPanel createScatterChartPanel(final Parameters params, final Simulation simulation) {
-		// TODO why never used ? remove !
-		return new JamelChartPanel(getNewScatterChart(params, simulation));
-	}
-
-	/**
 	 * Creates and returns a new plot with the specified dataset, axes and
 	 * renderer.
 	 * 
@@ -174,29 +161,6 @@ public class ChartManager extends JamelObject {
 		return plot;
 	}
 
-	@SuppressWarnings({ "javadoc", "unused" })
-	private static JamelChart getNewScatterChart(final Parameters params, final Simulation simulation) {
-		Jamel.notYetImplemented();
-		return null;
-	}
-
-	/**
-	 * Returns the specified scatter series.
-	 * 
-	 * @param sector
-	 *            the sector of the agents.
-	 * @param x
-	 *            the x value.
-	 * @param y
-	 *            the y value.
-	 * @return the specified scatter series.
-	 */
-	static private XYSeries getScatterSeries(String sector, String x, String y) {
-		Jamel.notYetImplemented();
-		// TODO IMPLEMENT
-		return null;
-	}
-
 	/**
 	 * Returns the specified series.
 	 * 
@@ -210,20 +174,16 @@ public class ChartManager extends JamelObject {
 	 *            the expression factory.
 	 * @return the specified series.
 	 */
-	static private XYSeries getSeries(String x, String y, String conditions, ExpressionFactory expressionFactory) {
-		DynamicXYSeries newSeries = null;
+	static private StandardDynamicXYSeries getSeries(String x, String y, String conditions,
+			ExpressionFactory expressionFactory) {
+		StandardDynamicXYSeries newSeries = null;
 		try {
 			final Expression xExp = expressionFactory.getExpression(x);
 			final Expression yExp = expressionFactory.getExpression(y);
 			if (conditions == null) {
-				newSeries = new DynamicXYSeries(xExp, yExp);
+				newSeries = new StandardDynamicXYSeries(xExp, yExp);
 			} else {
-				final String[] strings = ExpressionFactory.split(conditions);
-				final Expression[] conditionsExp = new Expression[strings.length];
-				for (int i = 0; i < strings.length; i++) {
-					conditionsExp[i] = expressionFactory.getExpression(strings[i]);
-				}
-				newSeries = new DynamicXYSeries(xExp, yExp, conditionsExp);
+				newSeries = new StandardDynamicXYSeries(xExp, yExp, parseConditions(conditions, expressionFactory));
 			}
 		} catch (final Exception e) {
 			Jamel.println("Failure with this series: " + x, y, conditions);
@@ -231,6 +191,21 @@ public class ChartManager extends JamelObject {
 			e.printStackTrace();
 		}
 		return newSeries;
+	}
+
+	private static Expression[] parseConditions(String conditions, ExpressionFactory expressionFactory) {
+		final String[] strings;
+		final Expression[] result;
+		if (conditions == null) {
+			result = null;
+		} else {
+			strings = ExpressionFactory.split(conditions);
+			result = new Expression[strings.length];
+			for (int i = 0; i < strings.length; i++) {
+				result[i] = expressionFactory.getExpression(strings[i]);
+			}
+		}
+		return result;
 	}
 
 	/**
@@ -286,15 +261,18 @@ public class ChartManager extends JamelObject {
 			} else {
 				conditions = defaultConditions;
 			}
-			final XYSeries newSeries;
+			final DynamicXYSeries newSeries;
 			if (seriesElement.hasAttribute("scatter") && seriesElement.getAttribute("scatter").equals("true")) {
 				final String sector = seriesElement.getAttribute("sector");
-				newSeries = getScatterSeries(sector, x, y);
+				final String selection = seriesElement.hasAttribute("select") ? seriesElement.getAttribute("select")
+						: null;
+				newSeries = this.getSector(sector).getScatterSeries(x, y,
+						parseConditions(conditions, expressionFactory), selection);
 			} else {
 				newSeries = getSeries(x, y, conditions, expressionFactory);
 			}
 			if (newSeries != null) {
-				this.dynamicSeries.add((DynamicXYSeries) newSeries);
+				this.dynamicSeries.add(newSeries);
 				dataset.addSeries(newSeries);
 
 				// Color
@@ -340,7 +318,7 @@ public class ChartManager extends JamelObject {
 				final String legendLabel;
 				final String tooltip;
 				if (seriesElement.getAttribute("label").equals("")) {
-					legendLabel = newSeries.getDescription();
+					legendLabel = ((XYSeries) newSeries).getDescription();
 					tooltip = null;
 				} else {
 					legendLabel = seriesElement.getAttribute("label");
@@ -416,9 +394,25 @@ public class ChartManager extends JamelObject {
 	 * Refreshes each registred dynamic series.
 	 */
 	public void refresh() {
-		for (final DynamicSeries series : this.dynamicSeries) {
-			series.update(true);
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+
+				@Override
+				public void run() {
+					for (final DynamicXYSeries series : dynamicSeries) {
+						series.update(true);
+					}
+				}
+
+			});
+		} catch (InvocationTargetException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+
 	}
 
 }

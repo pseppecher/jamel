@@ -8,7 +8,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.jfree.data.xy.XYDataItem;
+
 import jamel.Jamel;
+import jamel.gui.DynamicXYSeries;
 import jamel.util.Agent;
 import jamel.util.JamelObject;
 import jamel.util.Sector;
@@ -65,6 +68,13 @@ public class SectorDataManager extends JamelObject {
 	 */
 	private static final int SUM = 0;
 
+	/**
+	 * Returns the {@code DataKeys} of the specified class of {@code Agent}.
+	 * 
+	 * @param agentClass
+	 *            a class of {@code Agent}.
+	 * @return the {@code DataKeys} of the specified class of {@code Agent}.
+	 */
 	private static DataKeys getDataKeys(Class<? extends Agent> agentClass) {
 		final DataKeys result;
 		try {
@@ -340,9 +350,9 @@ public class SectorDataManager extends JamelObject {
 	 * @return the expression for the sum.
 	 */
 	private Expression getSum(final String dataKey, final String periods) {
-		
+
 		if (!this.dataKeys.containsKey(dataKey)) {
-			throw new RuntimeException("Unknown data key: "+ dataKey);
+			throw new RuntimeException("Unknown data key: " + dataKey);
 		}
 
 		final int min = parsePeriods(periods, 0);
@@ -416,6 +426,7 @@ public class SectorDataManager extends JamelObject {
 	 *            the period.
 	 * @return the specified value.
 	 */
+	@SuppressWarnings("null")
 	private Double getValue(String dataKey, int op, int t) {
 		final Double result;
 		final String query = "dataKey=" + dataKey + ", op=" + op + ", t=" + t;
@@ -590,6 +601,67 @@ public class SectorDataManager extends JamelObject {
 			this.expressions.put(key, result);
 		}
 		return result;
+	}
+
+	/**
+	 * @param xKey
+	 * @param yKey
+	 * @param conditions
+	 * @param selection
+	 * @return
+	 */
+	public DynamicXYSeries getScatterSeries(final String xKey, final String yKey, final Expression[] conditions,
+			final String selection) {
+
+		final int xIndex = this.dataKeys.indexOf(xKey);
+		final int yIndex = this.dataKeys.indexOf(yKey);
+
+		final Integer selectIndex;
+		final Double selectValue;
+		if (selection != null) {
+			final String[] select = selection.split("=", 2);
+			selectIndex = this.dataKeys.indexOf(select[0]);
+			selectValue = Double.parseDouble(select[1]);
+		} else {
+			selectIndex = null;
+			selectValue = null;
+		}
+
+		return new DynamicXYSeries(this.sector.getName() + "," + xKey + "," + yKey + "," + selection, false) {
+
+			@SuppressWarnings("unchecked")
+			@Override
+			public void update(boolean refresh) {
+				if (refresh) {
+					boolean update = true;
+					if (conditions != null) {
+						for (int i = 0; i < conditions.length; i++) {
+							if (conditions[i].getValue() == null || conditions[i].getValue() != 1) {
+								update = false;
+								break;
+							}
+						}
+					}
+					if (update) {
+						final int t = getPeriod();
+						this.data.clear();
+						for (Agent agent : agents) {
+							final Double x = agent.getData(xIndex, t);
+							final Double y = agent.getData(yIndex, t);
+							@SuppressWarnings("null")
+							final boolean selected = (selectIndex == null
+									|| selectValue.equals(agent.getData(selectIndex, t)));
+							if (selected && x != null && y != null) {
+								final XYDataItem item = new XYDataItem(x, y);
+								this.data.add(item);
+							}
+						}
+						this.fireSeriesChanged();
+					}
+				}
+			}
+
+		};
 	}
 
 	/**

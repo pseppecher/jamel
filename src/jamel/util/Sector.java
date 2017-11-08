@@ -2,9 +2,8 @@ package jamel.util;
 
 import java.util.List;
 
-import org.jfree.data.xy.XYSeries;
-
 import jamel.data.Expression;
+import jamel.gui.DynamicXYSeries;
 
 /**
  * Represents a sector.
@@ -85,7 +84,20 @@ public interface Sector {
 	 */
 	Phase getPhase(String phaseName, boolean shuffle);
 
-	XYSeries getScatterSeries(String x, String y);
+	/**
+	 * Returns the specified scatter series.
+	 * 
+	 * @param xKey
+	 *            the key for x values.
+	 * @param yKey
+	 *            the key for y values.
+	 * @param conditions
+	 *            the conditions.
+	 * @param selection
+	 *            the selection criteria.
+	 * @return the specified scatter series.
+	 */
+	DynamicXYSeries getScatterSeries(String xKey, String yKey, Expression[] conditions, String selection);
 
 	/**
 	 * Returns the simulation.
