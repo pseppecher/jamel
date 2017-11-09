@@ -165,20 +165,33 @@
 
 	<events>
 
-		<pause period="0" />
-		<Banks
-			period="0"
-			event="Populate"
-			size="1" />
-		<Households
-			period="0"
-			event="Populate"
-			size="6000" />
-		<Firms
-			period="0"
-			event="Populate"
-			size="400" />
-		<pause period="3000" />
+		<when t="0">
+			<do action="pause" />
+			<do
+				action="Populate"
+				sector="Banks"
+				size="1" />
+			<do
+				action="Populate"
+				sector="Households"
+				size="6000" />
+			<do
+				action="Populate"
+				sector="Firms"
+				size="400" />
+		</when>
+
+		<when t="3000">
+			<do
+				action="exportCharts"
+				to="exports/panels/"
+			>
+				<format
+					width="800"
+					height="300" />
+			</do>
+			<do action="pause" />
+		</when>
 
 	</events>
 

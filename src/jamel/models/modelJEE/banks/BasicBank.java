@@ -8,8 +8,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.jfree.data.xy.XYDataItem;
-
 import jamel.Jamel;
 import jamel.data.AgentDataset;
 import jamel.data.BasicAgentDataset;
@@ -1640,12 +1638,6 @@ public class BasicBank extends JamelObject implements Bank, Corporation {
 	public long getValueOfLiabilities() {
 		Jamel.notUsed();
 		return 0;
-	}
-
-	@Override
-	public XYDataItem getXYDataItem(String x, String y, int period) {
-		Jamel.notUsed();
-		return null;
 	}
 
 	@Override

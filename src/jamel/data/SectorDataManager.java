@@ -604,11 +604,17 @@ public class SectorDataManager extends JamelObject {
 	}
 
 	/**
+	 * Returns the specified scatter {@code DynamicXYSeries}.
+	 * 
 	 * @param xKey
+	 *            the key for the x values.
 	 * @param yKey
+	 *            the key for the y values.
 	 * @param conditions
+	 *            the conditions of update of the series.
 	 * @param selection
-	 * @return
+	 *            a string that defines the selection criteria.
+	 * @return the specified scatter {@code DynamicXYSeries}.
 	 */
 	public DynamicXYSeries getScatterSeries(final String xKey, final String yKey, final Expression[] conditions,
 			final String selection) {

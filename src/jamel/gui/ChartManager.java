@@ -193,6 +193,15 @@ public class ChartManager extends JamelObject {
 		return newSeries;
 	}
 
+	/**
+	 * Parses the given string and returns an array of expressions.
+	 * 
+	 * @param conditions
+	 *            a string that contains the description of the conditions.
+	 * @param expressionFactory
+	 *            the expression factory.
+	 * @return an array of expressions.
+	 */
 	private static Expression[] parseConditions(String conditions, ExpressionFactory expressionFactory) {
 		final String[] strings;
 		final Expression[] result;

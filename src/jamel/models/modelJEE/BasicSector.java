@@ -139,14 +139,18 @@ public class BasicSector extends JamelObject implements Sector {
 
 	@Override
 	final public void doEvent(Parameters event) {
-		final String eventType = event.getAttribute("event");
-		if (eventType.equals("Populate")) {
-			final int newFirms = Integer.parseInt(event.getAttribute("size"));
-			final List<Agent> list = this.createAgents(this.agentClass, newFirms);
+		if (!event.getName().equals("do")) {
+			throw new RuntimeException("Unknown event: '" + event.getName() + "'");
+		}
+		final String action = event.getAttribute("action");
+		if (action.equals("Populate")) {
+			final int newAgents = Integer.parseInt(event.getAttribute("size"));
+			final List<Agent> list = this.createAgents(this.agentClass, newAgents);
 			this.agentSet.putAll(list);
 			this.dataManager.put(list);
 		} else {
-			throw new RuntimeException("Unknown event or not yet implemented: " + event.getName() + ", " + eventType);
+			throw new RuntimeException(
+					"Unknown action or not yet implemented: '" + event.getName() + "', '" + action + "'");
 		}
 	}
 

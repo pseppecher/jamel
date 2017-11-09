@@ -4,7 +4,6 @@ import java.io.File;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
@@ -15,8 +14,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
 
 import jamel.Jamel;
 import jamel.data.Expression;
@@ -62,37 +59,6 @@ public class BasicSimulation implements Simulation {
 			}
 		}
 		return result;
-	}
-
-	/**
-	 * Returns the events.
-	 * 
-	 * @param events
-	 *            a XML element with the description of the events.
-	 * @return a map that contains the events.
-	 */
-	private static Map<Integer, List<Parameters>> getNewEvents(Parameters events) {
-		final HashMap<Integer, List<Parameters>> map = new HashMap<Integer, List<Parameters>>();
-		if (events != null) {
-			final List<Parameters> eventsList = events.getAll();
-			for (int i = 0; i < eventsList.size(); i++) {
-				final Parameters item = eventsList.get(i);
-				final String periodKey = item.getAttribute("period");
-				if ("".equals(periodKey)) {
-					throw new RuntimeException("Malformed event: Missing attribute: period");
-				}
-				final Integer period = Integer.parseInt(periodKey);
-				if (map.containsKey(period)) {
-					final List<Parameters> list = map.get(period);
-					list.add(item);
-				} else {
-					final List<Parameters> list = new LinkedList<Parameters>();
-					list.add(item);
-					map.put(period, list);
-				}
-			}
-		}
-		return map;
 	}
 
 	/**
@@ -171,21 +137,21 @@ public class BasicSimulation implements Simulation {
 	/**
 	 * Initializes and returns the list of phases of the circuit period.
 	 * 
-	 * @param param
-	 *            a XML element with the phases description.
 	 * @param sectors
 	 *            a collection (a Map:name,sector) of sectors.
+	 * @param description
+	 *            the description of the phases.
 	 * @return a list of phases.
 	 * @throws RuntimeException
 	 *             If an <code>RuntimeException</code> occurs.
 	 */
-	private static LinkedList<Phase> getNewPhases(Map<String, Sector> sectors, Parameters phasesNode)
+	private static LinkedList<Phase> getNewPhases(Map<String, Sector> sectors, Parameters description)
 			throws RuntimeException {
-		if (phasesNode == null) {
+		if (description == null) {
 			throw new RuntimeException("phasesNode is null");
 		}
-		final LinkedList<Phase> result = new LinkedList<Phase>();
-		final List<Parameters> phases = phasesNode.getAll();
+		final LinkedList<Phase> result = new LinkedList<>();
+		final List<Parameters> phases = description.getAll();
 		for (final Parameters element : phases) {
 			final String sectorName = element.getName();
 			final String phaseName = element.getAttribute("action");
@@ -205,6 +171,17 @@ public class BasicSimulation implements Simulation {
 		return result;
 	}
 
+	/**
+	 * Creates and returns a new sector.
+	 * 
+	 * @param simulation
+	 *            the parent simulation.
+	 * @param parameters
+	 *            the parameters.
+	 * @param defaultClassName
+	 *            the default class name of the sector.
+	 * @return a new sector.
+	 */
 	private static Sector getNewSector(final Simulation simulation, final Parameters parameters,
 			final String defaultClassName) {
 		if (!parameters.getName().equals("sector")) {
@@ -233,51 +210,12 @@ public class BasicSimulation implements Simulation {
 	}
 
 	/**
-	 * Initializes and returns the sectors.
-	 * 
-	 * @param circuit
-	 *            the circuit.
-	 * @param params
-	 *            the parameters.
-	 * @return a map (name of the sector, sector).
-	 * @throws RuntimeException
-	 *             If something goes wrong.
-	 */
-	private static HashMap<String, Sector> getNewSectors(Simulation circuit, Element params) throws RuntimeException {
-		final LinkedHashMap<String, Sector> result = new LinkedHashMap<String, Sector>();
-		final Element sectorsNode = (Element) params.getElementsByTagName("sectors").item(0);
-		final NodeList sectorsList = sectorsNode.getChildNodes();
-		for (int i = 0; i < sectorsList.getLength(); i++) {
-			final Node item = sectorsList.item(i);
-			if (item.getNodeType() == Node.ELEMENT_NODE) {
-				final Parameters sectorParameters = new Parameters(item);
-				final Element element = (Element) item;
-				final String sectorName = element.getNodeName();
-				final String sectorQualifiedName = element.getAttribute("type");
-				if (sectorQualifiedName == null) {
-					throw new RuntimeException(sectorName + ".type not found");
-				}
-				Sector sector = null;
-				try {
-					sector = (Sector) Class.forName(sectorQualifiedName, false, ClassLoader.getSystemClassLoader())
-							.getConstructor(Parameters.class, Simulation.class).newInstance(sectorParameters, circuit);
-					result.put(sectorName, sector);
-				} catch (Exception e) {
-					throw new RuntimeException(
-							"Error while creating \"" + sectorName + "\" as \"" + sectorQualifiedName + "\"", e);
-				}
-			}
-		}
-		return result;
-	}
-
-	/**
 	 * The date of creation of this simulation.
 	 */
 	private Date date = new Date();
 
 	/** The events. */
-	private final Map<Integer, List<Parameters>> events;
+	private final Map<Integer, Parameters> events = new HashMap<>();
 
 	/**
 	 * The expression factory;
@@ -428,10 +366,10 @@ public class BasicSimulation implements Simulation {
 	private final BasicTimer timer;
 
 	/**
-	 * Creates a new basic circuit.
+	 * Creates a new basic simulation.
 	 * 
-	 * @param elem
-	 *            an XML element with the parameters for the new circuit.
+	 * @param scenario
+	 *            the parameters for the new simulation.
 	 * @param file
 	 *            the scenario file.
 	 * @throws RuntimeException
@@ -466,7 +404,22 @@ public class BasicSimulation implements Simulation {
 		}
 
 		this.phases = getNewPhases(this.sectors, scenario.get("phases"));
-		this.events = getNewEvents(scenario.get("events"));
+
+		// Looks for the events.
+
+		{
+			final Parameters eventsTag = this.scenario.get("events");
+			if (eventsTag != null) {
+				for (Parameters event : eventsTag.getAll("when")) {
+					final int period = event.getIntAttribute("t");
+					if (this.events.containsKey(period)) {
+						throw new RuntimeException("Events already defined for the period: " + period);
+					}
+					this.events.put(period, event);
+				}
+			}
+		}
+
 		this.gui = getNewGui(scenario.get("gui"), this);
 
 		// TODO should be a parameter.
@@ -479,21 +432,25 @@ public class BasicSimulation implements Simulation {
 	 * Executes the specified event.
 	 * 
 	 * @param event
-	 *            a XML element that describes the event to be executed.
+	 *            the event to be executed.
 	 */
 	private void doEvent(Parameters event) {
-		if (event.getName().equals("pause")) {
-			pause();
-			// 2016-05-01
-			// } else if (event.getNodeName().equals("export")) {
-			// this.dataManager.export(event);
-		} else if (event.getName().equals("end")) {
-			this.run = false;
-		} else if (event.getName().equals("marker")) {
-			// 2016-03-27
-			// Does nothing (a marker is added to the charts).
-		} else {
-			throw new RuntimeException("Unknown event: " + event.getName());
+		switch (event.getName()) {
+		case "do":
+			final String action = event.getAttribute("action");
+			switch (action) {
+			case "pause":
+				this.pause = true;
+				break;
+			case "exportCharts":
+				this.gui.doEvent(event);
+				break;
+			default:
+				throw new RuntimeException("Not yet implemented: \'" + action + "\'");
+			}
+			break;
+		default:
+			throw new RuntimeException("Not yet implemented: \'" + event.getName() + "\'");
 		}
 	}
 
@@ -501,20 +458,15 @@ public class BasicSimulation implements Simulation {
 	 * Executes the events of the simulation.
 	 */
 	private void doEvents() {
-		final List<Parameters> eventList = this.events.get(this.timer.getPeriod());
-		if (eventList != null) {
-			for (Parameters event : eventList) {
-				final String eventName = event.getName();
-				/*final String markerMessage = event.getAttribute("marker");
-				if (!"".equals(markerMessage)) {
-					this.gui.addMarker(markerMessage, this.timer.getPeriod().intValue());
-					TODO IMPLEMENT ME
-				}*/
-				final Sector sector = this.sectors.get(eventName);
-				if (sector != null) {
-					sector.doEvent(event);
-				} else {
+		final Parameters currentEvents = this.events.get(getPeriod());
+		if (currentEvents != null) {
+			for (Parameters event : currentEvents.getAll()) {
+				if (!event.hasAttribute("sector")) {
 					this.doEvent(event);
+				} else {
+					final String sectorName = event.getAttribute("sector");
+					// TODO test if sector exists else throw new exception
+					this.sectors.get(sectorName).doEvent(event);
 				}
 			}
 		}

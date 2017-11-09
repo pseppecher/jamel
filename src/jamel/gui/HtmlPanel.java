@@ -1,6 +1,7 @@
 package jamel.gui;
 
 import java.awt.Color;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.AdjustmentEvent;
 import java.awt.event.AdjustmentListener;
@@ -228,6 +229,65 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 	}
 
 	/**
+	 * Initializes the specified {@code HtmlPanel}.
+	 * 
+	 * @param htmlPanel
+	 *            the {@code HtmlPanel} to be initialized.
+	 */
+	static private void init(HtmlPanel htmlPanel) {
+		htmlPanel.jEditorPane = new JEditorPane();
+		htmlPanel.jEditorPane.setContentType("text/html");
+		htmlPanel.jEditorPane.setText(htmlPanel.htmlElement.getText());
+		htmlPanel.jEditorPane.setEditable(false);
+		htmlPanel.jEditorPane.addHyperlinkListener(new HyperlinkListener() {
+			@Override
+			public void hyperlinkUpdate(HyperlinkEvent e) {
+				if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
+					try {
+						java.awt.Desktop.getDesktop().browse(e.getURL().toURI());
+					} catch (Exception ex) {
+						ex.printStackTrace();
+					}
+			}
+		});
+		htmlPanel.setPreferredSize(new Dimension(660, 400));
+		final Border border = BorderFactory.createCompoundBorder(
+				BorderFactory.createLineBorder(JamelColor.getColor("background"), 5),
+				BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+		htmlPanel.setBorder(border);
+		htmlPanel.setViewportView(htmlPanel.jEditorPane);
+
+		// Smart scrolling
+
+		final DefaultCaret caret = (DefaultCaret) htmlPanel.jEditorPane.getCaret();
+		caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
+		htmlPanel.getVerticalScrollBar().addAdjustmentListener(htmlPanel);
+
+	}
+
+	/**
+	 * Creates and returns a new {@code HtmlPanel}.
+	 * 
+	 * @param elem
+	 *            the description of the content of the panel.
+	 * @param gui
+	 *            the parent gui.
+	 * @param expressionFactory
+	 *            the {@code ExpressionFactory}.
+	 * @return a new {@code HtmlPanel}.
+	 */
+	public static Component getNewPanel(Element elem, BasicGui gui, ExpressionFactory expressionFactory) {
+		Component component;
+		try {
+			component = new HtmlPanel(elem, gui, expressionFactory);
+		} catch (Exception e) {
+			e.printStackTrace();
+			component = new HtmlPanel(getNewErrorElement(e.getMessage() + " (See log file for more details)"));
+		}
+		return component;
+	}
+
+	/**
 	 * If the scroll bar has to be adjusted.
 	 */
 	private boolean adjustScrollBar = true;
@@ -267,7 +327,7 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 	 * @param expressionFactory
 	 *            the expression factory.
 	 */
-	public HtmlPanel(final Element elem, final Gui gui, final ExpressionFactory expressionFactory) {
+	private HtmlPanel(final Element elem, final Gui gui, final ExpressionFactory expressionFactory) {
 		super();
 
 		// TODO utiliser Parameters au lieu de Element
@@ -298,35 +358,23 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 			panelDescription = elem;
 		}
 
-		this.jEditorPane = new JEditorPane();
-		this.jEditorPane.setContentType("text/html");
 		this.htmlElement = getNewHtmlElement(panelDescription, gui.getSimulation(), expressionFactory);
-		this.jEditorPane.setText(this.htmlElement.getText());
-		this.jEditorPane.setEditable(false);
-		this.jEditorPane.addHyperlinkListener(new HyperlinkListener() {
-			@Override
-			public void hyperlinkUpdate(HyperlinkEvent e) {
-				if (e.getEventType().equals(HyperlinkEvent.EventType.ACTIVATED))
-					try {
-						java.awt.Desktop.getDesktop().browse(e.getURL().toURI());
-					} catch (Exception ex) {
-						ex.printStackTrace();
-					}
-			}
-		});
-		this.setPreferredSize(new Dimension(660, 400));
-		final Border border = BorderFactory.createCompoundBorder(
-				BorderFactory.createLineBorder(JamelColor.getColor("background"), 5),
-				BorderFactory.createLineBorder(Color.LIGHT_GRAY));
-		this.setBorder(border);
-		this.setViewportView(jEditorPane);
 
-		// Smart scrolling
+		init(this);
 
-		final DefaultCaret caret = (DefaultCaret) jEditorPane.getCaret();
-		caret.setUpdatePolicy(DefaultCaret.NEVER_UPDATE);
-		this.getVerticalScrollBar().addAdjustmentListener(this);
+	}
 
+	/**
+	 * Creates a new {@code HtmlPanel} that displays the specified
+	 * {@code HtmlElement}.
+	 * 
+	 * @param htmlElement
+	 *            the {@code HtmlElement} to be displayed.
+	 */
+	private HtmlPanel(HtmlElement htmlElement) {
+		super();
+		this.htmlElement = htmlElement;
+		init(this);
 	}
 
 	@Override

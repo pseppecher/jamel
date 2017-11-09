@@ -82,7 +82,9 @@ public class BasicGui extends JamelObject implements Gui {
 					// d'erreur.
 				}
 			} else if (params.getName().equals("html")) {
-				result = new HtmlPanel(params.getElem(), gui, gui.expressionFactory);
+				result = HtmlPanel.getNewPanel(params.getElem(), gui, gui.expressionFactory);
+				// result = new HtmlPanel(params.getElem(), gui,
+				// gui.expressionFactory);
 			} else {
 				throw new RuntimeException("Not yet implemented: " + params.getName());
 			}
@@ -275,10 +277,11 @@ public class BasicGui extends JamelObject implements Gui {
 
 	@Override
 	public void doEvent(Parameters event) {
-		if (event.getName().equals("gui.exportCharts")) {
+		if (event.getName().equals("gui.exportCharts") || event.getAttribute("action").equals("exportCharts")) {
 			this.exportCharts(event);
 		} else {
-			Jamel.notYetImplemented();
+			Jamel.notYetImplemented("Unknown or not yet implemented event: '" + event.getName() + "', '"
+					+ event.getAttribute("action") + "'");
 		}
 	}
 

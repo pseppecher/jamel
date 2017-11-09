@@ -1,14 +1,23 @@
 package jamel.util;
 
-import org.jfree.data.xy.XYDataItem;
-
 /**
  * Represents an agent.
  */
 public interface Agent {
 
+	/**
+	 * Closes this agent.
+	 * 
+	 * Should be called at the end of the period.
+	 */
 	void close();
 
+	/**
+	 * Forces the execution of the specified event.
+	 * 
+	 * @param event
+	 *            the event to be executed.
+	 */
 	void doEvent(Parameters event);
 
 	/**
@@ -47,10 +56,22 @@ public interface Agent {
 	 */
 	Simulation getSimulation();
 
-	XYDataItem getXYDataItem(String x, String y, int period);
-
+	/**
+	 * Opens this agent.
+	 * 
+	 * Should be called at the beginning of the period.
+	 */
 	void open();
 
+	/**
+	 * Returns {@code true} if this agent satisfies the specified criteria,
+	 * {@code false} otherwise.
+	 * 
+	 * @param criteria
+	 *            a string that contains the criteria to be satisfied.
+	 * @return {@code true} if this agent satisfies the specified criteria,
+	 *         {@code false} otherwise.
+	 */
 	boolean satisfy(String criteria);
 
 }

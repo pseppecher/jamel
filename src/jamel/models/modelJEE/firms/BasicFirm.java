@@ -1296,8 +1296,7 @@ public class BasicFirm extends JamelObject implements Firm {
 		this.workforceManager.observations = this.parameters.getInt("wage.observations").intValue();
 		this.workforceManager.wageFlexibility = this.parameters.getFloat("wage.flexibility");
 		this.workforceManager.wageInitialValue = this.parameters.getDoubleValue("wage.initialValue");
-		this.productionManager.utilizationRateFlexibility = this.parameters
-				.getFloat("utilizationRate.flexibility");
+		this.productionManager.utilizationRateFlexibility = this.parameters.getFloat("utilizationRate.flexibility");
 		this.capitalManager.updateOwnership();
 
 		final Machine[] machines = getNewMachines(this.consts.initialCapacity, null, this.technology);
@@ -1828,12 +1827,6 @@ public class BasicFirm extends JamelObject implements Firm {
 	@Override
 	public long getValueOfLiabilities() {
 		return this.account.getDebt();
-	}
-
-	@Override
-	public XYDataItem getXYDataItem(String x, String y, int period) {
-		Jamel.notUsed();
-		return null;
 	}
 
 	@Override

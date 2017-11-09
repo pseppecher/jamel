@@ -111,16 +111,16 @@ public class Jamel {
 		} else {
 			simulationClassName = model + "." + parameters.getAttribute("className");
 		}
-		
+
 		if (simulationClassName.isEmpty()) {
-			throw new RuntimeException("className is missing or empty");			
+			throw new RuntimeException("className is missing or empty");
 		}
 
 		try {
 			simulation = (Simulation) Class.forName(simulationClassName, false, ClassLoader.getSystemClassLoader())
 					.getConstructor(Parameters.class, File.class).newInstance(parameters, file);
 		} catch (Exception e) {
-			Jamel.println("simulationClassName",simulationClassName);
+			Jamel.println("simulationClassName", simulationClassName);
 			throw new RuntimeException("Something went wrong while creating the simulation.", e);
 		}
 		return simulation;
@@ -140,6 +140,7 @@ public class Jamel {
 			simulation.run();
 		} catch (RuntimeException e) {
 			e.printStackTrace();
+			errorMessage("Error", "Something went wrong while running the simulation (" + e.getMessage() + ").");
 		}
 	}
 
@@ -178,7 +179,7 @@ public class Jamel {
 
 		println("Jamel " + version);
 		println("Start " + simpleDateFormat.format(new Date()));
-		
+
 		final Chooser scenarioChooser = new Chooser();
 
 		try {
@@ -231,7 +232,18 @@ public class Jamel {
 	 * Throws a new {@code NotYetImplementedException}.
 	 */
 	public static void notYetImplemented() {
-		throw new NotYetImplementedException();
+		throw new NotYetImplementedException("Not yet implemented.");
+	}
+
+	/**
+	 * Throws a new {@code NotYetImplementedException} with the specified detail
+	 * message.
+	 * 
+	 * @param message
+	 *            the detail message.
+	 */
+	public static void notYetImplemented(String message) {
+		throw new NotYetImplementedException(message);
 	}
 
 	/**

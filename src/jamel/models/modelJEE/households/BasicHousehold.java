@@ -8,8 +8,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import org.jfree.data.xy.XYDataItem;
-
 import jamel.Jamel;
 import jamel.data.AgentDataset;
 import jamel.data.BasicAgentDataset;
@@ -339,6 +337,24 @@ public class BasicHousehold extends JamelObject implements Household {
 	}
 
 	@Override
+	public void acceptPayCheque(Cheque paycheck) {
+		if (this.jobContract == null) {
+			throw new RuntimeException("Job contract is null.");
+		}
+		if (!this.jobContract.isValid()) {
+			throw new RuntimeException("Invalid job contract.");
+		}
+		if (this.wages > 0) {
+			throw new RuntimeException("Wage already earned.");
+		}
+		if (paycheck.getAmount() != this.jobContract.getWage()) {
+			throw new RuntimeException("Bad cheque amount.");
+		}
+		this.wages += paycheck.getAmount();
+		this.account.deposit(paycheck);
+	}
+
+	@Override
 	public void addAsset(Asset asset) {
 		this.assetPortfolio.add(asset);
 	}
@@ -455,24 +471,6 @@ public class BasicHousehold extends JamelObject implements Household {
 	}
 
 	@Override
-	public void acceptPayCheque(Cheque paycheck) {
-		if (this.jobContract == null) {
-			throw new RuntimeException("Job contract is null.");
-		}
-		if (!this.jobContract.isValid()) {
-			throw new RuntimeException("Invalid job contract.");
-		}
-		if (this.wages > 0) {
-			throw new RuntimeException("Wage already earned.");
-		}
-		if (paycheck.getAmount() != this.jobContract.getWage()) {
-			throw new RuntimeException("Bad cheque amount.");
-		}
-		this.wages += paycheck.getAmount();
-		this.account.deposit(paycheck);
-	}
-
-	@Override
 	public Double getData(int dataIndex, int t) {
 		return this.dataset.getData(dataIndex, t);
 	}
@@ -488,32 +486,8 @@ public class BasicHousehold extends JamelObject implements Household {
 	}
 
 	@Override
-	public void work() {
-		if (this.jobContract == null) {
-			throw new RuntimeException("Job contract is null.");
-		}
-		if (!this.jobContract.isValid()) {
-			throw new RuntimeException("Invalid job contract.");
-		}
-		if (this.variables.get("worked").intValue() != 0) {
-			throw new RuntimeException("Already worked.");
-		}
-		if (this.wages == 0) {
-			throw new RuntimeException("Wage not paid.");
-		}
-		this.variables.put("worked", 1);
-		
-	}
-
-	@Override
 	public String getName() {
 		return this.name;
-	}
-
-	@Override
-	public XYDataItem getXYDataItem(String x, String y, int period) {
-		Jamel.notUsed();
-		return null;
 	}
 
 	@Override
@@ -555,6 +529,24 @@ public class BasicHousehold extends JamelObject implements Household {
 			}
 		}
 		this.variables.put("dividends", dividend);
+	}
+
+	@Override
+	public void work() {
+		if (this.jobContract == null) {
+			throw new RuntimeException("Job contract is null.");
+		}
+		if (!this.jobContract.isValid()) {
+			throw new RuntimeException("Invalid job contract.");
+		}
+		if (this.variables.get("worked").intValue() != 0) {
+			throw new RuntimeException("Already worked.");
+		}
+		if (this.wages == 0) {
+			throw new RuntimeException("Wage not paid.");
+		}
+		this.variables.put("worked", 1);
+		
 	}
 
 }
