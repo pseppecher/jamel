@@ -7,8 +7,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.jfree.data.xy.XYDataItem;
-
 import jamel.Jamel;
 import jamel.data.AgentDataset;
 import jamel.data.BasicAgentDataset;

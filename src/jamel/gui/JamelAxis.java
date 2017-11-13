@@ -5,7 +5,7 @@ import java.awt.geom.Rectangle2D;
 
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.axis.NumberTickUnit;
-import org.jfree.ui.RectangleEdge;
+import org.jfree.chart.ui.RectangleEdge;
 
 /**
  * An axis for displaying numerical data.

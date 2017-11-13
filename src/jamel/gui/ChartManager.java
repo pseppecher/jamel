@@ -2,10 +2,12 @@ package jamel.gui;
 
 import java.awt.BasicStroke;
 import java.awt.Color;
-import java.awt.Font;
+import java.awt.Component;
 import java.awt.Paint;
 import java.awt.Shape;
+import java.awt.Stroke;
 import java.awt.geom.Line2D;
+import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.text.NumberFormat;
 import java.util.LinkedList;
@@ -23,15 +25,18 @@ import org.jfree.chart.plot.DefaultDrawingSupplier;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.ValueMarker;
 import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.VectorRenderer;
 import org.jfree.chart.renderer.xy.XYItemRenderer;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.title.TextTitle;
+import org.jfree.data.xy.VectorSeries;
+import org.jfree.data.xy.VectorSeriesCollection;
 import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
 import jamel.Jamel;
-import jamel.data.Expression;
+import jamel.data.DynamicSeries;
 import jamel.data.ExpressionFactory;
 import jamel.util.JamelObject;
 import jamel.util.Parameters;
@@ -46,7 +51,8 @@ public class ChartManager extends JamelObject {
 	/**
 	 * The font used for axis labels.
 	 */
-	private static final Font axisLabelFont = new Font("Tahoma", Font.PLAIN, 12);
+	// private static final Font axisLabelFont = new Font("Tahoma", Font.PLAIN,
+	// 12);
 
 	/**
 	 * A basic stroke used for legend items.
@@ -60,9 +66,9 @@ public class ChartManager extends JamelObject {
 	private static final Shape line = new Line2D.Double(0, 0, 10, 0);
 
 	/**
-	 * The font used for tick labels.
+	 * A thin stroke.
 	 */
-	private static final Font tickLabelFont = new Font("Tahoma", Font.PLAIN, 10);
+	private static final Stroke thinStroke = new BasicStroke(0.5f);
 
 	/**
 	 * Returns a new formatted string by adding spaces around math operators.
@@ -111,7 +117,7 @@ public class ChartManager extends JamelObject {
 			axis.setIntegerUnit(Boolean.parseBoolean(axisDescription.getAttribute("integerUnit")));
 		}
 
-		axis.setTickLabelFont(tickLabelFont);
+		// axis.setTickLabelFont(tickLabelFont);
 		if (axisDescription != null) {
 			final Double max = axisDescription.getDoubleAttribute("max");
 			if (max != null) {
@@ -154,78 +160,32 @@ public class ChartManager extends JamelObject {
 		plot.setRangeCrosshairVisible(false);
 		plot.setDomainCrosshairVisible(false);
 		plot.setBackgroundPaint(Color.white);
-		plot.getRangeAxis().setLabelFont(axisLabelFont);
-		plot.getDomainAxis().setLabelFont(axisLabelFont);
+		// plot.getRangeAxis().setLabelFont(axisLabelFont);
+		// plot.getDomainAxis().setLabelFont(axisLabelFont);
 		plot.setDomainZeroBaselineVisible(true);
 		plot.setRangeZeroBaselineVisible(true);
 		return plot;
 	}
 
 	/**
-	 * Returns the specified series.
-	 * 
-	 * @param x
-	 *            the x data.
-	 * @param y
-	 *            the y data.
-	 * @param conditions
-	 *            the conditions.
-	 * @param expressionFactory
-	 *            the expression factory.
-	 * @return the specified series.
-	 */
-	static private StandardDynamicXYSeries getSeries(String x, String y, String conditions,
-			ExpressionFactory expressionFactory) {
-		StandardDynamicXYSeries newSeries = null;
-		try {
-			final Expression xExp = expressionFactory.getExpression(x);
-			final Expression yExp = expressionFactory.getExpression(y);
-			if (conditions == null) {
-				newSeries = new StandardDynamicXYSeries(xExp, yExp);
-			} else {
-				newSeries = new StandardDynamicXYSeries(xExp, yExp, parseConditions(conditions, expressionFactory));
-			}
-		} catch (final Exception e) {
-			Jamel.println("Failure with this series: " + x, y, conditions);
-			Jamel.errorMessage("Warning", "Something went wrong while creating a series.");
-			e.printStackTrace();
-		}
-		return newSeries;
-	}
-
-	/**
-	 * Parses the given string and returns an array of expressions.
-	 * 
-	 * @param conditions
-	 *            a string that contains the description of the conditions.
-	 * @param expressionFactory
-	 *            the expression factory.
-	 * @return an array of expressions.
-	 */
-	private static Expression[] parseConditions(String conditions, ExpressionFactory expressionFactory) {
-		final String[] strings;
-		final Expression[] result;
-		if (conditions == null) {
-			result = null;
-		} else {
-			strings = ExpressionFactory.split(conditions);
-			result = new Expression[strings.length];
-			for (int i = 0; i < strings.length; i++) {
-				result[i] = expressionFactory.getExpression(strings[i]);
-			}
-		}
-		return result;
-	}
-
-	/**
 	 * The list of the series to update.
 	 */
-	final private List<DynamicXYSeries> dynamicSeries = new LinkedList<>();
+	final private List<DynamicSeries> dynamicSeries = new LinkedList<>();
 
 	/**
 	 * The expression factory.
 	 */
 	final private ExpressionFactory expressionFactory;
+
+	/**
+	 * The parent Gui.
+	 */
+	final private Gui gui;
+
+	/**
+	 * The list of the panels (charts and html).
+	 */
+	final private List<Component> panels = new LinkedList<>();
 
 	/**
 	 * Creates a new chart manager.
@@ -237,6 +197,7 @@ public class ChartManager extends JamelObject {
 	 */
 	public ChartManager(final Gui gui, final ExpressionFactory expressionFactory) {
 		super(gui.getSimulation());
+		this.gui = gui;
 		this.expressionFactory = expressionFactory;
 	}
 
@@ -247,7 +208,8 @@ public class ChartManager extends JamelObject {
 	 *            the description of the XY chart to create.
 	 * @return a new XY chart.
 	 */
-	public JamelChart getNewXYChart(final Parameters params) {
+	private JamelChart getNewXYChart(final Parameters params) {
+		assert params != null;
 		final String name = params.getAttribute("title");
 		final String defaultConditions;
 		if (params.get("if") != null) {
@@ -256,95 +218,155 @@ public class ChartManager extends JamelObject {
 			defaultConditions = null;
 		}
 		final List<Parameters> seriesList = params.getAll("series");
-		final XYSeriesCollection dataset = new XYSeriesCollection();
-		final XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+
+		final XYSeriesCollection xyDataset = new XYSeriesCollection();
+		final XYLineAndShapeRenderer xyRenderer = new XYLineAndShapeRenderer();
+
+		VectorSeriesCollection vectorDataset = null;
+		VectorRenderer vectorRenderer = null;
+
 		final DefaultDrawingSupplier drawingSupplier = new DefaultDrawingSupplier();
 		final LegendItemCollection defaultLegendItemCollection = new LegendItemCollection();
-		int k = 0;
+		int countXYSeries = 0;
+		// int countVectorSeries = 0;
 		for (final Parameters seriesElement : seriesList) {
+
+			final String conditions = (seriesElement.get("if") == null) ? defaultConditions
+					: seriesElement.get("if").getCompactText();
+
+			// TODO vérifier la présence de x et y, générer une erreur sinon.
 			final String x = seriesElement.get("x").getCompactText();
 			final String y = seriesElement.get("y").getCompactText();
-			final String conditions;
-			if (seriesElement.get("if") != null) {
-				conditions = seriesElement.get("if").getCompactText();
-			} else {
-				conditions = defaultConditions;
-			}
-			final DynamicXYSeries newSeries;
-			if (seriesElement.hasAttribute("scatter") && seriesElement.getAttribute("scatter").equals("true")) {
-				final String sector = seriesElement.getAttribute("sector");
-				final String selection = seriesElement.hasAttribute("select") ? seriesElement.getAttribute("select")
-						: null;
-				newSeries = this.getSector(sector).getScatterSeries(x, y,
-						parseConditions(conditions, expressionFactory), selection);
-			} else {
-				newSeries = getSeries(x, y, conditions, expressionFactory);
-			}
-			if (newSeries != null) {
+
+			if (seriesElement.hasAttribute("vector") && seriesElement.getAttribute("vector").equals("true")) {
+
+				final DynamicSeries newSeries;
+
+				// Vector series
+
+				if (vectorDataset == null) {
+					vectorDataset = new VectorSeriesCollection();
+					vectorRenderer = new VectorRenderer();
+				}
+
+				final String deltaX = seriesElement.get("deltaX").getCompactText();
+				final String deltaY = seriesElement.get("deltaY").getCompactText();
+
+				newSeries = expressionFactory.getVectorSeries(x, y, deltaX, deltaY, conditions);
+
 				this.dynamicSeries.add(newSeries);
-				dataset.addSeries(newSeries);
+				vectorDataset.addSeries((VectorSeries) newSeries);
+				// countVectorSeries++;
 
-				// Color
+			} else {
 
-				final Paint seriesPaint;
-				{
-					final String color = seriesElement.getAttribute("color");
-					if (color == "") {
-						seriesPaint = drawingSupplier.getNextPaint();
-					} else {
-						seriesPaint = JamelColor.getColor(color);
+				final DynamicSeries newSeries;
+				if (seriesElement.hasAttribute("scatter") && seriesElement.getAttribute("scatter").equals("true")) {
+
+					// Scatter series (permet de visualiser chaque agent d'un
+					// secteur)
+
+					final String sector = seriesElement.getAttribute("sector");
+					final String selection = seriesElement.hasAttribute("select") ? seriesElement.getAttribute("select")
+							: null;
+					newSeries = this.getSector(sector).getScatterSeries(x, y,
+							expressionFactory.parseConditions(conditions), selection);
+
+				} else {
+
+					// Line series
+
+					newSeries = expressionFactory.getXYSeries(x, y, conditions);
+				}
+				if (newSeries != null) {
+					
+					this.dynamicSeries.add(newSeries);
+					xyDataset.addSeries((XYSeries) newSeries);
+
+					final boolean shapeFilled = true;
+					Paint outlinePaint = Color.black;
+					
+					// Color
+
+					final Paint seriesPaint;
+					{
+						final String color = seriesElement.getAttribute("color");
+						if (color == "") {
+							seriesPaint = drawingSupplier.getNextPaint();
+						} else {
+							seriesPaint = JamelColor.getColor(color);
+						}
 					}
+
+					// Shapes ?
+
+					final Shape shape; // = xyRenderer.getDefaultShape();
+					final boolean shapeVisible;
+
+					if (seriesElement.getAttribute("shapesVisible").equals("true")) {
+						shape = drawingSupplier.getNextShape();
+						xyRenderer.setSeriesShapesVisible(countXYSeries, true);
+						xyRenderer.setSeriesShape(countXYSeries, shape);
+						xyRenderer.setUseFillPaint(true);
+						xyRenderer.setSeriesFillPaint(countXYSeries, seriesPaint);
+						xyRenderer.setSeriesOutlineStroke(countXYSeries, thinStroke);
+						xyRenderer.setSeriesStroke(countXYSeries, thinStroke);
+						shapeVisible = true;
+					} else {
+						xyRenderer.setSeriesShapesVisible(countXYSeries, false);
+						shape = xyRenderer.getDefaultShape();
+						shapeVisible = false;
+					}
+
+					// Line color
+
+					if (seriesElement.hasAttribute("lineColor")) {
+						final Color lineColor = JamelColor.getColor(seriesElement.getAttribute("lineColor"));
+						xyRenderer.setSeriesPaint(countXYSeries, lineColor);
+						outlinePaint = lineColor;
+					} else {
+						xyRenderer.setSeriesPaint(countXYSeries, seriesPaint);
+					}
+
+					// Line visibility
+
+					final boolean lineVisible = !seriesElement.getAttribute("linesVisible").equals("false");
+					xyRenderer.setSeriesLinesVisible(countXYSeries, lineVisible);
+
+					// Preparing default legend:
+
+					final String legendLabel;
+					final String tooltip;
+					if (seriesElement.getAttribute("label").equals("")) {
+						legendLabel = ((XYSeries) newSeries).getDescription();
+						tooltip = null;
+					} else {
+						legendLabel = seriesElement.getAttribute("label");
+						tooltip = "<html>x = " + addSpaces(x) + "<br>y = " + addSpaces(y) + "</html>";
+					}
+
+					final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null,
+							shapeVisible, shape, shapeFilled, seriesPaint, true, outlinePaint, thinStroke, lineVisible, line,
+							basicStroke, seriesPaint);
+
+					defaultLegendItemCollection.add(legendItem);
 				}
 
-				// Shapes ?
+				countXYSeries++;
 
-				final Shape shape = renderer.getBaseShape();
-				// final Shape lineshape = renderer.getline();
-
-				if (seriesElement.getAttribute("shapesVisible").equals("true")) {
-					renderer.setSeriesShapesVisible(k, true);
-					renderer.setUseFillPaint(true);
-					renderer.setSeriesFillPaint(k, seriesPaint);
-				} else {
-					renderer.setSeriesShapesVisible(k, false);
-				}
-
-				// Line color
-
-				if (seriesElement.hasAttribute("lineColor")) {
-					final Color lineColor = JamelColor.getColor(seriesElement.getAttribute("lineColor"));
-					renderer.setSeriesPaint(k, lineColor);
-				} else {
-					renderer.setSeriesPaint(k, seriesPaint);
-				}
-
-				// Line visibility
-
-				renderer.setSeriesLinesVisible(k, (!seriesElement.getAttribute("linesVisible").equals("false")));
-
-				// Preparing default legend:
-
-				final String legendLabel;
-				final String tooltip;
-				if (seriesElement.getAttribute("label").equals("")) {
-					legendLabel = ((XYSeries) newSeries).getDescription();
-					tooltip = null;
-				} else {
-					legendLabel = seriesElement.getAttribute("label");
-					tooltip = "<html>x = " + addSpaces(x) + "<br>y = " + addSpaces(y) + "</html>";
-				}
-
-				final LegendItem legendItem = new LegendItem(legendLabel, "description", tooltip, null, false, shape,
-						true, seriesPaint, false, seriesPaint, basicStroke, true, line, basicStroke, seriesPaint);
-
-				defaultLegendItemCollection.add(legendItem);
 			}
-			k++;
+
 		}
+
 		final NumberAxis xAxis = createAxis(params.get("xAxis"), null);
 		final NumberAxis yAxis = createAxis(params.get("yAxis"), null);
 
-		final XYPlot plot = createXYPlot(dataset, xAxis, yAxis, renderer);
+		final XYPlot plot;
+		if (vectorDataset != null) {
+			plot = createXYPlot(vectorDataset, xAxis, yAxis, vectorRenderer);
+		} else {
+			plot = createXYPlot(xyDataset, xAxis, yAxis, xyRenderer);
+		}
 
 		// TODO addZeroBaselines(plot, description);
 
@@ -400,6 +422,99 @@ public class ChartManager extends JamelObject {
 	}
 
 	/**
+	 * Exports all the charts as pdf files.
+	 * 
+	 * @param event
+	 *            the parameters of the export.
+	 */
+	public void exportCharts(Parameters event) {
+		final File parent = this.getSimulation().getFile().getParentFile();
+		final String exportDirectoryName;
+		if (event.getAttribute("to").isEmpty()) {
+			exportDirectoryName = "";
+		} else {
+			exportDirectoryName = event.getAttribute("to") + "/";
+		}
+		final Parameters chartDescription = event.get("format");
+		try {
+			SwingUtilities.invokeAndWait(new Runnable() {
+				private void ensureParentFileExist(final File file) {
+					if (!file.getParentFile().exists()) {
+						file.getParentFile().mkdirs();
+					}
+				}
+
+				@Override
+				public void run() {
+					for (Component comp : panels) {
+						final String tabName = comp.getParent().getParent().getName().replaceAll(" ", "_");
+						if (comp instanceof JamelChartPanel) {
+							final String filename = exportDirectoryName + tabName + "/"
+									+ ((JamelChartPanel) comp).getChart().getTitle().getText().replaceAll(" ", "_")
+									+ ".pdf";
+							final File pdfFile = new File(parent, filename);
+							ensureParentFileExist(pdfFile);
+							((JamelChartPanel) comp).export(pdfFile, chartDescription);
+						} else if (comp instanceof HtmlPanel) {
+							final String filename = exportDirectoryName + tabName + "/" + "panel.html";
+							// TODO: revoir le nommage de ce fichier
+							final File htmlFile = new File(parent, filename);
+							ensureParentFileExist(htmlFile);
+							((HtmlPanel) comp).export(htmlFile);
+						}
+					}
+				}
+
+			});
+		} catch (InvocationTargetException e) {
+			e.printStackTrace();
+		} catch (InterruptedException e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Creates and returns a new panel (a chart panel or a html panel).
+	 * 
+	 * @param params
+	 *            the description of the panel to be created.
+	 * @return the new panel.
+	 */
+	public Component getNewPanel(Parameters params) {
+		final Component result;
+		try {
+			if (params.getName().equals("empty")) {
+				result = new EmptyPanel();
+			} else if (params.getName().equals("chart")) {
+				Component chartPanel = null;
+				try {
+					chartPanel = new JamelChartPanel(this.getNewXYChart(params));
+				} catch (final Exception e) {
+					e.printStackTrace();
+					chartPanel = HtmlPanel.getNewErrorPanel(e.getMessage());
+				}
+				if (chartPanel != null) {
+					result = chartPanel;
+				} else {
+					result = new EmptyPanel();
+					// TODO il vaudrait mieux un HtmlPanel avec un message
+					// d'erreur.
+				}
+			} else if (params.getName().equals("html")) {
+				result = HtmlPanel.getNewPanel(params.getElem(), this.gui, this.expressionFactory);
+				// result = new HtmlPanel(params.getElem(), gui,
+				// gui.expressionFactory);
+			} else {
+				throw new RuntimeException("Not yet implemented: " + params.getName());
+			}
+		} catch (Exception e) {
+			throw new RuntimeException("Something went wrong", e);
+		}
+		this.panels.add(result);
+		return result;
+	}
+
+	/**
 	 * Refreshes each registred dynamic series.
 	 */
 	public void refresh() {
@@ -408,17 +523,18 @@ public class ChartManager extends JamelObject {
 
 				@Override
 				public void run() {
-					for (final DynamicXYSeries series : dynamicSeries) {
+					for (final DynamicSeries series : dynamicSeries) {
 						series.update(true);
+					}
+					for (final Component panel : panels) {
+						if (panel instanceof Updatable) {
+							((Updatable) panel).update();
+						}
 					}
 				}
 
 			});
-		} catch (InvocationTargetException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
+		} catch (InvocationTargetException | InterruptedException e) {
 			e.printStackTrace();
 		}
 

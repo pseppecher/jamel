@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Font;
 
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.block.BlockBorder;
 import org.jfree.chart.plot.Plot;
 import org.jfree.chart.plot.ValueMarker;
 
@@ -14,17 +15,13 @@ import jamel.util.Simulation;
  */
 public abstract class JamelChart extends JFreeChart {
 
-	/**
-	 * A transparent color used for chart background. TODO devrait être une
-	 * Jamel Color !
-	 */
-	private static final Color colorTransparent = new Color(0, 0, 0, 0);
-
 	/** The font for displaying the legend items. */
-	private static final Font legendItemFont = new Font("Monaco", Font.PLAIN, 10);
+	// private static final Font legendItemFont = new Font("Monaco", Font.PLAIN,
+	// 10);
 
 	/** The font for displaying the chart titles. */
-	private static final Font titleFont = new Font("Tahoma", Font.PLAIN, 14);
+	// private static final Font titleFont = new Font("Tahoma", Font.PLAIN, 14);
+	private static final Font titleFont = new Font("SansSerif", Font.BOLD, 14);
 
 	/**
 	 * The simulation.
@@ -44,8 +41,9 @@ public abstract class JamelChart extends JFreeChart {
 	public JamelChart(String title, Plot plot, Simulation simulation) {
 		super(title, titleFont, plot, true);
 		this.simulation = simulation;
-		this.setBackgroundPaint(colorTransparent);
-		this.getLegend().setItemFont(legendItemFont);
+		this.setBackgroundPaint(null);
+		this.getLegend().setFrame(new BlockBorder(0.5, 0.5, 0.5, 0.5, Color.gray));
+		// this.getLegend().setItemFont(legendItemFont);
 		this.setNotify(this.simulation.isPaused());
 	}
 

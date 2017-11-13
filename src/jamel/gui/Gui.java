@@ -21,6 +21,18 @@ public interface Gui {
 	void displayErrorMessage(String title, String message);
 
 	/**
+	 * Brings up a dialog that displays an error message.
+	 * 
+	 * @param title
+	 *            the title string for the dialog.
+	 * @param message
+	 *            the message to display.
+	 * @param e
+	 *            the exception that caused the error.
+	 */
+	void displayErrorMessage(String title, String message, Exception e);
+
+	/**
 	 * Executes the specified event.
 	 * 
 	 * @param event

@@ -9,9 +9,9 @@ import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.SwingUtilities;
 
 import jamel.util.Simulation;
-
 
 /**
  * The control panel.
@@ -104,34 +104,47 @@ public class ControlPanel extends JPanel {
 	/**
 	 * Updates this panel.
 	 */
-	public void refresh() {
+	private void doRefresh() {
 		this.timeCounter.setText("" + this.simulation.getPeriod());
-		if (simulation != null) {
-			final boolean b = simulation.isPaused();
-			if (pauseButton != null) {
-				if (b) {
-					if (resumeIcon != null) {
-						pauseButton.setIcon(resumeIcon);
-						pauseButton.setText("");
-						pauseButton.setToolTipText("Resume");
-					} else {
-						pauseButton.setText("Resume");
-					}
+		final boolean b = simulation.isPaused();
+		if (pauseButton != null) {
+			if (b) {
+				if (resumeIcon != null) {
+					pauseButton.setIcon(resumeIcon);
+					pauseButton.setText("");
+					pauseButton.setToolTipText("Resume");
 				} else {
-					if (suspendIcon != null) {
-						pauseButton.setIcon(suspendIcon);
-						pauseButton.setText("");
-						pauseButton.setToolTipText("Pause");
-					} else {
-						pauseButton.setText("Pause");
-					}
+					pauseButton.setText("Resume");
 				}
-				// pauseButton.setEnabled(!b);
-				// pauseButton.setIcon(myIcon);
-				// playButton.setEnabled(b);
+			} else {
+				if (suspendIcon != null) {
+					pauseButton.setIcon(suspendIcon);
+					pauseButton.setText("");
+					pauseButton.setToolTipText("Pause");
+				} else {
+					pauseButton.setText("Pause");
+				}
 			}
 		}
 		this.repaint();
+	}
+
+	/**
+	 * Updates this panel.
+	 */
+	public void refresh() {
+		if (SwingUtilities.isEventDispatchThread()) {
+			doRefresh();
+		} else {
+			SwingUtilities.invokeLater(new Runnable() {
+
+				@Override
+				public void run() {
+					doRefresh();
+				}
+
+			});
+		}
 	}
 
 }

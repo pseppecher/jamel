@@ -1,13 +1,11 @@
-package jamel.gui;
+package jamel.data;
 
 import org.jfree.data.xy.XYSeries;
-
-import jamel.data.Expression;
 
 /**
  * An extension of {@link XYSeries}.
  */
-public class StandardDynamicXYSeries extends DynamicXYSeries {
+public class StandardDynamicXYSeries extends XYSeries implements DynamicSeries {
 
 	/**
 	 * The conditions (a list of expressions).

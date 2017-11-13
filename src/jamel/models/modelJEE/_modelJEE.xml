@@ -16,7 +16,7 @@
 		</about>
 	</meta>
 
-	<gui src="config/panels.xml" />
+	<gui src="model.config/panels.xml" />
 
 	<sectors defaultClassName="jamel.models.modelJEE.BasicSector">
 
@@ -184,11 +184,11 @@
 		<when t="3000">
 			<do
 				action="exportCharts"
-				to="exports/panels/"
+				to="model.exports/"
 			>
 				<format
 					width="800"
-					height="300" />
+					height="500" />
 			</do>
 			<do action="pause" />
 		</when>

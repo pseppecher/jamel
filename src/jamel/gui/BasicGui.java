@@ -1,13 +1,11 @@
 package jamel.gui;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
 import java.awt.Window;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.swing.BoxLayout;
@@ -15,7 +13,6 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
-import javax.swing.SwingUtilities;
 
 import jamel.Jamel;
 import jamel.data.ExpressionFactory;
@@ -27,11 +24,6 @@ import jamel.util.Simulation;
  * A basic graphical user interface.
  */
 public class BasicGui extends JamelObject implements Gui {
-
-	/**
-	 * The background color for the tabed panels.
-	 */
-	private static final Color tabPanelBackgroundColor = new Color(0, 0, 0, 0);
 
 	/**
 	 * Marks the specified window as able to be full screened.
@@ -54,47 +46,6 @@ public class BasicGui extends JamelObject implements Gui {
 	}
 
 	/**
-	 * Creates and returns a new panel (a chart panel or a html panel).
-	 * 
-	 * @param params
-	 *            the description of the panel to be created.
-	 * @param gui
-	 *            the parent Gui.
-	 * @return the new panel.
-	 */
-	private static Component getNewPanel(final Parameters params, final BasicGui gui) {
-		final Component result;
-		try {
-			if (params.getName().equals("empty")) {
-				result = new EmptyPanel();
-			} else if (params.getName().equals("chart")) {
-				JamelChartPanel chartPanel = null;
-				try {
-					chartPanel = new JamelChartPanel(gui.chartManager.getNewXYChart(params));
-				} catch (final Exception e) {
-					e.printStackTrace();
-				}
-				if (chartPanel != null) {
-					result = chartPanel;
-				} else {
-					result = new EmptyPanel();
-					// TODO il vaudrait mieux un HtmlPanel avec un message
-					// d'erreur.
-				}
-			} else if (params.getName().equals("html")) {
-				result = HtmlPanel.getNewPanel(params.getElem(), gui, gui.expressionFactory);
-				// result = new HtmlPanel(params.getElem(), gui,
-				// gui.expressionFactory);
-			} else {
-				throw new RuntimeException("Not yet implemented: " + params.getName());
-			}
-		} catch (Exception e) {
-			throw new RuntimeException("Something went wrong", e);
-		}
-		return result;
-	}
-
-	/**
 	 * The chart manager.
 	 */
 	final private ChartManager chartManager;
@@ -103,16 +54,6 @@ public class BasicGui extends JamelObject implements Gui {
 	 * The control panel.
 	 */
 	final private ControlPanel controlPanel;
-
-	/**
-	 * The expression factory.
-	 */
-	private final ExpressionFactory expressionFactory;
-
-	/**
-	 * The list of the panels (charts and html).
-	 */
-	final private List<Component> panels = new LinkedList<>();
 
 	/**
 	 * The file where the Gui was described.
@@ -146,8 +87,6 @@ public class BasicGui extends JamelObject implements Gui {
 
 		super(simulation);
 
-		this.expressionFactory = expressionFactory;
-
 		this.chartManager = new ChartManager(this, expressionFactory);
 
 		this.sourceFile = sourceFile;
@@ -167,7 +106,7 @@ public class BasicGui extends JamelObject implements Gui {
 				if (!panelParam.getAttribute("visible").equals("false")) {
 					final JPanel tabPanel = new JPanel();
 					tabPanel.setLayout(new BoxLayout(tabPanel, BoxLayout.X_AXIS));
-					tabPanel.setBackground(tabPanelBackgroundColor);
+					tabPanel.setBackground(null);
 					tabPanel.setName(panelParam.getAttribute("title"));
 					final List<Parameters> nodeList = panelParam.getAll();
 					JPanel col = new JPanel();
@@ -179,8 +118,11 @@ public class BasicGui extends JamelObject implements Gui {
 							col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
 							tabPanel.add(col);
 						} else {
-							final Component subPanel = getNewPanel(node, this);
-							this.panels.add(subPanel);
+							// 2017-11-12
+							final Component subPanel = this.chartManager.getNewPanel(node);
+							// final Component subPanel = getNewPanel(node,
+							// this);
+							// this.panels.add(subPanel);
 							col.add(subPanel);
 						}
 					}
@@ -217,58 +159,6 @@ public class BasicGui extends JamelObject implements Gui {
 
 	}
 
-	/**
-	 * Exports all the charts as pdf files.
-	 * 
-	 * @param event
-	 *            the parameters of the export.
-	 */
-	private void exportCharts(final Parameters event) {
-		final File parent = this.getSimulation().getFile().getParentFile();
-		final String exportDirectoryName;
-		if (event.getAttribute("to").isEmpty()) {
-			exportDirectoryName = "";
-		} else {
-			exportDirectoryName = event.getAttribute("to") + "/";
-		}
-		final Parameters chartDescription = event.get("format");
-		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				private void ensureParentFileExist(final File file) {
-					if (!file.getParentFile().exists()) {
-						file.getParentFile().mkdirs();
-					}
-				}
-
-				@Override
-				public void run() {
-					for (Component comp : panels) {
-						final String tabName = comp.getParent().getParent().getName().replaceAll(" ", "_");
-						if (comp instanceof JamelChartPanel) {
-							final String filename = exportDirectoryName + tabName + "/"
-									+ ((JamelChartPanel) comp).getChart().getTitle().getText().replaceAll(" ", "_")
-									+ ".pdf";
-							final File pdfFile = new File(parent, filename);
-							ensureParentFileExist(pdfFile);
-							((JamelChartPanel) comp).export(pdfFile, chartDescription);
-						} else if (comp instanceof HtmlPanel) {
-							final String filename = exportDirectoryName + tabName + "/" + "panel.html";
-							// TODO: revoir le nommage de ce fichier
-							final File htmlFile = new File(parent, filename);
-							ensureParentFileExist(htmlFile);
-							((HtmlPanel) comp).export(htmlFile);
-						}
-					}
-				}
-
-			});
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-
 	@Override
 	public void displayErrorMessage(final String title, final String message) {
 		JOptionPane.showMessageDialog(this.window, "<html>" + message + "<br>See the console for more details.</html>",
@@ -276,9 +166,18 @@ public class BasicGui extends JamelObject implements Gui {
 	}
 
 	@Override
+	public void displayErrorMessage(final String title, final String message, final Exception e) {
+		JOptionPane.showMessageDialog(this.window,
+				"<html>Jamel said: " + message + "<br>" + "Cause: "
+						+ (e.getMessage() == null ? e.getClass().getName() : e.getMessage()) + "<br>"
+						+ "See the console for more details." + "</html>",
+				title, JOptionPane.ERROR_MESSAGE);
+	}
+
+	@Override
 	public void doEvent(Parameters event) {
 		if (event.getName().equals("gui.exportCharts") || event.getAttribute("action").equals("exportCharts")) {
-			this.exportCharts(event);
+			this.chartManager.exportCharts(event);
 		} else {
 			Jamel.notYetImplemented("Unknown or not yet implemented event: '" + event.getName() + "', '"
 					+ event.getAttribute("action") + "'");
@@ -294,23 +193,6 @@ public class BasicGui extends JamelObject implements Gui {
 	public void refresh() {
 		this.controlPanel.refresh();
 		this.chartManager.refresh();
-		// TODO basculer le rafraichissement des paneaux dans chartmanager ?
-		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-
-				@Override
-				public void run() {
-					for (final Component panel : panels) {
-						if (panel instanceof Updatable) {
-							((Updatable) panel).update();
-						}
-					}
-				}
-
-			});
-		} catch (InvocationTargetException | InterruptedException e) {
-			e.printStackTrace();
-		}
 	}
 
 }

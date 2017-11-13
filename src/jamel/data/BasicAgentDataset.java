@@ -153,6 +153,11 @@ public class BasicAgentDataset extends JamelObject implements AgentDataset {
 	}
 
 	@Override
+	public int getDataIndex(String key) {
+		return this.keys.indexOf(key);
+	}
+
+	@Override
 	public double getSum(int dataKey, int laps) {
 		if (laps < 0 || laps > maxSize) {
 			throw new RuntimeException("Bad value: " + laps);
@@ -208,7 +213,7 @@ public class BasicAgentDataset extends JamelObject implements AgentDataset {
 			this.period = this.getPeriod();
 		} else {
 			this.period++;
-			if ( this.getPeriod() != this.period) {
+			if (this.getPeriod() != this.period) {
 				Jamel.println(this.getPeriod(), this.period);
 				throw new RuntimeException("Inconsistency");
 			}

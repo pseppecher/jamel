@@ -56,6 +56,15 @@ public interface AgentDataset {
 	Double getData(final String key, final int t);
 
 	/**
+	 * Returns the index of the specified data.
+	 * 
+	 * @param key
+	 *            the key of the data.
+	 * @return the index of the data.
+	 */
+	int getDataIndex(String key);
+
+	/**
 	 * Returns the sum the specified subset of data.
 	 * 
 	 * @param index

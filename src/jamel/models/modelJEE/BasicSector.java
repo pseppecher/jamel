@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.function.Consumer;
 
 import jamel.Jamel;
+import jamel.data.DynamicSeries;
 import jamel.data.Expression;
 import jamel.data.SectorDataManager;
-import jamel.gui.DynamicXYSeries;
 import jamel.util.Agent;
 import jamel.util.JamelObject;
 import jamel.util.Parameters;
@@ -228,7 +228,7 @@ public class BasicSector extends JamelObject implements Sector {
 	}
 
 	@Override
-	public DynamicXYSeries getScatterSeries(String xKey, String yKey, Expression[] conditions, String selection) {
+	public DynamicSeries getScatterSeries(String xKey, String yKey, Expression[] conditions, String selection) {
 		return this.dataManager.getScatterSeries(xKey, yKey, conditions, selection);
 	}
 

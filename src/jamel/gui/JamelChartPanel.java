@@ -42,9 +42,11 @@ public class JamelChartPanel extends ChartPanel implements Updatable {
 	 *            the chart to be displayed.
 	 */
 	public JamelChartPanel(JamelChart chart) {
-		super(chart);
+		super(chart, false);
 		this.setBackground(background);
 		this.setDismissDelay(setDismissDelay);
+		this.setFillZoomRectangle(true);
+		this.setMouseWheelEnabled(true);
 	}
 
 	/**
@@ -91,7 +93,7 @@ public class JamelChartPanel extends ChartPanel implements Updatable {
 
 			// Export to pdf
 
-			final Class<?> pdfDocClass = Class.forName("com.orsonpdf.PDFDocument");
+			final Class<?> pdfDocClass = Class.forName("com.orsonpdf.PDFDocument4Jamel");
 			final Object pdfDoc = pdfDocClass.newInstance();
 			final Method m = pdfDocClass.getMethod("createPage", Rectangle2D.class);
 			final Rectangle2D rect = new Rectangle(w, h);
@@ -101,8 +103,14 @@ public class JamelChartPanel extends ChartPanel implements Updatable {
 			g2.setRenderingHint(JFreeChart.KEY_SUPPRESS_SHADOW_GENERATION, true);
 			final Rectangle2D drawArea = new Rectangle2D.Double(0, 0, w, h);
 			this.getChart().draw(g2, drawArea);
-			final Method m3 = pdfDocClass.getMethod("writeToFile", File.class);
-			m3.invoke(pdfDoc, file);
+			final Method m3 = pdfDocClass.getMethod("setAuthor", String.class);
+			m3.invoke(pdfDoc, "Pascal Seppecher");
+			final Method m4 = pdfDocClass.getMethod("setCreator", String.class);
+			m4.invoke(pdfDoc, "Jamel v" + Jamel.getVersion());
+			final Method m5 = pdfDocClass.getMethod("setTitle", String.class);
+			m5.invoke(pdfDoc, chartTitle.getText());
+			final Method m6 = pdfDocClass.getMethod("writeToFile", File.class);
+			m6.invoke(pdfDoc, file);
 
 		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | IllegalArgumentException
 				| InvocationTargetException | NoSuchMethodException | SecurityException ex) {
@@ -126,7 +134,7 @@ public class JamelChartPanel extends ChartPanel implements Updatable {
 		try {
 			super.paintComponent(g);
 		} catch (Exception e) {
-			Jamel.println("Something went wrong with this chart: "+this.getChart().getTitle().getText());
+			Jamel.println("Something went wrong with this chart: " + this.getChart().getTitle().getText());
 			e.printStackTrace();
 		}
 	}

@@ -266,6 +266,17 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 	}
 
 	/**
+	 * Returns a new error panel.
+	 * 
+	 * @param message
+	 *            the error message.
+	 * @return a new error panel.
+	 */
+	public static Component getNewErrorPanel(String message) {
+		return new HtmlPanel(getNewErrorElement(message + "<br>See log file for more details."));
+	}
+
+	/**
 	 * Creates and returns a new {@code HtmlPanel}.
 	 * 
 	 * @param elem
@@ -276,7 +287,7 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 	 *            the {@code ExpressionFactory}.
 	 * @return a new {@code HtmlPanel}.
 	 */
-	public static Component getNewPanel(Element elem, BasicGui gui, ExpressionFactory expressionFactory) {
+	public static Component getNewPanel(Element elem, Gui gui, ExpressionFactory expressionFactory) {
 		Component component;
 		try {
 			component = new HtmlPanel(elem, gui, expressionFactory);

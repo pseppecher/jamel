@@ -3,6 +3,8 @@ package jamel.data;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
 
+import org.jfree.data.xy.VectorDataItem;
+
 import jamel.Jamel;
 import jamel.util.ArgChecks;
 import jamel.util.JamelObject;
@@ -456,7 +458,7 @@ public class ExpressionFactory extends JamelObject {
 
 			if (!isBalanced(query)) {
 				throw new RuntimeException("Not balanced: " + query);
-				// TODO Comment traiter cet incident ?
+				// Comment traiter cet incident ?
 				// Il n'est pas dû à Jamel mais au scénario, il faut informer
 				// clairement l'utilisateur de l'endroit où il s'est planté.
 			}
@@ -602,6 +604,121 @@ public class ExpressionFactory extends JamelObject {
 			Jamel.println("Bad query: '" + query + "'");
 			throw new RuntimeException("Bad query: " + query, e);
 		}
+	}
+
+	/**
+	 * Creates and returns a new vector series.
+	 * 
+	 * @param x
+	 *            the definition of the x values.
+	 * @param y
+	 *            the definition of the y values.
+	 * @param deltaX
+	 *            the definition of the x vector values.
+	 * @param deltaY
+	 *            the definition of the y vector values.
+	 * @param conditions
+	 *            some conditions.
+	 * @return a new vector series.
+	 */
+	public DynamicSeries getVectorSeries(String x, String y, String deltaX, String deltaY, String conditions) {
+		final VectorDynamicXYSeries newSeries;
+
+		final Expression xExp = this.getExpression(x);
+		final Expression yExp = this.getExpression(y);
+		final Expression deltaXExp = this.getExpression(deltaX);
+		final Expression deltaYExp = this.getExpression(deltaY);
+		final Expression[] conditionsExp = parseConditions(conditions);
+
+		String seriesKey = xExp.toString() + ", " + yExp.toString() + ", " + deltaXExp.toString() + ", "
+				+ deltaYExp.toString();
+
+		newSeries = new VectorDynamicXYSeries(seriesKey) {
+
+			@Override
+			public void update(boolean refereshCharts) {
+				boolean update = true;
+				for (int i = 0; i < conditionsExp.length; i++) {
+					if (conditionsExp[i].getValue() == null || conditionsExp[i].getValue() != 1) {
+						update = false;
+						break;
+					}
+				}
+				if (update) {
+					try {
+						final Double xValue = xExp.getValue();
+						final Double yValue = yExp.getValue();
+						if (xValue != null && yValue!=null) {
+							final Double xDeltaValue = deltaXExp.getValue();
+							final Double yDeltaValue = deltaYExp.getValue();
+							final VectorDataItem item = new VectorDataItem(xValue, yValue, xDeltaValue, yDeltaValue);
+							this.add(item, false);
+						}
+					} catch (Exception e) {
+						throw new RuntimeException(
+								"Something went wrong while updating the series: " + this.getDescription(), e);
+					}
+				}
+				if (refereshCharts) {
+					this.setNotify(true);
+					this.setNotify(false);
+				}
+			}
+
+		};
+
+		return newSeries;
+	}
+
+	/**
+	 * Returns the specified series.
+	 * 
+	 * @param x
+	 *            the definition of x data.
+	 * @param y
+	 *            the definition of y data.
+	 * @param conditions
+	 *            the conditions.
+	 * @return the specified series.
+	 */
+	public StandardDynamicXYSeries getXYSeries(String x, String y, String conditions) {
+		StandardDynamicXYSeries newSeries = null;
+		try {
+			final Expression xExp = this.getExpression(x);
+			final Expression yExp = this.getExpression(y);
+			if (conditions == null) {
+				newSeries = new StandardDynamicXYSeries(xExp, yExp);
+			} else {
+				newSeries = new StandardDynamicXYSeries(xExp, yExp, this.parseConditions(conditions));
+			}
+		} catch (final Exception e) {
+			final String message = "Something went wrong with the series: " + x + ", " + y + ", " + conditions;
+			Jamel.println(message);
+			throw new RuntimeException(message, e);
+		}
+		return newSeries;
+	}
+
+	/**
+	 * Parses the given string and returns an array of expressions.
+	 * 
+	 * @param conditions
+	 *            a string that contains the description of the conditions.
+	 * @return an array of expressions.
+	 */
+	public Expression[] parseConditions(String conditions) {
+		final String[] strings;
+		final Expression[] result;
+		if (conditions == null || conditions.isEmpty()) {
+			result = new Expression[0];
+		} else {
+			strings = ExpressionFactory.split(conditions);
+			result = new Expression[strings.length];
+			for (int i = 0; i < strings.length; i++) {
+				result[i] = this.getExpression(strings[i]);
+			}
+		}
+		return result;
 	}
 
 }

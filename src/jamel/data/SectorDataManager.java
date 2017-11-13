@@ -11,7 +11,6 @@ import java.util.Map;
 import org.jfree.data.xy.XYDataItem;
 
 import jamel.Jamel;
-import jamel.gui.DynamicXYSeries;
 import jamel.util.Agent;
 import jamel.util.JamelObject;
 import jamel.util.Sector;
@@ -616,7 +615,7 @@ public class SectorDataManager extends JamelObject {
 	 *            a string that defines the selection criteria.
 	 * @return the specified scatter {@code DynamicXYSeries}.
 	 */
-	public DynamicXYSeries getScatterSeries(final String xKey, final String yKey, final Expression[] conditions,
+	public DynamicSeries getScatterSeries(final String xKey, final String yKey, final Expression[] conditions,
 			final String selection) {
 
 		final int xIndex = this.dataKeys.indexOf(xKey);
@@ -633,7 +632,7 @@ public class SectorDataManager extends JamelObject {
 			selectValue = null;
 		}
 
-		return new DynamicXYSeries(this.sector.getName() + "," + xKey + "," + yKey + "," + selection, false) {
+		return new AbstractScatterDynamicSeries(this.sector.getName() + "," + xKey + "," + yKey + "," + selection, false) {
 
 			@SuppressWarnings("unchecked")
 			@Override
