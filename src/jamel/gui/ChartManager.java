@@ -294,7 +294,7 @@ public class ChartManager extends JamelObject {
 						if (color == "") {
 							seriesPaint = drawingSupplier.getNextPaint();
 						} else {
-							seriesPaint = JamelColor.getColor(color);
+							seriesPaint = ColorParser.getColor(color);
 						}
 					}
 
@@ -321,7 +321,7 @@ public class ChartManager extends JamelObject {
 					// Line color
 
 					if (seriesElement.hasAttribute("lineColor")) {
-						final Color lineColor = JamelColor.getColor(seriesElement.getAttribute("lineColor"));
+						final Color lineColor = ColorParser.getColor(seriesElement.getAttribute("lineColor"));
 						xyRenderer.setSeriesPaint(countXYSeries, lineColor);
 						outlinePaint = lineColor;
 					} else {
@@ -399,7 +399,7 @@ public class ChartManager extends JamelObject {
 
 		final String background = params.getAttribute("background");
 		if (!background.isEmpty()) {
-			plot.setBackgroundPaint(JamelColor.getColor(background));
+			plot.setBackgroundPaint(ColorParser.getColor(background));
 		}
 
 		// TODO addMarkers(plot, description.getElementsByTagName("marker"));

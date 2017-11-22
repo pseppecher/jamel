@@ -252,7 +252,7 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 		});
 		htmlPanel.setPreferredSize(new Dimension(660, 400));
 		final Border border = BorderFactory.createCompoundBorder(
-				BorderFactory.createLineBorder(JamelColor.getColor("background"), 5),
+				BorderFactory.createLineBorder(ColorParser.getColor("background"), 5),
 				BorderFactory.createLineBorder(Color.LIGHT_GRAY));
 		htmlPanel.setBorder(border);
 		htmlPanel.setViewportView(htmlPanel.jEditorPane);

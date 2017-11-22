@@ -517,6 +517,15 @@ public class BasicSimulation implements Simulation {
 	}
 
 	@Override
+	public void displayErrorMessage(String title, String message) {
+		if (this.gui != null) {
+			this.gui.displayErrorMessage(title, message);
+		} else {
+			Jamel.errorMessage(title, message);
+		}
+	}
+
+	@Override
 	public Expression getDuration() {
 		return this.simDuration;
 	}

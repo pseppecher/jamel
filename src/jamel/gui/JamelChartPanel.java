@@ -1,6 +1,5 @@
 package jamel.gui;
 
-import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -26,11 +25,6 @@ import jamel.util.Parameters;
 public class JamelChartPanel extends ChartPanel implements Updatable {
 
 	/**
-	 * Background color
-	 */
-	private static final Color background = JamelColor.getColor("background");
-
-	/**
 	 * The tooltip dismiss delay, in ms.
 	 */
 	private static final int setDismissDelay = 10000;
@@ -43,7 +37,7 @@ public class JamelChartPanel extends ChartPanel implements Updatable {
 	 */
 	public JamelChartPanel(JamelChart chart) {
 		super(chart, false);
-		this.setBackground(background);
+		this.setBackground(ColorParser.background);
 		this.setDismissDelay(setDismissDelay);
 		this.setFillZoomRectangle(true);
 		this.setMouseWheelEnabled(true);

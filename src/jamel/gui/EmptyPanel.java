@@ -12,7 +12,7 @@ public class EmptyPanel extends ChartPanel {
 	 */
 	public EmptyPanel() {
 		super(null);
-		this.setBackground(JamelColor.getColor("background"));
+		this.setBackground(ColorParser.getColor("background"));
 	}
 
 }

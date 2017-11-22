@@ -11,6 +11,16 @@ import jamel.data.Expression;
 public interface Simulation {
 
 	/**
+	 * Brings up a dialog that displays an error message.
+	 * 
+	 * @param title
+	 *            the title string for the dialog.
+	 * @param message
+	 *            the message to display.
+	 */
+	void displayErrorMessage(String title, String message);
+
+	/**
 	 * Returns an access to the simulation duration.
 	 * 
 	 * @return an access to the simulation duration.

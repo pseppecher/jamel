@@ -80,9 +80,9 @@ public class Jamel {
 	}
 
 	/**
-	 * Message see log file for more details.
+	 * Message see the console for more details.
 	 */
-	private static final String seeLogFile = "See the jamel.log file for more details.";
+	private static final String seeLogFile = "See the console for more details.";
 
 	/** This version of Jamel. */
 	final private static int version = 20171106;
@@ -153,9 +153,8 @@ public class Jamel {
 	 *            the message.
 	 */
 	public static void errorMessage(final String title, final String message) {
-		JOptionPane.showMessageDialog(null,
-				"<html>Jamel said:<br>\"" + message + "\"<br>See the console for more details.</html>", title,
-				JOptionPane.ERROR_MESSAGE);
+		JOptionPane.showMessageDialog(null, "<html>Jamel said:<br>\"" + message + "\"<br>" + seeLogFile + "</html>",
+				title, JOptionPane.ERROR_MESSAGE);
 	}
 
 	/**
@@ -197,9 +196,8 @@ public class Jamel {
 			try {
 				scenario = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
 			} catch (SAXException | IOException | ParserConfigurationException e) {
-				JOptionPane.showMessageDialog(null, "<html>" + e.getMessage() + "<br>" + seeLogFile + "</html>",
-						"Initialization Error", JOptionPane.ERROR_MESSAGE);
 				e.printStackTrace();
+				errorMessage("Error",e.getMessage() + "<br>" + seeLogFile);
 				return;
 			}
 			if (scenario == null) {

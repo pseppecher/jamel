@@ -3,7 +3,7 @@ package jamel.data;
 import org.jfree.data.xy.VectorSeries;
 
 /**
- * An abstract class for sector series.
+ * An abstract class for vector series.
  */
 abstract public class VectorDynamicXYSeries extends VectorSeries implements DynamicSeries {
 
