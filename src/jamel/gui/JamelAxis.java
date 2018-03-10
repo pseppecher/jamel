@@ -41,20 +41,18 @@ public class JamelAxis extends NumberAxis {
 	@Override
 	protected void selectAutoTickUnit(Graphics2D g2, Rectangle2D dataArea, RectangleEdge edge) {
 
-		final double raw = this.getRange().getLength();
-		final double magnitude = Math.pow(10, Math.floor(Math.log10(raw)));
-		double newSize = magnitude / 5;
-		while (true) {
-			int nticks = (int) (raw / newSize);
-			if (nticks <= 10) {
-				break;
-			}
-			newSize = newSize * 2;
+		final double e = this.getRange().getLength();
+		final double ea = Math.pow(10, Math.floor(Math.log10(e / 3)));
+		double ep = ea;
+		if (ea * 10 < e) {
+			ep = ea * 5;
+		} else if (ea * 5 < e) {
+			ep = ea * 2;
 		}
-		if (this.integerUnit && newSize < 1) {
-			newSize = 1;
+		if (this.integerUnit && ep < 1) {
+			ep = 1;
 		}
-		final NumberTickUnit unit2 = new NumberTickUnit(newSize);
+		final NumberTickUnit unit2 = new NumberTickUnit(ep);
 		setTickUnit(unit2, false, false);
 
 	}

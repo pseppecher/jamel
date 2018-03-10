@@ -1,8 +1,6 @@
 # Jamel: Java Agent-based MacroEconomic Laboratory
 
-May-November 2017: refactoring (work in progress)
-
-November 2017: Source code and scenario for the paper "Is the Market Really a Good Teacher?"
+*Jamel (Java Agent-based Macro-Economic Laboratory)* is an open source agent-based framework dedicated to the modeling, the simulation and the analysis of complex monetary economies.
 
 More info: [http://p.seppecher.free.fr/jamel/](http://p.seppecher.free.fr/jamel/)
 

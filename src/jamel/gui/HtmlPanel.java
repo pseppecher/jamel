@@ -372,6 +372,7 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 		this.htmlElement = getNewHtmlElement(panelDescription, gui.getSimulation(), expressionFactory);
 
 		init(this);
+		this.text = this.htmlElement.getText();
 
 	}
 
@@ -386,6 +387,7 @@ public class HtmlPanel extends JScrollPane implements AdjustmentListener, Updata
 		super();
 		this.htmlElement = htmlElement;
 		init(this);
+		this.text = this.htmlElement.getText();
 	}
 
 	@Override

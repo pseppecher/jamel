@@ -75,13 +75,13 @@ public class SectorDataManager extends JamelObject {
 	 * @return the {@code DataKeys} of the specified class of {@code Agent}.
 	 */
 	private static DataKeys getDataKeys(Class<? extends Agent> agentClass) {
-		final DataKeys result;
+		DataKeys result;
 		try {
 			final Method getActionMethod = agentClass.getMethod("getDataKeys");
 			result = (DataKeys) getActionMethod.invoke(null);
-		} catch (NoSuchMethodException | SecurityException | IllegalAccessException | IllegalArgumentException
-				| InvocationTargetException e) {
-			throw new RuntimeException("Something went wrong", e);
+		} catch (@SuppressWarnings("unused") NoSuchMethodException | SecurityException | IllegalAccessException
+				| IllegalArgumentException | InvocationTargetException e) {
+			result = null;
 		}
 		return result;
 	}
@@ -194,7 +194,7 @@ public class SectorDataManager extends JamelObject {
 	 * @param sector
 	 *            the parent sector.
 	 */
-	public SectorDataManager(List<Agent> agents, Sector sector) {
+	public SectorDataManager(List<? extends Agent> agents, Sector sector) {
 		this(sector);
 		this.agents.addAll(agents);
 	}
@@ -351,7 +351,7 @@ public class SectorDataManager extends JamelObject {
 	private Expression getSum(final String dataKey, final String periods) {
 
 		if (!this.dataKeys.containsKey(dataKey)) {
-			throw new RuntimeException("Unknown data key: " + dataKey);
+			throw new RuntimeException("Unknown data key: '" + dataKey + "' for sector " + this.sector.getName());
 		}
 
 		final int min = parsePeriods(periods, 0);
@@ -632,7 +632,8 @@ public class SectorDataManager extends JamelObject {
 			selectValue = null;
 		}
 
-		return new AbstractScatterDynamicSeries(this.sector.getName() + "," + xKey + "," + yKey + "," + selection, false) {
+		return new AbstractScatterDynamicSeries(this.sector.getName() + "," + xKey + "," + yKey + "," + selection,
+				false) {
 
 			@SuppressWarnings("unchecked")
 			@Override

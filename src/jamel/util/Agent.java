@@ -32,17 +32,6 @@ public interface Agent {
 	Double getData(int dataIndex, int t);
 
 	/**
-	 * Returns the specified data.
-	 * 
-	 * @param dataKey
-	 *            the key of the data to be returned.
-	 * @param t
-	 *            the period of the data to be returned.
-	 * @return the specified data.
-	 */
-	Double getData(String dataKey, int t);
-
-	/**
 	 * Returns the name of the agent.
 	 * 
 	 * @return the name of the agent.

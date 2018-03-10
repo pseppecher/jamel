@@ -804,6 +804,12 @@ public class BasicFirm extends JamelObject implements Firm {
 					public boolean isEmpty() {
 						return vacancies == 0;
 					}
+
+					@Override
+					public int size() {
+						Jamel.notUsed();
+						return 0;
+					}
 				};
 			}
 		}
@@ -1773,16 +1779,6 @@ public class BasicFirm extends JamelObject implements Firm {
 	@Override
 	public Double getData(int dataIndex, int t) {
 		return this.dataset.getData(dataIndex, t);
-	}
-
-	@Override
-	public Double getData(final String dataKey, final int t) {
-		/*
-		 * TODO utilisé par le secteur pour accéder aux données statistiques.
-		 * Il serait meiux que le secteur désigne la donnée par son index.
-		 * Il faudrait pour cela qu'il dispose du dictionnaire clés/indexes.
-		 */
-		return this.dataset.getData(dataKey, t);
 	}
 
 	@Override

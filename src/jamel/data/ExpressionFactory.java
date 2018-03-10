@@ -493,12 +493,13 @@ public class ExpressionFactory extends JamelObject {
 						if (previous != '*' && previous != '/') {
 							operator = c;
 							position = i;
-							break;
+							//break; -> BIG BUG ! Fixed 2018-02-17
 						}
-					} else if (c == '*' || c == '/' || c == '%') {
+					} else if ((c == '*' || c == '/' || c == '%') && (operator==null)) {
 						operator = c;
 						position = i;
-					}
+					} 
+					
 				}
 			}
 

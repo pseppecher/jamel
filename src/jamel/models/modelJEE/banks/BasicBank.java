@@ -1608,11 +1608,6 @@ public class BasicBank extends JamelObject implements Bank, Corporation {
 	}
 
 	@Override
-	public Double getData(String dataKey, int t) {
-		return this.dataset.getData(dataKey, t);
-	}
-
-	@Override
 	public String getName() {
 		return this.name;
 	}

@@ -13,6 +13,9 @@ import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTabbedPane;
+import javax.xml.parsers.DocumentBuilderFactory;
+
+import org.w3c.dom.Element;
 
 import jamel.Jamel;
 import jamel.data.ExpressionFactory;
@@ -103,35 +106,34 @@ public class BasicGui extends JamelObject implements Gui {
 
 			final List<Parameters> panelList = param.getAll("panel");
 			for (Parameters panelParam : panelList) {
-				if (!panelParam.getAttribute("visible").equals("false")) {
-					final JPanel tabPanel = new JPanel();
-					tabPanel.setLayout(new BoxLayout(tabPanel, BoxLayout.X_AXIS));
-					tabPanel.setBackground(null);
-					tabPanel.setName(panelParam.getAttribute("title"));
-					final List<Parameters> nodeList = panelParam.getAll();
-					JPanel col = new JPanel();
-					col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
-					tabPanel.add(col);
-					for (Parameters node : nodeList) {
-						if (node.getName().equals("col")) {
-							col = new JPanel();
-							col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
-							tabPanel.add(col);
-						} else {
-							// 2017-11-12
-							final Component subPanel = this.chartManager.getNewPanel(node);
-							// final Component subPanel = getNewPanel(node,
-							// this);
-							// this.panels.add(subPanel);
-							col.add(subPanel);
-						}
+
+				if (panelParam.hasAttribute("source")) {
+					final String source = panelParam.getAttribute("source");
+					final String fileName = sourceFile.getParent() + "/" + source;
+					final File panelFile = new File(fileName);
+					final Element root;
+					try {
+						root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(panelFile)
+								.getDocumentElement();
+					} catch (final Exception e) {
+						final String message = "Something went wrong while reading the file \"" + fileName + "\"";
+						Jamel.println("***");
+						Jamel.println(message);
+						Jamel.println("cause: " + e.getMessage());
+						Jamel.println();
+						throw new RuntimeException(message, e);
 					}
-					this.tabbedPane.add(tabPanel);
-					/*
-					this.tabbedPane.setToolTipTextAt(this.tabbedPane.getTabCount() - 1,
-							"<html>Some additional informations about the <i>" + tabPanel.getName()
-									+ "</i> panel</html>");
-					*/
+					if (!root.getTagName().equals("panels")) {
+						throw new RuntimeException(fileName + ": Bad element: " + root.getTagName());
+					}
+					final Parameters moreParam = new Parameters(root);
+					final List<Parameters> morePanelList = moreParam.getAll("panel");
+					for (Parameters morePanelParam : morePanelList) {
+						newPanel(morePanelParam);
+					}
+
+				} else {
+					newPanel(panelParam);
 				}
 			}
 		}
@@ -156,6 +158,46 @@ public class BasicGui extends JamelObject implements Gui {
 		}
 		this.window.setTitle(windowTitle);
 		this.window.setVisible(true);
+	}
+
+	/**
+	 * Creates a new panel from the specified parameters.
+	 * The new panel is added to the list of panel of the gui.
+	 * 
+	 * @param panelParam
+	 *            the parameters.
+	 */
+	private void newPanel(Parameters panelParam) {
+		if (!panelParam.getAttribute("visible").equals("false")) {
+			final JPanel tabPanel = new JPanel();
+			tabPanel.setLayout(new BoxLayout(tabPanel, BoxLayout.X_AXIS));
+			tabPanel.setBackground(null);
+			tabPanel.setName(panelParam.getAttribute("title"));
+			final List<Parameters> nodeList = panelParam.getAll();
+			JPanel col = new JPanel();
+			col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
+			tabPanel.add(col);
+			for (Parameters node : nodeList) {
+				if (node.getName().equals("col")) {
+					col = new JPanel();
+					col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
+					tabPanel.add(col);
+				} else {
+					// 2017-11-12
+					final Component subPanel = this.chartManager.getNewPanel(node);
+					// final Component subPanel = getNewPanel(node,
+					// this);
+					// this.panels.add(subPanel);
+					col.add(subPanel);
+				}
+			}
+			this.tabbedPane.add(tabPanel);
+			/*
+			this.tabbedPane.setToolTipTextAt(this.tabbedPane.getTabCount() - 1,
+					"<html>Some additional informations about the <i>" + tabPanel.getName()
+							+ "</i> panel</html>");
+			*/
+		}
 
 	}
 

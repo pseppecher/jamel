@@ -228,11 +228,6 @@ public class BasicSimulation implements Simulation {
 	/** The graphical user interface. */
 	private final Gui gui;
 
-	/**
-	 * The model.
-	 */
-	final private String model;
-
 	/** A flag that indicates if the simulation is paused or not. */
 	private boolean pause;
 
@@ -383,19 +378,12 @@ public class BasicSimulation implements Simulation {
 
 		this.random = new Random(this.scenario.getIntAttribute("randomSeed"));
 
-		this.model = scenario.getAttribute("model");
-
 		// Looks for the sectors.
 
 		{
 			final Parameters sectorsTag = this.scenario.get("sectors");
-			final String defaultClassName;
 			final String defaultClassAttribute = sectorsTag.getAttribute("defaultClassName");
-			if (this.model.isEmpty()) {
-				defaultClassName = defaultClassAttribute;
-			} else {
-				defaultClassName = this.model + "." + defaultClassAttribute;
-			}
+			final String defaultClassName = defaultClassAttribute;
 			for (final Parameters params : sectorsTag.getAll("sector")) {
 				final Sector sector = getNewSector(this, params, defaultClassName);
 				this.sectors.put(sector.getName(), sector);
@@ -555,11 +543,6 @@ public class BasicSimulation implements Simulation {
 			throw new IllegalArgumentException("Bad query: \"" + query + "\"");
 		}
 		return result;
-	}
-
-	@Override
-	public String getModel() {
-		return this.model;
 	}
 
 	@Override

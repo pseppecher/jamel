@@ -76,27 +76,27 @@ public class Parameters {
 	/**
 	 * Creates a new Parameters object.
 	 * 
-	 * @param element
-	 *            the XML element to be encapsulated.
+	 * @param node
+	 *            the XML node to be encapsulated. The node should be an
+	 *            instance of <code>Element</code>.
 	 */
-	public Parameters(final Element element) {
-		this.element = element;
+	private Parameters(final Node node) {
+		ArgChecks.nullNotPermitted(node, "node");
+		if (!(node instanceof Element)) {
+			throw new IllegalArgumentException("The node should be an Element: " + node.getNodeName());
+		}
+		this.element = (Element) node;
 		this.string = element2string(this.element);
 	}
 
 	/**
 	 * Creates a new Parameters object.
 	 * 
-	 * @param node
-	 *            the XML node to be encapsulated. The node should be an
-	 *            instance of <code>Element</code>.
+	 * @param element
+	 *            the XML element to be encapsulated.
 	 */
-	public Parameters(final Node node) {
-		ArgChecks.nullNotPermitted(node, "node");
-		if (!(node instanceof Element)) {
-			throw new IllegalArgumentException("The node should be an Element: " + node.getNodeName());
-		}
-		this.element = (Element) node;
+	public Parameters(final Element element) {
+		this.element = element;
 		this.string = element2string(this.element);
 	}
 
@@ -238,21 +238,6 @@ public class Parameters {
 	}
 
 	/**
-	 * Retrieves an attribute <code>Integer</code> value by name.
-	 * 
-	 * @param name
-	 *            The name of the attribute to retrieve.
-	 * @return The attribute value as a <code>Integer</code>.
-	 */
-	public Integer getIntAttribute(String name) {
-		if (!this.element.hasAttribute(name)) {
-			throw new RuntimeException(
-					"Attribute not found: \"" + name + "\" in \"" + this.element.getTagName() + "\".");
-		}
-		return Integer.parseInt(this.element.getAttribute(name));
-	}
-
-	/**
 	 * Returns the integer value of the specified parameter.
 	 * 
 	 * @param key
@@ -280,6 +265,21 @@ public class Parameters {
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * Retrieves an attribute <code>Integer</code> value by name.
+	 * 
+	 * @param name
+	 *            The name of the attribute to retrieve.
+	 * @return The attribute value as a <code>Integer</code>.
+	 */
+	public Integer getIntAttribute(String name) {
+		if (!this.element.hasAttribute(name)) {
+			throw new RuntimeException(
+					"Attribute not found: \"" + name + "\" in \"" + this.element.getTagName() + "\".");
+		}
+		return Integer.parseInt(this.element.getAttribute(name));
 	}
 
 	/**

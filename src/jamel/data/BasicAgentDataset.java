@@ -58,25 +58,7 @@ public class BasicAgentDataset extends JamelObject implements AgentDataset {
 	}
 
 	@Override
-	public void close() {
-		if (!this.open) {
-			throw new RuntimeException("Should be closed");
-		}
-		this.open = false;
-	}
-
-	/**
-	 * Returns the agent.
-	 * 
-	 * @return the agent.
-	 */
-	@Override
-	public Agent getAgent() {
-		return this.agent;
-	}
-
-	@Override
-	public double getAverage(int dataKey, int laps) {
+	public double average(int dataKey, int laps) {
 		if (laps < 0 || laps > maxSize) {
 			throw new RuntimeException("Bad value: " + laps);
 		}
@@ -99,6 +81,24 @@ public class BasicAgentDataset extends JamelObject implements AgentDataset {
 			result = 0;
 		}
 		return result;
+	}
+
+	@Override
+	public void close() {
+		if (!this.open) {
+			throw new RuntimeException("Should be closed");
+		}
+		this.open = false;
+	}
+
+	/**
+	 * Returns the agent.
+	 * 
+	 * @return the agent.
+	 */
+	@Override
+	public Agent getAgent() {
+		return this.agent;
 	}
 
 	/**
@@ -158,26 +158,6 @@ public class BasicAgentDataset extends JamelObject implements AgentDataset {
 	}
 
 	@Override
-	public double getSum(int dataKey, int laps) {
-		if (laps < 0 || laps > maxSize) {
-			throw new RuntimeException("Bad value: " + laps);
-		}
-		double sum = 0;
-		int count = 0;
-		for (final Dataset dataset : this.data) {
-			final Double value = dataset.get(dataKey);
-			if (value != null) {
-				sum += value;
-				count++;
-			}
-			if (count == laps) {
-				break;
-			}
-		}
-		return sum;
-	}
-
-	@Override
 	public XYDataItem getXYDataItem(String x, String y, int t) {
 		final XYDataItem result;
 		final int index = this.getPeriod() - t;
@@ -225,12 +205,37 @@ public class BasicAgentDataset extends JamelObject implements AgentDataset {
 	}
 
 	@Override
+	public void put(int index, boolean b) {
+		this.put(index, b ? 1 : 0);
+	}
+
+	@Override
 	public void put(int index, Number value) {
 		if (!this.open) {
 			throw new RuntimeException("Should be open");
 			// Une fois fermé, plus aucune donnée ne doit être ajoutée.
 		}
 		this.data.get(0).put(index, value);
+	}
+
+	@Override
+	public double sum(int dataKey, int laps) {
+		if (laps < 0 || laps > maxSize) {
+			throw new RuntimeException("Bad value: " + laps);
+		}
+		double sum = 0;
+		int count = 0;
+		for (final Dataset dataset : this.data) {
+			final Double value = dataset.get(dataKey);
+			if (value != null) {
+				sum += value;
+				count++;
+			}
+			if (count == laps) {
+				break;
+			}
+		}
+		return sum;
 	}
 
 }

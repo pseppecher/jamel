@@ -3,7 +3,7 @@
 <!-- 7 novembre 2017 -->
 
 <!DOCTYPE gui [
-	<!ENTITY refresh "isEqual(t&#37;12, 0)">
+	<!ENTITY refresh "isEqual(t&#37;4, 0)">
 	<!ENTITY laps "t"> 
 	<!ENTITY GDP_12 "(val(Firms, wageBill, t-11...t, sum) + val(Firms, grossProfit, t-11...t, sum))"> 
 ]>
@@ -145,12 +145,12 @@
 				<y>100 * val(Firms, liabilities, t, sum) / val(Firms, assets, t, sum)</y>
 			</series>
 
-			<series label="Min" color="veryLightGreen">
+			<series label="Min" color="VERY_LIGHT_GREEN">
 				<x>t</x>
 				<y>100 * val(Firms, debtRatio, t, min)</y>
 			</series>
 
-			<series label="Max" color="veryLightGreen">
+			<series label="Max" color="VERY_LIGHT_GREEN">
 				<x>t</x>
 				<y>100 * val(Firms, debtRatio, t, max)</y>
 			</series>
@@ -462,6 +462,32 @@
 			<legend />
 
 		</chart>
+		
+	</panel>
+	
+	<panel title="Charts 3">
+		<chart title="Debt to GDP">
+		
+			<if>&refresh;</if>
+
+			<series label="Debt to GDP" color="green">
+				<x>t</x>
+				<y>100 * val(Firms, liabilities, t, sum) / val(Firms, productionValue, t-11...t, sum)</y>
+			</series>
+			<yAxis label="%" />
+
+		</chart>
+		
+		<empty />
+		<empty />
+		
+		<col />
+		
+		<empty />
+		
+		<col />
+		
+		<empty />
 		
 	</panel>
 	

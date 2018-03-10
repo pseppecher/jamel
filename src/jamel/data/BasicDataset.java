@@ -63,7 +63,7 @@ public class BasicDataset implements Dataset {
 	}
 
 	@Override
-	public void put(int index, Number value) {
+	public void put(final int index, final Number value) {
 		if (index < 0 || index >= this.data.length) {
 			throw new IllegalArgumentException("Index out of range: " + index);
 		}
@@ -71,7 +71,7 @@ public class BasicDataset implements Dataset {
 			Jamel.println(this.agent.getName(), this.period, index, keys.getKey(index), this.data[index], value);
 			throw new RuntimeException("Already in the database: " + keys.getKey(index));
 		}
-		this.data[index] = (value != null) ? value.doubleValue() : null;
+		this.data[index] = (value != null && Double.isFinite(value.doubleValue())) ? value.doubleValue() : null;
 	}
 
 }

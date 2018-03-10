@@ -337,6 +337,12 @@ public class BasicHousehold extends JamelObject implements Household {
 	}
 
 	@Override
+	public boolean acceptJob(JobOffer jobOffer) {
+		Jamel.notUsed();
+		return false;
+	}
+
+	@Override
 	public void acceptPayCheque(Cheque paycheck) {
 		if (this.jobContract == null) {
 			throw new RuntimeException("Job contract is null.");
@@ -476,11 +482,6 @@ public class BasicHousehold extends JamelObject implements Household {
 	}
 
 	@Override
-	public Double getData(String dataKey, int t) {
-		return this.dataset.getData(dataKey, t);
-	}
-
-	@Override
 	public long getFinancialCapacity() {
 		return this.account.getAmount() / 2;
 	}
@@ -488,6 +489,12 @@ public class BasicHousehold extends JamelObject implements Household {
 	@Override
 	public String getName() {
 		return this.name;
+	}
+
+	@Override
+	public boolean isEmployed() {
+		Jamel.notUsed();
+		return false;
 	}
 
 	@Override
@@ -546,9 +553,7 @@ public class BasicHousehold extends JamelObject implements Household {
 			throw new RuntimeException("Wage not paid.");
 		}
 		this.variables.put("worked", 1);
-		
+
 	}
 
 }
-
-// ***

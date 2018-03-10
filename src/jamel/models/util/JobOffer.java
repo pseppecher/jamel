@@ -28,4 +28,11 @@ public interface JobOffer {
 	 */
 	public boolean isEmpty();
 
+	/**
+	 * Returns the number of vacancies.
+	 * 
+	 * @return the number of vacancies.
+	 */
+	public int size();
+
 }

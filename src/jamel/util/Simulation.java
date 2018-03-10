@@ -51,13 +51,6 @@ public interface Simulation {
 	String getInfo(String key);
 
 	/**
-	 * Returns the model.
-	 * 
-	 * @return the model.
-	 */
-	String getModel();
-
-	/**
 	 * Returns the name of the simulation.
 	 * 
 	 * @return the name of the simulation.

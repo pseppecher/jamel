@@ -23,6 +23,23 @@ public abstract class JamelObject {
 	}
 
 	/**
+	 * Retourne soit l'entier immédiatement inférieur, soit l'entier
+	 * immédiatement supérieur à la valeur d.
+	 * Le choix entre inférieur et supérieur est fait au hasard.
+	 * La probabilité d'arrondire "au dessus" plutôt qu'"au dessous" est égale à
+	 * la par la partie décimale de d.
+	 * 
+	 * @param d
+	 *            a floating-point value to be rounded to an integer.
+	 * @return the value of the argument rounded at random.
+	 */
+	final public int aleaRound(double d) {
+		final int partieEntiere = (int) Math.floor(d);
+		final double partieDecimale = d - partieEntiere;
+		return partieEntiere + ((getRandom().nextFloat() > partieDecimale) ? 0 : 1);
+	}
+
+	/**
 	 * Returns the value of the current period.
 	 * 
 	 * @return the value of the current period.

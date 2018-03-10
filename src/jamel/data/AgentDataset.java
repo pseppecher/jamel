@@ -10,6 +10,18 @@ import jamel.util.Agent;
 public interface AgentDataset {
 
 	/**
+	 * Returns the average value of the specified subset of data.
+	 * 
+	 * @param index
+	 *            the index for the data to be averaged.
+	 * @param laps
+	 *            the number of data in the subset.
+	 * 
+	 * @return the average of the specified data.
+	 */
+	double average(int index, int laps);
+
+	/**
 	 * Closes the dataset.
 	 */
 	void close();
@@ -20,18 +32,6 @@ public interface AgentDataset {
 	 * @return the owner of this dataset.
 	 */
 	Agent getAgent();
-
-	/**
-	 * Returns the average value of the specified subset of data.
-	 * 
-	 * @param index
-	 *            the index for the data to be averaged.
-	 * @param laps
-	 *            the number of data in the subset.
-	 * 
-	 * @return the average of the specified data.
-	 */
-	double getAverage(int index, int laps);
 
 	/**
 	 * Returns the value of the specified data.
@@ -65,18 +65,6 @@ public interface AgentDataset {
 	int getDataIndex(String key);
 
 	/**
-	 * Returns the sum the specified subset of data.
-	 * 
-	 * @param index
-	 *            the index for the data to be summed.
-	 * @param laps
-	 *            the number of data in the subset.
-	 * 
-	 * @return the sum of the specified data.
-	 */
-	double getSum(int index, int laps);
-
-	/**
 	 * Returns the specified {@code XYDataItem} for the specified period.
 	 * 
 	 * @param x
@@ -97,6 +85,19 @@ public interface AgentDataset {
 	void open();
 
 	/**
+	 * Inserts the specified boolean value at the specified position in this
+	 * agent dataset. If the agent dataset previously contained a value for the
+	 * specified index, an exception is thrown.
+	 * 
+	 * @param index
+	 *            index with which the specified value is to be associated.
+	 * 
+	 * @param b
+	 *            boolean value to be associated with the specified key.
+	 */
+	void put(int index, boolean b);
+
+	/**
 	 * Inserts the specified value at the specified position in this agent
 	 * dataset. If the agent dataset previously contained a value for the
 	 * specified index, an exception is thrown.
@@ -108,5 +109,17 @@ public interface AgentDataset {
 	 *            value to be associated with the specified key.
 	 */
 	void put(int index, Number value);
+
+	/**
+	 * Returns the sum the specified subset of data.
+	 * 
+	 * @param index
+	 *            the index for the data to be summed.
+	 * @param laps
+	 *            the number of data in the subset.
+	 * 
+	 * @return the sum of the specified data.
+	 */
+	double sum(int index, int laps);
 
 }

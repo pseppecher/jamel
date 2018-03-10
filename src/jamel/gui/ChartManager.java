@@ -109,6 +109,8 @@ public class ChartManager extends JamelObject {
 		axis.setAutoRangeIncludesZero(false);
 		}*/
 
+		//axis.setAutoRangeIncludesZero(false);
+		
 		if (axisDescription != null && !axisDescription.getAttribute("label").equals("")) {
 			axis.setLabel(axisDescription.getAttribute("label"));
 		}
@@ -367,7 +369,7 @@ public class ChartManager extends JamelObject {
 		} else {
 			plot = createXYPlot(xyDataset, xAxis, yAxis, xyRenderer);
 		}
-
+		
 		// TODO addZeroBaselines(plot, description);
 
 		final Parameters legend = params.get("legend");

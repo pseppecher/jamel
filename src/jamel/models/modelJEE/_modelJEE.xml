@@ -1,8 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<!DOCTYPE simulation [
+	<!ENTITY model "jamel.models.modelJEE">
+]>
+
+
 <simulation
-	className="jamel.models.modelJEE.BasicSimulation"
-	date="2017-09-24"
+	className="&model;.BasicSimulation"
+	date="2018-02-08"
 	randomSeed="1"
 >
 
@@ -18,11 +23,11 @@
 
 	<gui src="model.config/panels.xml" />
 
-	<sectors defaultClassName="jamel.models.modelJEE.BasicSector">
+	<sectors defaultClassName="&model;.BasicSector">
 
 		<sector
 			name="Firms"
-			agent="jamel.models.modelJEE.firms.BasicFirm"
+			agent="&model;.firms.BasicFirm"
 		>
 			<settings
 				mutation.strenght="0.05"
@@ -77,7 +82,7 @@
 
 		<sector
 			name="Households"
-			agent="jamel.models.modelJEE.households.BasicHousehold"
+			agent="&model;.households.BasicHousehold"
 		>
 			<settings
 				wage.resistance="12"
@@ -98,7 +103,7 @@
 
 		<sector
 			name="Banks"
-			agent="jamel.models.modelJEE.banks.BasicBank"
+			agent="&model;.banks.BasicBank"
 		>
 			<settings
 				taylorRule.coef="2"

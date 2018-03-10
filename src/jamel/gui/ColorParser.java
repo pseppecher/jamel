@@ -14,6 +14,21 @@ public class ColorParser {
 	final static public Color background = new Color(230, 230, 230);
 
 	/**
+	 * Transparent blue color.
+	 */
+	final static public Color transparentBlue = new Color(0f, 0f, 1f, 0.5f);
+	
+	/**
+	 * Transparent green color.
+	 */
+	final static public Color transparentGreen = new Color(0f, 1f, 0f, 0.5f);
+
+	/**
+	 * Transparent red color.
+	 */
+	final static public Color transparentRed = new Color(1f, 0f, 0f, 0.5f);
+	
+	/**
 	 * Parses the string and returns the specified color.
 	 * 
 	 * @param name

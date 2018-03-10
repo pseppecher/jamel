@@ -25,9 +25,9 @@ public class AbstractDataKeys implements DataKeys {
 	private int nextIndex = 0;
 
 	/**
-	 * Returns the next key.
+	 * Returns the next index.
 	 * 
-	 * @return the next key.
+	 * @return the next index.
 	 */
 	protected int getNextIndex() {
 		final int result = this.nextIndex;

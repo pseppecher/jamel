@@ -1,7 +1,10 @@
 package jamel;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.lang.reflect.InvocationTargetException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -54,7 +57,7 @@ public class Jamel {
 		public void run() {
 			final Preferences prefs = Preferences.userRoot();
 			final String PREF_SCENARIO_PATH = version + ".scenario.path";
-			final String defaultFolder = "src/jamel/models";
+			final String defaultFolder = System.getProperty("user.dir");
 			final String path = prefs.get(PREF_SCENARIO_PATH, defaultFolder);
 			final JFileChooser fc = new JFileChooser() {
 				{
@@ -85,7 +88,7 @@ public class Jamel {
 	private static final String seeLogFile = "See the console for more details.";
 
 	/** This version of Jamel. */
-	final private static int version = 20171106;
+	final private static int version = 20180208;
 
 	/**
 	 * Creates and returns a new simulation.
@@ -104,13 +107,10 @@ public class Jamel {
 		if (!parameters.getName().equals("simulation")) {
 			throw new RuntimeException("Bad element: \'" + parameters.getName() + "\'");
 		}
-		final String model = parameters.getAttribute("model");
-		final String simulationClassName;
-		if (model.isEmpty()) {
-			simulationClassName = parameters.getAttribute("className");
-		} else {
-			simulationClassName = model + "." + parameters.getAttribute("className");
+		if (!parameters.hasAttribute("className")) {
+			throw new RuntimeException("missing attribute: className");
 		}
+		final String simulationClassName = parameters.getAttribute("className");
 
 		if (simulationClassName.isEmpty()) {
 			throw new RuntimeException("className is missing or empty");
@@ -120,9 +120,15 @@ public class Jamel {
 			simulation = (Simulation) Class.forName(simulationClassName, false, ClassLoader.getSystemClassLoader())
 					.getConstructor(Parameters.class, File.class).newInstance(parameters, file);
 		} catch (Exception e) {
-			Jamel.println("simulationClassName", simulationClassName);
-			throw new RuntimeException("Something went wrong while creating the simulation.", e);
+			final String message = "Something went wrong while creating the simulation.";
+			Jamel.println("***");
+			Jamel.println(message);
+			Jamel.println("simulation className: " + simulationClassName);
+			Jamel.println();
+			errorMessage("Error", message);
+			throw new RuntimeException(message, e);
 		}
+
 		return simulation;
 	}
 
@@ -172,8 +178,19 @@ public class Jamel {
 	 * @param args
 	 *            unused.
 	 */
+	@SuppressWarnings("resource")
 	public static void main(String[] args) {
 
+		final FileOutputStream fileOutputStream;
+		try {
+			fileOutputStream = new FileOutputStream("jamel.log");
+		} catch (FileNotFoundException e1) {
+			throw new RuntimeException(e1);
+		}
+
+		final PrintStream out = new PrintStream(fileOutputStream);
+		// System.setOut(out);
+		// System.setErr(out);
 		final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d HH:mm:ss", Locale.US);
 
 		println("Jamel " + version);
@@ -196,12 +213,20 @@ public class Jamel {
 			try {
 				scenario = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file);
 			} catch (SAXException | IOException | ParserConfigurationException e) {
+				Jamel.println("***");
+				Jamel.println("Something went wrong while parsing the scenario file.");
+				Jamel.println();
 				e.printStackTrace();
-				errorMessage("Error",e.getMessage() + "<br>" + seeLogFile);
+				errorMessage("Error", e.getMessage() + "<br>" + seeLogFile);
+				out.close();
 				return;
 			}
 			if (scenario == null) {
-				throw new RuntimeException("Scenario is null");
+				Jamel.println("***");
+				Jamel.println("Scenario is null.");
+				Jamel.println();
+				out.close();
+				return;
 			}
 
 			final String root = scenario.getDocumentElement().getTagName();
@@ -209,20 +234,29 @@ public class Jamel {
 			if (root.equals("simulation")) {
 				simulate(new Parameters(scenario.getDocumentElement()), file);
 			} else {
-				throw new RuntimeException("This file doesn't seem to be a Jamel scenario: bad root node: " + root);
+				Jamel.println("***");
+				Jamel.println("Scenario File: " + file.getName());
+				Jamel.println("Bad root");
+				Jamel.println("Expected: simulation");
+				Jamel.println("Found: " + root);
+				Jamel.println();
+				out.close();
+				return;
 			}
-
 		}
 
 		Jamel.println();
 		Jamel.println("End", simpleDateFormat.format(System.currentTimeMillis()));
 		Jamel.println();
+		out.close();
+
 	}
 
 	/**
 	 * Throws a new {@code NotUsedException}.
 	 */
 	public static void notUsed() {
+		errorMessage("Not used!", "This method should not be used.");
 		throw new NotUsedException();
 	}
 

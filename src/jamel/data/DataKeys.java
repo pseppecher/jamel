@@ -6,7 +6,7 @@ package jamel.data;
 public interface DataKeys {
 
 	/**
-	 * Returns {@code true} if this map contains a mapping for the specified.
+	 * Returns {@code true} if this map contains a mapping for the specified
 	 * data key.
 	 * 
 	 * @param dataKey
