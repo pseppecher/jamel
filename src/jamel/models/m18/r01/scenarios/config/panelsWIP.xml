@@ -4,7 +4,6 @@
 
 <!DOCTYPE gui [
 	<!ENTITY refresh "isEqual(t&#37;1, 0)">
-	<!ENTITY laps "t"> 
 	<!ENTITY year "t-11...t"> 
 	<!ENTITY GDP_12 "(val(Sector1, wageBill, &year;, sum) + val(Sector1, grossProfit, &year;, sum))">
 	<!ENTITY Price_S1 "(val(Sector1, salesValue, &year;, sum) / val(Sector1, salesVolume, &year;, sum))"> 
@@ -25,7 +24,7 @@
 	<!ENTITY Wages "val(Workers, wage, &year;, sum)"> 
 	<!ENTITY Income "(&Wages; + &Profits;)"> 
 	<!ENTITY sector "Sector2"> 
-	<!ENTITY firm "&sector;.Firm_195"> 
+	<!ENTITY firm "&sector;.Firm_122"> 
 ]>
 
 <gui className="jamel.gui.BasicGui">
@@ -460,7 +459,26 @@
 		
 	</panel>
 
-<panel title="Main">
+	<panel title="Main">
+
+		<chart title="TEST ALT INVEST">
+
+			<if>&refresh;</if>
+
+			<series label="Effective" color="red">
+				<x>t</x>
+				<y>val(Sector1, salesValue, t-11...t, sum) / &Price_S1;</y>
+			</series>
+
+			<series label="Alternative" color="blue">
+				<x>t</x>
+				<y>(val(Sector1, testAltInvestValue, t-11...t, sum) + val(Sector2, testAltInvestValue, t-11...t, sum))/ &Price_S1;</y>
+			</series>
+
+			<yAxis label="Value" integerUnit="true" />
+
+		</chart>
+		
 </panel>
 
 <panel title="Bank">
@@ -1330,10 +1348,48 @@
 			
 		</chart>
 		
-		<empty />
-	
-		<empty />
-	
+		<chart title="Normal Utilization Rates (S1)">
+		
+			<series label="Min" color="VERY_LIGHT_RED">
+				<x>t</x>
+				<y>100 * val(Sector1, normalUtilizationRate, t, min)</y>
+			</series>
+			
+			<series label="Max" color="VERY_LIGHT_RED">
+				<x>t</x>
+				<y>100 * val(Sector1, normalUtilizationRate, t, max)</y>
+			</series>
+			
+			<series label="Mean" color="RED">
+				<x>t</x>
+				<y>100 * val(Sector1, normalUtilizationRate, t, sum) / val(Sector1, count, t, sum)</y>
+			</series>
+			
+			<yAxis label="%" min="0" max="100"/>
+			
+		</chart>
+		
+		<chart title="Normal Utilization Rates (S2)">
+		
+			<series label="Min" color="VERY_LIGHT_BLUE">
+				<x>t</x>
+				<y>100 * val(Sector2, normalUtilizationRate, t, min)</y>
+			</series>
+			
+			<series label="Max" color="VERY_LIGHT_BLUE">
+				<x>t</x>
+				<y>100 * val(Sector2, normalUtilizationRate, t, max)</y>
+			</series>
+			
+			<series label="Mean" color="BLUE">
+				<x>t</x>
+				<y>100 * val(Sector2, normalUtilizationRate, t, sum) / val(Sector2, count, t, sum)</y>
+			</series>
+			
+			<yAxis label="%" min="0" max="100"/>
+			
+		</chart>
+		
 		<col />
 			
 		<chart title="Recent Vacancies">
@@ -1918,6 +1974,43 @@
 			<yAxis label="Value" />
 			
 		</chart>
+		<empty />
+		<empty />
+		
+		<col />
+		
+		<chart title="DEBUG targetVolume">
+
+			<series label="targetVolume" color="blue">
+				<x>t</x>
+				<y>val(&firm;, targetVolume, t)</y>
+			</series>
+
+			<yAxis label="#" />
+
+		</chart>
+		
+		<chart title="DEBUG targetMachines">
+
+			<series label="targetVolume" color="blue">
+				<x>t</x>
+				<y>val(&firm;, targetVolume, t)</y>
+			</series>
+
+			<series label="investmentVolume" color="red">
+				<x>t</x>
+				<y>val(&firm;, investmentVolume, t)</y>
+			</series>
+
+			<series label="inputVolume" color="orange">
+				<x>t</x>
+				<y>val(&firm;, inputVolume, t)</y>
+			</series>
+
+			<yAxis label="#" />
+
+		</chart>
+		
 		<empty />
 		<empty />
 		

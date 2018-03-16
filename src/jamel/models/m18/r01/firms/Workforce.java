@@ -30,7 +30,7 @@ import jamel.models.util.JobContract;
 	}
 
 	/**
-	 * Returns the payroll.
+	 * Computes and returns the payroll.
 	 * <p>
 	 * "In accounting, payroll refers to the amount paid to employees for
 	 * services they provided during a certain period of time." (<a

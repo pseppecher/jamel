@@ -88,87 +88,6 @@ import jamel.util.Sector;
 @SuppressWarnings("javadoc")
 public class BasicFirm extends JamelObject implements Firm {
 
-	/**
-	 * A class to parse and store the constant parameters of the firm.
-	 */
-	private class Constants {
-
-		final private String banks;
-
-		final private int initialCapacity;
-
-		final private float initialMarkupMax;
-
-		final private float initialMarkupMin;
-
-		final private float initialUtilizationRate;
-
-		final private float inventoryNormalLevel;
-
-		final private int jobContractMax;
-
-		final private int jobContractMin;
-
-		final private int longTerm;
-
-		final private float mutation;
-
-		final private int nSupplier = 10; // Should be a parameter.
-
-		final private int observations;
-
-		final private float productionAdjustment = 6;
-
-		final private float productionAdjustment2 = 1;
-
-		final private float retentionRate = 0.5f;
-
-		final private String shareholders;
-
-		final private int shortTerm;
-
-		final private int supervision;
-
-		final private String suppliers;
-
-		final private float wageFlexibility;
-
-		final private double wageInitialValue;
-
-		/**
-		 * Creates a new set of parameters by parsing the specified
-		 * {@code Parameters}.
-		 * 
-		 * @param params
-		 *            the parameters to be parsed.
-		 */
-		private Constants(Parameters params) {
-			this.supervision = params.getInt("supervision");
-			this.jobContractMax = params.getInt("workforce.jobContracts.max");
-			this.jobContractMin = params.getInt("workforce.jobContracts.min");
-
-			this.initialMarkupMin = params.getFloat("initial.markup.min");
-			this.initialMarkupMax = params.getFloat("initial.markup.max");
-
-			this.observations = params.getInt("wage.observations").intValue();
-			this.wageFlexibility = params.getFloat("wage.flexibility");
-			this.wageInitialValue = params.getDoubleValue("wage.initialValue");
-
-			this.shortTerm = params.getInt("credit.term.short");
-			this.longTerm = params.getInt("credit.term.long");
-			this.inventoryNormalLevel = params.getFloat("inventories.normalLevel");
-			this.mutation = params.getFloat("mutation.strenght").floatValue();
-			this.initialCapacity = params.getInt("production.capacity").intValue();
-			this.initialUtilizationRate = params.getFloat("utilizationRate.initialValue");
-			this.shareholders = params.getString("shareholders");
-			this.banks = params.getString("bankSector");
-			if (this.banks.isEmpty()) {
-				throw new RuntimeException();
-			}
-			this.suppliers = params.getString("production.machines.creation.input.suppliers");
-		}
-	}
-
 	private class SalesManager {
 
 		private long salesValue = 0;
@@ -187,9 +106,7 @@ public class BasicFirm extends JamelObject implements Firm {
 			final int validPeriod = getPeriod();
 			supplyVolume = factory.getInventories().getVolume();
 
-			// if (price == null) {
 			updatePrice();
-			// }
 
 			if (price == null) {
 				if (supplyVolume != 0) {
@@ -324,7 +241,7 @@ public class BasicFirm extends JamelObject implements Firm {
 
 	}
 
-	private class WorkforceManager {
+	class WorkforceManager {
 
 		/** The wage offered. */
 		private Double highWage = null;
@@ -344,7 +261,7 @@ public class BasicFirm extends JamelObject implements Firm {
 		private Integer vacancies = null;
 
 		/** The wage offered. */
-		private Double wage = null;
+		Double wage = null;
 
 		private void close() {
 			BasicFirm.this.periodDataset.put(keys.workforce, workforce.size());
@@ -359,10 +276,10 @@ public class BasicFirm extends JamelObject implements Firm {
 			 * grande taille.
 			 */
 			Double result = null;
-			if (K.observations > 0) {
+			if (cons.observations > 0) {
 				// @SuppressWarnings("unchecked")
-				for (int i = 0; i < K.observations; i++) {
-					final BasicFirm firm = laborMarket.selectEmployer();
+				for (int i = 0; i < cons.observations; i++) {
+					final BasicFirm firm = (BasicFirm) laborMarket.selectEmployer();
 					if (firm.factory.getCapacity() > factory.getCapacity()) {
 						final Double newWage = firm.workforceManager.wage;
 						if (newWage != null) {
@@ -401,9 +318,9 @@ public class BasicFirm extends JamelObject implements Firm {
 			if (vacancies != 0) {
 				jobOffer = new JobOffer() {
 
-					final private int validity = getPeriod();
-
 					final private long jobWage = (long) Math.floor(wage);
+
+					final private int validity = getPeriod();
 
 					@Override
 					public JobContract apply(final Worker worker) {
@@ -416,10 +333,10 @@ public class BasicFirm extends JamelObject implements Firm {
 						vacancies--;
 
 						final int term;
-						if (K.jobContractMax == K.jobContractMin) {
-							term = K.jobContractMin;
+						if (cons.jobContractMax == cons.jobContractMin) {
+							term = cons.jobContractMin;
 						} else {
-							term = K.jobContractMin + getRandom().nextInt(K.jobContractMax - K.jobContractMin);
+							term = cons.jobContractMin + getRandom().nextInt(cons.jobContractMax - cons.jobContractMin);
 						}
 
 						final JobContract jobContract = newJobContract(worker, jobWage, term);
@@ -476,12 +393,6 @@ public class BasicFirm extends JamelObject implements Firm {
 			BasicFirm.this.periodDataset.put(keys.wageBill, wagebill);
 		}
 
-		private void setWage(double wage) {
-			this.wage = wage;
-			this.highWage = this.wage * (1f + K.wageFlexibility);
-			this.lowWage = this.wage * (1f - K.wageFlexibility);
-		}
-
 		/**
 		 * A trial-and-error procedure for wage adjusting.
 		 */
@@ -493,9 +404,9 @@ public class BasicFirm extends JamelObject implements Firm {
 			// on désactive le salaire fixe pendant la période de supervision.
 			// if (getPeriod() < K.supervision || this.wage == null) {
 			if (this.wage == null) {
-				this.wage = K.wageInitialValue;
-				this.highWage = this.wage * (1f + K.wageFlexibility);
-				this.lowWage = this.wage * (1f - K.wageFlexibility);
+				this.wage = cons.wageInitialValue;
+				this.highWage = this.wage * (1f + cons.wageFlexibility);
+				this.lowWage = this.wage * (1f - cons.wageFlexibility);
 				recentVacancies = null;
 
 			} else {
@@ -508,16 +419,16 @@ public class BasicFirm extends JamelObject implements Firm {
 
 				if (newWage != null) {
 					this.wage = newWage;
-					this.highWage = this.wage * (1f + K.wageFlexibility);
-					this.lowWage = this.wage * (1f - K.wageFlexibility);
+					this.highWage = this.wage * (1f + cons.wageFlexibility);
+					this.lowWage = this.wage * (1f - cons.wageFlexibility);
 				} else if (recentVacancies == 0) {
 					this.highWage = this.wage;
 					this.wage = this.lowWage + getRandom().nextFloat() * (this.wage - this.lowWage);
-					this.lowWage = this.lowWage * (1f - K.wageFlexibility);
+					this.lowWage = this.lowWage * (1f - cons.wageFlexibility);
 				} else {
 					this.lowWage = this.wage;
 					this.wage = this.wage + getRandom().nextFloat() * (this.highWage - this.wage);
-					this.highWage = this.highWage * (1f + K.wageFlexibility);
+					this.highWage = this.highWage * (1f + cons.wageFlexibility);
 				}
 
 			}
@@ -531,7 +442,7 @@ public class BasicFirm extends JamelObject implements Firm {
 		private void updateWorkforce() {
 			workforce.cleanUp();
 			if (utilizationRateTargeted == null) {
-				utilizationRateTargeted = K.initialUtilizationRate;
+				utilizationRateTargeted = cons.initialUtilizationRate;
 			}
 			manpowerTarget = Math.min(factory.getCapacity(),
 					Math.round(factory.getCapacity() * utilizationRateTargeted));
@@ -552,12 +463,13 @@ public class BasicFirm extends JamelObject implements Firm {
 			this.newJobOffer();
 		}
 
-	}
+		void setWage(double wage) {
+			this.wage = wage;
+			this.highWage = this.wage * (1f + cons.wageFlexibility);
+			this.lowWage = this.wage * (1f - cons.wageFlexibility);
+		}
 
-	/**
-	 * The data keys.
-	 */
-	private static final BasicFirmKeys keys = BasicFirmKeys.getInstance();
+	}
 
 	/**
 	 * The supply comparator.
@@ -580,6 +492,11 @@ public class BasicFirm extends JamelObject implements Firm {
 			return result;
 		}
 	};
+
+	/**
+	 * The data keys.
+	 */
+	protected static final FirmKeys keys = FirmKeys.getInstance();
 
 	/**
 	 * Returns the optimum size of the investment.
@@ -816,16 +733,7 @@ public class BasicFirm extends JamelObject implements Firm {
 		return keys;
 	}
 
-	/** The account. */
-	final private Account account;
-
 	private long canceledDebt = 0;
-
-	/** The period data of the agent. */
-	private PeriodDataset periodDataset = null;
-
-	/** The dataset of the agent. */
-	final private AgentDataset agentDataset = new BasicAgentDataset(this);
 
 	/**
 	 * To count the number of debt cancellation since the start of the period (0
@@ -850,19 +758,7 @@ public class BasicFirm extends JamelObject implements Firm {
 	@SuppressWarnings("unused")
 	private boolean exportData;
 
-	/** The factory. */
-	final private BasicFactory factory;
-
-	private int imitations = 0;
-
-	final private Constants K;
-
-	private int lastImitiation = 0;
-
-	/**
-	 * The markup
-	 */
-	private float markup = 0;
+	private BasicLaborMarket laborMarket = null;
 
 	/** The name of this firm. */
 	final private String name;
@@ -886,10 +782,6 @@ public class BasicFirm extends JamelObject implements Firm {
 	 */
 	private double productionVolumeTarget = 0;
 
-	// private Float wageFlexibility = null;
-
-	// private Double wageInitialValue = null;
-
 	/**
 	 * The regular suppliers of investment goods.
 	 */
@@ -898,13 +790,8 @@ public class BasicFirm extends JamelObject implements Firm {
 	/** The marketing manager. */
 	final private SalesManager salesManager = new SalesManager();
 
-	/** The sector. */
-	final private Sector sector;
-
 	/** The supplier sector. */
 	private Sector supplierSector = null;
-
-	private Float targetDebtRatio = null;
 
 	/**
 	 * The capacity utilization rate targeted.
@@ -925,10 +812,36 @@ public class BasicFirm extends JamelObject implements Firm {
 	/** The workforce. */
 	final private Workforce workforce = new Workforce();
 
-	/** The employer behavior. */
-	final private WorkforceManager workforceManager = new WorkforceManager();
+	/** The account. */
+	protected final Account account;
 
-	private BasicLaborMarket laborMarket = null;
+	/** The dataset of the agent. */
+	protected final AgentDataset agentDataset = new BasicAgentDataset(this);
+
+	final protected FirmConstants cons;
+
+	/** The factory. */
+	protected final BasicFactory factory;
+
+	protected int imitations = 0;
+
+	protected int lastImitiation = 0;
+
+	/**
+	 * The markup
+	 */
+	protected float markup = 0;
+
+	/** The period data of the agent. */
+	protected PeriodDataset periodDataset = null;
+
+	/** The sector. */
+	protected final Sector sector;
+
+	protected Float targetDebtRatio = null;
+
+	/** The employer behavior. */
+	protected final WorkforceManager workforceManager = new WorkforceManager();
 
 	/**
 	 * Creates a new basic firm.
@@ -945,18 +858,40 @@ public class BasicFirm extends JamelObject implements Firm {
 
 		final Parameters parameters = this.sector.getParameters();
 
-		this.K = new Constants(parameters);
+		this.cons = new FirmConstants(parameters);
 
-		this.markup = 1.f + this.K.initialMarkupMin
-				+ getRandom().nextFloat() * (this.K.initialMarkupMax - this.K.initialMarkupMin);
+		this.markup = 1.f + this.cons.initialMarkupMin
+				+ getRandom().nextFloat() * (this.cons.initialMarkupMax - this.cons.initialMarkupMin);
 
-		this.account = ((Bank) this.getSimulation().getSector(this.K.banks).selectList(1).get(0)).openAccount(this);
+		this.account = ((Bank) this.getSimulation().getSector(this.cons.banks).selectList(1).get(0)).openAccount(this);
 
 		final float min = parameters.getFloat("debtRatio.target.initialValue.min");
 		final float max = parameters.getFloat("debtRatio.target.initialValue.max");
 		this.targetDebtRatio = min + (max - min) * this.getRandom().nextFloat();
 
-		this.factory = new BasicFactory(parameters.get("production"), this);
+		this.factory = new BasicFactory(parameters.get("production"), this.getSimulation());
+
+	}
+
+	public BasicFirm(Sector sector, int id, BasicFactory factory) {
+		super(sector.getSimulation());
+		this.name = "Firm_" + id;
+		this.sector = sector;
+
+		final Parameters parameters = this.sector.getParameters();
+
+		this.cons = new FirmConstants(parameters);
+
+		this.markup = 1.f + this.cons.initialMarkupMin
+				+ getRandom().nextFloat() * (this.cons.initialMarkupMax - this.cons.initialMarkupMin);
+
+		this.account = ((Bank) this.getSimulation().getSector(this.cons.banks).selectList(1).get(0)).openAccount(this);
+
+		final float min = parameters.getFloat("debtRatio.target.initialValue.min");
+		final float max = parameters.getFloat("debtRatio.target.initialValue.max");
+		this.targetDebtRatio = min + (max - min) * this.getRandom().nextFloat();
+
+		this.factory = factory;
 
 	}
 
@@ -1032,7 +967,7 @@ public class BasicFirm extends JamelObject implements Firm {
 	}
 
 	private double getInventoryNomalVolume() {
-		return K.inventoryNormalLevel * factory.getProductionAtFullCapacity();
+		return cons.inventoryNormalLevel * factory.getProductionAtFullCapacity();
 	}
 
 	/**
@@ -1049,218 +984,6 @@ public class BasicFirm extends JamelObject implements Firm {
 		return liabilitiesTarget;
 	}
 
-	/**
-	 * Returns an array of supplies, sorted by price in ascending order.
-	 * 
-	 * @param type
-	 *            the type of goods to be supplied.
-	 * @param j
-	 *            the number of supplies to be returned.
-	 * 
-	 * @return an array of supplies, sorted by price in ascending order.
-	 */
-	private Supply[] getSupplies() {
-
-		// On commence par initialiser (si besoin est) les secteur qui va
-		// fournir les biens capitaux.
-		if (this.supplierSector == null) {
-			this.supplierSector = this.getSimulation().getSector(this.K.suppliers);
-			// Supplier sector ne peut pas être créé à la création de la firme,
-			// car il n'existe peut-être pas encore.
-		}
-
-		// On crée une liste d'offres vides.
-		final ArrayList<Supply> list = new ArrayList<>(this.K.nSupplier);
-
-		// On récupère les offres des fournisseurs habituels.
-
-		for (final Agent supplier : this.regularSuppliers) {
-			final Supply supply = ((Supplier) supplier).getSupply();
-			if (!supplier.equals(this) && supply != null && !supply.isEmpty()) {
-				list.add(supply);
-			}
-		}
-
-		final int i = K.nSupplier - list.size();
-
-		if (i > 0) {
-			@SuppressWarnings("unchecked")
-			final List<? extends Supplier> suppliers = (List<? extends Supplier>) this.supplierSector.selectList(i);
-			for (final Agent supplier : suppliers) {
-				final Supply supply = ((Supplier) supplier).getSupply();
-				if (!supplier.equals(this) && supply != null && !supply.isEmpty() && !list.contains(supply)) {
-					list.add(supply);
-				}
-			}
-		}
-
-		final Supply[] supplies = list.toArray(new Supply[list.size()]);
-		Arrays.sort(supplies, supplyComparator);
-		this.regularSuppliers.clear();
-		for (Supply supply : supplies) {
-			this.regularSuppliers.add(supply.getSupplier());
-		}
-		if (this.regularSuppliers.size() == this.K.nSupplier) {
-			this.regularSuppliers.removeLast();
-		}
-		return supplies;
-	}
-
-	/**
-	 * Imitates an other firm (copies its target debt ratio).
-	 */
-	private void imitation() {
-		final int now = this.getPeriod();
-		if (now > K.supervision) {
-			if (now > this.lastImitiation + 12) {
-				BasicFirm firm = (BasicFirm) sector.select();
-				this.lastImitiation = now;
-				this.imitations = 1;
-				this.workforceManager.setWage(firm.workforceManager.wage);
-				this.targetDebtRatio = firm.targetDebtRatio;
-				this.markup = firm.markup;
-			}
-		}
-	}
-
-	@Override
-	public void invest() {
-
-		/*
-		 * 2018-03-10 -> public
-		 * Permet au marché des biens d'investissement d'appeler cette methode.
-		 * Permet de brasser les firmes de différents secteurs dans la phase d'investissement.
-		 */
-
-		boolean invest = false;
-		final long capital = this.getCapital();
-		final long capitalTarget2 = this.getCapitalTarget();
-
-		final double manpower = this.agentDataset.sum(keys.workforce, 12);
-		final double salesVolume = this.agentDataset.sum(keys.salesVolume, 12);
-		Double averagePrice = null;
-		Double averageWage = null;
-		if (manpower > 0 && salesVolume > 0) {
-			averagePrice = this.agentDataset.sum(keys.salesValue, 12) / salesVolume;
-			averageWage = this.agentDataset.sum(keys.wageBill, 12) / manpower;
-		}
-
-		int investmentSize = 0;
-
-		final int capacity = this.factory.getCapacity();
-
-		if ((averagePrice != null && averageWage != null) || (capacity == 0)
-				|| (this.getPeriod() < K.supervision && capacity < this.K.initialCapacity)) {
-
-			// Il faut que la firme ait fonctionné au moins une fois au
-			// cours des périodes récentes, pour qu'on puisse calculer un
-			// prix moyen et un salaire moyen.
-
-			// Sauf si le nombre de machine = 0, là il faut en racheter une
-			// coute que coute.
-
-			if (capacity == 0 || capital > capitalTarget2
-					|| (this.getPeriod() < K.supervision && capacity < this.K.initialCapacity)) {
-
-				// Il faut que le niveau de capital de la firme soit
-				// satisfaisant
-				// pour qu'on puisse envisager l'achat de nouvelles machines
-
-				// On récupère une liste d'offres.
-				final Supply[] supplies = getSupplies();
-
-				if (supplies.length > 0) {
-
-					// Il faut qu'il y ait au moins 1 offre de 'raw
-					// materials'.
-
-					// TODO pour combien de machines au max ? Il faudrait
-					// déterminer ça avant l'étape ci-dessous.
-					final Long[] machinePrices = getPrices(supplies, this.factory.getInputVolumeForANewMachine());
-
-					if (this.getPeriod() < K.supervision) {
-						investmentSize = Math.min(machinePrices.length - 1,
-								capacity < this.K.initialCapacity ? this.K.initialCapacity - capacity : 0);
-						this.periodDataset.put(keys.r1, investmentSize);
-					} else if (machinePrices.length == 1) {
-						investmentSize = 0;
-					} else if (this.factory.getCapacity() == 0) {
-						imitation();
-						investmentSize = 1;
-					} else {
-						if (averagePrice == null || averageWage == null) {
-							throw new RuntimeException("Inconsistency");
-						}
-						final float discountRate = this.account.getRealRate();
-						investmentSize = getOptimumSize(machinePrices, (long) this.factory.getProductivity(), capacity,
-								this.productionVolumeTarget, averagePrice, averageWage,
-								this.factory.getMachineTimeLife(), discountRate);
-
-						// 2018-01-24
-						// ici un calcul alternatif de la taille de
-						// l'investissement
-
-						// profit brut annuel par unité de production / valeur
-						// d'achat d'une unité d production
-						// niveau des ventes des 12 derniers mois rapporté à la
-						// capacité de production actuelle.
-						// taux d'intérêt réel
-
-						// TODO prévoir le cas où les profits sont nuls (ou
-						// négatifs), ou la capacité de production est nulle.
-
-						// final double profit = (dataset.sum(keys.salesValue,
-						// 12) - dataset.sum(keys.salesCosts, 12));
-
-						/*final double profit = dataset.sum(keys.salesValue, 12) - dataset.sum(keys.salesCosts, 12)
-								- dataset.sum(keys.dividends, 12) - dataset.sum(keys.interests, 12);
-						if (profit <= 0) {
-							investmentSizeAlt = 0;
-						} else {
-							final double machineryPrice = capacity * getAveragePrice(machinePrices);
-							final double profitRate = profit / machineryPrice;
-							final double utilisation = dataset.average(keys.salesVolume, 12)
-									/ this.factory.getProductionAtFullCapacity() - 0.8;
-						
-							final double interestCommitments = dataset.sum(keys.interests, 12) / profit;
-						
-							final float a = 1f;
-							final float b = 0f;
-							final float c = -0.f;
-						
-							investmentSizeAlt = Math.min(machinePrices.length - 1, Math.max(0, aleaRound(
-									capacity * (a * utilisation + b * profitRate + c * interestCommitments))));
-						
-						}*/
-
-					}
-
-					/*if (investmentSizeAlt > 0) {
-						invest(investmentSizeAlt, machinePrices, this.factory.getInputVolumeForANewMachine(), supplies);
-						invest = true;
-					}*/
-
-					if (investmentSize > 0) {
-						invest(investmentSize, machinePrices, this.factory.getInputVolumeForANewMachine(), supplies);
-						invest = true;
-					}
-
-					this.periodDataset.put(keys.r2, (investmentSize == machinePrices.length - 1) ? 1 : 0);
-
-				}
-
-			}
-		}
-
-		if (!invest) {
-			this.periodDataset.put(keys.investmentSize, 0);
-			this.periodDataset.put(keys.investmentVolume, 0);
-			this.periodDataset.put(keys.investmentValue, 0);
-		}
-
-		// this.dataset.put(keys.investmentSizeAlt, investmentSizeAlt);
-	}
-
 	private void invest(int investmentSize, Long[] machinePrices, long input, Supply[] supplies) {
 		if (investmentSize > machinePrices.length - 1) {
 			throw new IllegalArgumentException("Investment size is " + investmentSize + " but there is only "
@@ -1270,10 +993,10 @@ public class BasicFirm extends JamelObject implements Firm {
 		final long autofinancement = (long) (investmentCost * (1f - this.targetDebtRatio));
 		final long newLongTermLoan = investmentCost - autofinancement;
 		if (newLongTermLoan > 0) {
-			this.account.borrow(newLongTermLoan, K.longTerm, true);
+			this.account.borrow(newLongTermLoan, cons.longTerm, true);
 		}
 		if (this.account.getAmount() < investmentCost) {
-			this.account.borrow(investmentCost - this.account.getAmount(), K.shortTerm, true);
+			this.account.borrow(investmentCost - this.account.getAmount(), cons.shortTerm, true);
 		}
 
 		long requiredVolume = investmentSize * input;
@@ -1290,7 +1013,7 @@ public class BasicFirm extends JamelObject implements Firm {
 			}
 			final long expense = supply.getPrice(purchaseVolume);
 			if (expense > this.account.getAmount()) {
-				this.account.borrow(expense - this.account.getAmount(), K.shortTerm, true);
+				this.account.borrow(expense - this.account.getAmount(), cons.shortTerm, true);
 				/*Jamel.println("this.account.getAmount(): " + this.account.getAmount());
 				Jamel.println("expense: " + expense);
 				throw new RuntimeException("Not enough money.");*/
@@ -1320,24 +1043,6 @@ public class BasicFirm extends JamelObject implements Firm {
 		this.periodDataset.put(keys.investmentVolume, investmentVolume);
 		this.periodDataset.put(keys.investmentValue, investmentCost);
 
-	}
-
-	/**
-	 * Mutates
-	 * 
-	 * @param mut
-	 *            the size of the mutation.
-	 */
-	private void mutation() {
-		if (this.getPeriod() > K.supervision) {
-			this.targetDebtRatio += (float) (K.mutation * getRandom().nextGaussian());
-			this.markup += (float) (K.mutation * getRandom().nextGaussian());
-			if (this.targetDebtRatio > 1) {
-				this.targetDebtRatio = 1f;
-			} else if (this.targetDebtRatio < 0) {
-				this.targetDebtRatio = 0f;
-			}
-		}
 	}
 
 	/**
@@ -1400,7 +1105,7 @@ public class BasicFirm extends JamelObject implements Firm {
 		final double capital = getCapital();
 		final double averageIncome = agentDataset.average(keys.netProfit, 12);
 
-		long toBeDistributed = (long) (averageIncome * this.K.retentionRate);
+		long toBeDistributed = (long) (averageIncome * this.cons.retentionRate);
 
 		if (capital < 0 || toBeDistributed < 0 || divid == false) {
 			toBeDistributed = 0;
@@ -1422,7 +1127,7 @@ public class BasicFirm extends JamelObject implements Firm {
 
 	private void secureFinancing(long amount) {
 		if (amount > account.getAmount()) {
-			account.borrow(amount - account.getAmount(), K.shortTerm, false);
+			account.borrow(amount - account.getAmount(), cons.shortTerm, false);
 		}
 		if (account.getAmount() < amount) {
 			throw new RuntimeException("Production is not financed.");
@@ -1431,17 +1136,17 @@ public class BasicFirm extends JamelObject implements Firm {
 
 	private void updateCapacityUtilizationTarget() {
 
-		if (this.getPeriod() < K.supervision) {
+		if (this.getPeriod() < cons.supervision) {
 			this.utilizationRateTargeted = 0.9f;
 			this.productionVolumeTarget = factory.getProductionAtFullCapacity() * this.utilizationRateTargeted;
 		} else {
 
 			final double salesAverage = this.agentDataset.average(keys.salesVolume, 12);
 			final double inventoriesVolume = factory.getInventories().getVolume();
-			final double inventoriesVolumeNormal = factory.getProductionAtFullCapacity() * this.K.inventoryNormalLevel;
-			final double target = salesAverage
-					+ (inventoriesVolumeNormal - inventoriesVolume) / this.K.productionAdjustment;
-			this.productionVolumeTarget += (target - this.productionVolumeTarget) / this.K.productionAdjustment2;
+			final double inventoriesVolumeNormal = factory.getProductionAtFullCapacity()
+					* this.cons.inventoryNormalLevel;
+			this.productionVolumeTarget = salesAverage
+					+ (inventoriesVolumeNormal - inventoriesVolume) / this.cons.productionAdjustment;
 
 			final double potentialOutput = factory.getProductionAtFullCapacity();
 			final double ratio;
@@ -1463,10 +1168,111 @@ public class BasicFirm extends JamelObject implements Firm {
 		this.periodDataset.put(keys.utilizationTarget, this.utilizationRateTargeted);
 	}
 
+	private void updatePrice() {
+		final Double unitCost = factory.getInventories().valuePerUnit();
+		if (unitCost != null) {
+			if (unitCost.isNaN()) {
+				throw new RuntimeException("Unit cost is not a number");
+			}
+			this.price = this.markup * unitCost;
+		}
+		this.periodDataset.put(keys.price, this.price);
+		this.periodDataset.put(keys.unitCost, unitCost);
+	}
+
+	/**
+	 * Returns an array of supplies, sorted by price in ascending order.
+	 * 
+	 * @param type
+	 *            the type of goods to be supplied.
+	 * @param j
+	 *            the number of supplies to be returned.
+	 * 
+	 * @return an array of supplies, sorted by price in ascending order.
+	 */
+	protected Supply[] getSupplies() {
+
+		// On commence par initialiser (si besoin est) les secteur qui va
+		// fournir les biens capitaux.
+		if (this.supplierSector == null) {
+			this.supplierSector = this.getSimulation().getSector(this.cons.suppliers);
+			// Supplier sector ne peut pas être créé à la création de la firme,
+			// car il n'existe peut-être pas encore.
+		}
+
+		// On crée une liste d'offres vides.
+		final ArrayList<Supply> list = new ArrayList<>(this.cons.nSupplier);
+
+		// On récupère les offres des fournisseurs habituels.
+
+		for (final Agent supplier : this.regularSuppliers) {
+			final Supply supply = ((Supplier) supplier).getSupply();
+			if (!supplier.equals(this) && supply != null && !supply.isEmpty()) {
+				list.add(supply);
+			}
+		}
+
+		final int i = cons.nSupplier - list.size();
+
+		if (i > 0) {
+			@SuppressWarnings("unchecked")
+			final List<? extends Supplier> suppliers = (List<? extends Supplier>) this.supplierSector.selectList(i);
+			for (final Agent supplier : suppliers) {
+				final Supply supply = ((Supplier) supplier).getSupply();
+				if (!supplier.equals(this) && supply != null && !supply.isEmpty() && !list.contains(supply)) {
+					list.add(supply);
+				}
+			}
+		}
+
+		final Supply[] supplies = list.toArray(new Supply[list.size()]);
+		Arrays.sort(supplies, supplyComparator);
+		this.regularSuppliers.clear();
+		for (Supply supply : supplies) {
+			this.regularSuppliers.add(supply.getSupplier());
+		}
+		if (this.regularSuppliers.size() == this.cons.nSupplier) {
+			this.regularSuppliers.removeLast();
+		}
+		return supplies;
+	}
+
+	/**
+	 * Imitates an other firm (copies its target debt ratio).
+	 */
+	protected void imitation() {
+		final int now = this.getPeriod();
+		if (now > cons.supervision) {
+			if (now > this.lastImitiation + 12) {
+				BasicFirm firm = (BasicFirm) sector.select();
+				this.lastImitiation = now;
+				this.imitations = 1;
+				this.workforceManager.setWage(firm.workforceManager.wage);
+				this.targetDebtRatio = firm.targetDebtRatio;
+				this.markup = firm.markup;
+			}
+		}
+	}
+
+	/**
+	 * Mutates.
+	 */
+	protected void mutation() {
+		if (this.getPeriod() > cons.supervision) {
+			this.targetDebtRatio += (float) (cons.mutation * getRandom().nextGaussian());
+			this.markup += (float) (cons.mutation * getRandom().nextGaussian());
+			if (this.targetDebtRatio > 1) {
+				this.targetDebtRatio = 1f;
+			} else if (this.targetDebtRatio < 0) {
+				this.targetDebtRatio = 0f;
+			}
+		}
+	}
+
 	/**
 	 * Updates the data.
 	 */
-	private void updateData() {
+	protected void updateData() {
 
 		final long grossProfit = this.salesManager.salesValue - this.salesManager.salesValueAtCost;
 
@@ -1556,18 +1362,6 @@ public class BasicFirm extends JamelObject implements Firm {
 
 	}
 
-	private void updatePrice() {
-		final Double unitCost = factory.getInventories().valuePerUnit();
-		if (unitCost != null) {
-			if (unitCost.isNaN()) {
-				throw new RuntimeException("Unit cost is not a number");
-			}
-			this.price = this.markup * unitCost;
-		}
-		this.periodDataset.put(keys.price, this.price);
-		this.periodDataset.put(keys.unitCost, unitCost);
-	}
-
 	@Override
 	public void close() {
 		if (!this.open) {
@@ -1615,6 +1409,144 @@ public class BasicFirm extends JamelObject implements Firm {
 	}
 
 	@Override
+	public void invest() {
+
+		/*
+		 * 2018-03-10 -> public
+		 * Permet au marché des biens d'investissement d'appeler cette methode.
+		 * Permet de brasser les firmes de différents secteurs dans la phase d'investissement.
+		 */
+
+		boolean invest = false;
+		final long capital = this.getCapital();
+		final long capitalTarget2 = this.getCapitalTarget();
+
+		final double manpower = this.agentDataset.sum(keys.workforce, 12);
+		final double salesVolume = this.agentDataset.sum(keys.salesVolume, 12);
+		Double averagePrice = null;
+		Double averageWage = null;
+		if (manpower > 0 && salesVolume > 0) {
+			averagePrice = this.agentDataset.sum(keys.salesValue, 12) / salesVolume;
+			averageWage = this.agentDataset.sum(keys.wageBill, 12) / manpower;
+		}
+
+		int investmentSize = 0;
+
+		final int capacity = this.factory.getCapacity();
+
+		if ((averagePrice != null && averageWage != null) || (capacity == 0)
+				|| (this.getPeriod() < cons.supervision && capacity < this.cons.initialCapacity)) {
+
+			// Il faut que la firme ait fonctionné au moins une fois au
+			// cours des périodes récentes, pour qu'on puisse calculer un
+			// prix moyen et un salaire moyen.
+
+			// Sauf si le nombre de machine = 0, là il faut en racheter une
+			// coute que coute.
+
+			if (capacity == 0 || capital > capitalTarget2
+					|| (this.getPeriod() < cons.supervision && capacity < this.cons.initialCapacity)) {
+
+				// Il faut que le niveau de capital de la firme soit
+				// satisfaisant
+				// pour qu'on puisse envisager l'achat de nouvelles machines
+
+				// On récupère une liste d'offres.
+				final Supply[] supplies = getSupplies();
+
+				if (supplies.length > 0) {
+
+					// Il faut qu'il y ait au moins 1 offre de 'raw
+					// materials'.
+
+					// TODO pour combien de machines au max ? Il faudrait
+					// déterminer ça avant l'étape ci-dessous.
+					final Long[] machinePrices = getPrices(supplies, this.factory.getInputVolumeForANewMachine());
+
+					if (this.getPeriod() < cons.supervision) {
+						investmentSize = Math.min(machinePrices.length - 1,
+								capacity < this.cons.initialCapacity ? this.cons.initialCapacity - capacity : 0);
+						this.periodDataset.put(keys.r1, investmentSize);
+					} else if (machinePrices.length == 1) {
+						investmentSize = 0;
+					} else if (this.factory.getCapacity() == 0) {
+						imitation();
+						investmentSize = 1;
+					} else {
+						if (averagePrice == null || averageWage == null) {
+							throw new RuntimeException("Inconsistency");
+						}
+						final float discountRate = this.account.getRealRate();
+						investmentSize = getOptimumSize(machinePrices, (long) this.factory.getProductivity(), capacity,
+								this.productionVolumeTarget, averagePrice, averageWage,
+								this.factory.getMachineTimeLife(), discountRate);
+
+						// 2018-01-24
+						// ici un calcul alternatif de la taille de
+						// l'investissement
+
+						// profit brut annuel par unité de production / valeur
+						// d'achat d'une unité d production
+						// niveau des ventes des 12 derniers mois rapporté à la
+						// capacité de production actuelle.
+						// taux d'intérêt réel
+
+						// TODO prévoir le cas où les profits sont nuls (ou
+						// négatifs), ou la capacité de production est nulle.
+
+						// final double profit = (dataset.sum(keys.salesValue,
+						// 12) - dataset.sum(keys.salesCosts, 12));
+
+						/*final double profit = dataset.sum(keys.salesValue, 12) - dataset.sum(keys.salesCosts, 12)
+								- dataset.sum(keys.dividends, 12) - dataset.sum(keys.interests, 12);
+						if (profit <= 0) {
+							investmentSizeAlt = 0;
+						} else {
+							final double machineryPrice = capacity * getAveragePrice(machinePrices);
+							final double profitRate = profit / machineryPrice;
+							final double utilisation = dataset.average(keys.salesVolume, 12)
+									/ this.factory.getProductionAtFullCapacity() - 0.8;
+						
+							final double interestCommitments = dataset.sum(keys.interests, 12) / profit;
+						
+							final float a = 1f;
+							final float b = 0f;
+							final float c = -0.f;
+						
+							investmentSizeAlt = Math.min(machinePrices.length - 1, Math.max(0, aleaRound(
+									capacity * (a * utilisation + b * profitRate + c * interestCommitments))));
+						
+						}*/
+
+					}
+
+					/*if (investmentSizeAlt > 0) {
+						invest(investmentSizeAlt, machinePrices, this.factory.getInputVolumeForANewMachine(), supplies);
+						invest = true;
+					}*/
+
+					if (investmentSize > 0) {
+						invest(investmentSize, machinePrices, this.factory.getInputVolumeForANewMachine(), supplies);
+						invest = true;
+					}
+
+					this.periodDataset.put(keys.r2, (investmentSize == machinePrices.length - 1) ? 1 : 0);
+
+				}
+
+			}
+		}
+
+		if (!invest) {
+			this.periodDataset.put(keys.investmentSize, 0);
+			this.periodDataset.put(keys.investmentVolume, 0);
+			this.periodDataset.put(keys.investmentValue, 0);
+		}
+
+		// this.dataset.put(keys.investmentSizeAlt, investmentSizeAlt);
+	}
+
+	@Override
 	public boolean isSolvent() {
 		return (this.getCapital() >= 0);
 	}
@@ -1640,7 +1572,7 @@ public class BasicFirm extends JamelObject implements Firm {
 		this.factory.depreciation();
 
 		if (ownership.isEmpty()) {
-			final List<? extends Agent> selection = getSector(K.shareholders).selectList(10);
+			final List<? extends Agent> selection = getSector(cons.shareholders).selectList(10);
 			for (final Agent agent : selection) {
 				final Equity title = new Equity() {
 
@@ -1689,6 +1621,7 @@ public class BasicFirm extends JamelObject implements Firm {
 		return false;
 	}
 
+	@Override
 	public void setLaborMarket(BasicLaborMarket laborMarket) {
 		if (this.laborMarket != null) {
 			throw new RuntimeException("The labor market is already defined.");

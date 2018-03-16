@@ -159,7 +159,7 @@ public class BasicWorker extends JamelObject implements Worker, Household {
 	/**
 	 * The data keys.
 	 */
-	private static final BasicWorkerKeys keys = BasicWorkerKeys.getInstance();
+	private static final WorkerKeys keys = WorkerKeys.getInstance();
 
 	/**
 	 * Returns the specified action.

@@ -5,21 +5,21 @@ import jamel.data.AbstractDataKeys;
 /**
  * Data keys for the {@code BasicWorker}.
  */
-public class BasicWorkerKeys extends AbstractDataKeys {
+public class WorkerKeys extends AbstractDataKeys {
 
 	/**
 	 * An instance of {@code BasicWorkerKeys}.
 	 */
-	private static BasicWorkerKeys instance;
+	private static WorkerKeys instance;
 
 	/**
 	 * Returns an instance of {@code BasicWorkerKeys}.
 	 * 
 	 * @return an instance of {@code BasicWorkerKeys}.
 	 */
-	public static BasicWorkerKeys getInstance() {
+	public static WorkerKeys getInstance() {
 		if (instance == null) {
-			instance = new BasicWorkerKeys();
+			instance = new WorkerKeys();
 		}
 		return instance;
 	}
@@ -63,7 +63,7 @@ public class BasicWorkerKeys extends AbstractDataKeys {
 	/**
 	 * Creates a new set of data keys.
 	 */
-	private BasicWorkerKeys() {
+	private WorkerKeys() {
 		this.init(this.getClass().getFields());
 	}
 

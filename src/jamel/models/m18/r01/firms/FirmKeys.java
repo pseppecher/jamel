@@ -9,25 +9,21 @@ import jamel.data.AbstractDataKeys;
  * @author pascal
  *
  */
-/**
- * @author pascal
- *
- */
-final public class BasicFirmKeys extends AbstractDataKeys {
+final public class FirmKeys extends AbstractDataKeys {
 
 	/**
 	 * An instance of {@code BasicFirmKeys}.
 	 */
-	private static BasicFirmKeys instance;
+	private static FirmKeys instance;
 
 	/**
 	 * Returns an instance of {@code BasicShareholderKeys}.
 	 * 
 	 * @return an instance of {@code BasicShareholderKeys}.
 	 */
-	public static BasicFirmKeys getInstance() {
+	public static FirmKeys getInstance() {
 		if (instance == null) {
-			instance = new BasicFirmKeys();
+			instance = new FirmKeys();
 		}
 		return instance;
 	}
@@ -54,6 +50,13 @@ final public class BasicFirmKeys extends AbstractDataKeys {
 
 	@SuppressWarnings("javadoc")
 	final public int assets = this.getNextIndex();
+
+	/**
+	 * For debugging purpose.
+	 * Pour comparer le calcul du revenu net moyen de l'entreprise entre les
+	 * versions ICC et WIP.
+	 */
+	final public int averageIncome = this.getNextIndex();
 
 	@SuppressWarnings("javadoc")
 	final public int brokenMachines = this.getNextIndex();
@@ -122,6 +125,11 @@ final public class BasicFirmKeys extends AbstractDataKeys {
 
 	@SuppressWarnings("javadoc")
 	final public int inProcessValue = this.getNextIndex();
+
+	/**
+	 * Provisoire, pour un test.
+	 */
+	final public int inputVolume = this.getNextIndex();
 
 	@SuppressWarnings("javadoc")
 	final public int interests = this.getNextIndex();
@@ -194,6 +202,11 @@ final public class BasicFirmKeys extends AbstractDataKeys {
 	@SuppressWarnings("javadoc")
 	final public int netProfit = this.getNextIndex();
 
+	/**
+	 * 
+	 */
+	final public int normalUtilizationRate = this.getNextIndex();
+
 	@SuppressWarnings("javadoc")
 	final public int overdueDebt = this.getNextIndex();
 
@@ -233,6 +246,12 @@ final public class BasicFirmKeys extends AbstractDataKeys {
 	 */
 	final public int r3 = this.getNextIndex();
 
+	/**
+	 * For debugging purpose.
+	 * On essaie de comprendre les dynamiques de la Beveridge.
+	 */
+	final public int recentVacancies = this.getNextIndex();
+
 	@SuppressWarnings("javadoc")
 	final public int salesCosts = this.getNextIndex();
 
@@ -269,6 +288,17 @@ final public class BasicFirmKeys extends AbstractDataKeys {
 	@SuppressWarnings("javadoc")
 	final public int tangibleAssets = this.getNextIndex();
 
+	/**
+	 * For debugging purpose / remove me
+	 */
+	final public int targetVolume = this.getNextIndex();
+
+	/**
+	 * For debugging purpose.
+	 * On teste une procédure alternative de calcul de l'investissement.
+	 */
+	final public int testAltInvestValue = this.getNextIndex();
+
 	@SuppressWarnings("javadoc")
 	final public int unitCost = this.getNextIndex();
 
@@ -293,7 +323,7 @@ final public class BasicFirmKeys extends AbstractDataKeys {
 	final public int wageBill = this.getNextIndex();
 
 	/**
-	 * Montant de la dette pondérée par le risque de faillite de la firme. 
+	 * Montant de la dette pondérée par le risque de faillite de la firme.
 	 */
 	final public int weightedDebt = this.getNextIndex();
 
@@ -302,23 +332,11 @@ final public class BasicFirmKeys extends AbstractDataKeys {
 
 	@SuppressWarnings("javadoc")
 	final public int workforceTarget = this.getNextIndex();
-	
-	/**
-	 * For debugging purpose.
-	 * Pour comparer le calcul du revenu net moyen de l'entreprise entre les versions ICC et WIP. 
-	 */
-	final public int averageIncome = this.getNextIndex();
-
-	/**
-	 * For debugging purpose.
-	 * On essaie de comprendre les dynamiques de la Beveridge. 
-	 */
-	final public int recentVacancies = this.getNextIndex();
 
 	/**
 	 * Creates a new set of data keys.
 	 */
-	private BasicFirmKeys() {
+	private FirmKeys() {
 		this.init(this.getClass().getFields());
 	}
 

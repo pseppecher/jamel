@@ -5,9 +5,12 @@ import jamel.util.Parameters;
 /**
  * A class to parse and store the constant parameters of the firm.
  */
+@SuppressWarnings("javadoc")
 class FirmConstants {
 
 	final String banks;
+
+	final int initialCapacity;
 
 	final float initialMarkupMax;
 
@@ -21,32 +24,30 @@ class FirmConstants {
 
 	final int jobContractMin;
 
+	final int longTerm;
+
+	final float mutation;
+
 	final int nSupplier = 10; // TODO Should be a parameter.
 
 	final int observations;
 
 	final float productionAdjustment = 6; // TODO Should be a
-													// parameter.
+											// parameter.
 
 	final float retentionRate = 0.5f; // TODO Should be a parameter.
 
 	final String shareholders;
+
+	final int shortTerm;
+
+	final int supervision;
 
 	final String suppliers;
 
 	final float wageFlexibility;
 
 	final double wageInitialValue;
-
-	final int initialCapacity;
-
-	final int longTerm;
-
-	final float mutation;
-
-	final int shortTerm;
-
-	final int supervision;
 
 	/**
 	 * Creates a new set of parameters by parsing the specified

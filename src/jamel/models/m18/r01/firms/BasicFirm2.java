@@ -9,7 +9,8 @@ import jamel.util.Sector;
  * 2018-03-12
  * jamel/models/m18/r01/firms/BasicFirm2.java
  * Extension de BasicFirm.java
- * Utilise une fonction d'investissement à base de taux d'utilisation et de cash flow.
+ * Utilise une fonction d'investissement à base de taux d'utilisation et de cash
+ * flow.
  * 
  * 2018-03-10
  * jamel/models/m18/r01/firms/BasicFirm.java
@@ -67,7 +68,7 @@ import jamel.util.Sector;
 public class BasicFirm2 extends BasicFirm {
 
 	protected float normalUtilizationRate = 0.85f;
-	
+
 	/**
 	 * Creates a new basic firm.
 	 * 
@@ -80,30 +81,28 @@ public class BasicFirm2 extends BasicFirm {
 		super(sector, id, new BasicFactory2(sector.getParameters().get("production"), sector.getSimulation()));
 	}
 
-	private long altInvest() {
-		// Une méthode alternative de calcul de l'investissement.
+	private long getBudget() {
 		final double manpower = this.agentDataset.sum(keys.workforce, 12);
 		final double machines = this.agentDataset.sum(keys.capacity, 12);
 		final long budget;
 		if (machines == 0) {
-			budget = 0;
-			// TODO FIXME il faut alors acheter de quoi créer une machine.
-		} else {
-			final float utilizationRate = (float) (manpower / machines);
-			if (utilizationRate > normalUtilizationRate) {
-				final double sales = this.agentDataset.sum(keys.salesValue, 12);
-				final double costs = this.agentDataset.sum(keys.salesCosts, 12);
-				final double interests = this.agentDataset.sum(keys.interests, 12);
-				final double cashFlow = sales - (costs + interests);
-				if (cashFlow > 0) {
-					budget = (long) ((utilizationRate - normalUtilizationRate) * cashFlow);
-				} else {
-					budget = 0;
-				}
+			throw new RuntimeException("Inconsistency");
+		}
+		final float utilizationRate = (float) (manpower / machines);
+		if (utilizationRate > normalUtilizationRate) {
+			final double sales = this.agentDataset.sum(keys.salesValue, 12);
+			final double costs = this.agentDataset.sum(keys.salesCosts, 12);
+			final double interests = this.agentDataset.sum(keys.interests, 12);
+			final double cashFlow = sales - (costs + interests);
+			if (cashFlow > 0) {
+				budget = (long) ((utilizationRate - normalUtilizationRate) * cashFlow);
 			} else {
 				budget = 0;
 			}
+		} else {
+			budget = 0;
 		}
+
 		return budget;
 	}
 
@@ -115,6 +114,15 @@ public class BasicFirm2 extends BasicFirm {
 		super.updateData();
 		this.periodDataset.put(keys.normalUtilizationRate, this.normalUtilizationRate);
 	}
+
+	@Override
+	public void open() {
+		super.open();
+		if (this.factory.getCapacity() == 0) {
+			this.imitation();
+		}
+	}
+
 	@Override
 	public void invest() {
 
@@ -124,74 +132,73 @@ public class BasicFirm2 extends BasicFirm {
 		 * Permet de brasser les firmes de différents secteurs dans la phase d'investissement.
 		 */
 
+		final Commodities purchase = new BasicGoods(this.factory.getQualityOfInputForTheCreationOfANewMachine());
 		final Supply[] supplies = getSupplies();
 
 		if (supplies.length > 0) {
-		}
 
-		final int capacity = this.factory.getCapacity();
+			final int capacity = this.factory.getCapacity();
 
-		final Commodities purchase = new BasicGoods(this.factory.getQualityOfInputForTheCreationOfANewMachine());
+			if ((this.getPeriod() < cons.supervision && capacity < this.cons.initialCapacity) || capacity == 0) {
 
-		if ((this.getPeriod() < K.supervision && capacity < this.K.initialCapacity) || capacity == 0) {
+				// Ici on doit renouveller exactement les machines
+				// manquantes.
+				// L'investissement est donc déterminé en termes réels
 
-			// Ici on doit renouveller exactement les machines
-			// manquantes.
-			// L'investissement est donc déterminé en termes réels
-
-			final int targetMachines = (this.getPeriod() < K.supervision && capacity < this.K.initialCapacity)
-					? this.K.initialCapacity - capacity
-					: 1;
-			final int targetVolume = (int) (targetMachines * this.factory.getInputVolumeForANewMachine()
-					- ((BasicFactory2) this.factory).getInputVolume());
-			this.periodDataset.put(keys.targetVolume, targetVolume);
-			// Maintenant il s'agit d'acheter ce volume, et de financer cet
-			// achat.
-			if (targetVolume > 0) {
-				for (Supply supply : supplies) {
-					final long value;
-					final long volume;
-					if (supply.getVolume() < targetVolume - purchase.getVolume()) {
-						volume = supply.getVolume();
-						value = supply.getValue();
-					} else {
-						volume = targetVolume - purchase.getVolume();
-						value = supply.getPrice(volume);
-					}
-					if (this.account.getAmount() < value) {
-						this.account.borrow(value - this.account.getAmount(), 0, false);
-					}
-					purchase.add(supply.purchase(volume, account.issueCheque(supply.getSupplier(), value)));
-					if (purchase.getVolume() == targetVolume) {
-						break;
-					}
-					if (purchase.getVolume() > targetVolume) {
-						throw new RuntimeException("Inconsistency");
+				final int targetMachines = (this.getPeriod() < cons.supervision && capacity < this.cons.initialCapacity)
+						? this.cons.initialCapacity - capacity
+						: 1;
+				final int targetVolume = (int) (targetMachines * this.factory.getInputVolumeForANewMachine()
+						- ((BasicFactory2) this.factory).getInputVolume());
+				this.periodDataset.put(keys.targetVolume, targetVolume);
+				// Maintenant il s'agit d'acheter ce volume, et de financer cet
+				// achat.
+				if (targetVolume > 0) {
+					for (Supply supply : supplies) {
+						final long value;
+						final long volume;
+						if (supply.getVolume() < targetVolume - purchase.getVolume()) {
+							volume = supply.getVolume();
+							value = supply.getValue();
+						} else {
+							volume = targetVolume - purchase.getVolume();
+							value = supply.getPrice(volume);
+						}
+						if (this.account.getAmount() < value) {
+							this.account.borrow(value - this.account.getAmount(), 0, false);
+						}
+						purchase.add(supply.purchase(volume, account.issueCheque(supply.getSupplier(), value)));
+						if (purchase.getVolume() == targetVolume) {
+							break;
+						}
+						if (purchase.getVolume() > targetVolume) {
+							throw new RuntimeException("Inconsistency");
+						}
 					}
 				}
-			}
-		} else {
-			// ici on détermine le budget
-			final long budget = altInvest();
-			// puis on achète. Mais le financement ?
-			if (budget > 0) {
-				for (Supply supply : supplies) {
-					if (budget - purchase.getValue() < supply.getPrice()) {
-						break;
+			} else {
+				// ici on détermine le budget
+				final long budget = getBudget();
+				// puis on achète. Mais le financement ?
+				if (budget > 0) {
+					for (Supply supply : supplies) {
+						if (budget - purchase.getValue() < supply.getPrice()) {
+							break;
+						}
+						final long value;
+						final long volume;
+						if (supply.getValue() < budget - purchase.getValue()) {
+							volume = supply.getVolume();
+							value = supply.getValue();
+						} else {
+							volume = (long) ((budget - purchase.getValue()) / supply.getPrice());
+							value = supply.getPrice(volume);
+						}
+						if (this.account.getAmount() < value) {
+							this.account.borrow(value - this.account.getAmount(), 0, false);
+						}
+						purchase.add(supply.purchase(volume, account.issueCheque(supply.getSupplier(), value)));
 					}
-					final long value;
-					final long volume;
-					if (supply.getValue() < budget - purchase.getValue()) {
-						volume = supply.getVolume();
-						value = supply.getValue();
-					} else {
-						volume = (long) ((budget - purchase.getValue()) / supply.getPrice());
-						value = supply.getPrice(volume);
-					}
-					if (this.account.getAmount() < value) {
-						this.account.borrow(value - this.account.getAmount(), 0, false);
-					}
-					purchase.add(supply.purchase(volume, account.issueCheque(supply.getSupplier(), value)));
 				}
 			}
 		}
@@ -205,10 +212,10 @@ public class BasicFirm2 extends BasicFirm {
 			final long shortTerm = purchaseValue - longTerm;
 
 			if (longTerm > 0) {
-				this.account.borrow(longTerm, K.longTerm, true);
+				this.account.borrow(longTerm, cons.longTerm, true);
 			}
 			if (shortTerm > 0) {
-				this.account.borrow(shortTerm, K.shortTerm, true);
+				this.account.borrow(shortTerm, cons.shortTerm, true);
 			}
 
 			// TODO IMPLEMENT this.periodDataset.put(keys.investmentSize, 0);

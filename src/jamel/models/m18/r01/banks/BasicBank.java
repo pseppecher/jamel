@@ -147,13 +147,11 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 				 *            if the loan is amortizing.
 				 */
 				private BasicLoan(final long amount, final int term, final boolean amortizing) {
-					ArgChecks.negativeOr0NotPermitted(amount, "amount");
-					ArgChecks.negativeOr0NotPermitted(term, "term");
+					if (term < 0) {
+						throw new IllegalArgumentException("Bad term: " + term);
+					}
 					if (amount <= 0) {
 						throw new RuntimeException("Bad amount: " + amount);
-					}
-					if (term <= 0) {
-						throw new RuntimeException("Bad term: " + amount);
 					}
 					BasicAccount.this.deposit.plus(amount);
 					this.plus(amount);
@@ -585,6 +583,12 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 			// ***
 			// checkConsistency();
 			// ***
+			if (amount <= 0) {
+				throw new IllegalArgumentException("Bad amount: " + amount);
+			}
+			if (term < 0) {
+				throw new IllegalArgumentException("Bad term: " + term);
+			}
 			this.debt.newLoan(amount, term, amortizing);
 			// ***
 			// checkConsistency();
@@ -682,6 +686,15 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 		@Override
 		public Cheque issueCheque(AccountHolder payee, long amount) {
 			ArgChecks.negativeOr0NotPermitted(amount, "amount");
+			if (amount > this.getAmount()) {
+				final String message = "Not enough money";
+				Jamel.println("***");
+				Jamel.println(message);
+				Jamel.println("Cheque amount: " + amount);
+				Jamel.println("Account amount: " + this.getAmount());
+				Jamel.println();
+				throw new RuntimeException(message);
+			}
 			return this.deposit.issueCheque(payee, amount);
 		}
 
@@ -704,55 +717,9 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 	}
 
 	/**
-	 * A class to parse and store the constant parameters of the bank.
-	 */
-	private class Constants {
-
-		/**
-		 * The supervision period.
-		 */
-		final private float supervision;
-
-		/**
-		 * The capital target ratio.
-		 */
-		final private float capitalTargetRatio;
-
-		/**
-		 * The penalty premium.
-		 */
-		final private float penaltyPremium;
-
-		/**
-		 * The reaction coefficient of the taylor rule.
-		 */
-		final private float taylorCoef;
-
-		/**
-		 * The inflation target.
-		 */
-		final private float taylorTarget;
-
-		/**
-		 * Creates a new set of parameters by parsing the specified
-		 * {@code Parameters}.
-		 * 
-		 * @param params
-		 *            the parameters to be parsed.
-		 */
-		private Constants(Parameters params) {
-			this.supervision = params.getInt("supervision");
-			this.capitalTargetRatio = params.getFloat("capitalTargetRatio");
-			this.penaltyPremium = params.getFloat("penaltyPremium");
-			this.taylorCoef = params.getFloat("taylor.coef");
-			this.taylorTarget = params.getFloat("taylor.target");
-		}
-	}
-
-	/**
 	 * The set of data keys.
 	 */
-	private static final BasicBankKeys keys = BasicBankKeys.getInstance();
+	private static final BankKeys keys = BankKeys.getInstance();
 
 	/**
 	 * Returns the specified action.
@@ -799,6 +766,11 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 	private final List<BasicAccount> accounts = new ArrayList<>();
 
 	/**
+	 * The agent dataset.
+	 */
+	final private AgentDataset agentDataset;
+
+	/**
 	 * The bank cheque.
 	 */
 	final private BankCheque bankCheque = new BankCheque();
@@ -806,17 +778,7 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 	/**
 	 * The constants of the bank.
 	 */
-	final private Constants consts;
-
-	/**
-	 * The agent dataset.
-	 */
-	final private AgentDataset agentDataset;
-
-	/**
-	 * The period dataset.
-	 */
-	private PeriodDataset periodDataset;
+	final private BankConstants cons;
 
 	/**
 	 * To count the number of debt cancellation since the start of the period.
@@ -885,6 +847,11 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 	final private List<Equity> ownership = new LinkedList<>();
 
 	/**
+	 * The period dataset.
+	 */
+	private PeriodDataset periodDataset;
+
+	/**
 	 * The interest rate.
 	 */
 	private float rateNormal = 0;
@@ -918,7 +885,7 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 		this.id = id;
 		final Parameters params = this.sector.getParameters();
 		ArgChecks.nullNotPermitted(params, "params");
-		this.consts = new Constants(params);
+		this.cons = new BankConstants(params);
 		this.agentDataset = new BasicAgentDataset(this);
 	}
 
@@ -1010,13 +977,13 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 				final Equity title = new Equity() {
 
 					@Override
-					public Shareholder getOwner() {
-						return (Shareholder) agent;
+					public String getCompanyName() {
+						return getName();
 					}
 
 					@Override
-					public String getCompanyName() {
-						return getName();
+					public Shareholder getOwner() {
+						return (Shareholder) agent;
 					}
 
 					@Override
@@ -1053,7 +1020,7 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 		final long assets = this.outstandingDebtAmount.getAmount() + this.overdueDebtAmount.getAmount();
 		final long liabilities = this.depositsAmount.getAmount();
 		final long capital = assets - liabilities;
-		final long capitalTarget = (long) (assets * this.consts.capitalTargetRatio);
+		final long capitalTarget = (long) (assets * this.cons.capitalTargetRatio);
 		final long capitalExcess = Math.max(capital - capitalTarget, 0);
 		long dividends = 0;
 		if (capitalExcess > this.ownership.size()) {
@@ -1074,9 +1041,9 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 
 		final Double inflation = this.getPublicData("inflation");
 
-		if (getPeriod() < this.consts.supervision) {
+		if (getPeriod() < this.cons.supervision) {
 			this.rateNormal = 0.05f / 12f;
-			this.ratePenalty = this.rateNormal + this.consts.penaltyPremium;
+			this.ratePenalty = this.rateNormal + this.cons.penaltyPremium;
 			if (inflation != null) {
 				this.realRate = (float) (this.rateNormal - inflation / 12);
 			}
@@ -1093,13 +1060,13 @@ public class BasicBank extends JamelObject implements AccountHolder, Bank {
 			}
 			final Double interestRate;
 			if (inflation != null) {
-				interestRate = this.consts.taylorCoef * (inflation - this.consts.taylorTarget);
+				interestRate = this.cons.taylorCoef * (inflation - this.cons.taylorTarget);
 				if (interestRate > 0) {
 					this.rateNormal = (float) (interestRate / 12);
 				} else {
 					this.rateNormal = 0f;
 				}
-				this.ratePenalty = this.rateNormal + this.consts.penaltyPremium;
+				this.ratePenalty = this.rateNormal + this.cons.penaltyPremium;
 				this.realRate = (float) (this.rateNormal - inflation / 12);
 			} else {
 				this.rateNormal = 0f;

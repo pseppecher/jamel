@@ -99,7 +99,7 @@ public class BasicShareholder extends JamelObject implements Shareholder, Househ
 	/**
 	 * The data keys.
 	 */
-	private static final BasicShareholderKeys keys = BasicShareholderKeys.getInstance();
+	private static final ShareholderKeys keys = ShareholderKeys.getInstance();
 
 	/**
 	 * Returns the specified action.

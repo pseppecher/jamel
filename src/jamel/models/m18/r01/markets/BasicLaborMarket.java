@@ -9,7 +9,7 @@ import java.util.Map;
 import jamel.Jamel;
 import jamel.data.DynamicSeries;
 import jamel.data.Expression;
-import jamel.models.m18.r01.firms.BasicFirm;
+import jamel.models.m18.r01.firms.Firm;
 import jamel.models.m18.r01.households.BasicWorker;
 import jamel.models.util.Employer;
 import jamel.models.util.Worker;
@@ -86,7 +86,7 @@ public class BasicLaborMarket extends JamelObject implements Sector {
 					.selectAll();
 			this.employers.addAll(newList);
 			for (Employer employer : newList) {
-				((BasicFirm) employer).setLaborMarket(this);
+				((Firm) employer).setLaborMarket(this);
 			}
 		}
 		this.workers.addAll(
@@ -302,8 +302,8 @@ public class BasicLaborMarket extends JamelObject implements Sector {
 	 * 
 	 * @return one employer selected at random.
 	 */
-	public BasicFirm selectEmployer() {
-		return (BasicFirm) this.employers.get(getRandom().nextInt(this.employers.size()));
+	public Employer selectEmployer() {
+		return this.employers.get(getRandom().nextInt(this.employers.size()));
 	}
 
 	@Override

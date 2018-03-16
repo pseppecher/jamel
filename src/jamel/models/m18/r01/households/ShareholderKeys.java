@@ -5,21 +5,21 @@ import jamel.data.AbstractDataKeys;
 /**
  * Data keys for the {@code BasicShareholder}.
  */
-public class BasicShareholderKeys extends AbstractDataKeys {
+public class ShareholderKeys extends AbstractDataKeys {
 
 	/**
 	 * An instance of {@code BasicShareholderKeys}.
 	 */
-	private static BasicShareholderKeys instance;
+	private static ShareholderKeys instance;
 
 	/**
 	 * Returns an instance of {@code BasicShareholderKeys}.
 	 * 
 	 * @return an instance of {@code BasicShareholderKeys}.
 	 */
-	static BasicShareholderKeys getInstance() {
+	static ShareholderKeys getInstance() {
 		if (instance == null) {
-			instance = new BasicShareholderKeys();
+			instance = new ShareholderKeys();
 		}
 		return instance;
 	}
@@ -51,7 +51,7 @@ public class BasicShareholderKeys extends AbstractDataKeys {
 	/**
 	 * Creates a new set of data keys.
 	 */
-	private BasicShareholderKeys() {
+	private ShareholderKeys() {
 		this.init(this.getClass().getFields());
 	}
 

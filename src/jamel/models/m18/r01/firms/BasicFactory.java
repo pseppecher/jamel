@@ -14,6 +14,7 @@ import jamel.models.util.Worker;
 import jamel.util.ArgChecks;
 import jamel.util.JamelObject;
 import jamel.util.Parameters;
+import jamel.util.Simulation;
 
 /**
  * A not-so-basic factory.
@@ -267,7 +268,7 @@ class BasicFactory extends JamelObject {
 	/**
 	 * The data keys.
 	 */
-	private static final BasicFirmKeys keys = BasicFirmKeys.getInstance();
+	private static final FirmKeys keys = FirmKeys.getInstance();
 
 	/**
 	 * The dataset.
@@ -299,6 +300,11 @@ class BasicFactory extends JamelObject {
 	 * The number of goods required to create a new machine.
 	 */
 	final private int inputVolumeForANewMachine;
+
+	/**
+	 * The number of new machines created since the start of the period.
+	 */
+	private int investmentSize = 0;
 
 	/**
 	 * The machines.
@@ -341,11 +347,11 @@ class BasicFactory extends JamelObject {
 	 * 
 	 * @param parameters
 	 *            the parameters of the firm.
-	 * @param firm
-	 *            the parent firm.
+	 * @param simulation
+	 *            the simulation.
 	 */
-	public BasicFactory(final Parameters parameters, final Firm firm) {
-		super(((JamelObject) firm).getSimulation());
+	public BasicFactory(final Parameters parameters, final Simulation simulation) {
+		super(simulation);
 		if (parameters == null) {
 			throw new IllegalArgumentException("parameters is null");
 		}
@@ -406,9 +412,13 @@ class BasicFactory extends JamelObject {
 	 *            creation.
 	 */
 	public void expandCapacity(int size, Commodities input) {
+		if (this.investmentSize != 0) {
+			throw new RuntimeException("Inconsistency");
+		}
 		for (int i = 0; i < size; i++) {
 			final Machine machine = new Machine(input);
 			this.machinery.add(machine);
+			this.investmentSize++;
 		}
 	}
 
@@ -459,6 +469,15 @@ class BasicFactory extends JamelObject {
 	 */
 	public Commodities getInventories() {
 		return this.finishedGoods;
+	}
+
+	/**
+	 * Returns the number of new machines created since the start of the period.
+	 * 
+	 * @return the number of new machines created since the start of the period.
+	 */
+	public int getInvestmentSize() {
+		return this.investmentSize;
 	}
 
 	/**
@@ -539,6 +558,7 @@ class BasicFactory extends JamelObject {
 	public void open(PeriodDataset periodDataset) {
 		this.wageBill = null;
 		this.depreciation = null;
+		this.investmentSize = 0;
 		this.dataset = periodDataset;
 	}
 

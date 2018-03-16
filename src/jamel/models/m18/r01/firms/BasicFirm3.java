@@ -90,7 +90,7 @@ public class BasicFirm3 extends BasicFirm2 {
 	@Override
 	protected void imitation() {
 		final int now = this.getPeriod();
-		if (now > K.supervision) {
+		if (now > cons.supervision) {
 			if (now > this.lastImitiation + 12) {
 				BasicFirm3 firm = (BasicFirm3) sector.select();
 				this.lastImitiation = now;
@@ -111,10 +111,10 @@ public class BasicFirm3 extends BasicFirm2 {
 	 */
 	@Override
 	protected void mutation() {
-		if (this.getPeriod() > K.supervision) {
-			this.targetDebtRatio += (float) (K.mutation * getRandom().nextGaussian());
-			this.markup += (float) (K.mutation * getRandom().nextGaussian());
-			this.normalUtilizationRate += (float) (K.mutation * getRandom().nextGaussian());
+		if (this.getPeriod() > cons.supervision) {
+			this.targetDebtRatio += (float) (cons.mutation * getRandom().nextGaussian());
+			this.markup += (float) (cons.mutation * getRandom().nextGaussian());
+			this.normalUtilizationRate += (float) (cons.mutation * getRandom().nextGaussian());
 			if (this.targetDebtRatio > 1) {
 				this.targetDebtRatio = 1f;
 			} else if (this.targetDebtRatio < 0) {
