@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+
+	2018-03-13: m18/r01/m18.r01.03.xml
+	
+	Utilise une firme (BasicFirm3) qui apprend à fixer son taux d'utilisation normal
+	grace au BSP.
+		
+	2018-03-13: m18/r01/m18.r01.02.xml
+	
+	Utilise une firme (BasicFirm2) dont la fonction d'investissement est simplifiée,
+	basée sur le taux d'utilisation et le niveau du cash flow.
+	
+	2018-03-10: m18/r01/m18.r01.01.xml
+	From m18/q06/WIP_q06_04.xml
+	
+	Un modèle à deux secteurs, très proche du modèle (à trois secteurs) 
+	utilisé dans l'article "What drives markups?" (ICC) 
+
+-->
+
+<!DOCTYPE simulation [
+	<!ENTITY model "jamel.models.m18.r01">
+	<!ENTITY firm "BasicFirm3">
+	<!ENTITY supervision "10">
+	<!ENTITY mutation "0.015">
+	<!ENTITY debtRatio.target.initialValue.min "0.25">
+	<!ENTITY debtRatio.target.initialValue.max "0.25">
+	<!ENTITY initial.markup.min "0.4">
+	<!ENTITY initial.markup.max "0.4">	
+	<!ENTITY inventories.normalLevel "3">	
+	<!ENTITY term.long "200">	
+	<!ENTITY term.short "12">	
+	<!ENTITY machines.timeLife.stDev "36">
+	<!ENTITY wage.flexibility "0.025">
+	<!ENTITY wage.initialValue "500">
+	<!ENTITY utilizationRate.initialValue "0.85">
+]>
+
+<simulation
+	className="&model;.util.BasicSimulation"
+	randomSeed="0"
+>
+
+	<meta title="A model with 2 industrial sectors">
+		<longTitle>
+			<h1>A model with 2 industrial sectors</h1>
+			<h2>10 March 2018</h2>
+		</longTitle>
+	</meta>
+
+	<gui
+		src="config/panelsWIP.xml"
+		refresh="1" />
+
+	<sectors defaultClassName="&model;.util.BasicSector">
+
+		<sector
+			name="Banks"
+			agentClassName="&model;.banks.BasicBank"
+			initialPopulation="1"
+		>
+			<parameters
+				supervision="&supervision;"
+				capitalTargetRatio="0.1"
+				penaltyPremium="0.01"
+				taylor.coef="1.5"
+				taylor.target="0.02" />
+		</sector>
+
+		<sector
+			name="Sector1"
+			agentClassName="&model;.firms.&firm;"
+			initialPopulation="100"
+			comment="Secteur des biens capitaux"
+		>
+			<parameters
+				initial.markup.min="&initial.markup.min;"
+				initial.markup.max="&initial.markup.max;"
+				bankSector="Banks"
+				supervision="&supervision;"
+				credit.term.short="&term.short;"
+				credit.term.long="&term.long;"
+				inventories.normalLevel="&inventories.normalLevel;"
+				mutation.strenght="&mutation;"
+				utilizationRate.initialValue="&utilizationRate.initialValue;"
+				debtRatio.target.initialValue.min="&debtRatio.target.initialValue.min;"
+				debtRatio.target.initialValue.max="&debtRatio.target.initialValue.max;"
+				wage.observations="3"
+				wage.flexibility="&wage.flexibility;"
+				wage.initialValue="&wage.initialValue;"
+				shareholders="Shareholders"
+			>
+				<workforce>
+					<jobContracts
+						min="6"
+						max="36" />
+				</workforce>
+				<production
+					capacity="20"
+					processLenght="1"
+					productivity="100"
+					quality="investment goods"
+					machines.creation.input.quality="investment goods"
+					machines.creation.input.suppliers="Sector1"
+					machines.creation.input.volume="2500"
+					machines.timeLife.mean="&term.long;"
+					machines.timeLife.stDev="&machines.timeLife.stDev;" />
+			</parameters>
+		</sector>
+
+		<sector
+			name="Sector2"
+			agentClassName="&model;.firms.&firm;"
+			initialPopulation="275"
+			comment="Secteur des biens de consommation"
+		>
+			<parameters
+				initial.markup.min="&initial.markup.min;"
+				initial.markup.max="&initial.markup.max;"
+				bankSector="Banks"
+				supervision="&supervision;"
+				credit.term.short="&term.short;"
+				credit.term.long="&term.long;"
+				inventories.normalLevel="&inventories.normalLevel;"
+				mutation.strenght="&mutation;"
+				utilizationRate.initialValue="&utilizationRate.initialValue;"
+				debtRatio.target.initialValue.min="&debtRatio.target.initialValue.min;"
+				debtRatio.target.initialValue.max="&debtRatio.target.initialValue.max;"
+				wage.observations="3"
+				wage.flexibility="&wage.flexibility;"
+				wage.initialValue="&wage.initialValue;"
+				shareholders="Shareholders"
+			>
+				<workforce>
+					<jobContracts
+						min="6"
+						max="36" />
+				</workforce>
+				<production
+					capacity="20"
+					processLenght="2"
+					productivity="50"
+					quality="consumption goods"
+					machines.creation.input.quality="investment goods"
+					machines.creation.input.suppliers="Sector1"
+					machines.creation.input.volume="3000"
+					machines.timeLife.mean="&term.long;"
+					machines.timeLife.stDev="&machines.timeLife.stDev;" />
+			</parameters>
+		</sector>
+
+
+		<sector
+			name="Workers"
+			agentClassName="&model;.households.BasicWorker"
+			initialPopulation="8000"
+		>
+			<parameters supervision="&supervision;" bankSector="Banks">
+				<goodMarket
+					suppliers="Sector2"
+					quality="consumption goods"
+					savingsPropensityToConsumeExcess="1"
+					savingPropensity="0.1"
+					savingsRatioTarget="0.85"
+					search="10" />
+				<laborMarket
+					flexibility="0.01"
+					resistance="0"
+					search="10" />
+			</parameters>
+
+		</sector>
+
+		<sector
+			name="Shareholders"
+			agentClassName="&model;.households.BasicShareholder"
+			initialPopulation="1000"
+		>
+			<parameters 			
+				supervision="&supervision;"
+				bankSector="Banks">
+				<goodMarket
+					suppliers="Sector2"
+					quality="consumption goods"
+					savingsPropensityToConsumeExcess="1"
+					savingPropensity="0.8"
+					savingsRatioTarget="5"
+					search="10" />
+			</parameters>
+		</sector>
+
+		<sector
+			name="LaborMarket"
+			className="&model;.markets.BasicLaborMarket"
+		>
+			<parameters
+				employers="Sector1,Sector2"
+				workers="Workers" />
+		</sector>
+		
+		<sector
+			name="ConsumerMarket"
+			className="&model;.markets.BasicConsumptionGoodMarket"
+		>
+			<parameters
+				households="Workers,Shareholders"
+				 />
+		</sector>
+		
+		<sector
+			name="InvestmentMarket"
+			className="&model;.markets.BasicInvestmentGoodMarket"
+		>
+			<parameters
+				firms="Sector1,Sector2"
+				 />
+		</sector>
+
+	</sectors>
+
+	<phases>
+
+		<phase name="payDividends">
+			Sector1, Sector2, Banks
+		</phase>
+
+		<phase name="planProduction">
+			Sector1, Sector2
+		</phase>
+
+		<phase name="matching">
+			LaborMarket
+		</phase>
+
+		<phase name="production">
+			Sector1, Sector2
+		</phase>
+
+		<phase name="payWages">
+			Sector1, Sector2
+		</phase>
+
+		<phase
+			name="matching"
+		>
+			InvestmentMarket
+		</phase>
+
+		<phase 
+			name="consumption" 
+			shuffle="true">
+			ConsumerMarket
+		</phase>
+
+		<phase name="debtRecovery">
+			Banks
+		</phase>
+		
+	</phases>
+
+	<public comment="Ici les informations accessibles publiquement.">
+		<data
+			name="inflation"
+			comment="Le taux d'inflation ainsi calculé est utilisé par la banque pour calculer le taux d'intérêt."
+		>
+			val(Sector2, salesValue, t, sum) * val(Sector2, salesVolume, t-12,
+			sum)
+			/ (val(Sector2, salesVolume, t, sum) * val(Sector2, salesValue,
+			t-12, sum)) - 1
+		</data>
+		<!-- Cela pourrait être defini au niveau de la banque, qui enverrait la requête à la simulation. Y penser ! -->
+	</public>
+
+	<exports>
+		<export>
+		</export>
+	</exports>
+
+	<events>
+
+		<when t="250">
+			<do action="pause" />
+		</when>
+		<when t="500">
+			<do action="pause" />
+		</when>
+		<when t="1000">
+			<do action="pause" />
+		</when>
+		<when t="1500">
+			<do action="pause" />
+		</when>
+		<when t="2000">
+			<do
+				action="exportCharts"
+				to="exports/"
+			>
+				<format
+					width="800"
+					height="300" />
+			</do>
+			<do
+				action="exportCharts"
+				to="exportSmall/"
+			>
+				<format
+					width="400"
+					height="200" />
+			</do>
+			<do action="pause" />
+		</when>
+
+		<!-- Je laisse ça ici pour qu'on voit la syntaxe.
+		<when t="3001">
+			<do
+				action="setVerbose"
+				value="true"
+				select="name=Firm_167"
+				sector="Firms" />
+		</when>
+		 -->
+
+	</events>
+
+</simulation>
