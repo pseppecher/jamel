@@ -24,7 +24,7 @@
 	<!ENTITY Wages "val(Workers, wage, &year;, sum)"> 
 	<!ENTITY Income "(&Wages; + &Profits;)"> 
 	<!ENTITY sector "Sector2"> 
-	<!ENTITY firm "&sector;.Firm_122"> 
+	<!ENTITY firm "&sector;.Firm_173"> 
 ]>
 
 <gui className="jamel.gui.BasicGui">

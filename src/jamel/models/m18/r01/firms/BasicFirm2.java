@@ -81,31 +81,6 @@ public class BasicFirm2 extends BasicFirm {
 		super(sector, id, new BasicFactory2(sector.getParameters().get("production"), sector.getSimulation()));
 	}
 
-	private long getBudget() {
-		final double manpower = this.agentDataset.sum(keys.workforce, 12);
-		final double machines = this.agentDataset.sum(keys.capacity, 12);
-		final long budget;
-		if (machines == 0) {
-			throw new RuntimeException("Inconsistency");
-		}
-		final float utilizationRate = (float) (manpower / machines);
-		if (utilizationRate > normalUtilizationRate) {
-			final double sales = this.agentDataset.sum(keys.salesValue, 12);
-			final double costs = this.agentDataset.sum(keys.salesCosts, 12);
-			final double interests = this.agentDataset.sum(keys.interests, 12);
-			final double cashFlow = sales - (costs + interests);
-			if (cashFlow > 0) {
-				budget = (long) ((utilizationRate - normalUtilizationRate) * cashFlow);
-			} else {
-				budget = 0;
-			}
-		} else {
-			budget = 0;
-		}
-
-		return budget;
-	}
-
 	/**
 	 * Updates the data.
 	 */
@@ -132,75 +107,77 @@ public class BasicFirm2 extends BasicFirm {
 		 * Permet de brasser les firmes de différents secteurs dans la phase d'investissement.
 		 */
 
-		final Commodities purchase = new BasicGoods(this.factory.getQualityOfInputForTheCreationOfANewMachine());
+		final Commodities purchase;
 		final Supply[] supplies = getSupplies();
 
 		if (supplies.length > 0) {
 
 			final int capacity = this.factory.getCapacity();
 
-			if ((this.getPeriod() < cons.supervision && capacity < this.cons.initialCapacity) || capacity == 0) {
-
-				// Ici on doit renouveller exactement les machines
-				// manquantes.
-				// L'investissement est donc déterminé en termes réels
-
-				final int targetMachines = (this.getPeriod() < cons.supervision && capacity < this.cons.initialCapacity)
-						? this.cons.initialCapacity - capacity
-						: 1;
-				final int targetVolume = (int) (targetMachines * this.factory.getInputVolumeForANewMachine()
-						- ((BasicFactory2) this.factory).getInputVolume());
-				this.periodDataset.put(keys.targetVolume, targetVolume);
-				// Maintenant il s'agit d'acheter ce volume, et de financer cet
-				// achat.
-				if (targetVolume > 0) {
-					for (Supply supply : supplies) {
-						final long value;
-						final long volume;
-						if (supply.getVolume() < targetVolume - purchase.getVolume()) {
-							volume = supply.getVolume();
-							value = supply.getValue();
-						} else {
-							volume = targetVolume - purchase.getVolume();
-							value = supply.getPrice(volume);
-						}
-						if (this.account.getAmount() < value) {
-							this.account.borrow(value - this.account.getAmount(), 0, false);
-						}
-						purchase.add(supply.purchase(volume, account.issueCheque(supply.getSupplier(), value)));
-						if (purchase.getVolume() == targetVolume) {
-							break;
-						}
-						if (purchase.getVolume() > targetVolume) {
-							throw new RuntimeException("Inconsistency");
-						}
-					}
+			if (this.getPeriod() < cons.supervision) {
+				if (capacity < this.cons.initialCapacity) {
+					purchase = buy(this.cons.initialCapacity - capacity, supplies);
+				} else {
+					purchase = new BasicGoods(this.factory.getQualityOfInputForTheCreationOfANewMachine());
 				}
 			} else {
-				// ici on détermine le budget
-				final long budget = getBudget();
-				// puis on achète. Mais le financement ?
-				if (budget > 0) {
-					for (Supply supply : supplies) {
-						if (budget - purchase.getValue() < supply.getPrice()) {
-							break;
-						}
-						final long value;
-						final long volume;
-						if (supply.getValue() < budget - purchase.getValue()) {
-							volume = supply.getVolume();
-							value = supply.getValue();
+				if (capacity == 0) {
+					purchase = buy(1, supplies);
+				} else {
+
+					purchase = new BasicGoods(this.factory.getQualityOfInputForTheCreationOfANewMachine());
+
+					// on détermine le budget
+
+					final double manpower = this.agentDataset.sum(keys.workforce, 12);
+					final double machines = this.agentDataset.sum(keys.capacity, 12);
+					final long budget;
+					if (machines == 0) {
+						budget = 0;
+					} else {
+						final float utilizationRate = (float) (manpower / machines);
+						if (utilizationRate > normalUtilizationRate) {
+							final double sales = this.agentDataset.sum(keys.salesValue, 12);
+							final double costs = this.agentDataset.sum(keys.salesCosts, 12);
+							final double interests = this.agentDataset.sum(keys.interests, 12);
+							final double cashFlow = sales - (costs + interests);
+							if (cashFlow > 0) {
+								budget = (long) ((utilizationRate - normalUtilizationRate) * cashFlow);
+							} else {
+								budget = 0;
+							}
 						} else {
-							volume = (long) ((budget - purchase.getValue()) / supply.getPrice());
-							value = supply.getPrice(volume);
+							budget = 0;
 						}
-						if (this.account.getAmount() < value) {
-							this.account.borrow(value - this.account.getAmount(), 0, false);
+					}
+
+					// puis on achète.
+
+					if (budget > 0) {
+						for (Supply supply : supplies) {
+							if (budget - purchase.getValue() < supply.getPrice()) {
+								break;
+							}
+							final long value;
+							final long volume;
+							if (supply.getValue() < budget - purchase.getValue()) {
+								volume = supply.getVolume();
+								value = supply.getValue();
+							} else {
+								volume = (long) ((budget - purchase.getValue()) / supply.getPrice());
+								value = supply.getPrice(volume);
+							}
+							if (this.account.getAmount() < value) {
+								this.account.borrow(value - this.account.getAmount(), 0, false);
+							}
+							purchase.add(supply.purchase(volume, account.issueCheque(supply.getSupplier(), value)));
 						}
-						purchase.add(supply.purchase(volume, account.issueCheque(supply.getSupplier(), value)));
 					}
 				}
 			}
+
+		} else {
+			purchase = new BasicGoods(this.factory.getQualityOfInputForTheCreationOfANewMachine());
 		}
 
 		if (purchase.getVolume() > 0) {
@@ -232,6 +209,50 @@ public class BasicFirm2 extends BasicFirm {
 
 		this.periodDataset.put(keys.inputVolume, ((BasicFactory2) this.factory).getInputVolume());
 		// TODO : vérifier ici que purchase est bien vide
+
+	}
+
+	private Commodities buy(final int targetMachines, Supply[] supplies) {
+
+		if (targetMachines == 0) {
+			throw new IllegalArgumentException();
+		}
+
+		final Commodities purchase = new BasicGoods(this.factory.getQualityOfInputForTheCreationOfANewMachine());
+
+		// Ici on doit renouveller exactement les machines
+		// manquantes.
+		// L'investissement est donc déterminé en termes réels
+
+		final int targetVolume = (int) (targetMachines * this.factory.getInputVolumeForANewMachine()
+				- ((BasicFactory2) this.factory).getInputVolume());
+		this.periodDataset.put(keys.targetVolume, targetVolume);
+		// Maintenant il s'agit d'acheter ce volume, et de financer cet
+		// achat.
+
+		for (Supply supply : supplies) {
+			final long value;
+			final long volume;
+			if (supply.getVolume() < targetVolume - purchase.getVolume()) {
+				volume = supply.getVolume();
+				value = supply.getValue();
+			} else {
+				volume = targetVolume - purchase.getVolume();
+				value = supply.getPrice(volume);
+			}
+			if (this.account.getAmount() < value) {
+				this.account.borrow(value - this.account.getAmount(), 0, false);
+			}
+			purchase.add(supply.purchase(volume, account.issueCheque(supply.getSupplier(), value)));
+			if (purchase.getVolume() == targetVolume) {
+				break;
+			}
+			if (purchase.getVolume() > targetVolume) {
+				throw new RuntimeException("Inconsistency");
+			}
+		}
+
+		return purchase;
 
 	}
 
