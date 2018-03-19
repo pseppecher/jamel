@@ -15,12 +15,7 @@ import jamel.util.Simulation;
  */
 public abstract class JamelChart extends JFreeChart {
 
-	/** The font for displaying the legend items. */
-	// private static final Font legendItemFont = new Font("Monaco", Font.PLAIN,
-	// 10);
-
 	/** The font for displaying the chart titles. */
-	// private static final Font titleFont = new Font("Tahoma", Font.PLAIN, 14);
 	private static final Font titleFont = new Font("SansSerif", Font.BOLD, 14);
 
 	/**

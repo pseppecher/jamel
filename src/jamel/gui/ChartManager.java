@@ -43,16 +43,8 @@ import jamel.util.Parameters;
 
 /**
  * The chart manager.
- * 
- * TODO / WORK IN PROGRESS
  */
 public class ChartManager extends JamelObject {
-
-	/**
-	 * The font used for axis labels.
-	 */
-	// private static final Font axisLabelFont = new Font("Tahoma", Font.PLAIN,
-	// 12);
 
 	/**
 	 * A basic stroke used for legend items.

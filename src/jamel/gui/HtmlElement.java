@@ -13,5 +13,3 @@ public interface HtmlElement {
 	String getText();
 
 }
-
-// ***
