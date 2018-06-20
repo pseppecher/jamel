@@ -1,0 +1,1085 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 2018-04-09 -->
+<!-- Ensemble de panneaux permettant de scruter le comportement d'une firme en particulier. -->
+
+<!DOCTYPE gui [
+	<!ENTITY sector "Sector1"> 
+	<!ENTITY firm "&sector;.84"> 
+]>
+
+<panels>
+
+	<panel title="&firm;">
+
+		<html>
+			The behavior of any individual agent can be monitored
+			(here, the firm
+			<i>&firm;
+			</i>
+			).
+			<br />
+			<br />
+			Period:
+			<data format="##0">t</data>
+			<br />
+			&firm;
+			price:
+			<data format="##0.##">val(&firm;, price, t)</data>
+			<br />
+			Sector average price:
+			<data format="##0.##">val(&sector;, price, t, sum)/val(&sector;, count, t, sum)</data>
+			<br />
+			Sector average (ex post) markup:
+			<data format="##0.##">val(&sector;, salesValue, t, sum)/val(&sector;,
+				salesCosts, t, sum)</data>
+			<br />
+			Sector average wage:
+			<data format="##0.##">val(Workers, wage, t, sum)/val(Workers, count, t,
+				sum)</data>
+			<br />
+			wage:
+			<data format="##0.##">val(&firm;,
+				wage, t)
+			</data>
+			<br />
+			&firm;
+			inventoriesNormalVolume:
+			<data format="##0.##">val(&firm;,
+				inventoriesNormalVolume, t)
+			</data>
+			<br />
+			&firm;
+			inventoriesVolume:
+			<data format="##0.##">val(&firm;,
+				inventoriesVolume, t)
+			</data>
+			<br />
+			&firm;
+			inventoryDesequilibria:
+			<data format="##0.##">val(&firm;,
+				inventoryDesequilibria, t)
+			</data>
+			<br />
+		</html>
+
+		<chart title="Price">
+		
+			<series label="Firm Unit Cost" color="green">
+				<x>t</x>
+				<y>val(&firm;, unitCost, t)</y>
+			</series>
+			
+			<series label="Firm Price" color="red">
+				<x>t</x>
+				<y>val(&firm;, price, t)</y>
+			</series>
+			
+			<series label="Lower Price" color="pink">
+				<x>t</x>
+				<y>val(&firm;, lowPrice, t)</y>
+			</series>
+			
+			<series label="Upper Price" color="pink">
+				<x>t</x>
+				<y>val(&firm;, highPrice, t)</y>
+			</series>
+			
+			<series label="Sector Average" color="blue">
+				<x>t</x>
+				<y>val(&sector;, supplyValue, t, sum) / val(&sector;, supplyVolume, t, sum)</y>
+			</series>
+			
+		</chart>
+
+		<chart title="Inventories Level">
+			<series label="Firm" color="red">
+				<x>t</x>
+				<y>val(&firm;, inventoriesLevel, t)</y>
+			</series>
+		</chart>
+
+		<chart title="Insolvencies">
+
+			<series label="Insolvencies" color="red">
+				<x>t</x>
+				<y>1 - val(&firm;, solvent, t)</y>
+			</series>
+
+			<yAxis label=" " min="0" max="1.2" />
+
+		</chart>
+
+		<col />
+
+		<chart title="Wage">
+			<series label="&firm;">
+				<x>t</x>
+				<y>val(&firm;, wage, t)</y>
+			</series>
+			<series label="Sector Average">
+				<x>t</x>
+				<y>val(Workers, wage, t, sum) / val(Workers, employed, t, sum)</y>
+			</series>
+		</chart>
+
+		<chart title="Vacancies">
+
+			<info>
+				Trois façons de calculer le taux d'emplois vacants
+			</info>
+
+			<series label="Vacancy rate 1">
+				<x>t</x>
+				<y>100
+					* val(&firm;,
+					vacancies, t) / val(&firm;,
+					capacity, t)
+				</y>
+			</series>
+			<series label="Vacancy rate 2">
+				<x>t</x>
+				<y>100
+					* val(&firm;,
+					vacancies, t) / val(&firm;,
+					workforceTarget, t)
+				</y>
+			</series>
+			<series label="Vacancy rate 3">
+				<x>t</x>
+				<y>100
+					* val(&firm;,
+					vacancies, t) / val(&firm;,
+					jobOffers, t)
+				</y>
+			</series>
+			<yAxis label="%" min="0" max="101" />
+
+		</chart>
+
+		<chart title="Sales Level">
+			<series label="Firm" color="red">
+				<x>t</x>
+				<y>val(&firm;,
+					salesLevel, t)
+				</y>
+			</series>
+		</chart>
+
+		<chart title="Sales">
+
+			<series label="Production" color="red">
+				<x>t</x>
+				<y>val(&firm;,
+					productionVolume, t)
+				</y>
+			</series>
+
+			<series label="Sales" color="blue">
+				<x>t</x>
+				<y>val(&firm;,
+					salesVolume, t)
+				</y>
+			</series>
+
+			<series label="Supply" color="green">
+				<x>t</x>
+				<y>val(&firm;,
+					supplyVolume, t)
+				</y>
+			</series>
+
+			<yAxis label="Volume" />
+
+		</chart>
+
+		<col />
+
+		<chart title="Production">
+
+			<series label="Average" color="red">
+				<x>t</x>
+				<y>
+					(val(&firm;,
+					productionVolume, t) +
+					val(&firm;,
+					productionVolume, t-1) +
+					val(&firm;,
+					productionVolume, t-2) +
+					val(&firm;,
+					productionVolume, t-3) +
+					val(&firm;,
+					productionVolume, t-4) +
+					val(&firm;,
+					productionVolume, t-5))
+					/6
+				</y>
+			</series>
+
+			<series label="Effective" color="orange">
+				<x>t</x>
+				<y>val(&firm;,
+					productionVolume, t)
+				</y>
+			</series>
+
+			<series label="Target" color="green">
+				<x>t</x>
+				<y>val(&firm;,
+					productionTarget, t)
+				</y>
+			</series>
+
+			<series label="Max" color="blue">
+				<x>t</x>
+				<y>val(&firm;,
+					productionMax, t)
+				</y>
+			</series>
+
+			<yAxis label="Volume" />
+
+		</chart>
+
+
+
+		<chart title="Inventories">
+			
+			
+			<series label="Effective" color="red">
+				<x>t</x>
+				<y>val(&firm;,
+					inventoriesVolume, t)
+				</y>
+			</series>
+			<series label="Normal" color="green">
+				<x>t</x>
+				<y>val(&firm;,
+					inventoriesNormalVolume, t)
+				</y>
+			</series>
+			<series label="Desequilibria" color="orange">
+				<x>t</x>
+				<y>val(&firm;,
+					inventoryDesequilibria, t)
+				</y>
+			</series>
+			<yAxis label="Volume" />
+
+		</chart>
+
+		<chart title="Capacity Utilization">
+			
+			
+			<series label="Effective" color="red">
+				<x>t</x>
+				<y>100
+					* val(&firm;,
+					workforce, t) / val(&firm;,
+					capacity, t)
+				</y>
+			</series>
+			<series label="Target" color="blue">
+				<x>t</x>
+				<y>100
+					* val(&firm;,
+					utilizationTarget, t)
+				</y>
+			</series>
+			<yAxis label="%" min="0" max="100" />
+
+		</chart>
+
+		<chart title="Investment">
+			
+			
+			<series label="Investment" color="red">
+				<x>t</x>
+				<y>val(&firm;,
+					investmentSize, t)
+				</y>
+			</series>
+			<yAxis label="Volume" />
+
+		</chart>
+
+		<col />
+
+		<chart title="Workforce">
+
+			
+			
+
+			<series label="Effective" color="red">
+				<x>t</x>
+				<y>val(&firm;,
+					workforce, t)
+				</y>
+			</series>
+
+			<series label="Target" color="green">
+				<x>t</x>
+				<y>val(&firm;,
+					workforceTarget, t)
+				</y>
+			</series>
+
+			<series label="Max" color="blue">
+				<x>t</x>
+				<y>val(&firm;,
+					capacity, t)
+				</y>
+			</series>
+
+			<yAxis label="Workers" />
+
+		</chart>
+
+		<chart title="&sector; Debt Ratio">
+
+			
+			
+
+			<series label="Overdue debt" color="red">
+				<x>t</x>
+				<y>100
+					* val(&firm;,
+					overdueDebt, t) / val(&firm;,
+					assets, t)
+				</y>
+			</series>
+
+			<series label="Debt ratio" color="blue">
+				<x>t</x>
+				<y>100
+					* val(&firm;,
+					liabilities, t) / val(&firm;,
+					assets, t)
+				</y>
+			</series>
+
+			<yAxis label="%" min="0" max="100" />
+
+		</chart>
+
+		<chart title="Profits">
+
+			
+			
+
+			<series label="Gross profit">
+				<x>t</x>
+				<y>val(&firm;,
+					salesValue, t) - val(&firm;,
+					salesCosts, t)
+				</y>
+			</series>
+
+			<series label="Dividends">
+				<x>t</x>
+				<y>val(&firm;,
+					dividends, t)
+				</y>
+			</series>
+
+			<series label="Debt service">
+				<x>t</x>
+				<y>val(&firm;,
+					debtService, t)
+				</y>
+			</series>
+
+			<yAxis label="Value" />
+
+		</chart>
+
+		<chart title="Investment Value">
+			
+			<series label="Investment" color="red">
+				<x>t</x>
+				<y>val(&firm;,
+					investmentValue, t)
+				</y>
+			</series>
+			<yAxis label="Value" />
+
+		</chart>
+
+	</panel>
+	
+	<panel title="&firm;">
+	
+		<chart title="Debt">
+
+			<series label="&firm;" color="blue">
+				<x>t</x>
+				<y>val(&firm;, liabilities, t)</y>
+			</series>
+
+			<series label="Sector" color="red">
+				<x>t</x>
+				<y>val(Sector2, liabilities, t, sum) / val(Sector2, count, t, sum)</y>
+			</series>
+
+			<series label="Max" color="VERY_LIGHT_RED">
+				<x>t</x>
+				<y>val(Sector2, liabilities, t, max)</y>
+			</series>
+			<series label="Min" color="VERY_LIGHT_RED">
+				<x>t</x>
+				<y>val(Sector2, liabilities, t, min)</y>
+			</series>
+
+			<yAxis label="value" />
+
+		</chart>
+		
+		<chart title="Interest">
+
+			<series label="&firm;" color="blue">
+				<x>t</x>
+				<y>100 * 12 * val(&firm;, interests, t) / val(&firm;, liabilities, t-1)</y>
+			</series>
+
+			<yAxis label="%" />
+
+		</chart>
+		
+		<chart title="Vacancies">
+
+			<series label="Vacancies">
+				<x>t</x>
+				<y>val(&firm;, vacancies, t)</y>
+			</series>
+			<yAxis label="#"/>
+
+		</chart>
+		
+		<chart title="Wage Factor">
+			<series label="Wage Factor">
+				<x>t</x>
+				<y>100 * val(&firm;, wageFactor, t)</y>
+			</series>
+			<yAxis label="%" min="70" max="160" />
+		</chart>
+		
+		<col />
+		
+		<chart title="Interest to Gross Profit ratio">
+
+			<series label="&firm;" color="blue">
+				<x>t</x>
+				<y>100 * val(&firm;, interests, t) / val(&firm;, grossProfit, t)</y>
+			</series>
+
+			<series label="Sector" color="red">
+				<x>t</x>
+				<y>100 * val(&sector;, interests, t, sum) / val(&sector;, grossProfit, t, sum)</y>
+			</series>
+
+			<yAxis label="%" />
+
+		</chart>
+		
+		<chart title="Debt">
+		
+			<series label="overdueDebt" color="red">
+				<x>t</x>
+				<y>val(&firm;, overdueDebt, t)</y>
+			</series>
+			
+			<series label="longTermDebt" color="green">
+				<x>t</x>
+				<y>val(&firm;, longTermDebt, t)</y>
+			</series>
+			
+			<series label="shortTermDebt" color="blue">
+				<x>t</x>
+				<y>val(&firm;, shortTermDebt, t) - val(&firm;, overdueDebt, t)</y>
+			</series>
+						
+			<yAxis label="Value" />
+			
+		</chart>
+		<empty />
+		
+		<chart title="Wage">
+			<series label="Firm" color="blue">
+				<x>t</x>
+				<y>val(&firm;, wage, t)</y>
+			</series>
+			<series label="Min" color="VERY_LIGHT_BLUE">
+				<x>t</x>
+				<y>val(&sector;, wage, t, min)</y>
+			</series>
+			<series label="Max" color="VERY_LIGHT_BLUE">
+				<x>t</x>
+				<y>val(&sector;, wage, t, max)</y>
+			</series>
+			<yAxis label="Value" />
+		</chart>
+		
+		<col />
+		
+		<chart title="DEBUG targetVolume">
+
+			<series label="targetVolume" color="blue">
+				<x>t</x>
+				<y>val(&firm;, targetVolume, t)</y>
+			</series>
+
+			<yAxis label="#" />
+
+		</chart>
+		
+		<chart title="DEBUG targetMachines">
+
+			<series label="targetVolume" color="blue">
+				<x>t</x>
+				<y>val(&firm;, targetVolume, t)</y>
+			</series>
+
+			<series label="investmentVolume" color="red">
+				<x>t</x>
+				<y>val(&firm;, investmentVolume, t)</y>
+			</series>
+
+			<series label="inputVolume" color="orange">
+				<x>t</x>
+				<y>val(&firm;, inputVolume, t)</y>
+			</series>
+
+			<yAxis label="#" />
+
+		</chart>
+		
+		<empty />
+		<empty />
+		
+		<col />
+		
+		<html>
+			<i>&firm;</i>
+			<br />
+			<br />
+			Period: <data format="##0">t</data>
+			<br />
+			Sector average wage:
+			<data format="##0.##">val(Workers, wage, t, sum)/val(Workers, count, t, sum)</data>
+			<br />
+			Firm wage: <data format="##0.##">val(&firm;, wage, t)</data>
+			<br />
+			Firm wage (ex post): <data format="##0.##">val(&firm;, wageBill, t) / val(&firm;, workforce, t)</data>
+			<br />
+		</html><empty />
+						
+	</panel>
+	
+	<panel title="&firm;-Production"><chart title="Production">
+
+			<series label="Average" color="red">
+				<x>t</x>
+				<y>
+					(val(&firm;,
+					productionVolume, t) +
+					val(&firm;,
+					productionVolume, t-1) +
+					val(&firm;,
+					productionVolume, t-2) +
+					val(&firm;,
+					productionVolume, t-3) +
+					val(&firm;,
+					productionVolume, t-4) +
+					val(&firm;,
+					productionVolume, t-5))
+					/6
+				</y>
+			</series>
+
+			<series label="Effective" color="orange">
+				<x>t</x>
+				<y>val(&firm;,
+					productionVolume, t)
+				</y>
+			</series>
+
+			<series label="Target" color="green">
+				<x>t</x>
+				<y>val(&firm;,
+					productionTarget, t)
+				</y>
+			</series>
+
+			<series label="Max" color="blue">
+				<x>t</x>
+				<y>val(&firm;,
+					productionMax, t)
+				</y>
+			</series>
+
+			<yAxis label="Volume" />
+
+		</chart>
+
+		<chart title="Workforce">
+
+
+			<series label="Effective" color="red">
+				<x>t</x>
+				<y>val(&firm;, workforce, t)
+				</y>
+			</series>
+
+			<series label="Target" color="blue">
+				<x>t</x>
+				<y>val(&firm;, workforceTarget, t)
+				</y>
+			</series>
+
+			<series label="Max" color="green">
+				<x>t</x>
+				<y>val(&firm;, capacity, t)
+				</y>
+			</series>
+
+			<yAxis label="Workers" />
+
+		</chart>
+		
+		<chart title="Inventories">
+
+			<series
+				label="Effective"
+				color="red"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					inventoriesVolume, t)
+				</y>
+			</series>
+			<series
+				label="Normal"
+				color="green"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					inventoriesNormalVolume, t)
+				</y>
+			</series>
+			<series
+				label="Desequilibria"
+				color="orange"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					inventoryDesequilibria, t)
+				</y>
+			</series>
+			<yAxis label="Volume" />
+
+		</chart>
+
+		<empty />
+		
+		<col />
+		
+		<chart title="Production">
+
+			<series label="Sales" color="green">
+				<x>t</x>
+				<y>val(&firm;, salesVolume, t)
+				</y>
+			</series><series label="Production" color="red">
+				<x>t</x>
+				<y>val(&firm;, productionVolume, t)
+				</y>
+			</series>
+			
+			<yAxis label="Volume" />
+
+		</chart>
+		
+		<chart title="Utilization Target">
+
+			<series label="Target" color="red">
+				<x>t</x>
+				<y>100 * val(&firm;, utilizationTarget, t)</y>
+			</series>
+			
+			<yAxis label="%" min="0" max="105"/>
+
+		</chart>
+		
+		<chart title="Investment">
+
+			<series label="Budget" color="blue">
+				<x>t</x>
+				<y>val(&firm;, investmentBudget, t)</y>
+			</series>
+			
+			<series label="Expenditure" color="red">
+				<x>t</x>
+				<y>val(&firm;, investmentValue, t)</y>
+			</series>
+			
+			<yAxis label="Value" />
+
+		</chart>
+		
+		<chart title="Investment (Sector)">
+
+			<series label="Budget" color="blue">
+				<x>t</x>
+				<y>val(Sector2, investmentBudget, t, sum)</y>
+			</series>
+			
+			<series label="Expenditure" color="red">
+				<x>t</x>
+				<y>val(Sector2, investmentValue, t, sum)</y>
+			</series>
+			
+			<yAxis label="Value" />
+
+		</chart>
+		
+		<col />
+		
+		<chart title="Sales">
+
+			<series label="Sales" color="blue">
+				<x>t</x>
+				<y>val(&firm;, salesVolume, t)
+				</y>
+			</series>
+			
+			<series label="Supply" color="red">
+				<x>t</x>
+				<y>val(&firm;, supplyVolume, t)
+				</y>
+			</series>
+			
+			<yAxis label="Volume" />
+
+		</chart>
+		
+		<chart title="Sales Level">
+
+			<series label="Sales" color="blue">
+				<x>t</x>
+				<y>100 * val(&firm;, salesVolume, t) / val(&firm;, supplyVolume, t)</y>
+			</series>
+			
+			<yAxis label="%" min="0" max="105"/>
+
+		</chart>
+		
+		<chart title="Markup Level">
+
+			<series label="Markup" color="blue">
+				<x>t</x>
+				<y>100 * val(&firm;, markup, t)</y>
+			</series>
+			
+			<yAxis label="%" min="0" max="105"/>
+
+		</chart>
+		
+		<empty />
+		
+		<col />
+		
+		<chart title="Debt">
+
+			<series label="Debt" color="blue">
+				<x>t</x>
+				<y>100 * val(&firm;, liabilities, t) / val(&firm;, assets, t)</y>
+			</series>
+			
+			<series label="Overdue Debt" color="red">
+				<x>t</x>
+				<y>100 * val(&firm;, overdueDebt, t) / val(&firm;, assets, t)</y>
+			</series>
+			
+			<series label="Target" color="green">
+				<x>t</x>
+				<y>100 * val(&firm;, liabilitiesTarget, t) / val(&firm;, assets, t)</y>
+			</series>
+			
+			<yAxis label="%" min="0" max="105"/>
+
+		</chart>
+		
+		<chart title="Bankruptcy">
+
+			<series label="Imitations" color="blue">
+				<x>t</x>
+				<y>val(&firm;, imitation, t)</y>
+			</series>
+			
+			<yAxis label="#"/>
+
+		</chart>
+		
+		<chart title="Profits allocation">
+			<series label="Div." color="red">
+				<x>t</x>
+				<y>100 * val(&firm;, dividends, t) /  val(&firm;, grossProfit, t)</y>
+			</series>
+			<series label="Int." color="blue">
+				<x>t</x>
+				<y>100 * val(&firm;, interests, t) /  val(&firm;, grossProfit, t)</y>
+			</series>
+			<series label="Dep." color="green">
+				<x>t</x>
+				<y>100 * val(&firm;, depreciation, t) /  val(&firm;, grossProfit, t)</y>
+			</series>
+			<series label="Ret." color="orange">
+				<x>t</x>
+				<y>100 * val(&firm;, retainedEarnings, t) /  val(&firm;, grossProfit, t)</y>
+			</series>
+			<yAxis label="%" min="-50" max="100"/>
+		</chart>
+		
+		<empty />
+
+	</panel>
+
+	<panel title="&firm;-Investment">
+
+		<chart title="Capacity">
+			<series
+				label="Capacity"
+				color="red"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					capacity, t)
+				</y>
+			</series>
+			<yAxis
+				min="0"
+				max="100"
+				integerUnit="true" />
+		</chart>
+
+		<chart title="Liabilities">
+			<series
+				label="Debt Ratio"
+				color="blue"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					debtRatio, t)
+				</y>
+			</series>
+			<series
+				label="Debt Ratio Target"
+				color="orange"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					debtRatioTarget, t)
+				</y>
+			</series>
+		</chart>
+
+		<chart title="Supervision (DEBUG)">
+			<series
+				label="Besoin en nouvelles machines"
+				color="red"
+			>
+				<x>t</x>
+				<y>val(&firm;, newMachinesNeed, t)
+				</y>
+			</series>
+			<yAxis label="# machines" />
+			<legend />
+		</chart>
+
+		<chart title="Supervision (DEBUG)">
+			<series
+				label="suppliesLength"
+				color="red"
+			>
+				<x>t</x>
+				<y>val(&firm;, suppliesLength, t)
+				</y>
+			</series>
+			<yAxis label="# supplies" />
+			<legend />
+		</chart>
+
+		<col />
+
+		<chart title="Long Term Loans vs Fixed Capital">
+			<series
+				label="Long Term Loans vs Fixed Capital"
+				color="red"
+			>
+				<x>t</x>
+				<y>100*val(&firm;,
+					longTermDebt, t) / val(&firm;,
+					machineryValue, t)
+				</y>
+			</series>
+			<series
+				label="Target"
+				color="orange"
+			>
+				<x>t</x>
+				<y>100*val(&firm;,
+					debtRatioTarget, t)
+				</y>
+			</series>
+			<yAxis
+				label="%"
+				min="0"
+				max="101" />
+		</chart>
+
+		<chart title="Short Term Loans vs Circulating Capital">
+
+			<series
+				label="Short Term Loans / Circulating Capital"
+				color="red"
+			>
+				<x>t</x>
+				<y>100*val(&firm;,
+					shortTermDebt, t) / val(&firm;,
+					circulatingCapital, t)
+				</y>
+			</series>
+			<yAxis
+				label="%"
+				min="0"
+				max="101" />
+
+		</chart>
+
+		<chart title="Payback Period">
+			<series
+				label="Firm"
+				color="red"
+				shapesVisible="true"
+				lineColor="gray"
+				linesVisible="false"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					paybackPeriod, t)
+				</y>
+				<yAxis integerUnit="true" />
+			</series>
+		</chart>
+
+		<chart title="suppliesLength (DEBUG)">
+			<series label="min" color="red">
+				<x>t</x>
+				<y>val(Sector1, suppliesLength, t, min)</y>
+			</series>
+			<series label="max" color="red">
+				<x>t</x>
+				<y>val(Sector1, suppliesLength, t, max)</y>
+			</series>
+			<series label="mean" color="red">
+				<x>t</x>
+				<y>val(Sector1, suppliesLength, t, sum) / val(Sector1, count, t, sum)</y>
+			</series>
+			<yAxis label="# supplies" />
+			<legend />
+		</chart>
+		
+		<col />
+
+		<chart title="Production">
+
+			<series
+				label="Effective"
+				color="orange"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					productionVolume, t)
+				</y>
+			</series>
+
+			<series
+				label="Target"
+				color="green"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					productionTarget, t)
+				</y>
+			</series>
+
+			<series
+				label="Max"
+				color="blue"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					productionMax, t)
+				</y>
+			</series>
+
+			<yAxis label="Volume" />
+
+		</chart>
+
+		<chart title="Inventories">
+			<series
+				label="Effective"
+				color="red"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					inventoriesVolume, t)
+				</y>
+			</series>
+			<series
+				label="Normal"
+				color="green"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					inventoriesNormalVolume, t)
+				</y>
+			</series>
+			<series
+				label="Desequilibria"
+				color="orange"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					inventoryDesequilibria, t)
+				</y>
+			</series>
+			<yAxis label="Volume" />
+
+		</chart>
+
+		<chart title="Investment">
+			<series
+				label="Investment"
+				color="green"
+			>
+				<x>t</x>
+				<y>val(&firm;,
+					investmentSize, t)
+				</y>
+			</series>
+			<yAxis
+				label="# Machines"
+				integerUnit="true" />
+		</chart>
+
+		<empty /><col />
+
+		<empty />
+
+		<empty />
+
+	</panel>
+
+</panels>

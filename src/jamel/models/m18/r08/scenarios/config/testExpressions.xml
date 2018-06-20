@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- 17 février 2018, teste les règles de priorité des opérations -->
+
+<panels>
+
+	<panel title="Expression Consistency">
+
+		<chart title="TEST">
+			<series color="red">
+				<x>t</x>
+				<y>4-2-2</y>
+			</series>
+			<series color="blue">
+				<x>t</x>
+				<y>0</y>
+			</series>
+		</chart>
+		<chart title="TEST">
+			<series color="red">
+				<x>t</x>
+				<y>4-2+2</y>
+			</series>
+			<series color="blue">
+				<x>t</x>
+				<y>4</y>
+			</series>
+		</chart>
+
+		<chart title="TEST">
+			<series color="red">
+				<x>t</x>
+				<y>4*2-2</y>
+			</series>
+			<series color="blue">
+				<x>t</x>
+				<y>6</y>
+			</series>
+		</chart>
+
+		<chart title="TEST">
+			<series color="red">
+				<x>t</x>
+				<y>4*2+2</y>
+			</series>
+			<series color="blue">
+				<x>t</x>
+				<y>10</y>
+			</series>
+		</chart>
+
+		<col />
+
+		<chart title="TEST">
+			<series color="red">
+				<x>t</x>
+				<y>4-2*2-4</y>
+			</series>
+			<series color="blue">
+				<x>t</x>
+				<y>-4</y>
+			</series>
+		</chart>
+
+		<chart title="TEST">
+			<series color="red">
+				<x>t</x>
+				<y>4*2-6*7</y>
+			</series>
+			<series color="blue">
+				<x>t</x>
+				<y>-34</y>
+			</series>
+		</chart>
+
+		<chart title="TEST">
+			<series color="red">
+				<x>t</x>
+				<y>-2-2</y>
+			</series>
+			<series color="blue">
+				<x>t</x>
+				<y>-4</y>
+			</series>
+		</chart>
+
+		<chart title="TEST">
+			<series color="red">
+				<x>t</x>
+				<y>1-2+3-4</y>
+			</series>
+			<series color="blue">
+				<x>t</x>
+				<y>-2</y>
+			</series>
+		</chart>
+
+		<col />
+
+		<empty />
+
+		<col />
+
+		<empty />
+
+	</panel>
+	
+</panels>

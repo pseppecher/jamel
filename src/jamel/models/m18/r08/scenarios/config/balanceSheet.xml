@@ -1,0 +1,168 @@
+<?xml version = "1.0" encoding = "UTF-8"?>
+<html
+	title="Balance Sheet Matrix"
+>
+	<style>
+		.boldtable,
+		.boldtable td {
+		font-family:sans-serif;
+		font-size:12pt;
+		text-align: right;
+		}
+		.boldtable th {
+		font-family:sans-serif;
+		font-size:12pt;
+		text-align: center;
+		width: 120;
+		}
+	</style>
+
+	<br />
+	<br />
+	<br />
+	<br />
+	<table
+		border="0"
+		align="center"
+		class="boldtable"
+		cellspacing="10"
+	>
+		<caption>
+			Balance Sheet Matrix (period <data format="##0">t</data>)
+		</caption>
+
+		<tr><td colspan="6"><hr /></td></tr>
+
+		<tr name="Headers">
+			<th/>
+			<th>Households</th>
+			<th>Firms</th>
+			<th>Banks</th>
+			<th>&#931;</th>
+		</tr>
+
+		<tr><td colspan="6"><hr /></td></tr>
+
+		<tr name="In Process">
+			<th>In Process</th>
+			<td />
+			<td>
+				<data format="###,###">val(Firms, inProcessValue, t, sum)</data>
+			</td>
+			<td />
+			<td>
+				<data format="###,###">val(Firms, inProcessValue, t, sum)</data>
+			</td>
+		</tr>
+		<tr name="Finished Goods">
+			<th>Finished Goods</th>
+			<td />
+			<td>
+				<data format="###,###">val(Firms, inventoriesValue, t, sum)</data>
+			</td>
+			<td />
+			<td>
+				<data format="###,###">val(Firms, inventoriesValue, t, sum)</data>
+			</td>
+		</tr>
+		<tr name="Equipment">
+			<th>Equipment</th>
+			<td />
+			<td>
+				<data format="###,###">val(Firms, machineryValue, t, sum)</data>
+			</td>
+			<td />
+			<td>
+				<data format="###,###">val(Firms, machineryValue, t, sum)</data>
+			</td>
+		</tr>
+		<tr name="Deposits">
+			<th>Deposits</th>
+			<td>
+				<data format="###,###">val(Shareholders, money, t, sum) + val(Workers, money, t, sum)</data>
+			</td>
+			<td>
+				<data format="###,###">val(Firms, money, t, sum)</data>
+			</td>
+			<td>
+				<data format="###,###">-val(Banks, liabilities, t, sum)</data>
+			</td>
+			<td>
+				<data format="###,###">
+					val(Shareholders, money, t, sum) 
+					+ val(Workers, money, t, sum)
+					+ val(Firms, money, t, sum)
+					- val(Banks, liabilities, t, sum)
+				</data>
+			</td>
+		</tr>
+		<tr name="Short Term Loans">
+			<th>Short Term Loans</th>
+			<td />
+			<td>
+				<data format="###,###">-val(Banks, shortTermDebt, t, sum)</data>
+			</td>
+			<td>
+				<data format="###,###">val(Banks, shortTermDebt, t, sum)</data>
+			</td>
+			<td>	0</td>
+		</tr>
+		<tr name="Long Term Loans">
+			<th>Long Term Loans</th>
+			<td />
+			<td>
+				<data format="###,###">-val(Banks, longTermDebt, t, sum)</data>
+			</td>
+			<td>
+				<data format="###,###">val(Banks, longTermDebt, t, sum)</data>
+			</td>
+			<td>0</td>
+		</tr>
+		<tr name="Equities">
+			<th>Equities</th>
+			<td>
+				<data format="###,###">val(Firms, equities, t, sum) + val(Banks, equities, t, sum)</data>
+			</td>
+			<td>
+				<data format="###,###">- val(Firms, equities, t, sum)</data>
+			</td>
+			<td>
+				<data format="###,###">- val(Banks, equities, t, sum)</data>
+			</td>
+			<td>
+				<data format="###,###">0</data>				
+			</td>
+		</tr>
+
+		<tr><td colspan="6"><hr /></td></tr>
+
+		<tr name="Sum">
+			<th>&#931;</th>
+			<td name="Net Worth">
+				<data format="###,###">
+					val(Shareholders, money, t, sum) 
+					+ val(Workers, money, t, sum)
+					+ val(Firms, equities, t, sum) 
+					+ val(Banks, equities, t, sum)
+				</data>
+			</td>
+			<td>
+				0
+			</td>
+			<td>
+				0
+			</td>
+			<td name="Tangible assets">
+				<data format="###,###">
+					val(Firms, inProcessValue, t, sum)
+					+ val(Firms, inventoriesValue, t, sum)
+					+ val(Firms, machineryValue, t, sum)
+				</data>
+			</td>
+		</tr>
+
+		<tr><td colspan="6"><hr /></td></tr>
+
+	</table>
+
+</html>
