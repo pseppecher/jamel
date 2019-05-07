@@ -324,6 +324,30 @@ public class ExpressionFactory extends JamelObject {
 		return result;
 	}
 
+	@SuppressWarnings("javadoc")
+	private static Expression getTestNotEqual(Expression arg1, Expression arg2) {
+		ArgChecks.nullNotPermitted(arg1, "arg1");
+		ArgChecks.nullNotPermitted(arg2, "arg2");
+		final Expression result = new Expression() {
+
+			@Override
+			public Double getValue() {
+
+				final Double v1 = arg1.getValue();
+				final Double v2 = arg2.getValue();
+				return (v1 == null || v2 == null) ? null : (v1.equals(v2)) ? 0. : 1.;
+
+			}
+
+			@Override
+			public String toString() {
+				return "isEqual(" + arg1.toString() + ", " + arg2.toString() + ")";
+			}
+
+		};
+		return result;
+	}
+
 	/**
 	 * Returns <code>true</code> if parentheses in the specified query are
 	 * balanced, <code>false</code> otherwise.
@@ -443,6 +467,65 @@ public class ExpressionFactory extends JamelObject {
 		super(simulation);
 	}
 
+	@SuppressWarnings("javadoc")
+	private Expression getFunction(final String key) {
+		final Expression result;
+		if (!Pattern.matches("\\w*[\\(].*[\\)]", key)) {
+			throw new RuntimeException("Bad key: '" + key + "'");
+		}
+		final String functionName = key.split("\\(", 2)[0];
+		final String argString = key.split("\\(", 2)[1].substring(0, key.split("\\(", 2)[1].length() - 1);
+
+		switch (functionName) {
+		case "isEqual":
+			result = getTestEqual(argString);
+			break;
+		case "isNotEqual":
+			result = getTestNotEqual(argString);
+			break;
+		case "val":
+			result = getVal(argString);
+			break;
+		default:
+			throw new RuntimeException("Unknown function: '" + functionName + "'");
+		}
+		return result;
+	}
+
+	@SuppressWarnings("javadoc")
+	private Expression getTestEqual(String argString) {
+		final String[] args = split(argString);
+		final Expression result = getTestEqual(getExpression(args[0]), getExpression(args[1]));
+		return result;
+	}
+
+	@SuppressWarnings("javadoc")
+	private Expression getTestNotEqual(String argString) {
+		final String[] args = split(argString);
+		final Expression result = getTestNotEqual(getExpression(args[0]), getExpression(args[1]));
+		return result;
+	}
+
+	@SuppressWarnings("javadoc")
+	private Expression getVal(String argString) {
+		final Expression result;
+		final String[] split = argString.split(",", 2);
+		final Sector sector = this.getSimulation().getSector(split[0].split("\\.")[0]);
+		if (sector == null) {
+			throw new RuntimeException("Sector not found: " + split[0]);
+		}
+		final String[] args = split[1].split(",");
+		if (split[0].split("\\.").length == 2) {
+			// on demande une valeur sur un agent particulier.
+			result = sector.getIndividualDataAccess(split[0].split("\\.")[1], args);
+		} else {
+			// on demande une opération d'agrégation sur l'ensemble
+			// des agents (somme des données par exemple)
+			result = sector.getDataAccess(args);
+		}
+		return result;
+	}
+
 	/**
 	 * Returns the specified expression.
 	 * 
@@ -493,13 +576,13 @@ public class ExpressionFactory extends JamelObject {
 						if (previous != '*' && previous != '/') {
 							operator = c;
 							position = i;
-							//break; -> BIG BUG ! Fixed 2018-02-17
+							// break; -> BIG BUG ! Fixed 2018-02-17
 						}
-					} else if ((c == '*' || c == '/' || c == '%') && (operator==null)) {
+					} else if ((c == '*' || c == '/' || c == '%') && (operator == null)) {
 						operator = c;
 						position = i;
-					} 
-					
+					}
+
 				}
 			}
 
@@ -540,6 +623,11 @@ public class ExpressionFactory extends JamelObject {
 				result = getNumeric(Double.parseDouble(key));
 			}
 
+			else if (Pattern.matches("\\w*[\\(].*[\\)]", key)) {
+				result = getFunction(key);
+			}
+
+			/*
 			else if (Pattern.matches("isEqual[\\(].*[\\)]", key)) {
 				final String argString = key.substring(8, key.length() - 1);
 				final String[] args = split(argString);
@@ -548,7 +636,7 @@ public class ExpressionFactory extends JamelObject {
 				}
 				result = getTestEqual(getExpression(args[0]), getExpression(args[1]));
 			}
-
+			
 			else if (Pattern.matches("val[\\(].*[\\)]", key)) {
 				final String argString = key.substring(4, key.length() - 1);
 				final String[] split = argString.split(",", 2);
@@ -566,6 +654,7 @@ public class ExpressionFactory extends JamelObject {
 					result = sector.getDataAccess(args);
 				}
 			}
+			*/
 
 			else if (Pattern.matches(".*[\\.].*", key)) {
 				// Récupération d'un paramètre
@@ -602,8 +691,11 @@ public class ExpressionFactory extends JamelObject {
 			}
 			return result;
 		} catch (Exception e) {
-			Jamel.println("Bad query: '" + query + "'");
-			throw new RuntimeException("Bad query: " + query, e);
+			final String message = "Bad query: '" + query + "'";
+			Jamel.println("***");
+			Jamel.println(message);
+			Jamel.println();
+			throw new RuntimeException(message, e);
 		}
 	}
 
@@ -649,7 +741,7 @@ public class ExpressionFactory extends JamelObject {
 					try {
 						final Double xValue = xExp.getValue();
 						final Double yValue = yExp.getValue();
-						if (xValue != null && yValue!=null) {
+						if (xValue != null && yValue != null) {
 							final Double xDeltaValue = deltaXExp.getValue();
 							final Double yDeltaValue = deltaYExp.getValue();
 							final VectorDataItem item = new VectorDataItem(xValue, yValue, xDeltaValue, yDeltaValue);

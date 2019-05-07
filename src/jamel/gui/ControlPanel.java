@@ -2,6 +2,7 @@ package jamel.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
@@ -10,7 +11,16 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.xml.sax.SAXException;
+
+import jamel.Jamel;
+import jamel.util.Parameters;
 import jamel.util.Simulation;
 
 /**
@@ -20,6 +30,9 @@ public class ControlPanel extends JPanel {
 
 	/** The pause button. */
 	private final JButton pauseButton;
+
+	/** The export button. */
+	private JButton exportButton = null;
 
 	/** The simulation. */
 	private final Simulation simulation;
@@ -36,6 +49,11 @@ public class ControlPanel extends JPanel {
 	 * The resume icon.
 	 */
 	private final ImageIcon resumeIcon;
+
+	/**
+	 * The export icon.
+	 */
+	private ImageIcon exportIcon = null;
 
 	/**
 	 * Creates a new control panel.
@@ -56,6 +74,36 @@ public class ControlPanel extends JPanel {
 		this.timeCounter.setText("");
 		this.add(pauseButton);
 		this.add(timeCounter);
+		if (this.simulation.eventMethodImplemented()) {
+			try {
+				this.exportIcon = getIcon("resources/save_edit.gif");
+				this.exportButton = this.getExportButton(getExportParameters());
+				this.add(exportButton);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	/**
+	 * Returns the export parameters.
+	 * 
+	 * @return the export parameters.
+	 * @throws ParserConfigurationException
+	 *             if something goes wrong.
+	 * @throws SAXException
+	 *             if something goes wrong.
+	 * @throws IOException
+	 *             if something goes wrong.
+	 */
+	private static Parameters getExportParameters() throws ParserConfigurationException, SAXException, IOException {
+		final ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		final URL url = cl.getResource("resources/exportToPDF.xml");
+		final DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
+		final DocumentBuilder db = dbf.newDocumentBuilder();
+		final Document doc = db.parse(url.openStream());
+		final Element elem = doc.getDocumentElement();
+		return new Parameters(elem);
 	}
 
 	/**
@@ -72,6 +120,7 @@ public class ControlPanel extends JPanel {
 		if (url != null) {
 			result = new ImageIcon(url);
 		} else {
+			Jamel.println("Control Panel: Missing icon: " + name);
 			result = null;
 		}
 		return result;
@@ -102,6 +151,32 @@ public class ControlPanel extends JPanel {
 	}
 
 	/**
+	 * Creates and returns a new export button.
+	 * 
+	 * @param parameters
+	 *            the parameters of the export.
+	 * 
+	 * @return a new export button.
+	 */
+	private JButton getExportButton(Parameters parameters) {
+		return new JButton("Export") {
+			{
+				this.addActionListener(new ActionListener() {
+					@Override
+					public void actionPerformed(ActionEvent e) {
+						simulation.event(parameters);
+					}
+				});
+				if (exportIcon != null) {
+					this.setIcon(exportIcon);
+					this.setText("");
+					this.setToolTipText("Export panels");
+				}
+			}
+		};
+	}
+
+	/**
 	 * Updates this panel.
 	 */
 	private void doRefresh() {
@@ -124,6 +199,9 @@ public class ControlPanel extends JPanel {
 				} else {
 					pauseButton.setText("Pause");
 				}
+			}
+			if (this.exportButton != null) {
+				this.exportButton.setEnabled(b);
 			}
 		}
 		this.repaint();

@@ -88,4 +88,18 @@ public abstract class JamelObject {
 		return this.simulation;
 	}
 
+	final public double nextDouble(double d1, double d2) {
+		if (d2 <= d1) {
+			throw new IllegalArgumentException("Bad values: " + d1 + ", " + d2);
+		}
+		return d1 + getRandom().nextDouble() * (d2 - d1);
+	}
+
+	final public int nextInt(int i1, int i2) {
+		if (i2 <= i1) {
+			throw new IllegalArgumentException("Bad values: " + i1 + ", " + i2);
+		}
+		return i1 + getRandom().nextInt(i2 - i1);
+	}
+
 }

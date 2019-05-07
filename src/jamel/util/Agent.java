@@ -1,5 +1,7 @@
 package jamel.util;
 
+import jamel.Jamel;
+
 /**
  * Represents an agent.
  */
@@ -30,6 +32,15 @@ public interface Agent {
 	 * @return the specified data.
 	 */
 	Double getData(int dataIndex, int t);
+
+	/**
+	 * Returns the ID number of this agent.
+	 * @return the ID number of this agent.
+	 */
+	default int getID() {
+		Jamel.notUsed();
+		return 0;
+	}
 
 	/**
 	 * Returns the name of the agent.

@@ -14,6 +14,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
 import org.jfree.chart.LegendItem;
@@ -101,8 +102,8 @@ public class ChartManager extends JamelObject {
 		axis.setAutoRangeIncludesZero(false);
 		}*/
 
-		//axis.setAutoRangeIncludesZero(false);
-		
+		// axis.setAutoRangeIncludesZero(false);
+
 		if (axisDescription != null && !axisDescription.getAttribute("label").equals("")) {
 			axis.setLabel(axisDescription.getAttribute("label"));
 		}
@@ -161,6 +162,12 @@ public class ChartManager extends JamelObject {
 		return plot;
 	}
 
+	private static void ensureParentFileExist(final File file) {
+		if (!file.getParentFile().exists()) {
+			file.getParentFile().mkdirs();
+		}
+	}
+
 	/**
 	 * The list of the series to update.
 	 */
@@ -193,6 +200,26 @@ public class ChartManager extends JamelObject {
 		super(gui.getSimulation());
 		this.gui = gui;
 		this.expressionFactory = expressionFactory;
+	}
+
+	private void exportCharts(File parent, String exportDirectoryName, Parameters chartDescription) {
+		Jamel.println("Export to: " + parent.getAbsolutePath() + "/" + exportDirectoryName);
+		for (Component comp : panels) {
+			final String tabName = comp.getParent().getParent().getName().replaceAll(" ", "_");
+			if (comp instanceof JamelChartPanel) {
+				final String filename = exportDirectoryName + tabName + "/"
+						+ ((JamelChartPanel) comp).getChart().getTitle().getText().replaceAll(" ", "_") + ".pdf";
+				final File pdfFile = new File(parent, filename);
+				ensureParentFileExist(pdfFile);
+				((JamelChartPanel) comp).export(pdfFile, chartDescription);
+			} else if (comp instanceof HtmlPanel) {
+				final String filename = exportDirectoryName + tabName + "/" + "panel.html";
+				// TODO: revoir le nommage de ce fichier
+				final File htmlFile = new File(parent, filename);
+				ensureParentFileExist(htmlFile);
+				((HtmlPanel) comp).export(htmlFile);
+			}
+		}
 	}
 
 	/**
@@ -273,13 +300,13 @@ public class ChartManager extends JamelObject {
 					newSeries = expressionFactory.getXYSeries(x, y, conditions);
 				}
 				if (newSeries != null) {
-					
+
 					this.dynamicSeries.add(newSeries);
 					xyDataset.addSeries((XYSeries) newSeries);
 
 					final boolean shapeFilled = true;
 					Paint outlinePaint = Color.black;
-					
+
 					// Color
 
 					final Paint seriesPaint;
@@ -339,9 +366,9 @@ public class ChartManager extends JamelObject {
 						tooltip = "<html>x = " + addSpaces(x) + "<br>y = " + addSpaces(y) + "</html>";
 					}
 
-					final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null,
-							shapeVisible, shape, shapeFilled, seriesPaint, true, outlinePaint, thinStroke, lineVisible, line,
-							basicStroke, seriesPaint);
+					final LegendItem legendItem = new LegendItem(legendLabel, null, tooltip, null, shapeVisible, shape,
+							shapeFilled, seriesPaint, true, outlinePaint, thinStroke, lineVisible, line, basicStroke,
+							seriesPaint);
 
 					defaultLegendItemCollection.add(legendItem);
 				}
@@ -361,7 +388,7 @@ public class ChartManager extends JamelObject {
 		} else {
 			plot = createXYPlot(xyDataset, xAxis, yAxis, xyRenderer);
 		}
-		
+
 		// TODO addZeroBaselines(plot, description);
 
 		final Parameters legend = params.get("legend");
@@ -423,47 +450,30 @@ public class ChartManager extends JamelObject {
 	 */
 	public void exportCharts(Parameters event) {
 		final File parent = this.getSimulation().getFile().getParentFile();
+		final String prefix = "exports/" + this.getSimulation().getName() + "/";
 		final String exportDirectoryName;
 		if (event.getAttribute("to").isEmpty()) {
-			exportDirectoryName = "";
+			exportDirectoryName = prefix + (String) JOptionPane.showInputDialog(null, "Export name", "Export Dialog",
+					JOptionPane.PLAIN_MESSAGE, null, null, "period_" + getSimulation().getPeriod()) + "/";
 		} else {
-			exportDirectoryName = event.getAttribute("to") + "/";
+			exportDirectoryName = prefix + event.getAttribute("to") + "/";
 		}
 		final Parameters chartDescription = event.get("format");
-		try {
-			SwingUtilities.invokeAndWait(new Runnable() {
-				private void ensureParentFileExist(final File file) {
-					if (!file.getParentFile().exists()) {
-						file.getParentFile().mkdirs();
+		if (SwingUtilities.isEventDispatchThread()) {
+			exportCharts(parent, exportDirectoryName, chartDescription);
+		} else {
+			try {
+				SwingUtilities.invokeAndWait(new Runnable() {
+					@Override
+					public void run() {
+						exportCharts(parent, exportDirectoryName, chartDescription);
 					}
-				}
-
-				@Override
-				public void run() {
-					for (Component comp : panels) {
-						final String tabName = comp.getParent().getParent().getName().replaceAll(" ", "_");
-						if (comp instanceof JamelChartPanel) {
-							final String filename = exportDirectoryName + tabName + "/"
-									+ ((JamelChartPanel) comp).getChart().getTitle().getText().replaceAll(" ", "_")
-									+ ".pdf";
-							final File pdfFile = new File(parent, filename);
-							ensureParentFileExist(pdfFile);
-							((JamelChartPanel) comp).export(pdfFile, chartDescription);
-						} else if (comp instanceof HtmlPanel) {
-							final String filename = exportDirectoryName + tabName + "/" + "panel.html";
-							// TODO: revoir le nommage de ce fichier
-							final File htmlFile = new File(parent, filename);
-							ensureParentFileExist(htmlFile);
-							((HtmlPanel) comp).export(htmlFile);
-						}
-					}
-				}
-
-			});
-		} catch (InvocationTargetException e) {
-			e.printStackTrace();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+				});
+			} catch (InvocationTargetException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

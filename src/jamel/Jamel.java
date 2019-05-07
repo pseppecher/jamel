@@ -88,7 +88,7 @@ public class Jamel {
 	private static final String seeLogFile = "See the console for more details.";
 
 	/** This version of Jamel. */
-	final private static int version = 20180208;
+	final private static int version = 20180404;
 
 	/**
 	 * Creates and returns a new simulation.

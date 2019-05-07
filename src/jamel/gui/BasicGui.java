@@ -3,6 +3,7 @@ package jamel.gui;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Frame;
+import java.awt.Toolkit;
 import java.awt.Window;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
@@ -152,7 +153,7 @@ public class BasicGui extends JamelObject implements Gui {
 		final String simulationTitle = simulation.getInfo("meta-title");
 		final String windowTitle;
 		if (simulationTitle != null) {
-			windowTitle = simulationTitle + " (" + simulation.getName() + ")";
+			windowTitle = simulationTitle + " (" + simulation.getFile().getPath() + ")";
 		} else {
 			windowTitle = simulation.getName();
 		}
@@ -203,12 +204,14 @@ public class BasicGui extends JamelObject implements Gui {
 
 	@Override
 	public void displayErrorMessage(final String title, final String message) {
-		JOptionPane.showMessageDialog(this.window, "<html>" + message + "<br>See the console for more details.</html>",
+		Toolkit.getDefaultToolkit().beep();
+		JOptionPane.showMessageDialog(this.window, "<html>Jamel said: " + message + "<br>See the console for more details.</html>",
 				title, JOptionPane.ERROR_MESSAGE);
 	}
 
 	@Override
 	public void displayErrorMessage(final String title, final String message, final Exception e) {
+		Toolkit.getDefaultToolkit().beep();
 		JOptionPane.showMessageDialog(this.window,
 				"<html>Jamel said: " + message + "<br>" + "Cause: "
 						+ (e.getMessage() == null ? e.getClass().getName() : e.getMessage()) + "<br>"
