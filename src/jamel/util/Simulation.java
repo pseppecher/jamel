@@ -3,6 +3,7 @@ package jamel.util;
 import java.io.File;
 import java.util.Random;
 
+import jamel.Jamel;
 import jamel.data.Expression;
 
 /**
@@ -19,6 +20,25 @@ public interface Simulation {
 	 *            the message to display.
 	 */
 	void displayErrorMessage(String title, String message);
+
+	/**
+	 * Executes the specified event.
+	 * 
+	 * @param event
+	 *            the event to be executed.
+	 */
+	default void event(Parameters event) {
+		Jamel.notUsed();
+	}
+
+	/**
+	 * Returns {@code true} if this simulation implements the {@code event()} method.
+	 * 
+	 * @return {@code true} if this simulation implements the {@code event()} method.
+	 */
+	default boolean eventMethodImplemented() {
+		return false;
+	}
 
 	/**
 	 * Returns an access to the simulation duration.
